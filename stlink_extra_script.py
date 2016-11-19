@@ -4,7 +4,7 @@ from os.path import join
 env = DefaultEnvironment()
 
 env.Replace(
-	UPLOADER=join("$PIOPACKAGES_DIR", "tool-stlink", "st-flash"),
+#	UPLOADER=join("$PIOPACKAGES_DIR", "tool-stlink", "st-flash"),
     MYUPLOADERFLAGS=[
 			"--reset",		# reset board before and after flashing
             "write",        # write in flash
@@ -13,3 +13,6 @@ env.Replace(
         ],
     UPLOADCMD='$UPLOADER $MYUPLOADERFLAGS',
 )
+
+#print env.Dump()
+#print ARGUMENTS
