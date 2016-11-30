@@ -22,14 +22,16 @@
 #include "N3310LCD.h"
 
 #define NOKIALCD_ENABLED        // select DOGLCD or NOKIALCD
+//#define DOGLCD_ENABLED        // select DOGLCD or NOKIALCD
 #define ADC_AVG_SAMPLES 8       // number of ADC values to read for averaging
 #define MPPT_SAFE_MODE 1
 
 // DC/DC converter settings
 const int _pwm_frequency = 100; // kHz
-const int solar_voltage_offset_start = 3000; // mV  charging switched on if Vsolar > Vbat + offset
+const int solar_voltage_offset_start = 5000; // mV  charging switched on if Vsolar > Vbat + offset
+const int solar_voltage_offset_stop = 1000; // mV  charging switched on if Vsolar > Vbat + offset
 const int max_charge_current = 10000;  // mA        PCB maximum: 12 A
-const int charge_current_cutoff = 100;  // mA       --> if lower, charger is switched off
+const int charge_current_cutoff = 20;  // mA       --> if lower, charger is switched off
 const int max_cv_chg_voltage_offset = 100;  // mV   max voltage offset vs. vmax to switch back into CC mode
 const int max_solar_voltage = 55000; // mV
 
@@ -37,6 +39,7 @@ const int max_solar_voltage = 55000; // mV
 const int num_cells = 6;
 const int v_cell_max = 2400;        // max voltage per cell
 const int v_cell_trickle = 2300;    // voltage for trickle charging of lead-acid batteries
+const int v_cell_recharge = 2200;   // voltage to switch from CV or trickle back to CC charging
 const int v_cell_load_disconnect = 1950;
 const int v_cell_load_reconnect  = 2200;
 
@@ -87,6 +90,8 @@ int dcdc_current_target = 0;
 int solar_power_prev = 0;   // unit: mW
 int solar_power = 0;        // unit: mW
 
+bool battery_full = false;
+
 // for daily energy counting
 long seconds_zero_solar = 0;
 bool nighttime = false;
@@ -115,6 +120,9 @@ void energy_counter();
 //----------------------------------------------------------------------------
 int main()
 {
+    // boot from System Memory where USB DFU bootloader is located
+    //OB->USER |= 1 << 4;
+
     load_disable = 0;
     setup();
 
@@ -235,7 +243,8 @@ void state_machine()
     switch (state) {
 
         case STANDBY:
-            if  (solar_voltage > battery_voltage + solar_voltage_offset_start) {
+            if  (solar_voltage > battery_voltage + solar_voltage_offset_start
+                && battery_voltage < num_cells * v_cell_recharge) {
                 //enter_state(CHG_BIKE);
                 enter_state(CHG_CC);
             }
@@ -251,7 +260,8 @@ void state_machine()
                 // increase PV voltage
                 mppt.duty_cycle_step(-1);
             }
-            else if (dcdc_current < charge_current_cutoff) {
+            else if (dcdc_current < charge_current_cutoff ||
+                solar_voltage < battery_voltage + solar_voltage_offset_stop) {
                 //enter_state(BAT_ERROR);
                 enter_state(STANDBY);
                 return;
@@ -268,9 +278,11 @@ void state_machine()
 
         case CHG_CV:
 
-            if (dcdc_current < charge_current_cutoff) {
+            if (dcdc_current < charge_current_cutoff ||
+                solar_voltage < battery_voltage + solar_voltage_offset_stop) {
                 // battery charging finished?
                 if (battery_voltage > (num_cells * v_cell_max - max_cv_chg_voltage_offset)) {
+                    // TODO: define different current and time cut off (compare to Victron manual)
                     enter_state(CHG_TRICKLE);
                 }
                 else {
@@ -298,7 +310,10 @@ void state_machine()
 
         case CHG_TRICKLE:
 
-            if (dcdc_current < charge_current_cutoff) {
+            if (dcdc_current < charge_current_cutoff ||
+                solar_voltage < battery_voltage + solar_voltage_offset_stop) {
+                // current cutoff will probably never be reached because of
+                // leakage current inside battery --> stay in trickle till end of day
                 enter_state(STANDBY);
                 return;
             }
@@ -358,7 +373,7 @@ void energy_counter()
         input_Wh_day = 0.0;
         output_Wh_day = 0.0;
     }
-    
+
     input_Wh_day += solar_power / 1000.0 / 3600.0;
     output_Wh_day += load_current / 1000.0 * battery_voltage / 1000.0 / 3600.0;
     input_Wh_total += solar_power / 1000.0 / 3600.0;
