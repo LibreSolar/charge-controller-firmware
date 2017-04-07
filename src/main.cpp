@@ -18,14 +18,11 @@
 //#include "config_12a.h"     // choose old PCB revision (12A)
 #include "config.h"     // choose new PCB revision (20A)
 #include "BuckConverter.h"
-//#include "DogLCD.h"
-//#include "font_6x8.h"
 #include "Adafruit_SSD1306.h"
 //#include "SDFileSystem.h"
 #include <math.h>     // log for thermistor calculation
 #include "display.h"
 
-//#define DOGLCD_ENABLED
 //#define SDCARD_ENABLED
 #define OLED_ENABLED
 
@@ -33,11 +30,6 @@
 
 //----------------------------------------------------------------------------
 // global variables
-
-#ifdef DOGLCD_ENABLED
-SPI spi(PIN_UEXT_MOSI, NC, PIN_UEXT_SCK);
-DogLCD lcd(spi, PIN_UEXT_SSEL, PIN_UEXT_RX, PIN_UEXT_TX); //  spi, CS, CD, reset
-#endif
 
 #ifdef SDCARD_ENABLED
 SDFileSystem sd(PIN_UEXT_MOSI, PIN_UEXT_MISO, PIN_UEXT_SCK, PIN_UEXT_SSEL, "sd");
@@ -63,15 +55,15 @@ DigitalOut load_disable(PIN_LOAD_DIS);
 AnalogIn v_ref(PIN_V_REF);
 AnalogIn v_bat(PIN_V_BAT);
 AnalogIn v_solar(PIN_V_SOLAR);
-AnalogIn v_temp(PIN_V_TEMP);
+AnalogIn v_temp(PIN_TEMP_INT);
 AnalogIn i_load(PIN_I_LOAD);
 AnalogIn i_dcdc(PIN_I_DCDC);
 
 int solar_voltage;      // mV
 int battery_voltage;    // mV
 int dcdc_current = 0;       // mA
-int load_current;       // mA
-float temperature;       // mA
+int load_current = 0;       // mA
+float temperature;       // °C
 int solar_power = 0;        // unit: mW
 
 int dcdc_current_offset = 0;
@@ -99,10 +91,8 @@ int state = BAT_ERROR;
 
 void setup();
 void update_measurements();
-void update_controller();
 void enter_state(int next_state);
 void state_machine();
-void adjust_input_voltage(int delta_mV);
 void update_screen();
 void energy_counter();
 void load_management();
@@ -143,13 +133,8 @@ int main()
 //----------------------------------------------------------------------------
 void setup()
 {
-    #ifdef DOGLCD_ENABLED
-        lcd.init();
-        lcd.view(VIEW_TOP);
-    #endif
-
     led_green = 1;
-    load_disable = 0;
+    load_disable = 1;
     //    ref_i_dcdc = 0;         // 0 for buck, 1 for boost (TODO)
 
     // for RTC backup register
@@ -158,17 +143,18 @@ void setup()
 
     set_time(rtc_read_backup_reg(0));
 
-    input_Wh_day = float(rtc_read_backup_reg(1)) / 1000.0; // mWh
-    output_Wh_day = float(rtc_read_backup_reg(2)) / 1000.0; // mWh
-    input_Wh_total = float(rtc_read_backup_reg(3)); // Wh
-    output_Wh_total = float(rtc_read_backup_reg(4)); // Wh
+    input_Wh_day = (float)rtc_read_backup_reg(1) / 1000.0; // mWh
+    output_Wh_day = (float)rtc_read_backup_reg(2) / 1000.0; // mWh
+    input_Wh_total = (float)rtc_read_backup_reg(3); // Wh
+    output_Wh_total = (float)rtc_read_backup_reg(4); // Wh
 
     mppt.frequency_kHz(_pwm_frequency);
     mppt.deadtime_ns(300);
     mppt.set_duty_cycle(0.90);
     mppt.lock_settings();
-    mppt.set_current_limit(charge_current_max);
-    mppt.set_voltage_limit(num_cells * cell_voltage_max);
+    mppt.set_max_current(charge_current_max);
+    mppt.set_min_current(charge_current_cutoff);
+    mppt.set_max_voltage(num_cells * cell_voltage_max);
     mppt.duty_cycle_limits((float) cell_voltage_load_disconnect * num_cells / max_solar_voltage, 0.97);
 
     update_measurements();
@@ -211,8 +197,8 @@ void enter_state(int next_state)
         case CHG_CC:
             serial.printf("Enter State: CHG_CC\n");
             //serial.printf("P=%d Vsol=%d Vbat=%d Ibat=%d delta_time_CV=%d\n", solar_power, solar_voltage, battery_voltage, dcdc_current, time(NULL) - mppt.last_time_CV());
-            mppt.set_current_limit(charge_current_max);
-            mppt.set_voltage_limit(num_cells * cell_voltage_max);
+            mppt.set_max_current(charge_current_max);
+            mppt.set_max_voltage(num_cells * cell_voltage_max);
             mppt.last_time_CV_reset();
             mppt.start((float) battery_voltage / (solar_voltage - 1000.0));
             led_red = 1;
@@ -221,25 +207,27 @@ void enter_state(int next_state)
         case CHG_CV:
             serial.printf("Enter State: CHG_CV\n");
             //serial.printf("P=%d Vsol=%d Vbat=%d Ibat=%d delta_time_CV=%d\n", solar_power, solar_voltage, battery_voltage, dcdc_current, time(NULL) - mppt.last_time_CV());
-            mppt.set_voltage_limit(num_cells * cell_voltage_max);
+            mppt.set_max_voltage(num_cells * cell_voltage_max);
             break;
 
         case CHG_TRICKLE:
             serial.printf("Enter State: CHG_TRICKLE\n");
             //serial.printf("P=%d Vsol=%d Vbat=%d Ibat=%d delta_time_CV=%d\n", solar_power, solar_voltage, battery_voltage, dcdc_current, time(NULL) - mppt.last_time_CV());
-            mppt.set_voltage_limit(num_cells * cell_voltage_trickle);
+            mppt.set_max_voltage(num_cells * cell_voltage_trickle);
             mppt.last_time_CV_reset();
             break;
 
         case CHG_EQUALIZATION:
             serial.printf("Enter State: CHG_EQUALIZATION\n");
-            mppt.set_voltage_limit(num_cells * cell_voltage_equalization);
+            mppt.set_max_voltage(num_cells * cell_voltage_equalization);
             mppt.last_time_CV_reset();
-            mppt.set_current_limit(current_limit_equalization);
+            mppt.set_max_current(current_limit_equalization);
             break;
 
         case TEST:
             serial.printf("Enter State: TEST\n");
+            //mppt.set_current_limit(charge_current_max);
+            //mppt.set_voltage_limit(num_cells * cell_voltage_max);
             mppt.start(0.50);
             led_red = 1;
             break;
@@ -261,16 +249,33 @@ void enter_state(int next_state)
 
 /*****************************************************************************
  *  Charger state machine
- *
- *  INIT       Initial state when system boots up. Checks communication to BMS
- *             and turns the CHG and DSG FETs on
- *  STANDBY    Battery can be discharged, but no charging power is available
- *             or battery is fully charged
- *  CHG_CC     Constant current (CC) charging with maximum current possible
- *             (MPPT algorithm is running)
- *  CHG_CV     Constant voltage (CV) charging at maximum cell voltage
- *  BAT_ERROR  An error occured. Charging disabled.
- *
+
+ ## Standby
+ Initial state of the charge controller. If the solar voltage is high enough
+ and the battery is not full, charging in CC mode is started.
+
+ ### CC / bulk charging
+ The battery is charged with maximum possible current (MPPT algorithm is
+ active) until the CV voltage limit is reached.
+
+ ### CV / absorption charging
+ Lead-acid batteries are charged for some time using a slightly higher charge
+ voltage. After a current cutoff limit or a time limit is reached, the charger
+ goes into trickle or equalization mode for lead-acid batteries or back into
+ Standby for Li-ion batteries.
+
+ ### Trickle charging
+ This mode is kept forever for a lead-acid battery and keeps the battery at
+ full state of charge. If too much power is drawn from the battery, the
+ charger switches back into CC / bulk charging mode.
+
+ ### Equalization charging
+ This mode is only used for lead-acid batteries after several deep-discharge
+ cycles or a very long period of time with no equalization. Voltage is
+ increased to 15V or above, so care must be taken for the other system
+ components attached to the battery. (currently, no equalization charging is
+ enabled in the software)
+
  */
 void state_machine()
 {
@@ -319,22 +324,28 @@ void state_machine()
                 }
             }
             else if (dcdc_current < charge_current_cutoff
-                     || solar_voltage < battery_voltage + solar_voltage_offset_stop) {
+                     || solar_voltage < battery_voltage + solar_voltage_offset_stop)
+            {
                 enter_state(STANDBY);
             }
             break;
         }
 
         case CHG_TRICKLE: {
-            if (time(NULL) - mppt.last_time_CV() > time_trickle_recharge * 60) {
+            if (time(NULL) - mppt.last_time_CV() > time_trickle_recharge * 60)
+            {
                 enter_state(CHG_CC);
             }
-            else if (dcdc_current < charge_current_cutoff
-                     || solar_voltage < battery_voltage + solar_voltage_offset_stop) {
-                // current cutoff might never be reached because of lakage
-                // current inside battery --> stay in trickle till end of day
+            else if ((dcdc_current < charge_current_cutoff
+                     && battery_voltage < num_cells * cell_voltage_trickle)
+                     || solar_voltage < battery_voltage + solar_voltage_offset_stop)
+            {
                 enter_state(STANDBY);
             }
+            break;
+        }
+
+        case TEST: {
             break;
         }
 
@@ -448,7 +459,7 @@ void update_measurements()
     // low pass filter of measurement values:
     // y(n) = (1-c)*x(n) + c*y(n-1)    with c=exp(-Ta/RC)
     // https://en.wikipedia.org/wiki/Low-pass_filter#Simple_infinite_impulse_response_filter
-    float c = 0.2;      // filter constant
+    float c = 0.3;      // filter constant
 
     // first call of function
     if (battery_voltage == 0) {
@@ -457,17 +468,17 @@ void update_measurements()
 
 #ifdef MPPT_12A
     // solar voltage divider o-- 150k --o-- 6.8k --o
-    tmp = adc_read(v_solar) * vcc * 1568 / 68;
-    solar_voltage = (100 - c) * tmp + c * solar_voltage;
+    tmp = adc_read_avg(v_solar) * vcc * 1568 / 68;
+    solar_voltage = (1.0 - c) * tmp + c * solar_voltage;
 
     // battery voltage divider o-- 120k --o-- 10k --o
-    tmp = adc_read(v_bat) * vcc * 130 / 10;
-    battery_voltage = (100 - c) * tmp + c * battery_voltage;
+    tmp = adc_read_avg(v_bat) * vcc * 130 / 10;
+    battery_voltage = (1.0 - c) * tmp + c * battery_voltage;
 
-    tmp = adc_read(i_dcdc) * vcc  * 1000 / 5 / 50;
+    tmp = adc_read_avg(i_dcdc) * vcc  * 1000 / 5 / 50;
     dcdc_current = (1.0 - c) * (tmp + dcdc_current_offset) + c * dcdc_current;
 
-    tmp = adc_read(i_load) * vcc * 1000 / 5 / 50;
+    tmp = adc_read_avg(i_load) * vcc * 1000 / 5 / 50;
     load_current = (1.0 - c) * (tmp + load_current_offset) + c * load_current;
 
     solar_power = battery_voltage * dcdc_current / 1000;
@@ -570,7 +581,7 @@ void update_screen(void)
     oled.printf("Tot +%4.1fkWh -%4.1fkWh", input_Wh_total / 1000.0, fabs(output_Wh_total) / 1000.0);
 
     oled.setTextCursor(0, 56);
-    oled.printf("PWM %.1f%% ", mppt.get_duty_cycle() * 100.0);
+    oled.printf("Temp %.1f PWM %.1f%% ", temperature, mppt.get_duty_cycle() * 100.0);
     switch (state) {
         case STANDBY:
             oled.printf("Standby\n");
@@ -586,6 +597,9 @@ void update_screen(void)
             break;
         case CHG_BIKE:
             oled.printf("Bike gen\n");
+            break;
+        case TEST:
+            oled.printf("Test\n");
             break;
         default:
             oled.printf("Error\n");

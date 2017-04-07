@@ -80,7 +80,7 @@ const int thermistorBetaValue = 3435;  // typical value for Semitec 103AT-5 ther
 #define PIN_UEXT_MISO PB_4
 #define PIN_UEXT_MOSI PB_5
 #define PIN_UEXT_SCK  PB_3
-#define PIN_UEXT_SSEL PC_13
+#define PIN_UEXT_SSEL PA_0
 
 #define PIN_SWD_TX    PA_9
 #define PIN_SWD_RX    PA_10
@@ -94,12 +94,11 @@ const int thermistorBetaValue = 3435;  // typical value for Semitec 103AT-5 ther
 
 #define PIN_REF_I_DCDC PA_4
 
-#define PIN_V_REF    PA_5
-#define PIN_V_BAT    PA_6
-#define PIN_V_SOLAR  PA_7
-#define PIN_TEMP_INT PA_1
-#define PIN_TEMP_BAT PA_0
-#define PIN_I_LOAD   PB_0
-#define PIN_I_DCDC   PB_1
+#define PIN_V_REF   PA_5
+#define PIN_V_BAT   PA_6
+#define PIN_V_SOLAR PA_7
+#define PIN_TEMP_INT  PA_1
+#define PIN_I_LOAD  PB_0
+#define PIN_I_DCDC  PB_1
 
 #endif

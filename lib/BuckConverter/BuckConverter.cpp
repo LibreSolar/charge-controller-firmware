@@ -23,6 +23,7 @@ BuckConverter::BuckConverter(int freq_kHz)
     last_time_CV_reset();
 
     _pwm_delta = 1;
+    _enabled = false;
 }
 
 void BuckConverter::update(int input_voltage_mV, int output_voltage_mV, int output_current_mA) {
@@ -33,10 +34,22 @@ void BuckConverter::update(int input_voltage_mV, int output_voltage_mV, int outp
 
     if (output_voltage_mV > _max_voltage_mV) {
         // increase input voltage to lower output voltage
-        duty_cycle_step(-1);
-        _time_voltage_limit_reached = time(NULL);
+        if (output_current_mA > _min_current_mA) {
+            duty_cycle_step(-1);
+            _time_voltage_limit_reached = time(NULL);
+        }
+        else {
+            // switch off and wait for voltage to go down
+            // (otherwise current could get negative, i.e. into solar panel)
+            TIM1->BDTR &= ~(TIM_BDTR_MOE);
+        }
         //printf("output_voltage_mV = %d, _max_voltage_mV = %d\n", output_voltage_mV, _max_voltage_mV);
-        fflush(stdout);
+        //fflush(stdout);
+    }
+    else if (~(TIM1->BDTR & TIM_BDTR_MOE) && _enabled == true) {
+        // switched off because of too high output voltage?
+        // now: output_voltage_mV <= _max_voltage_mV --> start again
+        start((float) output_voltage_mV / (input_voltage_mV - 1000.0));
     }
     else if (output_current_mA > _max_current_mA) {
         // increase input voltage to decrease current
@@ -99,12 +112,16 @@ void BuckConverter::init_registers() {
     TIM1->EGR |= TIM_EGR_UG;
 }
 
-void BuckConverter::set_voltage_limit(int voltage_mV) {
+void BuckConverter::set_max_voltage(int voltage_mV) {
     _max_voltage_mV = voltage_mV;
 }
 
-void BuckConverter::set_current_limit(int current_mA) {
+void BuckConverter::set_max_current(int current_mA) {
     _max_current_mA = current_mA;
+}
+
+void BuckConverter::set_min_current(int current_mA) {
+    _min_current_mA = current_mA;
 }
 
 time_t BuckConverter::last_time_CV() {
@@ -183,6 +200,8 @@ void BuckConverter::start(float pwm_duty) {
     // Break and Dead-Time Register
     // MOE  = 1: Main output enable
     TIM1->BDTR |= TIM_BDTR_MOE;
+
+    _enabled = true;
 }
 
 
@@ -191,6 +210,8 @@ void BuckConverter::stop() {
     // Break and Dead-Time Register
     // MOE  = 1: Main output enable
     TIM1->BDTR &= ~(TIM_BDTR_MOE);
+
+    _enabled = false;
 }
 
 

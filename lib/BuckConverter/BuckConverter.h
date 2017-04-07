@@ -24,8 +24,9 @@ public:
      */
     BuckConverter(int freq_kHz);
 
-    void set_voltage_limit(int voltage_mV);
-    void set_current_limit(int current_mA);
+    void set_max_voltage(int voltage_mV);
+    void set_max_current(int current_mA);
+    void set_min_current(int current_mA);
     time_t last_time_CV ();
     void last_time_CV_reset();
 
@@ -101,8 +102,11 @@ private:
     float _max_duty;
     int _pwm_delta;
 
+    bool _enabled;
+
     int _max_voltage_mV;
     int _max_current_mA;
+    int _min_current_mA;
     int _output_power_prev_mW;
     time_t _time_voltage_limit_reached;
 };

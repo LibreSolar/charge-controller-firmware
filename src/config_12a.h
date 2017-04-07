@@ -41,7 +41,7 @@ const int charge_current_max = 10000;  // mA        PCB maximum: 20 A
 // State: CV/absorption
 const int cell_voltage_max = 2400;        // max voltage per cell
 const int time_limit_CV = 120; // min
-const int current_cutoff_CV = 1000; //2000; // mA
+const int current_cutoff_CV = 300; //2000; // mA
 
 // State: float/trickle
 const bool trickle_enabled = true;
@@ -97,7 +97,7 @@ const int thermistorBetaValue = 3435;  // typical value for Semitec 103AT-5 ther
 #define PIN_V_REF   PA_0  // not connected
 #define PIN_V_BAT   PA_4
 #define PIN_V_SOLAR PA_5
-#define PIN_V_TEMP  PA_0  // not connected
+#define PIN_TEMP_INT  PA_0  // not connected
 #define PIN_I_LOAD  PA_6
 #define PIN_I_DCDC  PA_7
 
