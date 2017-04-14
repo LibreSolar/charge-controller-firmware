@@ -1,7 +1,7 @@
 # MPPT Charger Software
 Software based on ARM mbed library for the LibreSolar 20 A MPPT solar charge controller
 
-## State machine
+## State machine in class ChargeController
 
 The charge management is implemented using a state machine with the following states:
 
@@ -22,6 +22,6 @@ This mode is only used for lead-acid batteries after several deep-discharge cycl
 
 ![Text](img/MPPT_flow_chart.png)
 
-## DC/DC control class
+## DC/DC controller using class HalfBridge
 
-The PWM signal generation for the DC/DC controller inside the charge controller is done by a separate class BuckConverter. Most of the dangerous functions which could blow up your MOSFETs are implemented here.
+The PWM signal generation for the DC/DC controller inside the charge controller is done by a separate class HalfBridge. Most of the dangerous functions which could blow up your MOSFETs are implemented here.

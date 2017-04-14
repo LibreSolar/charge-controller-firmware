@@ -1,5 +1,5 @@
-/* mbed library for MPPT buck converter
- * Copyright (c) 2016 Martin Jäger (www.libre.solar)
+/* mbed library for half bridge driver PWM generation
+ * Copyright (c) 2016-2017 Martin Jäger (www.libre.solar)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,21 +14,19 @@
  * limitations under the License.
  */
 
+#ifndef HALFBRIDGE_H
+#define HALFBRIDGE_H
+
 #include "mbed.h"
 
-class BuckConverter
+
+class HalfBridge
 {
 public:
 
     /** Create a half bridge object
      */
-    BuckConverter(int freq_kHz);
-
-    void set_max_voltage(int voltage_mV);
-    void set_max_current(int current_mA);
-    void set_min_current(int current_mA);
-    time_t last_time_CV ();
-    void last_time_CV_reset();
+    HalfBridge(int freq_kHz);
 
     /** Set the PWM frequency in kHz
      *
@@ -57,13 +55,12 @@ public:
      */
     void stop();
 
-    /** Updates duty cycle to match voltage levels based on measured values
+    /** Get status of the PWM output
      *
-     *  @param input_voltage_mV Measured input voltage (mV)
-     *  @param output_voltage_mV Measured output voltage (mA)
-     *  @param output_current_mA Measured output current (mA)
+     *  @returns
+     *    True if PWM output enabled
      */
-    void update(int input_voltage_mV, int output_voltage_mV, int output_current_mA);
+    bool enabled();
 
     /** Set the duty cycle of the PWM signal between 0.0 and 1.0
      *
@@ -103,10 +100,6 @@ private:
     int _pwm_delta;
 
     bool _enabled;
-
-    int _max_voltage_mV;
-    int _max_current_mA;
-    int _min_current_mA;
-    int _output_power_prev_mW;
-    time_t _time_voltage_limit_reached;
 };
+
+#endif // HALFBRIDGE_H

@@ -1,5 +1,5 @@
-/* mbed library for MPPT buck converter
- * Copyright (c) 2016 Martin Jäger (www.libre.solar)
+/* mbed library for half bridge driver PWM generation
+ * Copyright (c) 2016-2017 Martin Jäger (www.libre.solar)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,59 +14,18 @@
  * limitations under the License.
  */
 
-#include "BuckConverter.h"
+#include "HalfBridge.h"
 
-BuckConverter::BuckConverter(int freq_kHz)
+HalfBridge::HalfBridge(int freq_kHz)
 {
     init_registers();
     frequency_kHz(freq_kHz);
-    last_time_CV_reset();
 
     _pwm_delta = 1;
     _enabled = false;
 }
 
-void BuckConverter::update(int input_voltage_mV, int output_voltage_mV, int output_current_mA) {
-
-    int output_power_mW = output_voltage_mV * output_current_mA / 1000;
-
-    //printf("P=%d P_prev=%d Vi=%d Vo=%d Io=%d\n", output_power_mW, _output_power_prev_mW, input_voltage_mV, output_voltage_mV, output_current_mA);
-
-    if (output_voltage_mV > _max_voltage_mV) {
-        // increase input voltage to lower output voltage
-        if (output_current_mA > _min_current_mA) {
-            duty_cycle_step(-1);
-            _time_voltage_limit_reached = time(NULL);
-        }
-        else {
-            // switch off and wait for voltage to go down
-            // (otherwise current could get negative, i.e. into solar panel)
-            TIM1->BDTR &= ~(TIM_BDTR_MOE);
-        }
-        //printf("output_voltage_mV = %d, _max_voltage_mV = %d\n", output_voltage_mV, _max_voltage_mV);
-        //fflush(stdout);
-    }
-    else if (~(TIM1->BDTR & TIM_BDTR_MOE) && _enabled == true) {
-        // switched off because of too high output voltage?
-        // now: output_voltage_mV <= _max_voltage_mV --> start again
-        start((float) output_voltage_mV / (input_voltage_mV - 1000.0));
-    }
-    else if (output_current_mA > _max_current_mA) {
-        // increase input voltage to decrease current
-        duty_cycle_step(-1);
-    }
-    else {
-        // start MPPT
-        if (_output_power_prev_mW > output_power_mW) {
-            _pwm_delta = -_pwm_delta;
-        }
-        duty_cycle_step(_pwm_delta);
-    }
-
-    _output_power_prev_mW = output_power_mW;
-}
-
-void BuckConverter::init_registers() {
+void HalfBridge::init_registers() {
 
     // Enable peripheral clock of GPIOA and GPIOB
     RCC->AHBENR |= RCC_AHBENR_GPIOAEN | RCC_AHBENR_GPIOBEN;
@@ -112,27 +71,7 @@ void BuckConverter::init_registers() {
     TIM1->EGR |= TIM_EGR_UG;
 }
 
-void BuckConverter::set_max_voltage(int voltage_mV) {
-    _max_voltage_mV = voltage_mV;
-}
-
-void BuckConverter::set_max_current(int current_mA) {
-    _max_current_mA = current_mA;
-}
-
-void BuckConverter::set_min_current(int current_mA) {
-    _min_current_mA = current_mA;
-}
-
-time_t BuckConverter::last_time_CV() {
-    return _time_voltage_limit_reached;
-}
-
-void BuckConverter::last_time_CV_reset() {
-    _time_voltage_limit_reached = 0x7FFFFFFF;   // maximum value
-}
-
-void BuckConverter::frequency_kHz(int freq) {
+void HalfBridge::frequency_kHz(int freq) {
 
     _pwm_resolution = SystemCoreClock / (freq * 1000);
 
@@ -141,8 +80,7 @@ void BuckConverter::frequency_kHz(int freq) {
     TIM1->ARR = _pwm_resolution / 2;
 }
 
-
-void BuckConverter::set_duty_cycle(float duty) {
+void HalfBridge::set_duty_cycle(float duty) {
 
     float duty_target;
     // protection against wrong settings which could destroy the hardware
@@ -159,7 +97,7 @@ void BuckConverter::set_duty_cycle(float duty) {
     TIM1->CCR1 = _pwm_resolution / 2 * duty_target;
 }
 
-void BuckConverter::duty_cycle_step(int delta)
+void HalfBridge::duty_cycle_step(int delta)
 {
     float duty_target;
     duty_target = (float)(TIM1->CCR1 + delta) / (_pwm_resolution / 2);
@@ -177,12 +115,12 @@ void BuckConverter::duty_cycle_step(int delta)
 }
 
 
-float BuckConverter::get_duty_cycle() {
+float HalfBridge::get_duty_cycle() {
     return (float)(TIM1->CCR1) / (_pwm_resolution / 2);;
 }
 
 
-void BuckConverter::deadtime_ns(int deadtime) {
+void HalfBridge::deadtime_ns(int deadtime) {
 
     uint8_t deadtime_clocks = (SystemCoreClock / 1000 / 1000) * deadtime / 1000;
 
@@ -194,7 +132,7 @@ void BuckConverter::deadtime_ns(int deadtime) {
 }
 
 
-void BuckConverter::start(float pwm_duty) {
+void HalfBridge::start(float pwm_duty) {
     set_duty_cycle(pwm_duty);
 
     // Break and Dead-Time Register
@@ -205,7 +143,7 @@ void BuckConverter::start(float pwm_duty) {
 }
 
 
-void BuckConverter::stop() {
+void HalfBridge::stop() {
 
     // Break and Dead-Time Register
     // MOE  = 1: Main output enable
@@ -214,8 +152,13 @@ void BuckConverter::stop() {
     _enabled = false;
 }
 
+bool HalfBridge::enabled() {
 
-void BuckConverter::lock_settings() {
+    return _enabled;
+}
+
+
+void HalfBridge::lock_settings() {
 
     // TODO: does not work properly... maybe HW bug?
 
@@ -223,7 +166,7 @@ void BuckConverter::lock_settings() {
     TIM1->BDTR |= TIM_BDTR_LOCK_1 | TIM_BDTR_LOCK_0;
 }
 
-void BuckConverter::duty_cycle_limits(float min_duty, float max_duty) {
+void HalfBridge::duty_cycle_limits(float min_duty, float max_duty) {
 
     _min_duty = min_duty;
     _max_duty = max_duty;

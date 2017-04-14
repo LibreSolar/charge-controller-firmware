@@ -18,46 +18,56 @@
 #define CONFIG_H
 
 #include "mbed.h"
+#include "ChargeController.h"
 
 #define MPPT_20A
+
 
 // DC/DC converter settings
 const int _pwm_frequency = 70; // kHz
 
-const int charge_current_cutoff = 20;  // mA       --> if lower, charger is switched off
-const int max_solar_voltage = 55000; // mV
-
-const int num_cells = 6;
+const float dcdc_current_min = 0.1;  // A       --> if lower, charger is switched off
+const float solar_voltage_max = 55.0; // V
 
 // State: Standby
-const int solar_voltage_offset_start = 5000; // mV  charging switched on if Vsolar > Vbat + offset
-const int solar_voltage_offset_stop = 1000;  // mV  charging switched off if Vsolar < Vbat + offset
-const int time_limit_recharge = 60;//5*60; // sec
-const int cell_voltage_recharge = 2300; // mV
+const float solar_voltage_offset_start = 5.0; // V  charging switched on if Vsolar > Vbat + offset
+const float solar_voltage_offset_stop = 1.0;  // V  charging switched off if Vsolar < Vbat + offset
 
-// State: CC/bulk
-const int charge_current_max = 10000;  // mA        PCB maximum: 20 A
+ChargingProfile profile = {
+  6, // num_cells;
 
-// State: CV/absorption
-const int cell_voltage_max = 2400;        // max voltage per cell
-const int time_limit_CV = 120; // min
-const int current_cutoff_CV = 2000; // mA
+  // State: Standby
+  60, // time_limit_recharge; // sec
+  2.3, // cell_voltage_recharge; // V
 
-// State: float/trickle
-const bool trickle_enabled = true;
-const int cell_voltage_trickle = 2300;    // voltage for trickle charging of lead-acid batteries
-const int time_trickle_recharge = 30;  // min
+  // State: CC/bulk
+  10.0, // charge_current_max;  // A        PCB maximum: 20 A
 
-// State: equalization
-const bool equalization_enabled = false;
-const int cell_voltage_equalization = 2500; // mV
-const int time_limit_equalization = 60; // min
-const int current_limit_equalization = 1000; // mA
-const int equalization_trigger_time = 8; // weeks
-const int equalization_trigger_deep_cycles = 10; // times
+  // State: CV/absorption
+  2.4, // cell_voltage_max;        // max voltage per cell
+  120, // time_limit_CV; // sec
+  2.0, // current_cutoff_CV; // A
 
-const int cell_voltage_load_disconnect = 1950;
-const int cell_voltage_load_reconnect  = 2200;
+  // State: float/trickle
+  true, // trickle_enabled;
+  2.3, // cell_voltage_trickle;    // target voltage for trickle charging of lead-acid batteries
+  30*60, // time_trickle_recharge;     // sec
+
+  // State: equalization
+  false, // equalization_enabled;
+  2.5, // cell_voltage_equalization; // V
+  60, // time_limit_equalization; // sec
+  1.0, // current_limit_equalization; // A
+  8, // equalization_trigger_time; // weeks
+  10, // equalization_trigger_deep_cycles; // times
+
+  1.95, // cell_voltage_load_disconnect;
+  2.2, // cell_voltage_load_reconnect;
+
+  // TODO
+  1.0 // temperature_compensation;
+};
+
 
 /*
 // typcial LiFePO4 battery
