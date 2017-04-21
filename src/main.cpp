@@ -52,7 +52,9 @@ DigitalOut led_green(PIN_LED_GREEN);
 DigitalOut led_red(PIN_LED_RED);
 DigitalOut load_disable(PIN_LOAD_DIS);
 
-//AnalogOut ref_i_dcdc(PIN_REF_I_DCDC);
+#ifdef MPPT_20A
+AnalogOut ref_i_dcdc(PIN_REF_I_DCDC);
+#endif
 
 AnalogIn v_ref(PIN_V_REF);
 
@@ -63,13 +65,17 @@ AnalogValue dcdc_current(PIN_I_DCDC, 1000 / 2 / (1500.0 / 22.0)); // op amp gain
 AnalogValue load_current(PIN_I_LOAD, 1000 / 2 / (1500.0 / 22.0));
 AnalogValue thermistor_voltage(PIN_TEMP_INT, 1.0);
 #endif
+#ifdef MPPT_12A
+AnalogValue solar_voltage(PIN_V_SOLAR, 156.8 / 6.8); // solar voltage divider o-- 100k --o-- 5.6k --o
+AnalogValue battery_voltage(PIN_V_BAT, 130 / 10); // battery voltage divider o-- 100k --o-- 10k --o
+AnalogValue dcdc_current(PIN_I_DCDC, 1000 / 5 / 50); // op amp gain: 150/2.2 = 68.2, resistor: 2 mOhm
+AnalogValue load_current(PIN_I_LOAD, 1000 / 5 / 50);
+AnalogValue thermistor_voltage(PIN_TEMP_INT, 1.0);
+#endif
 
 ChargeController charger(profile);
 
 float temperature; // °C
-
-int dcdc_current_offset = 0;
-int load_current_offset = 0;
 
 // for daily energy counting
 int seconds_zero_solar = 0;
@@ -88,7 +94,6 @@ void setup();
 void update_measurements();
 void update_screen();
 void energy_counter();
-void load_management();
 void log_data();
 void rtc_write_backup_reg(uint32_t BackupRegister, uint32_t data);
 uint32_t rtc_read_backup_reg(uint32_t BackupRegister);
@@ -105,7 +110,8 @@ int main()
     time_t last_second = time(NULL);
 
     tick1.attach(&update_measurements, 0.01);
-    tick2.attach(&update_mppt, 0.1);
+    tick2.attach(&update_mppt, 0.05);
+    //dcdc.start(0.5);  // for testing only (don't run update_mppt!)
 
     //time_state_changed = time(NULL) - 60*60*24; // start immediately
 
@@ -113,9 +119,21 @@ int main()
         // called once per second
         if (time(NULL) - last_second >= 1) {
             last_second = time(NULL);
+
+            // updates charger state machine
+            charger.update(battery_voltage.read(), dcdc_current.read());
+
+            // load management
+            if (charger.discharging_enabled()) {
+                load_disable = 0;
+            } else {
+                load_disable = 1;
+            }
+
             energy_counter();
             update_screen();
             log_data();
+            fflush(stdout);
         }
         sleep();    // wake-up by ticker interrupts
     }
@@ -126,7 +144,10 @@ void setup()
 {
     led_green = 1;
     load_disable = 1;
-    //    ref_i_dcdc = 0;         // 0 for buck, 1 for boost (TODO)
+
+#ifdef MPPT_20A
+    ref_i_dcdc = 0.1;         // 0 for buck, 1 for boost (TODO)
+#endif
 
     // for RTC backup register
     __PWR_CLK_ENABLE();   // normally in SystemClock_Config()
@@ -134,20 +155,20 @@ void setup()
 
     set_time(rtc_read_backup_reg(0));
 
-    input_Wh_day = (float)rtc_read_backup_reg(1) / 1000.0; // mWh
-    output_Wh_day = (float)rtc_read_backup_reg(2) / 1000.0; // mWh
-    input_Wh_total = (float)rtc_read_backup_reg(3); // Wh
-    output_Wh_total = (float)rtc_read_backup_reg(4); // Wh
+    input_Wh_day = rtc_read_backup_reg(1);
+    output_Wh_day = rtc_read_backup_reg(2);
+    input_Wh_total = rtc_read_backup_reg(3);
+    output_Wh_total = rtc_read_backup_reg(4);
 
     dcdc.deadtime_ns(300);
     dcdc.lock_settings();
     dcdc.duty_cycle_limits((float) profile.cell_voltage_load_disconnect * profile.num_cells / solar_voltage_max, 0.97);
 
+    wait(0.2);
     update_measurements();
 
-    // calibration of current sensors in no load condition
-    //load_current_offset = -load_current;
-    //dcdc_current_offset = -dcdc_current;
+    dcdc_current.calibrate_offset(0.0);
+    load_current.calibrate_offset(0.0);
 
     serial.baud(115200);
     serial.printf("\nSerial interface started...\n");
@@ -159,19 +180,11 @@ void setup()
     freopen("/serial", "w", stdout);  // retarget stdout
 }
 
-void load_management()
-{
-    if (charger.discharging_enabled()) {
-        load_disable = 0;
-    } else {
-        load_disable = 1;
-    }
-}
-
 void update_mppt()
 {
-    charger.update(battery_voltage.read(), dcdc_current.read());
-    load_management();
+    //serial.printf("B: %.2fV, %.2fA, S: %.2fV, Charger: %d, DCDC: %d, PWM: %.1f\n",
+    //    battery_voltage.read(), dcdc_current.read(), solar_voltage.read(),
+    //    charger.get_state(), dcdc.enabled(), dcdc.get_duty_cycle() * 100.0);
 
     float dcdc_power_new = battery_voltage * dcdc_current;
 
@@ -187,6 +200,7 @@ void update_mppt()
     {
         dcdc.stop();
         led_red = 0;
+        //serial.printf("DCDC stopped!\n");
     }
 
     if (battery_voltage > charger.read_target_voltage()) {
@@ -199,13 +213,14 @@ void update_mppt()
             // (otherwise current could get negative, i.e. into solar panel)
             dcdc.stop();
             led_red = 0;
+            //serial.printf("DCDC stopped!\n");
         }
     }
     else if (dcdc_current > charger.read_target_current()) {
         // increase input voltage to decrease current
         dcdc.duty_cycle_step(-1);
     }
-    else {
+    else if (dcdc.enabled()) {
         //printf("MPPT\n");
         // start MPPT
         if (dcdc_power > dcdc_power_new) {
@@ -252,10 +267,10 @@ void energy_counter()
 
     // save values to RTC backup register
     rtc_write_backup_reg(0, time(NULL));
-    rtc_write_backup_reg(1, (uint32_t)(input_Wh_day * 1000));  // mWh
-    rtc_write_backup_reg(2, (uint32_t)(output_Wh_day * 1000));  // mWh
-    rtc_write_backup_reg(3, (uint32_t)(input_Wh_total));  // kWh
-    rtc_write_backup_reg(4, (uint32_t)(output_Wh_total));  // kWh
+    rtc_write_backup_reg(1, input_Wh_day);
+    rtc_write_backup_reg(2, output_Wh_day);
+    rtc_write_backup_reg(3, input_Wh_total);
+    rtc_write_backup_reg(4, output_Wh_total);
 }
 
 void log_data()

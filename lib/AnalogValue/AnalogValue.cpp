@@ -22,13 +22,14 @@ AnalogValue::AnalogValue(PinName pin, float multiplier, const int num_readings, 
     _adc(pin), _num_readings(num_readings)
 {
     _multiplier = multiplier;
+    _offset = 0;
     update();   // initialize value without filter
     _filter_constant = filter_constant;
 }
 
 void AnalogValue::update()
 {
-    float tmp = adc_read_avg(_adc, _num_readings) * _vcc * _multiplier;
+    float tmp = adc_read_avg(_adc, _num_readings) * _vcc * _multiplier + _offset;
     _value = (1.0 - _filter_constant) * tmp + _filter_constant * _value;
 }
 
@@ -50,4 +51,10 @@ float AnalogValue::read()
 void AnalogValue::update_reference_voltage(AnalogIn& adc_ref, float ref_voltage, int num_readings)
 {
     _vcc = ref_voltage / adc_read_avg(adc_ref, num_readings);
+}
+
+void AnalogValue::calibrate_offset(float expected_value)
+{
+    float tmp = adc_read_avg(_adc, _num_readings) * _vcc * _multiplier;
+    _offset = expected_value - tmp;
 }

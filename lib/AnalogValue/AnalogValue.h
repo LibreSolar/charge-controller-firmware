@@ -48,6 +48,12 @@ public:
      */
     float read();
 
+    /** Read the last updated (and filtered) ADC result (incl. multiplier)
+     *
+     *  @param expected_value Value which should be read under current conditions (after application of multiplier)
+     */
+    void calibrate_offset(float expected_value = 0.0);
+
     /** An operator shorthand for read()
      *
      * The float() operator can be used as a shorthand for read() to simplify common code sequences
@@ -66,7 +72,7 @@ public:
     }
 
 private:
-    
+
     /** Read out ADC results and apply averaging and/or low pass filter
      *
      *  @param input AnalogIn for the pin to be read
@@ -85,4 +91,5 @@ private:
 
     const int _num_readings;
     float _filter_constant;
+    float _offset;
 };

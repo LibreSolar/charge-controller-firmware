@@ -22,7 +22,6 @@
 
 #define MPPT_20A
 
-
 // DC/DC converter settings
 const int _pwm_frequency = 70; // kHz
 
@@ -45,7 +44,7 @@ ChargingProfile profile = {
 
   // State: CV/absorption
   2.4, // cell_voltage_max;        // max voltage per cell
-  120, // time_limit_CV; // sec
+  120*60, // time_limit_CV; // sec
   2.0, // current_cutoff_CV; // A
 
   // State: float/trickle
