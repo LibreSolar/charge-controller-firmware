@@ -27,6 +27,7 @@ const int _pwm_frequency = 100; // kHz
 
 const float dcdc_current_min = 0.1;  // A       --> if lower, charger is switched off
 const float solar_voltage_max = 55.0; // V
+const int dcdc_restart_interval = 60; // s    --> when should we retry to start charging after low solar power cut-off?
 
 // State: Standby
 const float solar_voltage_offset_start = 5.0; // V  charging switched on if Vsolar > Vbat + offset
@@ -40,12 +41,12 @@ ChargingProfile profile = {
   2.3, // cell_voltage_recharge; // V
 
   // State: CC/bulk
-  10.0, // charge_current_max;  // A        PCB maximum: 20 A
+  12.0, // charge_current_max;  // A        PCB maximum: 20 A
 
   // State: CV/absorption
   2.4, // cell_voltage_max;        // max voltage per cell
   120*60, // time_limit_CV; // sec
-  2.0, // current_cutoff_CV; // A
+  1.0, // current_cutoff_CV; // A
 
   // State: float/trickle
   true, // trickle_enabled;
@@ -61,7 +62,7 @@ ChargingProfile profile = {
   10, // equalization_trigger_deep_cycles; // times
 
   1.95, // cell_voltage_load_disconnect;
-  2.2, // cell_voltage_load_reconnect;
+  2.1, // cell_voltage_load_reconnect;
 
   // TODO
   1.0 // temperature_compensation;

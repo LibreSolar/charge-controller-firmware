@@ -17,71 +17,14 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#include "mbed.h"
-#include "ChargeController.h"
-
-#define MPPT_20A
-
 // DC/DC converter settings
-const int _pwm_frequency = 70; // kHz
+const int _pwm_frequency = 70; // kHz  70 = good compromise between output ripple and efficiency
 
-const float dcdc_current_min = 0.1;  // A       --> if lower, charger is switched off
-const float solar_voltage_max = 55.0; // V
+#define CAN_SPEED 250000    // 250 kHz
+#define CAN_NODE_ID 10
 
-// State: Standby
-const float solar_voltage_offset_start = 5.0; // V  charging switched on if Vsolar > Vbat + offset
-const float solar_voltage_offset_stop = 1.0;  // V  charging switched off if Vsolar < Vbat + offset
-
-ChargingProfile profile = {
-  6, // num_cells;
-
-  // State: Standby
-  60, // time_limit_recharge; // sec
-  2.3, // cell_voltage_recharge; // V
-
-  // State: CC/bulk
-  10.0, // charge_current_max;  // A        PCB maximum: 20 A
-
-  // State: CV/absorption
-  2.4, // cell_voltage_max;        // max voltage per cell
-  120*60, // time_limit_CV; // sec
-  2.0, // current_cutoff_CV; // A
-
-  // State: float/trickle
-  true, // trickle_enabled;
-  2.3, // cell_voltage_trickle;    // target voltage for trickle charging of lead-acid batteries
-  30*60, // time_trickle_recharge;     // sec
-
-  // State: equalization
-  false, // equalization_enabled;
-  2.5, // cell_voltage_equalization; // V
-  60, // time_limit_equalization; // sec
-  1.0, // current_limit_equalization; // A
-  8, // equalization_trigger_time; // weeks
-  10, // equalization_trigger_deep_cycles; // times
-
-  1.95, // cell_voltage_load_disconnect;
-  2.2, // cell_voltage_load_reconnect;
-
-  // TODO
-  1.0 // temperature_compensation;
-};
-
-
-/*
-// typcial LiFePO4 battery
-const int num_cells = 4;
-const int v_cell_max = 3550;        // max voltage per cell
-const int v_cell_trickle = 3550;    // voltage for trickle charging of lead-acid batteries
-const int v_cell_load_disconnect = 3000;
-const int v_cell_load_reconnect  = 3150;
-*/
-const int thermistorBetaValue = 3435;  // typical value for Semitec 103AT-5 thermistor: 3435
-
-//----------------------------------------------------------------------------
-// global variables
-
-// 20A board (rev. 0.6)
+// 20A board (rev. 0.6-0.8)
+#define PIN_UEXT_DIS  PC_14     // starting from rev. 0.10
 #define PIN_UEXT_TX   PA_2
 #define PIN_UEXT_RX   PA_3
 #define PIN_UEXT_SCL  PB_6
@@ -89,7 +32,7 @@ const int thermistorBetaValue = 3435;  // typical value for Semitec 103AT-5 ther
 #define PIN_UEXT_MISO PB_4
 #define PIN_UEXT_MOSI PB_5
 #define PIN_UEXT_SCK  PB_3
-#define PIN_UEXT_SSEL PC_13
+#define PIN_UEXT_SSEL PC_13     // PCB rev 0.6: PA_0
 
 #define PIN_SWD_TX    PA_9
 #define PIN_SWD_RX    PA_10
@@ -100,15 +43,23 @@ const int thermistorBetaValue = 3435;  // typical value for Semitec 103AT-5 ther
 #define PIN_LED_GREEN PB_14
 #define PIN_LED_RED   PB_15
 #define PIN_LOAD_DIS  PB_2
+#define PIN_5V_OUT_EN PB_12
+
+#define PIN_CAN_RX    PB_8
+#define PIN_CAN_TX    PB_9
+#define PIN_CAN_STB   PA_15
 
 #define PIN_REF_I_DCDC PA_4
 
 #define PIN_V_REF    PA_5
 #define PIN_V_BAT    PA_6
 #define PIN_V_SOLAR  PA_7
-#define PIN_TEMP_INT PA_1
 #define PIN_TEMP_BAT PA_0
+#define PIN_TEMP_INT PA_1
 #define PIN_I_LOAD   PB_0
 #define PIN_I_DCDC   PB_1
+
+#define PIN_EEPROM_SCL PB_10
+#define PIN_EEPROM_SDA PB_11
 
 #endif

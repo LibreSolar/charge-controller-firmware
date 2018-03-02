@@ -23,39 +23,41 @@
 
 #include "mbed.h"
 
+// default values for 12V lead-acid battery
 struct ChargingProfile {
-    int num_cells;
+    int num_cells = 6;
 
     // State: Standby
-    int time_limit_recharge; // sec
-    float cell_voltage_recharge; // V
+    int time_limit_recharge = 60; // sec
+    float cell_voltage_recharge = 2.3; // V
+    float cell_voltage_absolute_min = 1.8; // V   (under this voltage, battery is considered damaged)
 
     // State: CC/bulk
-    float charge_current_max;  // A        PCB maximum: 20 A
+    float charge_current_max = 20;  // A        PCB maximum: 20 A
 
     // State: CV/absorption
-    float cell_voltage_max;        // max voltage per cell
-    int time_limit_CV; // sec
-    float current_cutoff_CV; // A
+    float cell_voltage_max = 2.4;        // max voltage per cell
+    int time_limit_CV = 120*60; // sec
+    float current_cutoff_CV = 2.0; // A
 
     // State: float/trickle
-    bool trickle_enabled;
-    float cell_voltage_trickle;    // target voltage for trickle charging of lead-acid batteries
-    int time_trickle_recharge;     // sec
+    bool trickle_enabled = true;
+    float cell_voltage_trickle = 2.3;    // target voltage for trickle charging of lead-acid batteries
+    int time_trickle_recharge = 30*60;     // sec
 
     // State: equalization
-    bool equalization_enabled;
-    float cell_voltage_equalization; // V
-    int time_limit_equalization; // sec
-    float current_limit_equalization; // A
-    int equalization_trigger_time; // weeks
-    int equalization_trigger_deep_cycles; // times
+    bool equalization_enabled = false;
+    float cell_voltage_equalization = 2.5; // V
+    int time_limit_equalization = 60*60; // sec
+    float current_limit_equalization = 1.0; // A
+    int equalization_trigger_time = 8; // weeks
+    int equalization_trigger_deep_cycles = 10; // times
 
-    float cell_voltage_load_disconnect;
-    float cell_voltage_load_reconnect;
+    float cell_voltage_load_disconnect = 1.95;
+    float cell_voltage_load_reconnect = 2.2;
 
     // TODO
-    float temperature_compensation;
+    float temperature_compensation = 1.0;
 };
 
 // possible charger states

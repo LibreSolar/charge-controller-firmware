@@ -21,6 +21,7 @@ ChargeController::ChargeController(ChargingProfile& profile) :
     _profile(profile)
 {
     _charging_enabled = false;
+    _time_state_changed = -profile.time_limit_recharge;     // start immediately
 }
 
 /*****************************************************************************
@@ -55,6 +56,8 @@ ChargeController::ChargeController(ChargingProfile& profile) :
  */
 
 void ChargeController::update(float battery_voltage, float battery_current) {
+
+    //printf("_time_state_change = %d, time = %d, v_bat = %f, i_bat = %f\n", _time_state_changed, time(NULL), battery_voltage, battery_current);
 
     // Load management
     if (battery_voltage < _profile.cell_voltage_load_disconnect * _profile.num_cells) {

@@ -2,3 +2,8 @@
 .clang_complete
 .gcc-flags.json
 .piolibdeps
+.vscode/browse.vc.db*
+.vscode
+.vscode/c_cpp_properties.json
+.vscode/launch.json
+.vscode/*.db
