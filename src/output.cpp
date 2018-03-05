@@ -20,7 +20,6 @@
 #include "ChargeController.h"
 
 #include "Adafruit_SSD1306.h"
-#include "SSD1308.h"
 #include "display.h"
 
 Serial serial_uext(PIN_UEXT_TX, PIN_UEXT_RX, "serial_uext");
@@ -28,7 +27,6 @@ Serial serial_uext(PIN_UEXT_TX, PIN_UEXT_RX, "serial_uext");
 extern I2C i2c;
 
 Adafruit_SSD1306_I2c oled(i2c, PIN_UEXT_SSEL, 0x78, 64, 128);
-//SSD1308 oled = SSD1308(&i2c, SSD1308_SA0);
 
 extern ChargeController charger;
 extern HalfBridge dcdc;
@@ -126,7 +124,6 @@ void output_serial_json()
 
 void output_oled()
 {
-    i2c.frequency(100000);
     oled.clearDisplay();
 
     oled.drawBitmap(6, 0, bmp_pv_panel, 16, 16, 1);

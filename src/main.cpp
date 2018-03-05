@@ -26,7 +26,7 @@
 #include <math.h>     // log for thermistor calculation
 
 #include "output.h"
-#include "output_can.h"
+//#include "output_can.h"
 
 //----------------------------------------------------------------------------
 // global variables
@@ -37,7 +37,6 @@ CAN can(PIN_CAN_RX, PIN_CAN_TX, CAN_SPEED);
 DigitalOut uext_sda(PIN_UEXT_SDA);
 DigitalOut uext_scl(PIN_UEXT_SCL);
 I2C i2c(PIN_UEXT_SDA, PIN_UEXT_SCL);
-
 
 DeviceState device;
 CalibrationData cal;
@@ -96,8 +95,8 @@ int main()
     time_t last_second = time(NULL);
 
     //tick1.attach(&update_measurements, 0.01);     // too often, may cause crash of MCU
-    tick2.attach(&update_mppt, 0.2);
-    //dcdc.start(0.5);  // for testing only (don't run update_mppt!)
+    //tick2.attach(&update_mppt, 0.2);
+    dcdc.start(0.9);  // for testing only (don't run update_mppt!)
 
     //tick3.attach(&can_send_data, 1);
 
@@ -107,7 +106,7 @@ int main()
 
         update_measurements();
 
-        can_process_outbox();
+        //can_process_outbox();
         //can_process_inbox();
 
         // called once per second
@@ -128,7 +127,7 @@ int main()
                 load_disable = 1;
             }
 
-            can_send_data();
+            //can_send_data();
 
             energy_counter();
 
@@ -190,12 +189,15 @@ void setup()
     serial.printf("\nSerial interface started...\n");
     freopen("/serial", "w", stdout);  // retarget stdout
 
-    can.mode(CAN::Normal);
+    i2c.frequency(400000);
+
+
+    //can.mode(CAN::Normal);
     //can.attach(&can_receive);
 
     // TXFP: Transmit FIFO priority driven by request order (chronologically)
     // NART: No automatic retransmission
-    CAN1->MCR |= CAN_MCR_TXFP | CAN_MCR_NART;
+    //CAN1->MCR |= CAN_MCR_TXFP | CAN_MCR_NART;
 }
 
 void update_mppt()

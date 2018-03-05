@@ -18,6 +18,8 @@
 #include "config.h"
 #include "output.h"
 #include "output_can.h"
+#include "can_msg_queue.h"
+//#include "can_iso_tp.h"
 
 #include "data_objects.h"
 #include "HalfBridge.h"
@@ -28,52 +30,6 @@ extern CAN can;
 
 CANMsgQueue can_tx_queue;
 CANMsgQueue can_rx_queue;
-
-bool CANMsgQueue::full() {
-    return _length == CAN_QUEUE_SIZE;
-}
-
-bool CANMsgQueue::empty() {
-    return _length == 0;
-}
-
-void CANMsgQueue::enqueue(CANMessage msg) {
-    if (!full()) {
-        _queue[(_first + _length) % CAN_QUEUE_SIZE] = msg;
-        _length++;
-    }
-}
-
-int CANMsgQueue::dequeue() {
-    if (!empty()) {
-        _first = (_first + 1) % CAN_QUEUE_SIZE;
-        _length--;
-        return 1;
-    } else {
-        return 0;
-    }
-}
-
-int CANMsgQueue::dequeue(CANMessage& msg) {
-    if (!empty()) {
-        msg = _queue[_first];
-        _first = (_first + 1) % CAN_QUEUE_SIZE;
-        _length--;
-        return 1;
-    } else {
-        return 0;
-    }
-}
-
-int CANMsgQueue::first(CANMessage& msg) {
-    if (!empty()) {
-        msg = _queue[_first];
-        return 1;
-    } else {
-        return 0;
-    }
-}
-
 
 //----------------------------------------------------------------------------
 // preliminary simple CAN functions to send data to the bus for logging

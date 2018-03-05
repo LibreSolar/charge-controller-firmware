@@ -4,6 +4,7 @@
 #include "mbed.h"
 #include "config.h"
 #include "data_objects.h"
+#include "can_msg_queue.h"
 
 
 #define PUB_MULTIFRAME_EN (0x1U << 7)
@@ -18,24 +19,7 @@
 #define TS_LIST     0x05
 
 
-#define CAN_QUEUE_SIZE 30
-
 static uint8_t can_node_id = CAN_NODE_ID;
-
-class CANMsgQueue {
-public:
-    bool full();
-    bool empty();
-    void enqueue(CANMessage msg);
-    int dequeue(CANMessage& msg);
-    int dequeue();
-    int first(CANMessage& msg);
-
-private:
-    CANMessage _queue[CAN_QUEUE_SIZE];
-    int _first;
-    int _length;
-};
 
 void can_send_data();
 void can_receive();
