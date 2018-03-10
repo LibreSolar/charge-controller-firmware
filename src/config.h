@@ -17,8 +17,10 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+#include "mbed.h"
+
 // DC/DC converter settings
-const int _pwm_frequency = 70; // kHz  70 = good compromise between output ripple and efficiency
+#define PWM_FREQUENCY 70 // kHz  70 = good compromise between output ripple and efficiency
 
 #define CAN_SPEED 250000    // 250 kHz
 #define CAN_NODE_ID 10
@@ -51,15 +53,41 @@ const int _pwm_frequency = 70; // kHz  70 = good compromise between output rippl
 
 #define PIN_REF_I_DCDC PA_4
 
-#define PIN_V_REF    PA_5
-#define PIN_V_BAT    PA_6
-#define PIN_V_SOLAR  PA_7
-#define PIN_TEMP_BAT PA_0
-#define PIN_TEMP_INT PA_1
-#define PIN_I_LOAD   PB_0
-#define PIN_I_DCDC   PB_1
+#define PIN_TEMP_BAT PA_0   // ADC_IN0
+#define PIN_TEMP_INT PA_1   // ADC_IN1
+#define PIN_V_REF    PA_5   // ADC_IN5
+#define PIN_V_BAT    PA_6   // ADC_IN6
+#define PIN_V_SOLAR  PA_7   // ADC_IN7
+#define PIN_I_LOAD   PB_0   // ADC_IN8
+#define PIN_I_DCDC   PB_1   // ADC_IN9
 
 #define PIN_EEPROM_SCL PB_10
 #define PIN_EEPROM_SDA PB_11
+
+
+extern float solar_voltage;
+extern float battery_voltage;
+extern float dcdc_current;
+extern float load_current;     
+extern float temp_mosfets;  // °C
+extern float temp_battery;  // °C
+static float ref_voltage;
+
+typedef struct {
+    uint8_t channel_number;
+    PinName pin;
+    float* value;
+    float multiplier;
+} AnalogValue_t;
+
+static const AnalogValue_t adc_channels[] = {
+    { 0, PIN_TEMP_BAT, &temp_battery, 0.0 },
+    { 1, PIN_TEMP_INT, &temp_mosfets, 0.0 },
+    { 5, PIN_V_REF,    &ref_voltage, 0.0 },
+    { 6, PIN_V_BAT,    &battery_voltage, 110.0 / 10 },  // battery voltage divider 100k + 10k
+    { 7, PIN_V_SOLAR,  &solar_voltage, 1056.0 / 56.0 },  // solar voltage divider: 100k + 5.6k
+    { 8, PIN_I_LOAD,   &load_current, 1000 / 2 / (1500.0 / 22.0) },    // op amp gain: 150/2.2 = 68.2, resistor: 2 mOhm
+    { 9, PIN_I_DCDC,   &dcdc_current, 1000 / 2 / (1500.0 / 22.0) }    
+};
 
 #endif

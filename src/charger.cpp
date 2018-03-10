@@ -14,14 +14,33 @@
  * limitations under the License.
  */
 
-#include "ChargeController.h"
+#include "charger.h"
 
 
-ChargeController::ChargeController(ChargingProfile& profile) :
-    _profile(profile)
+static ChargingProfile *_profile;          // all charging profile variables
+static int _state;                         // valid states: enum charger_states
+static int _time_state_changed;            // timestamp of last state change
+static float _target_voltage;              // target voltage for current state
+static float _target_current;              // target current for current state
+static int _time_voltage_limit_reached;    // last time the CV limit was reached
+static bool _charging_enabled;
+static bool _discharging_enabled;
+
+
+// private function
+
+/** Enter a different charger state
+ *
+ *  @param next_state Next state (e.g. CHG_CC)
+ */
+void charger_enter_state(int next_state);
+
+
+void charger_init(ChargingProfile *profile)
 {
+    _profile = profile;
     _charging_enabled = false;
-    _time_state_changed = -profile.time_limit_recharge;     // start immediately
+    _time_state_changed = -profile->time_limit_recharge;     // start immediately
 }
 
 /*****************************************************************************
@@ -55,15 +74,15 @@ ChargeController::ChargeController(ChargingProfile& profile) :
 
  */
 
-void ChargeController::update(float battery_voltage, float battery_current) {
+void charger_update(float battery_voltage, float battery_current) {
 
     //printf("_time_state_change = %d, time = %d, v_bat = %f, i_bat = %f\n", _time_state_changed, time(NULL), battery_voltage, battery_current);
 
     // Load management
-    if (battery_voltage < _profile.cell_voltage_load_disconnect * _profile.num_cells) {
+    if (battery_voltage < _profile->cell_voltage_load_disconnect * _profile->num_cells) {
         _discharging_enabled = false;
     }
-    if (battery_voltage >= _profile.cell_voltage_load_reconnect * _profile.num_cells) {
+    if (battery_voltage >= _profile->cell_voltage_load_reconnect * _profile->num_cells) {
         _discharging_enabled = true;
     }
 
@@ -71,21 +90,21 @@ void ChargeController::update(float battery_voltage, float battery_current) {
     switch (_state) {
 
         case CHG_IDLE: {
-            if  (battery_voltage < _profile.num_cells * _profile.cell_voltage_recharge
-                 && (time(NULL) - _time_state_changed) > _profile.time_limit_recharge)
+            if  (battery_voltage < _profile->num_cells * _profile->cell_voltage_recharge
+                 && (time(NULL) - _time_state_changed) > _profile->time_limit_recharge)
             {
-                _target_current = _profile.charge_current_max;
-                _target_voltage = _profile.num_cells * _profile.cell_voltage_max;
+                _target_current = _profile->charge_current_max;
+                _target_voltage = _profile->num_cells * _profile->cell_voltage_max;
                 _charging_enabled = true;
-                enter_state(CHG_CC);
+                charger_enter_state(CHG_CC);
             }
             break;
         }
 
         case CHG_CC: {
             if (battery_voltage > _target_voltage) {
-                _target_voltage = _profile.num_cells * _profile.cell_voltage_max;
-                enter_state(CHG_CV);
+                _target_voltage = _profile->num_cells * _profile->cell_voltage_max;
+                charger_enter_state(CHG_CV);
             }
             break;
         }
@@ -97,23 +116,23 @@ void ChargeController::update(float battery_voltage, float battery_current) {
 
             // cut-off limit reached because battery full (i.e. CV mode still
             // reached by available solar power within last 2s) or CV period long enough?
-            if ((battery_current < _profile.current_cutoff_CV && (time(NULL) - _time_voltage_limit_reached) < 2)
-                || (time(NULL) - _time_state_changed) > _profile.time_limit_CV)
+            if ((battery_current < _profile->current_cutoff_CV && (time(NULL) - _time_voltage_limit_reached) < 2)
+                || (time(NULL) - _time_state_changed) > _profile->time_limit_CV)
             {
-                if (_profile.equalization_enabled) {
+                if (_profile->equalization_enabled) {
                     // TODO: additional conditions!
-                    _target_voltage = _profile.num_cells * _profile.cell_voltage_equalization;
-                    _target_current = _profile.current_limit_equalization;
-                    enter_state(CHG_EQUALIZATION);
+                    _target_voltage = _profile->num_cells * _profile->cell_voltage_equalization;
+                    _target_current = _profile->current_limit_equalization;
+                    charger_enter_state(CHG_EQUALIZATION);
                 }
-                else if (_profile.trickle_enabled) {
-                    _target_voltage = _profile.num_cells * _profile.cell_voltage_trickle;
-                    enter_state(CHG_TRICKLE);
+                else if (_profile->trickle_enabled) {
+                    _target_voltage = _profile->num_cells * _profile->cell_voltage_trickle;
+                    charger_enter_state(CHG_TRICKLE);
                 }
                 else {
                     _target_current = 0;
                     _charging_enabled = false;
-                    enter_state(CHG_IDLE);
+                    charger_enter_state(CHG_IDLE);
                 }
             }
             break;
@@ -124,11 +143,11 @@ void ChargeController::update(float battery_voltage, float battery_current) {
                 _time_voltage_limit_reached = time(NULL);
             }
 
-            if (time(NULL) - _time_voltage_limit_reached > _profile.time_trickle_recharge)
+            if (time(NULL) - _time_voltage_limit_reached > _profile->time_trickle_recharge)
             {
-                _target_current = _profile.charge_current_max;
-                _target_voltage = _profile.num_cells * _profile.cell_voltage_max;
-                enter_state(CHG_CC);
+                _target_current = _profile->charge_current_max;
+                _target_voltage = _profile->num_cells * _profile->cell_voltage_max;
+                charger_enter_state(CHG_CC);
             }
             // assumtion: trickle does not harm the battery --> never go back to idle
             // (for Li-ion battery: disable trickle!)
@@ -137,34 +156,34 @@ void ChargeController::update(float battery_voltage, float battery_current) {
     }
 }
 
-void ChargeController::enter_state(int next_state)
+void charger_enter_state(int next_state)
 {
     printf("Enter State: %d\n", next_state);
     _time_state_changed = time(NULL);
     _state = next_state;
 }
 
-bool ChargeController::discharging_enabled()
+bool charger_discharging_enabled()
 {
     return _discharging_enabled;
 }
 
-bool ChargeController::charging_enabled()
+bool charger_charging_enabled()
 {
     return _charging_enabled;
 }
 
-int ChargeController::get_state()
+int charger_get_state()
 {
     return _state;
 }
 
-float ChargeController::read_target_current()
+float charger_read_target_current()
 {
     return _target_current;
 }
 
-float ChargeController::read_target_voltage()
+float charger_read_target_voltage()
 {
     return _target_voltage;
 }

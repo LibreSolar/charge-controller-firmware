@@ -18,7 +18,7 @@
 #define CONFIG_12A_H
 
 #include "mbed.h"
-#include "ChargeController.h"
+#include "charger.h"
 
 #define MPPT_12A
 

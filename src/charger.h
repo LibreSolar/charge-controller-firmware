@@ -63,74 +63,54 @@ struct ChargingProfile {
 // possible charger states
 enum charger_states {CHG_IDLE, CHG_CC, CHG_CV, CHG_TRICKLE, CHG_EQUALIZATION};
 
-class ChargeController
-{
-public:
 
-    /** Create Charge Controller object
-     *
-     *  @param profile ChargingProfile struct including voltage limits, etc.
-     */
-    ChargeController(ChargingProfile& profile);
+/** Create Charge Controller object
+ *
+ *  @param profile ChargingProfile struct including voltage limits, etc.
+ */
+void charger_init(ChargingProfile *profile);
 
-    /** Get target battery current for current charger state
-     *
-     *  @returns
-     *    Target current (A)
-     */
-    float read_target_current();
+/** Get target battery current for current charger state
+ *
+ *  @returns
+ *    Target current (A)
+ */
+float charger_read_target_current();
 
-    /** Get target battery voltage for current charger state
-     *
-     *  @returns
-     *    Target voltage (V)
-     */
-    float read_target_voltage();
+/** Get target battery voltage for current charger state
+ *
+ *  @returns
+ *    Target voltage (V)
+ */
+float charger_read_target_voltage();
 
-    /** Determine if charging of the battery is allowed
-     *
-     *  @returns
-     *    True if charging is allowed
-     */
-    bool charging_enabled();
+/** Determine if charging of the battery is allowed
+ *
+ *  @returns
+ *    True if charging is allowed
+ */
+bool charger_charging_enabled();
 
-    /** Determine if discharging the battery is allowed
-     *
-     *  @returns
-     *    True if discharging is allowed
-     */
-    bool discharging_enabled();
+/** Determine if discharging the battery is allowed
+ *
+ *  @returns
+ *    True if discharging is allowed
+ */
+bool charger_discharging_enabled();
 
-    /** Charger state machine update, should be called exactly once per second
-     *
-     *  @param battery_voltage Actual measured battery voltage (V)
-     *  @param battery_current Actual measured battery current (A)
-     */
-    void update(float battery_voltage, float battery_current);
+/** Charger state machine update, should be called exactly once per second
+ *
+ *  @param battery_voltage Actual measured battery voltage (V)
+ *  @param battery_current Actual measured battery current (A)
+ */
+void charger_update(float battery_voltage, float battery_current);
 
-    /** Get current charge controller state
-     *
-     *  @returns
-     *    CHG_IDLE, CHG_CC, CHG_CV, CHG_TRICKLE or CHG_EQUALIZATION
-     */
-    int get_state();
-
-private:
-    /** Enter a different charger state
-     *
-     *  @param next_state Next state (e.g. CHG_CC)
-     */
-    void enter_state(int next_state);
-
-    ChargingProfile& _profile;          // all charging profile variables
-    int _state;                         // valid states: enum charger_states
-    int _time_state_changed;            // timestamp of last state change
-    float _target_voltage;              // target voltage for current state
-    float _target_current;              // target current for current state
-    int _time_voltage_limit_reached;    // last time the CV limit was reached
-    bool _charging_enabled;
-    bool _discharging_enabled;
-};
+/** Get current charge controller state
+ *
+ *  @returns
+ *    CHG_IDLE, CHG_CC, CHG_CV, CHG_TRICKLE or CHG_EQUALIZATION
+ */
+int charger_get_state();
 
 
-#endif // CHARGECONTROLLER_H
+#endif // CHARGER_H

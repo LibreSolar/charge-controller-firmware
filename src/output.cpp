@@ -16,8 +16,8 @@
 
 #include "config.h"
 #include "data_objects.h"
-#include "HalfBridge.h"
-#include "ChargeController.h"
+#include "dcdc.h"
+#include "charger.h"
 
 #include "Adafruit_SSD1306.h"
 #include "display.h"
@@ -28,8 +28,6 @@ extern I2C i2c;
 
 Adafruit_SSD1306_I2c oled(i2c, PIN_UEXT_SSEL, 0x78, 64, 128);
 
-extern ChargeController charger;
-extern HalfBridge dcdc;
 //extern DeviceState device;
 
 extern Serial serial;
@@ -63,7 +61,7 @@ void output_serial()
         fprintf(fp, "%d;", device.load_enabled);
         fprintf(fp, "%.0f;%.0f;", device.input_Wh_day, fabs(device.output_Wh_day));
         fprintf(fp, "%.1f;%.1f;", device.input_Wh_total / 1000.0, fabs(device.output_Wh_total / 1000.0));
-        switch (charger.get_state()) {
+        switch (charger_get_state()) {
             case CHG_IDLE:
                 fprintf(fp, "Standby;");
                 break;
@@ -80,8 +78,8 @@ void output_serial()
                 fprintf(fp, "Error;");
                 break;
         }
-        fprintf(fp, "%.1f;", dcdc.get_duty_cycle() * 100.0);
-        fprintf(fp, "%d;", dcdc.enabled());
+        fprintf(fp, "%.1f;", dcdc_get_duty_cycle() * 100.0);
+        fprintf(fp, "%d;", dcdc_enabled());
         fprintf(fp, "\n");
     }
 
@@ -129,7 +127,7 @@ void output_oled()
     oled.drawBitmap(6, 0, bmp_pv_panel, 16, 16, 1);
     oled.drawBitmap(104, 0, bmp_load, 16, 16, 1);
 
-    if (dcdc.enabled() == false) {
+    if (dcdc_enabled() == false) {
         oled.drawBitmap(27, 3, bmp_disconnected, 32, 8, 1);
     }
     else {
@@ -171,8 +169,8 @@ void output_oled()
     oled.printf("Tot +%4.1fkWh -%4.1fkWh", device.input_Wh_total / 1000.0, fabs(device.output_Wh_total) / 1000.0);
 
     oled.setTextCursor(0, 56);
-    oled.printf("T %.1f PWM %.1f%% ", device.internal_temperature, dcdc.get_duty_cycle() * 100.0);
-    switch (charger.get_state()) {
+    oled.printf("T %.1f PWM %.1f%% ", device.internal_temperature, dcdc_get_duty_cycle() * 100.0);
+    switch (charger_get_state()) {
         case CHG_IDLE:
             oled.printf("Idle\n");
             break;

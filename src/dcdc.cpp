@@ -14,18 +14,17 @@
  * limitations under the License.
  */
 
-#include "HalfBridge.h"
+#include "dcdc.h"
 
-HalfBridge::HalfBridge(int freq_kHz)
-{
-    init_registers();
-    frequency_kHz(freq_kHz);
 
-    _pwm_delta = 1;
-    _enabled = false;
-}
+static int _pwm_resolution;
+static float _min_duty;
+static float _max_duty;
+static int _pwm_delta;
 
-void HalfBridge::init_registers() {
+static bool _enabled;
+
+void dcdc_init(int freq_kHz) {
 
     // Enable peripheral clock of GPIOA and GPIOB
     RCC->AHBENR |= RCC_AHBENR_GPIOAEN | RCC_AHBENR_GPIOBEN;
@@ -69,18 +68,19 @@ void HalfBridge::init_registers() {
 
     // Force update generation (UG = 1)
     TIM1->EGR |= TIM_EGR_UG;
-}
 
-void HalfBridge::frequency_kHz(int freq) {
-
-    _pwm_resolution = SystemCoreClock / (freq * 1000);
+    // set PWM frequency and resolution
+    _pwm_resolution = SystemCoreClock / (freq_kHz * 1000);
 
     // Auto Reload Register
     // center-aligned mode --> divide resolution by 2
     TIM1->ARR = _pwm_resolution / 2;
+
+    _pwm_delta = 1;
+    _enabled = false;
 }
 
-void HalfBridge::set_duty_cycle(float duty) {
+void dcdc_set_duty_cycle(float duty) {
 
     float duty_target;
     // protection against wrong settings which could destroy the hardware
@@ -97,17 +97,17 @@ void HalfBridge::set_duty_cycle(float duty) {
     TIM1->CCR1 = _pwm_resolution / 2 * duty_target;
 }
 
-void HalfBridge::duty_cycle_step(int delta)
+void dcdc_duty_cycle_step(int delta)
 {
     float duty_target;
     duty_target = (float)(TIM1->CCR1 + delta) / (_pwm_resolution / 2);
 
     // protection against wrong settings which could destroy the hardware
     if (duty_target < _min_duty) {
-        set_duty_cycle(_min_duty);
+        dcdc_set_duty_cycle(_min_duty);
     }
     else if (duty_target > _max_duty) {
-        set_duty_cycle(_max_duty);
+        dcdc_set_duty_cycle(_max_duty);
     }
     else {
         TIM1->CCR1 = TIM1->CCR1 + delta;
@@ -115,12 +115,12 @@ void HalfBridge::duty_cycle_step(int delta)
 }
 
 
-float HalfBridge::get_duty_cycle() {
+float dcdc_get_duty_cycle() {
     return (float)(TIM1->CCR1) / (_pwm_resolution / 2);;
 }
 
 
-void HalfBridge::deadtime_ns(int deadtime) {
+void dcdc_deadtime_ns(int deadtime) {
 
     uint8_t deadtime_clocks = (SystemCoreClock / 1000 / 1000) * deadtime / 1000;
 
@@ -132,18 +132,18 @@ void HalfBridge::deadtime_ns(int deadtime) {
 }
 
 
-void HalfBridge::start(float pwm_duty) {
-    set_duty_cycle(pwm_duty);
+void dcdc_start(float pwm_duty) {
+    dcdc_set_duty_cycle(pwm_duty);
 
     // Break and Dead-Time Register
     // MOE  = 1: Main output enable
-    TIM1->BDTR |= TIM_BDTR_MOE;
+    //TIM1->BDTR |= TIM_BDTR_MOE;
 
     _enabled = true;
 }
 
 
-void HalfBridge::stop() {
+void dcdc_stop() {
 
     // Break and Dead-Time Register
     // MOE  = 1: Main output enable
@@ -152,13 +152,13 @@ void HalfBridge::stop() {
     _enabled = false;
 }
 
-bool HalfBridge::enabled() {
+bool dcdc_enabled() {
 
     return _enabled;
 }
 
 
-void HalfBridge::lock_settings() {
+void dcdc_lock_settings() {
 
     // TODO: does not work properly... maybe HW bug?
 
@@ -166,16 +166,16 @@ void HalfBridge::lock_settings() {
     TIM1->BDTR |= TIM_BDTR_LOCK_1 | TIM_BDTR_LOCK_0;
 }
 
-void HalfBridge::duty_cycle_limits(float min_duty, float max_duty) {
+void dcdc_duty_cycle_limits(float min_duty, float max_duty) {
 
     _min_duty = min_duty;
     _max_duty = max_duty;
 
     // adjust set value to new limits
-    if (get_duty_cycle() < _min_duty) {
-        set_duty_cycle(_min_duty);
+    if (dcdc_get_duty_cycle() < _min_duty) {
+        dcdc_set_duty_cycle(_min_duty);
     }
-    else if (get_duty_cycle() > _max_duty) {
-        set_duty_cycle(_max_duty);
+    else if (dcdc_get_duty_cycle() > _max_duty) {
+        dcdc_set_duty_cycle(_max_duty);
     }
 }

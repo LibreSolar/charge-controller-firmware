@@ -1,6 +1,10 @@
 # MPPT Charger Software
 Software based on ARM mbed library for the LibreSolar 20 A MPPT solar charge controller
 
+## Important remarks
+
+- Do **not** use mbed Ticker class, as it disturbs the timer settings and might cause the charge controller to crash. In addition to that, it contains a lot of overhead and is not very efficient. Timers should be programmed bare metal. Currently, TIM1 is used for PWM generation and TIM15 to trigger ADC readings.
+
 ## State machine in class ChargeController
 
 The charge management is implemented using a state machine with the following states:

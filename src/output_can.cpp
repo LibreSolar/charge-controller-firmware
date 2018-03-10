@@ -22,8 +22,8 @@
 //#include "can_iso_tp.h"
 
 #include "data_objects.h"
-#include "HalfBridge.h"
-#include "ChargeController.h"
+#include "dcdc.h"
+#include "charger.h"
 
 extern Serial serial;
 extern CAN can;
@@ -40,13 +40,15 @@ void can_pub_msg(DataObject_t data_obj)
     union float2bytes { float f; char b[4]; } f2b;     // for conversion of float to single bytes
 
     int msg_priority = 6;
-    int msg_id_template = msg_priority << 26 | can_node_id;
 
     CANMessage msg;
     msg.format = CANExtended;
     msg.type = CANData;
 
-    msg.id = msg_id_template | data_obj.id << 8;
+    msg.id = msg_priority << 26
+        | (1U << 24) | (1U << 24)   // identify as publication message
+        | data_obj.id << 8
+        | can_node_id;
 
     // first byte: TinyTP-header or data type for single frame message
     // currently: no multi-frame and no timestamp
@@ -119,10 +121,10 @@ void can_pub_msg(DataObject_t data_obj)
         case T_BOOL:
             msg.len = 1;
             if (*((bool*)data_obj.data) == true) {
-                msg.data[0] = 0xf5;     // simple type: true
+                msg.data[0] = TS_T_TRUE;     // simple type: true
             }
             else {
-                msg.data[0] = 0xf4;     // simple type: false
+                msg.data[0] = TS_T_FALSE;     // simple type: false
             }
             break;
         case T_STRING:

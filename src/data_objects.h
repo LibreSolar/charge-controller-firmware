@@ -47,7 +47,7 @@ struct CalibrationData {
     int32_t dcdc_restart_interval = 60; // s    --> when should we retry to start charging after low solar power cut-off?
     float solar_voltage_offset_start = 5.0; // V  charging switched on if Vsolar > Vbat + offset
     float solar_voltage_offset_stop = 1.0;  // V  charging switched off if Vsolar < Vbat + offset
-    int32_t thermistorBetaValue = 3435;  // typical value for Semitec 103AT-5 thermistor: 3435
+    int32_t thermistor_beta_value = 3435;  // typical value for Semitec 103AT-5 thermistor: 3435
 };
 extern CalibrationData cal;
 
@@ -132,7 +132,7 @@ static const DataObject_t dataObjects[] {
     {++oid,   ACCESS_READ | ACCESS_WRITE, TS_C_CAL, T_INT32,  0, (void*) &(cal.dcdc_restart_interval), "tDcdcRestart"},
     {++oid,   ACCESS_READ | ACCESS_WRITE, TS_C_CAL, T_FLOAT32, 0, (void*) &(cal.solar_voltage_offset_start), "vSolarOffsetStart"},
     {++oid,   ACCESS_READ | ACCESS_WRITE, TS_C_CAL, T_FLOAT32, 0, (void*) &(cal.solar_voltage_offset_stop), "vSolarOffsetStop"},
-    {++oid,   ACCESS_READ | ACCESS_WRITE, TS_C_CAL, T_INT32,  0, (void*) &(cal.thermistorBetaValue), "thermistorBetaValue"}
+    {++oid,   ACCESS_READ | ACCESS_WRITE, TS_C_CAL, T_INT32,  0, (void*) &(cal.thermistor_beta_value), "thermistorBetaValue"}
 };
 
 #endif

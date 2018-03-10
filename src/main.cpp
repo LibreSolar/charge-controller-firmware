@@ -19,34 +19,28 @@
 #include "mbed.h"
 #include "config.h"
 #include "data_objects.h"
-#include "HalfBridge.h"
-#include "AnalogValue.h"
-#include "ChargeController.h"
+#include "dcdc.h"
+#include "charger.h"
+#include "adc_dma.h"
+
 //#include "24LCxx_I2C.h"
 #include <math.h>     // log for thermistor calculation
 
 #include "output.h"
-//#include "output_can.h"
+#include "output_can.h"
 
 //----------------------------------------------------------------------------
 // global variables
 
 Serial serial(PIN_SWD_TX, PIN_SWD_RX, "serial");
 CAN can(PIN_CAN_RX, PIN_CAN_TX, CAN_SPEED);
-
-DigitalOut uext_sda(PIN_UEXT_SDA);
-DigitalOut uext_scl(PIN_UEXT_SCL);
 I2C i2c(PIN_UEXT_SDA, PIN_UEXT_SCL);
 
 DeviceState device;
 CalibrationData cal;
-
 ChargingProfile profile;
-ChargeController charger(profile);
 
-// PWM will be generated on pins PA8 (TIM1_CH1) and PB13 (TIM1_CH1N)
-HalfBridge dcdc(_pwm_frequency);
-float dcdc_power;    // saves previous output power
+float dcdc_power;    // stores previous output power
 int pwm_delta = 1;
 int dcdc_off_timestamp = -cal.dcdc_restart_interval;    // start immediately
 
@@ -58,17 +52,15 @@ DigitalOut out_5v_enable(PIN_5V_OUT_EN);
 DigitalOut uext_disable(PIN_UEXT_DIS);
 
 AnalogOut ref_i_dcdc(PIN_REF_I_DCDC);
-AnalogIn v_ref(PIN_V_REF);
 
-AnalogValue solar_voltage(PIN_V_SOLAR, 1056.0 / 56.0, 4, 0.2); // solar voltage divider o-- 100k --o-- 5.6k --o
-AnalogValue battery_voltage(PIN_V_BAT, 110 / 10, 4, 0.2); // battery voltage divider o-- 100k --o-- 10k --o
-AnalogValue dcdc_current(PIN_I_DCDC, 1000 / 2 / (1500.0 / 22.0), 4, 0.3); // op amp gain: 150/2.2 = 68.2, resistor: 2 mOhm
-AnalogValue load_current(PIN_I_LOAD, 1000 / 2 / (1500.0 / 22.0));
-AnalogValue thermistor_mosfets(PIN_TEMP_INT, 1.0);
-AnalogValue thermistor_battery(PIN_TEMP_BAT, 1.0);
-float temp_mosfets; // °C
-
-//C24LCXX_I2C eeprom(PIN_EEPROM_SDA, PIN_EEPROM_SCL, 0x07);
+float solar_voltage;
+float battery_voltage;
+float dcdc_current;
+float dcdc_current_offset = 0.0;
+float load_current;     
+float load_current_offset = 0.0;
+float temp_mosfets;  // °C
+float temp_battery;  // °C
 
 // for daily energy counting
 int seconds_zero_solar = 0;
@@ -80,54 +72,49 @@ bool nighttime = false;
 // function prototypes
 
 void setup();
-void update_measurements();
 void energy_counter();
 void update_mppt();
+
+void init_watchdog(float timeout);      // timeout in seconds
+void feed_the_dog();
 
 //----------------------------------------------------------------------------
 int main()
 {
-    Ticker tick1, tick2, tick3;
+    Ticker tick1, tick2;
 
     setup();
     wait(3);    // safety feature: be able to re-flash before starting
 
+    init_watchdog(1.0);
+
     time_t last_second = time(NULL);
-
-    //tick1.attach(&update_measurements, 0.01);     // too often, may cause crash of MCU
-    //tick2.attach(&update_mppt, 0.2);
-    dcdc.start(0.9);  // for testing only (don't run update_mppt!)
-
-    //tick3.attach(&can_send_data, 1);
-
-    int count_10s = 0;
 
     while(1) {
 
         update_measurements();
+        update_mppt();
 
-        //can_process_outbox();
-        //can_process_inbox();
+        can_process_outbox();
+        can_process_inbox();
 
         // called once per second
         if (time(NULL) - last_second >= 1) {
             last_second = time(NULL);
-            count_10s++;
 
-            serial.printf("Still alive... time: %d\n", time(NULL));
-            //serial.printf("Clock speed: %d\n", SystemCoreClock);
+            //serial.printf("Still alive... time: %d\n", time(NULL));
 
             // updates charger state machine
-            charger.update(battery_voltage.read(), dcdc_current.read());
+            charger_update(battery_voltage, dcdc_current);
 
             // load management
-            if (charger.discharging_enabled()) {
+            if (charger_discharging_enabled()) {
                 load_disable = 0;
             } else {
                 load_disable = 1;
             }
 
-            //can_send_data();
+            can_send_data();
 
             energy_counter();
 
@@ -140,18 +127,11 @@ int main()
             device.internal_temperature = temp_mosfets;
             device.load_enabled = !load_disable;
 
-            #ifdef WIFI_ENABLED
-                if (count_10s >= 10) {
-                    count_10s = 0;
-                    //output_wifi(device, charger, dcdc);
-                }
-            #else
-                //output_serial_json();
-                output_oled();
-            #endif
+            output_oled();
 
             fflush(stdout);
         }
+        feed_the_dog();
         //sleep();    // wake-up by ticker interrupts
     }
 }
@@ -163,7 +143,7 @@ void setup()
     load_disable = 1;
     can_disable = 0;
     out_5v_enable = 0;
-    //uext_disable = 0;
+    uext_disable = 0;
     ref_i_dcdc = 0.1;         // 0 for buck, 1 for boost (TODO)
 
     // adjust default values for 12V LiFePO4 battery
@@ -174,91 +154,97 @@ void setup()
     profile.cell_voltage_load_disconnect = 3.0;
     profile.cell_voltage_load_reconnect  = 3.15;
 
-    dcdc.deadtime_ns(300);
-    dcdc.lock_settings();
-    dcdc.duty_cycle_limits((float) profile.cell_voltage_load_disconnect * profile.num_cells / cal.solar_voltage_max, 0.97);
-
-    wait(0.2);
-    update_measurements();
-
-    dcdc_current.calibrate_offset(0.0);
-    load_current.calibrate_offset(0.0);
-
-    //serial.baud(9600);
     serial.baud(115200);
-    serial.printf("\nSerial interface started...\n");
+    printf("\nSerial interface started...\n");
     freopen("/serial", "w", stdout);  // retarget stdout
 
     i2c.frequency(400000);
 
+    dcdc_init(PWM_FREQUENCY);
+    dcdc_deadtime_ns(300);
+    dcdc_lock_settings();
+    dcdc_duty_cycle_limits((float) profile.cell_voltage_load_disconnect * profile.num_cells / cal.solar_voltage_max, 0.97);
 
-    //can.mode(CAN::Normal);
-    //can.attach(&can_receive);
+    charger_init(&profile);
+    
+    setup_adc_timer();
+    setup_adc();
+    start_dma();
+
+    wait(0.2);      // wait for ADC to collect some measurement values
+
+    update_measurements();
+    dcdc_current_offset = -dcdc_current;
+    load_current_offset = -load_current;
+
+    can.mode(CAN::Normal);
+    can.attach(&can_receive);
 
     // TXFP: Transmit FIFO priority driven by request order (chronologically)
     // NART: No automatic retransmission
-    //CAN1->MCR |= CAN_MCR_TXFP | CAN_MCR_NART;
+    CAN1->MCR |= CAN_MCR_TXFP | CAN_MCR_NART;
 }
 
 void update_mppt()
 {
     float dcdc_power_new = battery_voltage * dcdc_current;
-
-    if (dcdc.enabled()) {
+/*
+    if (dcdc_enabled()) {
         serial.printf("B: %.2fV, %.2fA, S: %.2fV, Pwr: %.2fW, Charger: %d, DCDC: %d, PWM: %.1f\n",
-            battery_voltage.read(), dcdc_current.read(), solar_voltage.read(), dcdc_power_new,
-            charger.get_state(), dcdc.enabled(), dcdc.get_duty_cycle() * 100.0);
+            battery_voltage, dcdc_current, solar_voltage, dcdc_power_new,
+            charger_get_state(), dcdc_enabled(), dcdc_get_duty_cycle() * 100.0);
     }
-
-    if (dcdc.enabled() == false && charger.charging_enabled() == true
-        && battery_voltage < charger.read_target_voltage()
+*/
+    if (dcdc_enabled() == false && charger_charging_enabled() == true
+        && battery_voltage < charger_read_target_voltage()
         && battery_voltage > (profile.cell_voltage_absolute_min * profile.num_cells)
         && solar_voltage > battery_voltage + cal.solar_voltage_offset_start
         && time(NULL) > dcdc_off_timestamp + cal.dcdc_restart_interval)
     {
         serial.printf("MPPT start!\n");
-        dcdc.start(battery_voltage / (solar_voltage - 3.0));    // TODO: use factor (1V too low!)
+        dcdc_start(battery_voltage / (solar_voltage - 3.0));    // TODO: use factor (1V too low!)
         led_red = 1;
     }
-    else if (dcdc.enabled() == true &&
+    else if (dcdc_enabled() == true &&
         ((solar_voltage < battery_voltage + cal.solar_voltage_offset_stop
         && dcdc_current < cal.dcdc_current_min)
-        || charger.charging_enabled() == false))
+        || charger_charging_enabled() == false))
     {
         serial.printf("MPPT stop!\n");
-        dcdc.stop();
+        dcdc_stop();
         led_red = 0;
         dcdc_off_timestamp = time(NULL);
     }
-    else if (dcdc.enabled()) {
+    else if (dcdc_enabled()) {
 
-        if (battery_voltage > charger.read_target_voltage()
-            || dcdc_current > charger.read_target_current()
+        if (battery_voltage > charger_read_target_voltage()
+            || dcdc_current > charger_read_target_current()
             || temp_mosfets > 80)
         {
             // increase input voltage --> lower output voltage and decreased current
-            dcdc.duty_cycle_step(-1);
+            dcdc_duty_cycle_step(-1);
         }
         else if (dcdc_current < cal.dcdc_current_min) {
             // very low current --> decrease input voltage to increase current
             pwm_delta = 1;
-            dcdc.duty_cycle_step(1);
+            dcdc_duty_cycle_step(1);
         }
         else {
-            //serial.printf("P: %.2f, P_prev: %.2f, v_bat: %.2f, i_bat: %.2f, v_target: %.2f, i_target: %.2f, PWM: %.1f\n",
-            //    dcdc_power_new, dcdc_power, battery_voltage.read(), dcdc_current.read(), charger.read_target_voltage(), charger.read_target_current(), dcdc.get_duty_cycle() * 100.0);
+            /*
+            serial.printf("P: %.2f, P_prev: %.2f, v_bat: %.2f, i_bat: %.2f, v_target: %.2f, i_target: %.2f, PWM: %.1f\n",
+                dcdc_power_new, dcdc_power, battery_voltage, dcdc_current, charger_read_target_voltage(), charger_read_target_current(), dcdc_get_duty_cycle() * 100.0);
+            */
 
             // start MPPT
             if (dcdc_power > dcdc_power_new) {
                 pwm_delta = -pwm_delta;
             }
-            dcdc.duty_cycle_step(pwm_delta);
+            dcdc_duty_cycle_step(pwm_delta);
         }
     }
 
     dcdc_power = dcdc_power_new;
 }
-
 
 //----------------------------------------------------------------------------
 // must be called once per second
@@ -294,25 +280,81 @@ void energy_counter()
 }
 
 
-//----------------------------------------------------------------------------
-void update_measurements()
+// configures IWDG (timeout in seconds)
+void init_watchdog(float timeout) {
+
+    #define LSI_FREQ 40000     // approx. 40 kHz according to RM0091
+    
+    uint16_t prescaler;
+    float calculated_timeout;
+
+    IWDG->KR = 0x5555; // Disable write protection of IWDG registers
+
+    // set prescaler
+    if ((timeout * (LSI_FREQ/4)) < 0x7FF) {
+        IWDG->PR = IWDG_PRESCALER_4;
+        prescaler = 4;
+    }
+    else if ((timeout * (LSI_FREQ/8)) < 0xFF0) {
+        IWDG->PR = IWDG_PRESCALER_8;
+        prescaler = 8;
+    }
+    else if ((timeout * (LSI_FREQ/16)) < 0xFF0) {
+        IWDG->PR = IWDG_PRESCALER_16;
+        prescaler = 16;
+    }
+    else if ((timeout * (LSI_FREQ/32)) < 0xFF0) {
+        IWDG->PR = IWDG_PRESCALER_32;
+        prescaler = 32;
+    }
+    else if ((timeout * (LSI_FREQ/64)) < 0xFF0) {
+        IWDG->PR = IWDG_PRESCALER_64;
+        prescaler = 64;
+    }
+    else if ((timeout * (LSI_FREQ/128)) < 0xFF0) {
+        IWDG->PR = IWDG_PRESCALER_128;
+        prescaler = 128;
+    }
+    else {
+        IWDG->PR = IWDG_PRESCALER_256;
+        prescaler = 256;
+    }
+    
+    // set reload value (between 0 and 0x0FFF)
+    IWDG->RLR = (uint32_t)(timeout * (LSI_FREQ/prescaler));
+    
+    calculated_timeout = ((float)(prescaler * IWDG->RLR)) / LSI_FREQ;
+    printf("WATCHDOG set with prescaler:%d reload value: 0x%X - timeout:%f\n",prescaler, IWDG->RLR, calculated_timeout);
+    
+    IWDG->KR = 0xAAAA;  // reload
+    IWDG->KR = 0xCCCC;  // start
+
+    feed_the_dog();
+}
+ 
+// Reset the watchdog timer
+void feed_the_dog()
 {
-#ifdef MPPT_20A
-    //AnalogValue::update_reference_voltage(v_ref, 2.5);
-#endif
+    IWDG->KR = 0xAAAA;
+}
 
-    solar_voltage.update();
-    battery_voltage.update();
-    dcdc_current.update();
-    load_current.update();
+// this function is called by mbed if a serious error occured: error() function called
+void mbed_die(void)
+{
+    dcdc_stop();
+    load_disable = 1;
 
-    thermistor_mosfets.update();
+    while (1) {
+        led_red = 1;
+        led_green = 0;
+        wait_ms(100);
+        led_red = 0;
+        led_green = 1;
+        wait_ms(100);
 
-    // resistance of NTC (Ohm)
-    unsigned long rts = 10000.0 * thermistor_mosfets.read() / (3.3 - thermistor_mosfets.read());
-    // Temperature calculation using Beta equation for 10k thermistor
-    // (25°C reference temperature for Beta equation assumed)
-    temp_mosfets = 1.0/(1.0/(273.15+25) + 1.0/cal.thermistorBetaValue*log(rts/10000.0)) - 273.15;
+        // stay here to indicate something was wrong
+        feed_the_dog();
+    }
 }
 
 #endif
