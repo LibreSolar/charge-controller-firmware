@@ -17,15 +17,13 @@
 #ifndef UNIT_TEST
 
 #include "mbed.h"
+#include <math.h>     // log for thermistor calculation
+
 #include "config.h"
 #include "data_objects.h"
 #include "dcdc.h"
 #include "charger.h"
 #include "adc_dma.h"
-
-//#include "24LCxx_I2C.h"
-#include <math.h>     // log for thermistor calculation
-
 #include "output.h"
 #include "output_can.h"
 
@@ -92,8 +90,11 @@ int main()
 
     while(1) {
 
-        update_measurements();
-        update_mppt();
+        if (new_reading_available) {
+            update_measurements();
+            update_mppt();
+            new_reading_available = false;
+        }
 
         can_process_outbox();
         can_process_inbox();

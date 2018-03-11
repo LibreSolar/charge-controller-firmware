@@ -85,7 +85,7 @@ static const AnalogValue_t adc_channels[] = {
     { 1, PIN_TEMP_INT, &temp_mosfets, 0.0 },
     { 5, PIN_V_REF,    &ref_voltage, 0.0 },
     { 6, PIN_V_BAT,    &battery_voltage, 110.0 / 10 },  // battery voltage divider 100k + 10k
-    { 7, PIN_V_SOLAR,  &solar_voltage, 1056.0 / 56.0 },  // solar voltage divider: 100k + 5.6k
+    { 7, PIN_V_SOLAR,  &solar_voltage, 105.6 / 5.6 },  // solar voltage divider: 100k + 5.6k
     { 8, PIN_I_LOAD,   &load_current, 1000 / 2 / (1500.0 / 22.0) },    // op amp gain: 150/2.2 = 68.2, resistor: 2 mOhm
     { 9, PIN_I_DCDC,   &dcdc_current, 1000 / 2 / (1500.0 / 22.0) }    
 };

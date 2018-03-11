@@ -32,6 +32,7 @@ volatile uint32_t adc_filtered[NUM_ADC_CH] = {0,0,0,0,0,0,0};
 #define ADC_FILTER_CONST 5          // filter multiplier = 1/(2^ADC_FILTER_CONST)
 volatile int num_adc_conversions;
 
+bool new_reading_available = false;
 
 extern float solar_voltage;
 extern float battery_voltage;
@@ -133,6 +134,9 @@ extern "C" void DMA1_Channel1_IRQHandler(void)
             adc_filtered[i] += (uint32_t)adc_readings[i] - (adc_filtered[i] >> ADC_FILTER_CONST);
         }
         num_adc_conversions++;
+        if (num_adc_conversions % 100 == 0) {
+            new_reading_available = true;
+        }
         //DMA1->IFCR |= DMA_IFCR_CTCIF1;
     }
     DMA1->IFCR |= 0x0FFFFFFF;       // clear all interrupt registers
@@ -152,6 +156,7 @@ void setup_adc()
     uint32_t function = (uint32_t)NC;
     analogin_t _adc;
     analogin_t* obj = &_adc;
+    static bool adc_calibrated = false;
 
     for (unsigned int i = 0; i < sizeof(adc_channels)/sizeof(AnalogValue_t); i++) {
 
@@ -189,6 +194,12 @@ void setup_adc()
 
         if (HAL_ADC_Init(&obj->handle) != HAL_OK) {
             error("Cannot initialize ADC");
+        }
+
+        // ADC calibration is done only once
+        if (!adc_calibrated) {
+            adc_calibrated = true;
+            HAL_ADCEx_Calibration_Start(&obj->handle);
         }
 
         ADC_ChannelConfTypeDef sConfig = {0};
@@ -231,9 +242,6 @@ void setup_adc()
     if (HAL_ADC_Init(&obj->handle) != HAL_OK) {
         error("Cannot initialize ADC");
     }
-
-    // calibrate ADC (doesn't matte that it's after first reading of ADC value)
-    HAL_ADCEx_Calibration_Start(&obj->handle);
 
     // ADC sampling time register
     // 000: 1.5 ADC clock cycles

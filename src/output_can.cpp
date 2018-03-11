@@ -35,6 +35,10 @@ CANMsgQueue can_rx_queue;
 // preliminary simple CAN functions to send data to the bus for logging
 // Data format based on CBOR specification (except for first byte, which uses
 // only 6 bit to specify type and transport protocol)
+//
+// Protocol details:
+// https://github.com/LibreSolar/ThingSet/blob/master/can.md
+
 void can_pub_msg(DataObject_t data_obj)
 {
     union float2bytes { float f; char b[4]; } f2b;     // for conversion of float to single bytes
@@ -136,7 +140,9 @@ void can_pub_msg(DataObject_t data_obj)
 void can_send_data()
 {
     for (unsigned int i = 0; i < sizeof(dataObjects)/sizeof(DataObject_t); ++i) {
-        can_pub_msg(dataObjects[i]);
+        if (dataObjects[i].category == TS_C_OUTPUT) {
+            can_pub_msg(dataObjects[i]);
+        }
     }
 }
 

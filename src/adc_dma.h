@@ -18,6 +18,10 @@
 #ifndef ADC_DMA_H
 #define ADC_DMA_H
 
+#include "mbed.h"
+
+extern bool new_reading_available;
+
 void update_measurements();
 
 void setup_adc_timer();

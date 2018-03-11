@@ -79,7 +79,6 @@ typedef struct {
 #define TS_T_ARRAY 16    // 0x10
 #define TS_T_MAP   20    // 0x14
 
-
 // ThingSet CAN special types and simple values
 #define TS_T_TIMESTAMP    32  // 0x20
 #define TS_T_DECIMAL_FRAC 36  // 0x24

@@ -1,11 +1,14 @@
 # MPPT Charger Software
+
 Software based on ARM mbed library for the LibreSolar 20 A MPPT solar charge controller
 
 ## Important remarks
 
 - Do **not** use mbed Ticker class, as it disturbs the timer settings and might cause the charge controller to crash. In addition to that, it contains a lot of overhead and is not very efficient. Timers should be programmed bare metal. Currently, TIM1 is used for PWM generation and TIM15 to trigger ADC readings.
 
-## State machine in class ChargeController
+- The PWM signal generation for the DC/DC controller inside the charge controller is done in the file dcdc.cpp. Most of the dangerous functions which could turn your MOSFETs into magic smoke are implemented here, so don't touch it unless you know what you're doing.
+
+## State machine of the charge controller
 
 The charge management is implemented using a state machine with the following states:
 
@@ -26,6 +29,4 @@ This mode is only used for lead-acid batteries after several deep-discharge cycl
 
 ![Text](img/MPPT_flow_chart.png)
 
-## DC/DC controller using class HalfBridge
 
-The PWM signal generation for the DC/DC controller inside the charge controller is done by a separate class HalfBridge. Most of the dangerous functions which could blow up your MOSFETs are implemented here.

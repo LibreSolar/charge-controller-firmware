@@ -137,7 +137,7 @@ void dcdc_start(float pwm_duty) {
 
     // Break and Dead-Time Register
     // MOE  = 1: Main output enable
-    //TIM1->BDTR |= TIM_BDTR_MOE;
+    TIM1->BDTR |= TIM_BDTR_MOE;
 
     _enabled = true;
 }
