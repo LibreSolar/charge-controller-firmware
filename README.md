@@ -29,4 +29,6 @@ This mode is only used for lead-acid batteries after several deep-discharge cycl
 
 ![Text](img/MPPT_flow_chart.png)
 
+## Toolchain and flashing instructions
 
+See the Libre Solar website for a detailed instruction how to [develop software](http://libre.solar/docs/toolchain/) and [flash new firmware](http://libre.solar/docs/flashing/).
