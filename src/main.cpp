@@ -48,6 +48,7 @@ DigitalOut load_disable(PIN_LOAD_DIS);
 DigitalOut can_disable(PIN_CAN_STB);
 DigitalOut out_5v_enable(PIN_5V_OUT_EN);
 DigitalOut uext_disable(PIN_UEXT_DIS);
+DigitalOut vbus_disable(PIN_V_BUS_DIS);
 
 AnalogOut ref_i_dcdc(PIN_REF_I_DCDC);
 
@@ -97,7 +98,7 @@ int main()
         }
 
         can_process_outbox();
-        can_process_inbox();
+        //can_process_inbox();
 
         // called once per second
         if (time(NULL) - last_second >= 1) {
@@ -124,7 +125,7 @@ int main()
             device.bus_current = dcdc_current;
             device.input_current = dcdc_power / solar_voltage;
             device.load_current = load_current;
-            device.external_temperature = temp_mosfets;
+            device.external_temperature = temp_battery;
             device.internal_temperature = temp_mosfets;
             device.load_enabled = !load_disable;
 
@@ -140,12 +141,13 @@ int main()
 //----------------------------------------------------------------------------
 void setup()
 {
-    led_green = 1;
+    led_red = 1;
     load_disable = 1;
     can_disable = 0;
     out_5v_enable = 0;
     uext_disable = 0;
     ref_i_dcdc = 0.1;         // 0 for buck, 1 for boost (TODO)
+    vbus_disable = 0;
 
     // adjust default values for 12V LiFePO4 battery
     profile.num_cells = 4;
@@ -179,7 +181,7 @@ void setup()
     load_current_offset = -load_current;
 
     can.mode(CAN::Normal);
-    can.attach(&can_receive);
+    //can.attach(&can_receive);
 
     // TXFP: Transmit FIFO priority driven by request order (chronologically)
     // NART: No automatic retransmission
@@ -204,7 +206,7 @@ void update_mppt()
     {
         serial.printf("MPPT start!\n");
         dcdc_start(battery_voltage / (solar_voltage - 3.0));    // TODO: use factor (1V too low!)
-        led_red = 1;
+        led_green = 1;
     }
     else if (dcdc_enabled() == true &&
         ((solar_voltage < battery_voltage + cal.solar_voltage_offset_stop
@@ -213,7 +215,7 @@ void update_mppt()
     {
         serial.printf("MPPT stop!\n");
         dcdc_stop();
-        led_red = 0;
+        led_green = 0;
         dcdc_off_timestamp = time(NULL);
     }
     else if (dcdc_enabled()) {

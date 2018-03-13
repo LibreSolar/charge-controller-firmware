@@ -113,7 +113,7 @@ static uint16_t oid;
 
 static const DataObject_t dataObjects[] {
     // output data
-    {oid=0, ACCESS_READ, TS_C_OUTPUT, T_FLOAT32, 0, (void*) &(device.bus_voltage), "vBat"},
+    {oid=0x4001, ACCESS_READ, TS_C_OUTPUT, T_FLOAT32, 0, (void*) &(device.bus_voltage), "vBat"},
     {++oid, ACCESS_READ, TS_C_OUTPUT, T_FLOAT32, 0, (void*) &(device.input_voltage), "vSolar"},
     {++oid, ACCESS_READ, TS_C_OUTPUT, T_FLOAT32, 0, (void*) &(device.bus_current), "iBat"},
     {++oid, ACCESS_READ, TS_C_OUTPUT, T_FLOAT32, 0, (void*) &(device.load_current), "iLoad"},
@@ -126,7 +126,7 @@ static const DataObject_t dataObjects[] {
     {++oid, ACCESS_READ, TS_C_OUTPUT, T_FLOAT32, 0, (void*) &(device.output_Wh_total), "eOutputTotal_Wh"},
 
     // calibration data
-    {oid=100, ACCESS_READ | ACCESS_WRITE, TS_C_CAL, T_FLOAT32, 0, (void*) &(cal.dcdc_current_min), "iDcdcMin"},
+    {oid=0x6001, ACCESS_READ | ACCESS_WRITE, TS_C_CAL, T_FLOAT32, 0, (void*) &(cal.dcdc_current_min), "iDcdcMin"},
     {++oid,   ACCESS_READ | ACCESS_WRITE, TS_C_CAL, T_FLOAT32, 0, (void*) &(cal.solar_voltage_max), "vSolarMax"},
     {++oid,   ACCESS_READ | ACCESS_WRITE, TS_C_CAL, T_INT32,  0, (void*) &(cal.dcdc_restart_interval), "tDcdcRestart"},
     {++oid,   ACCESS_READ | ACCESS_WRITE, TS_C_CAL, T_FLOAT32, 0, (void*) &(cal.solar_voltage_offset_start), "vSolarOffsetStart"},

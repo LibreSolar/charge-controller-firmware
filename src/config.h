@@ -42,14 +42,15 @@
 #define PIN_PWM_HS    PA_8
 #define PIN_PWM_LS    PB_13
 
-#define PIN_LED_GREEN PB_14
-#define PIN_LED_RED   PB_15
+#define PIN_LED_RED   PB_14
+#define PIN_LED_GREEN PB_15
 #define PIN_LOAD_DIS  PB_2
 #define PIN_5V_OUT_EN PB_12
 
 #define PIN_CAN_RX    PB_8
 #define PIN_CAN_TX    PB_9
 #define PIN_CAN_STB   PA_15
+#define PIN_V_BUS_DIS PC_15     // bus power supply disable, starting from rev. 0.10
 
 #define PIN_REF_I_DCDC PA_4
 
