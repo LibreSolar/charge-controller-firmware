@@ -36,7 +36,7 @@ I2C i2c(PIN_UEXT_SDA, PIN_UEXT_SCL);
 
 DeviceState device;
 CalibrationData cal;
-ChargingProfile profile;
+extern ChargingProfile profile;
 
 float dcdc_power;    // stores previous output power
 int pwm_delta = 1;
@@ -149,14 +149,6 @@ void setup()
     ref_i_dcdc = 0.1;         // 0 for buck, 1 for boost (TODO)
     vbus_disable = 0;
 
-    // adjust default values for 12V LiFePO4 battery
-    profile.num_cells = 4;
-    profile.cell_voltage_max = 3.55;        // max voltage per cell
-    profile.cell_voltage_recharge = 3.35;
-    profile.trickle_enabled = false;
-    profile.cell_voltage_load_disconnect = 3.0;
-    profile.cell_voltage_load_reconnect  = 3.15;
-
     serial.baud(115200);
     printf("\nSerial interface started...\n");
     freopen("/serial", "w", stdout);  // retarget stdout
@@ -188,6 +180,8 @@ void setup()
     CAN1->MCR |= CAN_MCR_TXFP | CAN_MCR_NART;
 }
 
+// this is called regularly after a number of conversion have happend
+// (currently 100, i.e. at 10Hz, see adc_dma.cpp)
 void update_mppt()
 {
     float dcdc_power_new = battery_voltage * dcdc_current;

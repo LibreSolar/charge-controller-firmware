@@ -32,3 +32,5 @@ This mode is only used for lead-acid batteries after several deep-discharge cycl
 ## Toolchain and flashing instructions
 
 See the Libre Solar website for a detailed instruction how to [develop software](http://libre.solar/docs/toolchain/) and [flash new firmware](http://libre.solar/docs/flashing/).
+
+Please note that you have to create the file **config.cpp** by using / changing one of the provided templates to your needs before the software compiles successfully. The file config.cpp is **not** tracked in git since it represents a specific configuration. Please do not add it in a pull request, change the templates if necessary.  
