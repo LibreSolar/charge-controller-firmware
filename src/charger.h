@@ -23,8 +23,12 @@
 
 #include "mbed.h"
 
+
 // default values for 12V lead-acid battery
 struct ChargingProfile {
+
+    ChargingProfile();
+    
     int num_cells = 6;
 
     // State: Standby

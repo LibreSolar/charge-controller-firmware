@@ -1,0 +1,57 @@
+/* mbed library for a battery charge controller
+ * Copyright (c) 2017 Martin Jäger (www.libre.solar)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include "charger.h"
+
+ChargingProfile profile;
+
+
+ChargingProfile::ChargingProfile()
+{
+    num_cells = 3;
+
+    // State: Standby
+    time_limit_recharge = 60; // sec
+    cell_voltage_recharge = 3.9; // V
+    cell_voltage_absolute_min = 2.7; // V   (under this voltage, battery is considered damaged)
+
+    // State: CC/bulk
+    charge_current_max = 8;  // A        PCB maximum: 20 A
+
+    // State: CV/absorption
+    cell_voltage_max = 4.1;        // max voltage per cell
+    time_limit_CV = 120*60; // sec
+    current_cutoff_CV = 1.0; // A
+
+    // State: float/trickle
+    trickle_enabled = false;
+    cell_voltage_trickle = 2.3;    // target voltage for trickle charging of lead-acid batteries
+    time_trickle_recharge = 30*60;     // sec
+
+    // State: equalization
+    equalization_enabled = false;
+    cell_voltage_equalization = 2.5; // V
+    time_limit_equalization = 60*60; // sec
+    current_limit_equalization = 1.0; // A
+    equalization_trigger_time = 8; // weeks
+    equalization_trigger_deep_cycles = 10; // times
+
+    cell_voltage_load_disconnect = 3.3;
+    cell_voltage_load_reconnect = 3.6;
+
+    // TODO
+    temperature_compensation = 1.0;
+}
