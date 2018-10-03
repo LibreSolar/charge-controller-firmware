@@ -26,6 +26,6 @@ void can_receive();
 void can_process_outbox();
 void can_process_inbox();
 void can_list_object_ids(int category = TS_C_ALL);
-void can_send_object_name(int obj_id);
+void can_send_object_name(int obj_id, uint8_t can_dest_id);
 
 #endif

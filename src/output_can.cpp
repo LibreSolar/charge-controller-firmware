@@ -166,17 +166,18 @@ void can_list_object_ids(int category) {
 
 }
 
-void can_send_object_name(int data_obj_id) {
+void can_send_object_name(int data_obj_id, uint8_t can_dest_id) {
     uint8_t msg_priority = 7;   // low priority service message
     uint8_t function_id = 0x84;
     CANMessage msg;
     msg.format = CANExtended;
     msg.type = CANData;
-    msg.id = msg_priority << 26 | function_id << 16 | can_node_id;      // TODO: add destination node ID
+    msg.id = msg_priority << 26 | function_id << 16 |(can_dest_id << 8)| can_node_id;      // TODO: add destination node ID
 
     int arr_id = -1;
-    for (arr_id = 0; arr_id < sizeof(dataObjects)/sizeof(DataObject_t); arr_id++) {
-        if (dataObjects[arr_id].id == data_obj_id) {
+    for (int idx = 0; idx < sizeof(dataObjects)/sizeof(DataObject_t); idx++) {
+        if (dataObjects[idx].id == data_obj_id) {
+            arr_id = idx;
             break;  // correct array entry found
         }
     }
@@ -220,6 +221,7 @@ void can_process_inbox() {
             serial.printf("Service frame\n");
             // service frame
             int function_id = (msg.id >> 16) & (int)0xFF;
+            uint8_t can_dest_id = msg.id & (int)0xFF;
             int data_obj_id;
             int value;
 
@@ -241,7 +243,7 @@ void can_process_inbox() {
                     break;
                 case TS_OBJ_NAME:
                     data_obj_id = msg.data[1] + (msg.data[2] << 8);
-                    can_send_object_name(data_obj_id);
+                    can_send_object_name(data_obj_id, can_dest_id);
                     serial.printf("Get Data Object Name: %d\n", data_obj_id);
                     break;
                 case TS_LIST:
