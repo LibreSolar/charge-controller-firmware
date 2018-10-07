@@ -94,7 +94,7 @@ void output_serial_json()
 {
     serial.printf("{");
     bool first = true;
-    for(unsigned int i = 0; i < sizeof(dataObjects)/sizeof(DataObject_t); ++i) {
+    for(unsigned int i = 0; i < dataObjectsCount; ++i) {
         if (first == false) {
             serial.printf(",");
         }
