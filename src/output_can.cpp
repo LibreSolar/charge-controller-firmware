@@ -1,4 +1,4 @@
-/* LibreSolar Battery Management System firmware
+/* LibreSolar MPPT charge controller firmware
  * Copyright (c) 2016-2018 Martin Jäger (www.libre.solar)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+/*
 #include "mbed.h"
 #include "config.h"
 #include "output.h"
@@ -22,7 +23,7 @@
 //#include "can_iso_tp.h"
 
 #include "data_objects.h"
-#include "dcdc.h"
+#include "half_bridge.h"
 #include "charger.h"
 
 extern Serial serial;
@@ -39,7 +40,7 @@ CANMsgQueue can_rx_queue;
 // Protocol details:
 // https://github.com/LibreSolar/ThingSet/blob/master/can.md
 
-void can_pub_msg(DataObject_t data_obj)
+void can_pub_msg(data_object_t data_obj)
 {
     union float2bytes { float f; char b[4]; } f2b;     // for conversion of float to single bytes
 
@@ -166,7 +167,8 @@ void can_list_object_ids(int category) {
 
 }
 
-void can_send_object_name(int data_obj_id, uint8_t can_dest_id) {
+void can_send_object_name(int data_obj_id, uint8_t can_dest_id)
+{
     uint8_t msg_priority = 7;   // low priority service message
     uint8_t function_id = 0x84;
     CANMessage msg;
@@ -203,7 +205,8 @@ void can_send_object_name(int data_obj_id, uint8_t can_dest_id) {
     can_tx_queue.enqueue(msg);
 }
 
-void can_process_inbox() {
+void can_process_inbox()
+{
     int max_attempts = 15;
     while (!can_rx_queue.empty() && max_attempts >0) {
         CANMessage msg;
@@ -269,3 +272,5 @@ void can_receive() {
         }
     }
 }
+
+*/

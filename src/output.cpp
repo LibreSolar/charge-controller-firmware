@@ -14,28 +14,35 @@
  * limitations under the License.
  */
 
+#ifndef UNIT_TEST
+
 #include "config.h"
 #include "data_objects.h"
-#include "dcdc.h"
-#include "charger.h"
+
+#include "half_bridge.h"
 
 #include "Adafruit_SSD1306.h"
 #include "display.h"
 
-Serial serial_uext(PIN_UEXT_TX, PIN_UEXT_RX, "serial_uext");
+#include "output.h"
+
+// TODO
+//#include "SDBlockDevice.h"
+//SDBlockDevice sd(PIN_UEXT_MOSI, PIN_UEXT_MISO, PIN_UEXT_SCK, PIN_UEXT_SSEL);
+//uint8_t block[512] = "Hello World!\n";
+
+//Serial serial_uext(PIN_UEXT_TX, PIN_UEXT_RX, "serial_uext");
 
 extern I2C i2c;
-
 Adafruit_SSD1306_I2c oled(i2c, PIN_UEXT_SSEL, 0x78, 64, 128);
-
-//extern DeviceState device;
 
 extern Serial serial;
 
-//SDFileSystem sd(PIN_UEXT_MOSI, PIN_UEXT_MISO, PIN_UEXT_SCK, PIN_UEXT_SSEL, "sd");
+void output_serial(dcdc_t *dcdc, battery_t *bat, load_output_t *load)
+//void output_serial(dcdc_t *dcdc, dcdc_port_t *solar_port,  dcdc_port_t *bat_port, battery_t *bat, load_output_t *load)
 
-void output_serial()
 {
+    /*
     #ifdef SDCARD_ENABLED
         //sd.mount();
         FILE *fp = fopen("/sd/solar_log.csv", "a");
@@ -49,37 +56,38 @@ void output_serial()
     }
     else {
         char buffer[32];
-        time_t seconds = time(NULL)+60*60*2;
+        time_t seconds = time(NULL);
         strftime(buffer, 32, "%F %T", localtime(&seconds));
         //printf("Time as a custom formatted string = %s", buffer);
-        fprintf(fp, "%s;", buffer);
+        //fprintf(fp, "%s;", buffer);
+        fprintf(fp, "%d ", (int)time(NULL));
 //        fprintf(fp, "%d;", seconds_day);
 //        fprintf(fp, "%d;", day_counter);
-        fprintf(fp, "%.2f;%.1f;", device.input_voltage, device.bus_voltage * device.bus_current);
-        fprintf(fp, "%.2f;%.1f;", device.bus_voltage, device.bus_current);
-        fprintf(fp, "%.1f;%.2f;", device.load_current * device.bus_voltage, device.load_current);
-        fprintf(fp, "%d;", device.load_enabled);
-        fprintf(fp, "%.0f;%.0f;", device.input_Wh_day, fabs(device.output_Wh_day));
-        fprintf(fp, "%.1f;%.1f;", device.input_Wh_total / 1000.0, fabs(device.output_Wh_total / 1000.0));
-        switch (charger_get_state()) {
+        fprintf(fp, "%.2f %.1f ", dcdc->hs_voltage, dcdc->ls_voltage * meas->dcdc_current);
+        fprintf(fp, "%.2f %.1f ", meas->battery_voltage, meas->dcdc_current);
+        fprintf(fp, "%.1f %.2f ", meas->load_current * meas->battery_voltage, meas->load_current);
+        fprintf(fp, "%d ", meas->load_enabled);
+        fprintf(fp, "%.0f %.0f ", meas->input_Wh_day, fabs(meas->output_Wh_day));
+        fprintf(fp, "%.1f %.1f ", meas->input_Wh_total / 1000.0, fabs(meas->output_Wh_total / 1000.0));
+        switch (bat->state) {
             case CHG_IDLE:
-                fprintf(fp, "Standby;");
+                fprintf(fp, "Standby");
                 break;
             case CHG_CC:
-                fprintf(fp, "CC;");
+                fprintf(fp, "CC");
                 break;
             case CHG_CV:
-                fprintf(fp, "CV;");
+                fprintf(fp, "CV");
                 break;
             case CHG_TRICKLE:
-                fprintf(fp, "Trickle;");
+                fprintf(fp, "Trickle");
                 break;
             default:
-                fprintf(fp, "Error;");
+                fprintf(fp, "Error");
                 break;
         }
-        fprintf(fp, "%.1f;", dcdc_get_duty_cycle() * 100.0);
-        fprintf(fp, "%d;", dcdc_enabled());
+        fprintf(fp, " %.1f ", half_bridge_get_duty_cycle() * 100.0);
+        fprintf(fp, "%d ", half_bridge_enabled());
         fprintf(fp, "\n");
     }
 
@@ -88,53 +96,26 @@ void output_serial()
     #ifdef SDCARD_ENABLED
     sd.unmount();
     #endif
+    */
 }
 
-void output_serial_json()
+void output_oled(dcdc_t *dcdc, dcdc_port_t *solar_port,  dcdc_port_t *bat_port, battery_t *bat, load_output_t *load)
 {
-    serial.printf("{");
-    bool first = true;
-    for(unsigned int i = 0; i < dataObjectsCount; ++i) {
-        if (first == false) {
-            serial.printf(",");
-        }
-        else {
-            first = false;
-        }
-        serial.printf("\"%s\":", dataObjects[i].name);
-        switch (dataObjects[i].type) {
-            case T_FLOAT32:
-                serial.printf("%.3f", *((float*)dataObjects[i].data));
-                break;
-            case T_STRING:
-                serial.printf("\"%s\"", (char*)dataObjects[i].data);
-                break;
-            case T_INT32:
-                serial.printf("%d", *((int*)dataObjects[i].data));
-                break;
-            case T_BOOL:
-                serial.printf("%s", (*((bool*)dataObjects[i].data) == true ? "true" : "false"));
-                break;
-        }
-    }
-    serial.printf("}\n");
-}
+    float tmp;
 
-void output_oled()
-{
     oled.clearDisplay();
 
     oled.drawBitmap(6, 0, bmp_pv_panel, 16, 16, 1);
     oled.drawBitmap(104, 0, bmp_load, 16, 16, 1);
 
-    if (dcdc_enabled() == false) {
+    if (half_bridge_enabled() == false) {
         oled.drawBitmap(27, 3, bmp_disconnected, 32, 8, 1);
     }
     else {
         oled.drawBitmap(34, 3, bmp_arrow_right, 5, 7, 1);
     }
 
-    if (device.load_enabled) {
+    if (load->enabled) {
         oled.drawBitmap(84, 3, bmp_arrow_right, 5, 7, 1);
     }
     else {
@@ -149,28 +130,44 @@ void output_oled()
     oled.drawRect(63, 4, 2, 5, 1);      // bar 4
     oled.drawRect(66, 4, 2, 5, 1);      // bar 5
 
-    oled.setTextCursor(0, 18);
-    oled.printf("%4.1fV", device.input_voltage);
-    oled.setTextCursor(0, 26);
-    oled.printf("%4.0fW", fabs(device.bus_voltage * device.bus_current));
+    // solar panel data
+    if (half_bridge_enabled()) {
+        tmp = solar_port->voltage * solar_port->current;
+        oled.setTextCursor(0, 18);
+        oled.printf("%4.0fW", (abs(tmp) < 1) ? 0 : tmp);     // remove negative zeros
+    }
+    else {
+        oled.setTextCursor(8, 18);
+        oled.printf("n/a");
+    }
+    if (solar_port->voltage > bat_port->voltage) {
+        oled.setTextCursor(0, 26);
+        oled.printf("%4.1fV", solar_port->voltage);
+    }
 
+    // battey data
+    tmp = bat_port->voltage * (bat_port->current - load->current);
     oled.setTextCursor(42, 18);
-    oled.printf("%5.2fV", device.bus_voltage);
+    oled.printf("%5.1fW", (abs(tmp) < 0.1) ? 0 : tmp);    // remove negative zeros
     oled.setTextCursor(42, 26);
-    oled.printf("%5.2fA", fabs(device.bus_current));
+    oled.printf("%5.1fV", bat_port->voltage);
 
+    // load data
+    tmp = bat_port->voltage * load->current;
     oled.setTextCursor(90, 18);
-    oled.printf("%5.2fA\n", fabs(device.load_current));
+    oled.printf("%5.1fW", (abs(tmp) < 0.1) ? 0 : tmp);    // remove negative zeros
     oled.setTextCursor(90, 26);
-    oled.printf("%5.1fW", fabs(device.load_current) * device.bus_voltage);
+    oled.printf("%5.1fA\n", (abs(load->current) < 0.1) ? 0 : load->current);
 
     oled.setTextCursor(0, 36);
-    oled.printf("Day +%5.0fWh -%5.0fWh", device.input_Wh_day, fabs(device.output_Wh_day));
-    oled.printf("Tot +%4.1fkWh -%4.1fkWh", device.input_Wh_total / 1000.0, fabs(device.output_Wh_total) / 1000.0);
+    oled.printf("Day +%5.0fWh -%5.0fWh", bat->input_Wh_day, fabs(bat->output_Wh_day));
+    oled.printf("Tot +%4.1fkWh -%4.1fkWh", bat->input_Wh_total / 1000.0, fabs(bat->output_Wh_total) / 1000.0);
 
     oled.setTextCursor(0, 56);
-    oled.printf("T %.1f PWM %.1f%% ", device.internal_temperature, dcdc_get_duty_cycle() * 100.0);
-    switch (charger_get_state()) {
+    oled.printf("T %.0fC PWM %.0f%% SOC %d%%", dcdc->temp_mosfets, half_bridge_get_duty_cycle() * 100.0, bat->soc);
+
+    /*
+    switch (chg->state) {
         case CHG_IDLE:
             oled.printf("Idle");
             break;
@@ -186,6 +183,8 @@ void output_oled()
         default:
             oled.printf("Err.");
             break;
-    }
+    }*/
     oled.display();
 }
+
+#endif /* UNIT_TEST */

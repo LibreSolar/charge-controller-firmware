@@ -14,18 +14,24 @@
  * limitations under the License.
  */
 
+#ifndef UNIT_TEST
 
 #ifndef ADC_DMA_H
 #define ADC_DMA_H
 
 #include "mbed.h"
+#include "data_objects.h"
+#include "structs.h"
 
 extern bool new_reading_available;
 
-void update_measurements();
+void calibrate_current_sensors(dcdc_t *dcdc, load_output_t *load);
+void update_measurements(dcdc_t *dcdc, battery_t *bat, load_output_t *load, dcdc_port_t *hs, dcdc_port_t *ls);
 
-void setup_adc_timer();
-void setup_adc();
-void start_dma();
+void setup_adc_timer(void);
+void setup_adc(void);
+void start_dma(void);
 
 #endif // ADC_DMA
+
+#endif /* UNIT_TEST */

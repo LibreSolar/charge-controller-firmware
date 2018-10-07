@@ -14,70 +14,56 @@
  * limitations under the License.
  */
 
-#ifndef DCDC_H
-#define DCDC_H
+#ifndef __HALF_BRIDGE_H_
+#define __HALF_BRIDGE_H_
 
 #include "mbed.h"
 
-/** Initiatializes the registers to generate the PWM signal
+/** Initiatializes the registers to generate the PWM signal and sets duty
+ *  cycle limits
  *
- *  @param freq Frequency in kHz
+ *  @param freq Switching frequency in kHz
+ *  @param deadtime Deadtime in ns between switching the two FETs on/off
+ *  @param min_duty Minimum duty cycle (e.g. 0.5 for limiting input voltage)
+ *  @param max_duty Maximum duty cycle (e.g. 0.97 for charge pump)
  */
-void dcdc_init(int freq_kHz);
-
-/** Set the deadtime between switching the two FETs on/off
- *
- *  @param deadtime Deadtime in ns
- */
-void dcdc_deadtime_ns(int deadtime);
-
-/** Lock the settings of PWM generation to prevent accidental changes
- *  (does not work properly, yet! --> TODO)
- */
-void dcdc_lock_settings(void);
+void half_bridge_init(int freq_kHz, int deadtime_ns, float min_duty, float max_duty);
 
 /** Start the PWM generation
  *
  *  @param pwm_duty Duty cycle between 0.0 and 1.0
  */
-void dcdc_start(float pwm_duty);
+void half_bridge_start(float pwm_duty);
 
 /** Stop the PWM generation
  */
-void dcdc_stop();
+void half_bridge_stop();
 
 /** Get status of the PWM output
  *
  *  @returns
  *    True if PWM output enabled
  */
-bool dcdc_enabled();
+bool half_bridge_enabled();
 
 /** Set the duty cycle of the PWM signal between 0.0 and 1.0
  *
  *  @param duty Duty cycle between 0.0 and 1.0
  */
-void dcdc_set_duty_cycle(float duty);
+void half_bridge_set_duty_cycle(float duty);
 
 /** Adjust the duty cycle with minimum step size
  *
  *  @param delta Number of steps (positive or negative)
  */
-void dcdc_duty_cycle_step(int delta);
+void half_bridge_duty_cycle_step(int delta);
 
 /** Read the currently set duty cycle
  *
  *  @returns
  *    Duty cycle between 0.0 and 1.0
  */
-float dcdc_get_duty_cycle();
-
-/** Set limits for the duty cycle to prevent hardware damages
- *
- *  @param min_duty Minimum duty cycle (e.g. 0.5 for limiting input voltage)
- *  @param max_duty Maximum duty cycle (e.g. 0.97 for charge pump)
- */
-void dcdc_duty_cycle_limits(float min_duty, float max_duty);
+float half_bridge_get_duty_cycle();
 
 
-#endif // HALFBRIDGE_H
+#endif // HALFB_RIDGE_H

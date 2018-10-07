@@ -14,18 +14,21 @@
  * limitations under the License.
  */
 
-#include "dcdc.h"
+#ifndef UNIT_TEST
 
+#include "half_bridge.h"
+#include "config.h"
+
+#if defined(STM32F0) && (PWM_TIM == 1)
 
 static int _pwm_resolution;
 static float _min_duty;
 static float _max_duty;
-static int _pwm_delta;
 
 static bool _enabled;
 
-void dcdc_init(int freq_kHz) {
-
+void _init_registers(int freq_kHz, int deadtime_ns)
+{
     // Enable peripheral clock of GPIOA and GPIOB
     RCC->AHBENR |= RCC_AHBENR_GPIOAEN | RCC_AHBENR_GPIOBEN;
 
@@ -76,12 +79,32 @@ void dcdc_init(int freq_kHz) {
     // center-aligned mode --> divide resolution by 2
     TIM1->ARR = _pwm_resolution / 2;
 
-    _pwm_delta = 1;
+    uint8_t deadtime_clocks = (SystemCoreClock / 1000 / 1000) * deadtime_ns / 1000;
+
+    // Break and Dead-Time Register
+    // MOE  = 1: Main output enable
+    // OSSR = 0: Off-state selection for Run mode -> OC/OCN = 0
+    // OSSI = 0: Off-state selection for Idle mode -> OC/OCN = 0
+    TIM1->BDTR |= (deadtime_clocks & (uint32_t)0x7F); // ensure that only the last 7 bits are changed
+
+    // Lock Break and Dead-Time Register
+    // TODO: does not work properly... maybe HW bug?
+    TIM1->BDTR |= TIM_BDTR_LOCK_1 | TIM_BDTR_LOCK_0;
+}
+
+void half_bridge_init(int freq_kHz, int deadtime_ns, float min_duty, float max_duty)
+{
+    _init_registers(freq_kHz, deadtime_ns);
+
+    _min_duty = min_duty;
+    _max_duty = max_duty;
+    half_bridge_set_duty_cycle(_max_duty);      // init with allowed value
+
     _enabled = false;
 }
 
-void dcdc_set_duty_cycle(float duty) {
-
+void half_bridge_set_duty_cycle(float duty)
+{
     float duty_target;
     // protection against wrong settings which could destroy the hardware
     if (duty < _min_duty) {
@@ -97,43 +120,31 @@ void dcdc_set_duty_cycle(float duty) {
     TIM1->CCR1 = _pwm_resolution / 2 * duty_target;
 }
 
-void dcdc_duty_cycle_step(int delta)
+void half_bridge_duty_cycle_step(int delta)
 {
     float duty_target;
     duty_target = (float)(TIM1->CCR1 + delta) / (_pwm_resolution / 2);
 
     // protection against wrong settings which could destroy the hardware
     if (duty_target < _min_duty) {
-        dcdc_set_duty_cycle(_min_duty);
+        half_bridge_set_duty_cycle(_min_duty);
     }
     else if (duty_target > _max_duty) {
-        dcdc_set_duty_cycle(_max_duty);
+        half_bridge_set_duty_cycle(_max_duty);
     }
     else {
         TIM1->CCR1 = TIM1->CCR1 + delta;
     }
 }
 
-
-float dcdc_get_duty_cycle() {
+float half_bridge_get_duty_cycle()
+{
     return (float)(TIM1->CCR1) / (_pwm_resolution / 2);;
 }
 
-
-void dcdc_deadtime_ns(int deadtime) {
-
-    uint8_t deadtime_clocks = (SystemCoreClock / 1000 / 1000) * deadtime / 1000;
-
-    // Break and Dead-Time Register
-    // MOE  = 1: Main output enable
-    // OSSR = 0: Off-state selection for Run mode -> OC/OCN = 0
-    // OSSI = 0: Off-state selection for Idle mode -> OC/OCN = 0
-    TIM1->BDTR |= (deadtime_clocks & (uint32_t)0x7F); // ensure that only the last 7 bits are changed
-}
-
-
-void dcdc_start(float pwm_duty) {
-    dcdc_set_duty_cycle(pwm_duty);
+void half_bridge_start(float pwm_duty)
+{
+    half_bridge_set_duty_cycle(pwm_duty);
 
     // Break and Dead-Time Register
     // MOE  = 1: Main output enable
@@ -142,9 +153,8 @@ void dcdc_start(float pwm_duty) {
     _enabled = true;
 }
 
-
-void dcdc_stop() {
-
+void half_bridge_stop()
+{
     // Break and Dead-Time Register
     // MOE  = 1: Main output enable
     TIM1->BDTR &= ~(TIM_BDTR_MOE);
@@ -152,30 +162,11 @@ void dcdc_stop() {
     _enabled = false;
 }
 
-bool dcdc_enabled() {
-
+bool half_bridge_enabled()
+{
     return _enabled;
 }
 
+#endif /* PWM_TIM */
 
-void dcdc_lock_settings() {
-
-    // TODO: does not work properly... maybe HW bug?
-
-    // Break and Dead-Time Register
-    TIM1->BDTR |= TIM_BDTR_LOCK_1 | TIM_BDTR_LOCK_0;
-}
-
-void dcdc_duty_cycle_limits(float min_duty, float max_duty) {
-
-    _min_duty = min_duty;
-    _max_duty = max_duty;
-
-    // adjust set value to new limits
-    if (dcdc_get_duty_cycle() < _min_duty) {
-        dcdc_set_duty_cycle(_min_duty);
-    }
-    else if (dcdc_get_duty_cycle() > _max_duty) {
-        dcdc_set_duty_cycle(_max_duty);
-    }
-}
+#endif /* UNIT_TEST */

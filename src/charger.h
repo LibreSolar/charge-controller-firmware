@@ -1,5 +1,5 @@
-/* mbed library for a battery charge controller
- * Copyright (c) 2017 Martin Jäger (www.libre.solar)
+/* LibreSolar MPPT charge controller firmware
+ * Copyright (c) 2016-2018 Martin Jäger (www.libre.solar)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,107 +14,37 @@
  * limitations under the License.
  */
 
-// settings: battery_capacity, charge_profile
-// input:  actual charge current, actual battery voltage
-// output: SOC, target_voltage, target_current (=max current)
+#ifndef __CHARGER_H_
+#define __CHARGER_H_
 
-#ifndef CHARGECONTROLLER_H
-#define CHARGECONTROLLER_H
+#include "data_objects.h"
+#include <stdbool.h>
 
-#include "mbed.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
 
+void battery_init(battery_t* bat, int type, int capacity_Ah);
 
-// default values for 12V lead-acid battery
-struct ChargingProfile {
-
-    ChargingProfile();
-    
-    int num_cells = 6;
-
-    // State: Standby
-    int time_limit_recharge = 60; // sec
-    float cell_voltage_recharge = 2.3; // V
-    float cell_voltage_absolute_min = 1.8; // V   (under this voltage, battery is considered damaged)
-
-    // State: CC/bulk
-    float charge_current_max = 20;  // A        PCB maximum: 20 A
-
-    // State: CV/absorption
-    float cell_voltage_max = 2.4;        // max voltage per cell
-    int time_limit_CV = 120*60; // sec
-    float current_cutoff_CV = 2.0; // A
-
-    // State: float/trickle
-    bool trickle_enabled = true;
-    float cell_voltage_trickle = 2.3;    // target voltage for trickle charging of lead-acid batteries
-    int time_trickle_recharge = 30*60;     // sec
-
-    // State: equalization
-    bool equalization_enabled = false;
-    float cell_voltage_equalization = 2.5; // V
-    int time_limit_equalization = 60*60; // sec
-    float current_limit_equalization = 1.0; // A
-    int equalization_trigger_time = 8; // weeks
-    int equalization_trigger_deep_cycles = 10; // times
-
-    float cell_voltage_load_disconnect = 1.95;
-    float cell_voltage_load_reconnect = 2.2;
-
-    // TODO
-    float temperature_compensation = 1.0;
-};
-
-// possible charger states
-enum charger_states {CHG_IDLE, CHG_CC, CHG_CV, CHG_TRICKLE, CHG_EQUALIZATION};
-
-
-/** Create Charge Controller object
+/* Initialize DC/DC and DC/DC port structs
  *
- *  @param profile ChargingProfile struct including voltage limits, etc.
+ * See http://libre.solar/docs/dcdc_control for detailed information
  */
-void charger_init(ChargingProfile *profile);
+void dcdc_init(dcdc_t *dcdc);
+void dcdc_port_init_bat(dcdc_port_t *port, battery_t *bat);
+void dcdc_port_init_solar(dcdc_port_t *port);
+void dcdc_port_init_nanogrid(dcdc_port_t *port);
 
-/** Get target battery current for current charger state
- *
- *  @returns
- *    Target current (A)
+/* Charger state machine update, should be called exactly once per second
  */
-float charger_read_target_current();
+void charger_state_machine(dcdc_port_t *port, battery_t *bat, float voltage, float current);
 
-/** Get target battery voltage for current charger state
- *
- *  @returns
- *    Target voltage (V)
- */
-float charger_read_target_voltage();
+void bat_calculate_soc(battery_t *bat, float voltage, float current);
 
-/** Determine if charging of the battery is allowed
- *
- *  @returns
- *    True if charging is allowed
- */
-bool charger_charging_enabled();
+void dcdc_control(dcdc_t *dcdc, dcdc_port_t *high_side, dcdc_port_t *low_side);
 
-/** Determine if discharging the battery is allowed
- *
- *  @returns
- *    True if discharging is allowed
- */
-bool charger_discharging_enabled();
-
-/** Charger state machine update, should be called exactly once per second
- *
- *  @param battery_voltage Actual measured battery voltage (V)
- *  @param battery_current Actual measured battery current (A)
- */
-void charger_update(float battery_voltage, float battery_current);
-
-/** Get current charge controller state
- *
- *  @returns
- *    CHG_IDLE, CHG_CC, CHG_CV, CHG_TRICKLE or CHG_EQUALIZATION
- */
-int charger_get_state();
-
+#ifdef __cplusplus
+}
+#endif
 
 #endif // CHARGER_H

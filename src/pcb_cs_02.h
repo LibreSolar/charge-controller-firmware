@@ -1,0 +1,94 @@
+/* LibreSolar MPPT charge controller firmware
+ * Copyright (c) 2016-2017 Martin Jäger (www.libre.solar)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#ifndef __PCB_CS_02_H_
+#define __PCB_CS_02_H_
+
+#include "mbed.h"
+
+// DC/DC converter settings
+#define PWM_FREQUENCY 50 // kHz  50 = better for cloud solar to increase efficiency
+#define PWM_TIM        1 // use TIM1 timer
+
+#define DCDC_CURRENT_MAX 8   // PCB maximum DCDC output current
+#define LOAD_CURRENT_MAX 10  // PCB maximum load switch current
+
+#define PIN_UEXT_TX   PA_2
+#define PIN_UEXT_RX   PA_3
+#define PIN_UEXT_SCL  PB_6
+#define PIN_UEXT_SDA  PB_7
+#define PIN_UEXT_MISO PB_4
+#define PIN_UEXT_MOSI PB_5
+#define PIN_UEXT_SCK  PB_3
+#define PIN_UEXT_SSEL PA_15     // different than 20A MPPT
+
+#define PIN_SWD_TX    PA_9
+#define PIN_SWD_RX    PA_10
+
+#define PIN_PWM_HS    PA_8
+#define PIN_PWM_LS    PB_13
+
+#define PIN_LED_SOC   PB_14   // LED1
+#define PIN_LED_SOLAR PB_15   // LED2
+#define PIN_LED_LOAD  PB_12   // LED3
+
+#define PIN_LOAD_DIS    PB_2
+#define PIN_USB_PWR_EN  PC_13
+#define PIN_USB_PWR_FLG PC_14
+
+#define PIN_REF_I_DCDC PA_4
+
+#define PIN_EEPROM_SCL PB_10
+#define PIN_EEPROM_SDA PB_11
+
+#define EEPROM_VERSION 1      // versioning of EEPROM layout (2 bytes)
+
+// typical value for Semitec 103AT-5 thermistor: 3435
+#define NTC_BETA_VALUE 3435
+
+#define ADC_GAIN_V_BAT (110.0 / 10 )    // battery voltage divider 100k + 10k
+#define ADC_GAIN_V_SOLAR (105.6 / 5.6)  // solar voltage divider: 100k + 5.6k
+#define ADC_GAIN_I_LOAD (1000 / 4 / (1500.0 / 22.0)) // op amp gain: 150/2.2 = 68.2, resistor: 4 mOhm
+#define ADC_GAIN_I_DCDC (1000 / 4 / (1500.0 / 22.0))
+
+// position in the array written by the DMA controller
+enum {
+    ADC_POS_TEMP_BAT,   // ADC 0
+    ADC_POS_TEMP_FETS,  // ADC 1
+    ADC_POS_V_REF,      // ADC 5
+    ADC_POS_V_BAT,      // ADC 6
+    ADC_POS_V_SOLAR,    // ADC 7
+    ADC_POS_I_LOAD,     // ADC 8
+    ADC_POS_I_DCDC,     // ADC 9
+    ADC_POS_TEMP_MCU,   // ADC 16
+    ADC_POS_VREF_MCU,   // ADC 17
+    NUM_ADC_CH          // trick to get the number of enums
+};
+
+// selected ADC channels (has to match with above enum)
+#define ADC_CHSEL ( \
+    ADC_CHSELR_CHSEL0 | \
+    ADC_CHSELR_CHSEL1 | \
+    ADC_CHSELR_CHSEL5 | \
+    ADC_CHSELR_CHSEL6 | \
+    ADC_CHSELR_CHSEL7 | \
+    ADC_CHSELR_CHSEL8 | \
+    ADC_CHSELR_CHSEL9 | \
+    ADC_CHSELR_CHSEL16 | \
+    ADC_CHSELR_CHSEL17 \
+)
+
+#endif
