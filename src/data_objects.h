@@ -109,29 +109,7 @@ typedef struct {
 #define ACCESS_READ_AUTH (0x1U << 2)       // read after authentication
 #define ACCESS_WRITE_AUTH (0x1U << 3)      // write after authentication
 
-static uint16_t oid;
-
-static const DataObject_t dataObjects[] {
-    // output data
-    {oid=0x4001, ACCESS_READ, TS_C_OUTPUT, T_FLOAT32, 0, (void*) &(device.bus_voltage), "vBat"},
-    {++oid, ACCESS_READ, TS_C_OUTPUT, T_FLOAT32, 0, (void*) &(device.input_voltage), "vSolar"},
-    {++oid, ACCESS_READ, TS_C_OUTPUT, T_FLOAT32, 0, (void*) &(device.bus_current), "iBat"},
-    {++oid, ACCESS_READ, TS_C_OUTPUT, T_FLOAT32, 0, (void*) &(device.load_current), "iLoad"},
-    {++oid, ACCESS_READ, TS_C_OUTPUT, T_FLOAT32, 0, (void*) &(device.external_temperature), "tempExt"},
-    {++oid, ACCESS_READ, TS_C_OUTPUT, T_FLOAT32, 0, (void*) &(device.internal_temperature), "tempInt"},
-    {++oid, ACCESS_READ, TS_C_OUTPUT, T_BOOL,    0, (void*) &(device.load_enabled), "loaEn"},
-    {++oid, ACCESS_READ, TS_C_OUTPUT, T_FLOAT32, 0, (void*) &(device.input_Wh_day), "eInputDay_Wh"},
-    {++oid, ACCESS_READ, TS_C_OUTPUT, T_FLOAT32, 0, (void*) &(device.output_Wh_day), "eOutputDay_Wh"},
-    {++oid, ACCESS_READ, TS_C_OUTPUT, T_FLOAT32, 0, (void*) &(device.input_Wh_total), "eInputTotal_Wh"},
-    {++oid, ACCESS_READ, TS_C_OUTPUT, T_FLOAT32, 0, (void*) &(device.output_Wh_total), "eOutputTotal_Wh"},
-
-    // calibration data
-    {oid=0x6001, ACCESS_READ | ACCESS_WRITE, TS_C_CAL, T_FLOAT32, 0, (void*) &(cal.dcdc_current_min), "iDcdcMin"},
-    {++oid,   ACCESS_READ | ACCESS_WRITE, TS_C_CAL, T_FLOAT32, 0, (void*) &(cal.solar_voltage_max), "vSolarMax"},
-    {++oid,   ACCESS_READ | ACCESS_WRITE, TS_C_CAL, T_INT32,  0, (void*) &(cal.dcdc_restart_interval), "tDcdcRestart"},
-    {++oid,   ACCESS_READ | ACCESS_WRITE, TS_C_CAL, T_FLOAT32, 0, (void*) &(cal.solar_voltage_offset_start), "vSolarOffsetStart"},
-    {++oid,   ACCESS_READ | ACCESS_WRITE, TS_C_CAL, T_FLOAT32, 0, (void*) &(cal.solar_voltage_offset_stop), "vSolarOffsetStop"},
-    {++oid,   ACCESS_READ | ACCESS_WRITE, TS_C_CAL, T_INT32,  0, (void*) &(cal.thermistor_beta_value), "thermistorBetaValue"}
-};
+extern const DataObject_t dataObjects[]; // see output_can.cpp
+extern const size_t dataObjectsCount;
 
 #endif

@@ -94,7 +94,7 @@ void output_serial_json()
 {
     serial.printf("{");
     bool first = true;
-    for(unsigned int i = 0; i < sizeof(dataObjects)/sizeof(DataObject_t); ++i) {
+    for(unsigned int i = 0; i < dataObjectsCount; ++i) {
         if (first == false) {
             serial.printf(",");
         }
@@ -172,19 +172,19 @@ void output_oled()
     oled.printf("T %.1f PWM %.1f%% ", device.internal_temperature, dcdc_get_duty_cycle() * 100.0);
     switch (charger_get_state()) {
         case CHG_IDLE:
-            oled.printf("Idle\n");
+            oled.printf("Idle");
             break;
         case CHG_CC:
-            oled.printf("CC charge\n");
+            oled.printf("CC");
             break;
         case CHG_CV:
-            oled.printf("CV charge\n");
+            oled.printf("CV");
             break;
         case CHG_TRICKLE:
-            oled.printf("Trickle chg\n");
+            oled.printf("Trkl");
             break;
         default:
-            oled.printf("Error\n");
+            oled.printf("Err.");
             break;
     }
     oled.display();

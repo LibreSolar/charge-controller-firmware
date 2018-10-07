@@ -321,7 +321,7 @@ void init_watchdog(float timeout) {
     IWDG->RLR = (uint32_t)(timeout * (LSI_FREQ/prescaler));
     
     calculated_timeout = ((float)(prescaler * IWDG->RLR)) / LSI_FREQ;
-    printf("WATCHDOG set with prescaler:%d reload value: 0x%X - timeout:%f\n",prescaler, IWDG->RLR, calculated_timeout);
+    printf("WATCHDOG set with prescaler:%d reload value: 0x%lX - timeout:%f\n",prescaler, IWDG->RLR, calculated_timeout);
     
     IWDG->KR = 0xAAAA;  // reload
     IWDG->KR = 0xCCCC;  // start

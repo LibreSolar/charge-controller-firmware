@@ -139,7 +139,7 @@ void can_pub_msg(DataObject_t data_obj)
 
 void can_send_data()
 {
-    for (unsigned int i = 0; i < sizeof(dataObjects)/sizeof(DataObject_t); ++i) {
+    for (unsigned int i = 0; i < dataObjectsCount; ++i) {
         if (dataObjects[i].category == TS_C_OUTPUT) {
             can_pub_msg(dataObjects[i]);
         }
@@ -175,7 +175,7 @@ void can_send_object_name(int data_obj_id, uint8_t can_dest_id) {
     msg.id = msg_priority << 26 | function_id << 16 |(can_dest_id << 8)| can_node_id;      // TODO: add destination node ID
 
     int arr_id = -1;
-    for (int idx = 0; idx < sizeof(dataObjects)/sizeof(DataObject_t); idx++) {
+    for (unsigned int idx = 0; idx < dataObjectsCount; idx++) {
         if (dataObjects[idx].id == data_obj_id) {
             arr_id = idx;
             break;  // correct array entry found
@@ -229,7 +229,7 @@ void can_process_inbox() {
                 case TS_WRITE:
                     data_obj_id = msg.data[1] + (msg.data[2] << 8);
                     value = msg.data[6] + (msg.data[7] << 8);
-                    for (unsigned int i = 0; i < sizeof(dataObjects)/sizeof(DataObject_t); ++i) {
+                    for (unsigned int i = 0; i < dataObjectsCount; ++i) {
                         if (dataObjects[i].id == data_obj_id) {
                             if (dataObjects[i].access & ACCESS_WRITE) {
                                 // TODO: write data
