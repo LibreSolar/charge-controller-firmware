@@ -23,5 +23,6 @@ install:
     # - platformio lib -g install 4ee c23 
 
 script:
-        - cp src/config.cpp.LeadAcid.template src/config.cpp
-        - platformio ci --lib="lib/Adafruit_GFX" --project-conf=platformio.ini 
+        #- cp src/config.cpp.LeadAcid.template src/config.cpp
+        # - platformio ci --lib="lib/Adafruit_GFX" --lib="lib/ThingSet" --project-conf=platformio.ini -e libresolar_0_10,libresolar_0_05 
+        - platformio run -e libresolar_0_10 -e libresolar_0_05 -e cloudsolar_0_2 -e cloudsolar_0_3_f0  -e cloudsolar_0_3
