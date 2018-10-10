@@ -373,9 +373,7 @@ int cbor_deserialize_string(uint8_t *data, char *value, uint16_t buf_size)
             return len;
         }
     }
-    else {
-        return 0;   // longer string not supported
-    }
+    return 0;   // longer string not supported
 }
 
 // determines the size of the cbor data item starting at given pointer

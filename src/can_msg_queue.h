@@ -2,6 +2,8 @@
 #ifndef CAN_MSG_QUEUE_H
 #define CAN_MSG_QUEUE_H
 
+#ifdef STM32F0  // STM32L0 does not have CAN
+
 #include "mbed.h"
 
 #define CAN_QUEUE_SIZE 30
@@ -21,4 +23,6 @@ private:
     int _length;
 };
 
-#endif
+#endif /* STM32F0 */
+
+#endif /* CAN_MSG_QUEUE_H */

@@ -19,7 +19,7 @@
 #include "mbed.h"
 #include "config.h"
 #include "data_objects.h"
-//#include <math.h>     // log for thermistor calculation
+#include <math.h>     // log for thermistor calculation
 
 // factory calibration values for internal voltage reference and temperature sensor (see MCU datasheet, not RM)
 #if defined(STM32F0)
@@ -75,12 +75,10 @@ void update_measurements(dcdc_t *dcdc, battery_t *bat, load_output_t *load, dcdc
     ls->voltage = 
         (float)(((adc_filtered[ADC_POS_V_BAT] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
         ADC_GAIN_V_BAT / 1000.0;
-    //dcdc->ls_voltage = ls->voltage;
 
     hs->voltage = 
         (float)(((adc_filtered[ADC_POS_V_SOLAR] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
         ADC_GAIN_V_SOLAR / 1000.0;
-    //dcdc->hs_voltage = hs->voltage;
 
     load->current = 
         (float)(((adc_filtered[ADC_POS_I_LOAD] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
@@ -92,7 +90,9 @@ void update_measurements(dcdc_t *dcdc, battery_t *bat, load_output_t *load, dcdc
     dcdc->ls_current = ls->current;
 
     hs->current = -ls->current * ls->voltage / hs->voltage;
-    //meas->bat_current = meas->dcdc_current - meas->load_current;
+
+    // ToDo: improved (faster) temperature calculation:
+    // https://www.embeddedrelated.com/showarticle/91.php
 
 #ifdef ADC_POS_TEMP_BAT
     // battery temperature calculation
@@ -103,14 +103,14 @@ void update_measurements(dcdc_t *dcdc, battery_t *bat, load_output_t *load, dcdc
     // (25°C reference temperature for Beta equation assumed)
     bat->temp = 1.0/(1.0/(273.15+25) + 1.0/NTC_BETA_VALUE*log(rts/10000.0)) - 273.15; // °C
 #endif
-    // improved temperature calculation:
-    // https://www.embeddedrelated.com/showarticle/91.php
-/*
+
+#ifdef ADC_POS_TEMP_FETS
     // MOSFET temperature calculation
     v_temp = ((adc_filtered[ADC_POS_TEMP_FETS] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096;  // voltage read by ADC (mV)
     rts = 10000 * v_temp / (vcc - v_temp); // resistance of NTC (Ohm)
     dcdc->temp_mosfets = 1.0/(1.0/(273.15+25) + 1.0/NTC_BETA_VALUE*log(rts/10000.0)) - 273.15; // °C
-*/
+#endif
+
 /*
     // internal MCU temperature
     uint16_t adcval = (adc_filtered[ADC_POS_TEMP_MCU] >> (4 + ADC_FILTER_CONST));
@@ -146,6 +146,8 @@ void update_measurements(dcdc_t *dcdc, battery_t *bat, load_output_t *load, dcdc
 
 void start_dma()
 {
+    //__HAL_RCC_DMA1_CLK_ENABLE();
+
     /* Enable the peripheral clock on DMA */
     RCC->AHBENR |= RCC_AHBENR_DMA1EN;
 
@@ -207,100 +209,56 @@ extern "C" void DMA1_Channel1_IRQHandler(void)
     }*/
 }
 
-
-// ToDo: Change to more clean function with direct register access without using ST HAL
 void setup_adc()
 {
-    analogin_t _adc;
-    analogin_t* obj = &_adc;
+    ADC_HandleTypeDef hadc;
+    ADC_ChannelConfTypeDef sConfig = {0};
 
-#if defined(STM32F0)
-    // Enable HSI14 as ADC clock source.
-    RCC->APB2ENR |= RCC_APB2ENR_ADC1EN; // Enable the peripheral clock of the ADC
-    RCC->CR2 |= RCC_CR2_HSI14ON; // Start HSI14 RC oscillator
-    while ((RCC->CR2 & RCC_CR2_HSI14RDY) == 0) // Wait HSI14 is ready
-    {
-        // For robust implementation, add here time-out management
-    }
-    //ADC1->CFGR2 &= (~ADC_CFGR2_CKMODE); // Select HSI14 by writing 00 in CKMODE (reset value)
-#elif defined(STM32L0)
-    // ADC1->CFGR2 &= ~ADC_CFGR2_CKMODE;  // reset value already
-    RCC->CR |= RCC_CR_HSION; // Start HSI16 RC oscillator
-    while ((RCC->CR & RCC_CR_HSIRDY) == 0)
-    {
-        // For robust implementation, add here time-out management
-    }
-#endif
-
-    obj->pin = PA_0;     // start for one channel only
-    obj->handle.Instance = (ADC_TypeDef *)ADC_1;
+    __HAL_RCC_ADC1_CLK_ENABLE();
 
     // Configure ADC object structures
-    obj->handle.State = HAL_ADC_STATE_RESET;
-    obj->handle.Init.ClockPrescaler        = ADC_CLOCK_SYNC_PCLK_DIV4;
-    obj->handle.Init.Resolution            = ADC_RESOLUTION_12B;
-    obj->handle.Init.DataAlign             = ADC_DATAALIGN_LEFT;       // for exeponential moving average filter
-    obj->handle.Init.ScanConvMode          = ADC_SCAN_DIRECTION_FORWARD;
-    obj->handle.Init.EOCSelection          = ADC_EOC_SINGLE_CONV;
-    obj->handle.Init.LowPowerAutoWait      = DISABLE;
-    obj->handle.Init.LowPowerAutoPowerOff  = DISABLE;
-    obj->handle.Init.ContinuousConvMode    = DISABLE;
-    obj->handle.Init.DiscontinuousConvMode = DISABLE;
-    obj->handle.Init.ExternalTrigConv      = ADC_SOFTWARE_START;
-    obj->handle.Init.ExternalTrigConvEdge  = ADC_EXTERNALTRIGCONVEDGE_NONE;
-    obj->handle.Init.DMAContinuousRequests = ENABLE; //DISABLE;
-    obj->handle.Init.Overrun               = ADC_OVR_DATA_OVERWRITTEN;
+    hadc.Instance                   = ADC1;
+    hadc.State                      = HAL_ADC_STATE_RESET;
+    hadc.Init.ClockPrescaler        = ADC_CLOCK_SYNC_PCLK_DIV4;
+    hadc.Init.Resolution            = ADC_RESOLUTION_12B;
+    hadc.Init.DataAlign             = ADC_DATAALIGN_LEFT;       // for exponential moving average filter
+    hadc.Init.ScanConvMode          = ADC_SCAN_DIRECTION_FORWARD;
+    hadc.Init.EOCSelection          = ADC_EOC_SINGLE_CONV;
+    hadc.Init.LowPowerAutoWait      = DISABLE;
+    hadc.Init.LowPowerAutoPowerOff  = DISABLE;
+    hadc.Init.ContinuousConvMode    = DISABLE;
+    hadc.Init.DiscontinuousConvMode = DISABLE;
+    hadc.Init.ExternalTrigConv      = ADC_SOFTWARE_START;
+    hadc.Init.ExternalTrigConvEdge  = ADC_EXTERNALTRIGCONVEDGE_NONE;
+    hadc.Init.DMAContinuousRequests = ENABLE; //DISABLE;
+    hadc.Init.Overrun               = ADC_OVR_DATA_OVERWRITTEN;
 
-    if (HAL_ADC_Init(&obj->handle) != HAL_OK) {
+    if (HAL_ADC_Init(&hadc) != HAL_OK) {
         error("Cannot initialize ADC");
     }
 
-    // calibrate ADC
-    if ((ADC1->CR & ADC_CR_ADEN) != 0) // Ensure that ADEN = 0
-    {
-        ADC1->CR |= ADC_CR_ADDIS; // Clear ADEN by setting ADDIS
-    }
-    while ((ADC1->CR & ADC_CR_ADEN) != 0)
-    {
-        // For robust implementation, add here time-out management
-    }
-    ADC1->CFGR1 &= ~ADC_CFGR1_DMAEN; // disable DMA during calibration
-    ADC1->CR |= ADC_CR_ADCAL; // Launch the calibration by setting ADCAL
-    while ((ADC1->CR & ADC_CR_ADCAL) != 0) // Wait until ADCAL=0
-    {
-        // For robust implementation, add here time-out management
-    }
-
-    ADC_ChannelConfTypeDef sConfig = {0};
-
-    // Configure ADC channel
-    sConfig.Rank         = ADC_RANK_CHANNEL_NUMBER;
-#if defined(STM32F0)
-    sConfig.SamplingTime = ADC_SAMPLETIME_7CYCLES_5;
+#if defined(STM32L0)
+    HAL_ADCEx_Calibration_Start(&hadc, ADC_SINGLE_ENDED);
+#else
+    HAL_ADCEx_Calibration_Start(&hadc);
 #endif
 
+    // Configure ADC channel
+    sConfig.Channel     = ADC_CHANNEL_0;            // can be any channel for initialization
+    sConfig.Rank        = ADC_RANK_CHANNEL_NUMBER;
+
     // Clear all channels as it is not done in HAL_ADC_ConfigChannel()
-    obj->handle.Instance->CHSELR = 0;
+    hadc.Instance->CHSELR = 0;
 
-    HAL_ADC_ConfigChannel(&obj->handle, &sConfig);
-
-    HAL_ADC_Start(&obj->handle); // Start conversion
-
-    /*
-    // Read out value one time to finish ADC configuration
-    if (HAL_ADC_PollForConversion(&obj->handle, 10) == HAL_OK) {
-        HAL_ADC_GetValue(&obj->handle);
+    if (HAL_ADC_ConfigChannel(&hadc, &sConfig) != HAL_OK) {
+        error("Cannot initialize ADC");
     }
-    */
-    // Performs the AD conversion
-    ADC1->CR |= ADC_CR_ADSTART; // Start the ADC conversion
-    for (int i = 0 ; i < 4 ; i++)
-    {
-        while ((ADC1->ISR & ADC_ISR_EOC) == 0) // Wait end of conversion
-        {
-            // For robust implementation, add here time-out management
-        }
-        //ADC_Result[i] = ADC1->DR; // Store the ADC conversion result
+
+    HAL_ADC_Start(&hadc); // Start conversion
+
+    // Read out value one time to finish ADC configuration
+    if (HAL_ADC_PollForConversion(&hadc, 10) == HAL_OK) {
+        HAL_ADC_GetValue(&hadc);
     }
 
     // ADC sampling time register
@@ -318,19 +276,6 @@ void setup_adc()
     // Select ADC channels based on setup in config.h
     ADC1->CHSELR = ADC_CHSEL;
 
-/*
-    // Select ADC channels
-    ADC1->CHSELR = 
-        ADC_CHSELR_CHSEL0 |     // PIN_TEMP_BAT PA_0
-        ADC_CHSELR_CHSEL1 |     // PIN_TEMP_INT PA_1
-        ADC_CHSELR_CHSEL5 |     // PIN_V_REF    PA_5
-        ADC_CHSELR_CHSEL6 |     // PIN_V_BAT    PA_6
-        ADC_CHSELR_CHSEL7 |     // PIN_V_SOLAR  PA_7
-        ADC_CHSELR_CHSEL8 |     // PIN_I_LOAD   PB_0
-        ADC_CHSELR_CHSEL9 |     // PIN_I_DCDC   PB_1
-        ADC_CHSELR_CHSEL16;     // internal temperature ref
-//        ADC_CHSELR_CHSEL17 |     // internal voltage ref
-*/
     //ADC1->CFGR1 &= ~(ADC_CFGR1_EXTEN_0 | ADC_CFGR1_EXTEN_1);
     //ADC1->CFGR1 |= ADC_CFGR1_EXTEN_0;       // enable external trigger (e.g. timer)
 

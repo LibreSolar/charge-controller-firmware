@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-// generates PWM signal on PB0 and PB1 using timer TIM3
+
+/* Generates PWM signal on PB0 (high-side) and PB1 (low-side) using timer TIM3
+ */
 
 #ifndef UNIT_TEST
 
@@ -79,8 +81,8 @@ void _init_registers(int freq_kHz)
 
     // Capture/Compare Enable Register
     // CCxP: Active high polarity on OCx (default = 0)
-    TIM3->CCER |= TIM_CCER_CC3P;
-    TIM3->CCER &= ~(TIM_CCER_CC4P);
+    TIM3->CCER &= ~(TIM_CCER_CC3P);     // PB0 / TIM3_CH3: high-side
+    TIM3->CCER |= TIM_CCER_CC4P;        // PB1 / TIM3_CH4: low-side
 
     // Control Register 1
     // TIM_CR1_CMS = 01: Select center-aligned mode 1
@@ -130,8 +132,8 @@ void half_bridge_set_duty_cycle(float duty)
         duty_target = duty;
     }
 
-    TIM3->CCR3 = _pwm_resolution / 2 * duty_target + _deadtime_clocks;
-    TIM3->CCR4 = _pwm_resolution / 2 * duty_target;
+    TIM3->CCR3 = _pwm_resolution / 2 * duty_target; // high-side
+    TIM3->CCR4 = _pwm_resolution / 2 * duty_target + _deadtime_clocks; // low-side
 }
 
 void half_bridge_duty_cycle_step(int delta)

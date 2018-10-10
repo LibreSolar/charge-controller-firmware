@@ -14,37 +14,31 @@
  * limitations under the License.
  */
 
-#ifndef __CHARGER_H_
-#define __CHARGER_H_
+#ifndef __DCDC_H_
+#define __DCDC_H_
 
 #include "data_objects.h"
 #include <stdbool.h>
+//#include "structs.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void battery_init(battery_t* bat, int type, int capacity_Ah);
-
 /* Initialize DC/DC and DC/DC port structs
  *
  * See http://libre.solar/docs/dcdc_control for detailed information
  */
-//void dcdc_init(dcdc_t *dcdc);
-//void dcdc_port_init_bat(dcdc_port_t *port, battery_t *bat);
-//void dcdc_port_init_solar(dcdc_port_t *port);
-//void dcdc_port_init_nanogrid(dcdc_port_t *port);
+void dcdc_init(dcdc_t *dcdc);
 
-/* Charger state machine update, should be called exactly once per second
- */
-void charger_state_machine(dcdc_port_t *port, battery_t *bat, float voltage, float current);
+void dcdc_port_init_bat(dcdc_port_t *port, battery_t *bat);
+void dcdc_port_init_solar(dcdc_port_t *port);
+void dcdc_port_init_nanogrid(dcdc_port_t *port);
 
-void bat_calculate_soc(battery_t *bat, float voltage, float current);
-
-//void dcdc_control(dcdc_t *dcdc, dcdc_port_t *high_side, dcdc_port_t *low_side);
+void dcdc_control(dcdc_t *dcdc, dcdc_port_t *high_side, dcdc_port_t *low_side);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // CHARGER_H
+#endif // DCDC_H

@@ -21,8 +21,12 @@
 
 const char* manufacturer = "Libre Solar";
 const char* deviceName = "MPPT Solar Charge Controller 20A";
+const char* deviceID = "LSMPPT-00001";
 
 const data_object_t dataObjects[] = {
+    // info
+    {0x1003, TS_ACCESS_READ, TS_T_STRING, 0, (void*) &(deviceID), "deviceID"},
+
     // input data
     {0x3001, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_BOOL, 0, (void*) &(load.enabled_target), "loadEnTarget"},
     {0x3002, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_BOOL, 0, (void*) &(load.usb_enabled_target), "usbEnTarget"},

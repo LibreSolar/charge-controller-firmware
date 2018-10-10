@@ -106,7 +106,7 @@ typedef struct {
     float current;
 
     // target voltage if port is configured as output
-    float voltage_output_max;
+    float voltage_output_target;
     float droop_resistance;     // v_target = v_out_max - r_droop * current
     
     // minimum voltage to allow current output (necessary to prevent charging of deep-discharged Li-ion batteries)
@@ -130,9 +130,6 @@ typedef struct {
  */
 typedef struct {
     // actual measurements
-    //float hs_voltage;
-    //float hs_current;         // not measured, could only be calculated
-    //float ls_voltage;
     float ls_current;           // inductor current
     float temp_mosfets;
 
@@ -152,7 +149,7 @@ typedef struct {
     //float offset_voltage_stop;   // V  charging switched off if Vsolar < Vbat + offset
     int restart_interval;   // s    --> when should we retry to start charging after low solar power cut-off?
 } dcdc_t;
-
+    
 /* Load Output type
  * 
  * Stores status of load output incl. 5V USB output (if existing on PCB)

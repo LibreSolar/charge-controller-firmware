@@ -39,7 +39,7 @@
 #define PIN_SWD_RX    PA_10
 
 #define PIN_LED_SOC_12 PB_13
-#define PIN_LED_SOC_3  PB_2
+#define PIN_LED_SOC    PB_2
 #define PIN_LED_SOLAR  PB_11
 #define PIN_LED_LOAD   PB_10
 #define PIN_LED_GND    PB_14

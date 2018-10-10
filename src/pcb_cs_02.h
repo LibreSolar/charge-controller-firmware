@@ -38,9 +38,6 @@
 #define PIN_SWD_TX    PA_9
 #define PIN_SWD_RX    PA_10
 
-#define PIN_PWM_HS    PA_8
-#define PIN_PWM_LS    PB_13
-
 #define PIN_LED_SOC   PB_14   // LED1
 #define PIN_LED_SOLAR PB_15   // LED2
 #define PIN_LED_LOAD  PB_12   // LED3

@@ -85,7 +85,7 @@ void update_solar_led(bool enabled)
 //----------------------------------------------------------------------------
 void flash_led_soc(battery_t *bat)
 {
-#ifdef PCB_CS_02
+#ifdef PIN_LED_SOC
     if (bat->full) {
         led_soc = 1;
     }

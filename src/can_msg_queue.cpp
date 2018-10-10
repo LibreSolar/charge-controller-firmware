@@ -1,4 +1,6 @@
 
+#ifdef STM32F0  // STM32L0 does not have CAN
+
 #include "can_msg_queue.h"
 
 bool CANMsgQueue::full() {
@@ -46,3 +48,4 @@ int CANMsgQueue::first(CANMessage& msg) {
     }
 }
 
+#endif /* STM32F0 */

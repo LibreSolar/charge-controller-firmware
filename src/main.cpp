@@ -22,13 +22,14 @@
 #include "config.h"
 #include "data_objects.h"
 
-#include "half_bridge.h"
-#include "hardware.h"
-#include "charger.h"
-#include "adc_dma.h"
+#include "half_bridge.h"        // PWM generation for DC/DC converter
+#include "hardware.h"           // hardware-related functions like load switch, LED control, watchdog, etc.
+#include "dcdc.h"               // DC/DC converter control (hardware independent)
+#include "charger.h"            // battery charging state machine
+#include "adc_dma.h"            // ADC using DMA and conversion to measurement values
 #include "output.h"
 #include "communication.h"
-#include "eeprom.h"
+#include "eeprom.h"             // external I2C EEPROM
 
 //----------------------------------------------------------------------------
 // global variables
@@ -67,7 +68,6 @@ int seconds_day = 0;
 int day_counter = 0;
 bool nighttime = false;
 
-//Thread dcdc_thread;
 Timer tim;
 
 //----------------------------------------------------------------------------
@@ -75,7 +75,6 @@ Timer tim;
 
 void setup();
 void energy_counter();
-
 
 void check_overcurrent()
 {
@@ -122,11 +121,7 @@ int main()
         if (time(NULL) - last_second >= 1) {
             last_second = time(NULL);
 
-            //serial.printf("Still alive... time: %d\n", (int)time(NULL));
-
-            // TEST only!!
-            //if (dcdc_enabled()) dcdc_stop();
-            //else dcdc_start(0.9);
+            //printf("Still alive... time: %d\n", (int)time(NULL));
 
             charger_state_machine(&ls_port, &bat, ls_port.voltage, ls_port.current);
 
@@ -224,6 +219,8 @@ void setup()
 
     update_measurements(&dcdc, &bat, &load, &hs_port, &ls_port);
     calibrate_current_sensors(&dcdc, &load);
+
+    //output_sdcard();
 }
 
 //----------------------------------------------------------------------------
