@@ -33,54 +33,97 @@ void _enter_state(battery_t* bat, int next_state)
     bat->state = next_state;
 }
 
-void battery_init(battery_t* bat, int type, int capacity_Ah)
+void battery_init(battery_t* bat, int type, int capacity_Ah, int num_cells)
 {
-    bat->num_cells = 6;     // for normal 12V lead acid batteries
+    // init to safe defaults
+    bat->charge_current_max = 20;               // A        PCB maximum: 20 A
+
+     // Trickle / Equalization Charge Configuration ONLY FOR LEAD-ACID 
+    bat->trickle_enabled = false;
+    bat->equalization_enabled = false;          // only for lead acid
+    bat->valid_config = false; // just to be on the safe side
+ 
+    // battery pack specific information
+    bat->num_cells = num_cells; 
+
     bat->capacity = capacity_Ah;
 
+    // common values (shared for all battery types)
+
+ 
     // State: Standby
     bat->time_limit_recharge = 60;              // sec
-    bat->cell_voltage_recharge = 2.3;           // V
-    bat->cell_voltage_absolute_min = 1.8;       // V   (under this voltage, battery is considered damaged)
-
-    bat->charge_current_max = 20;               // A        PCB maximum: 20 A
-    bat->cell_voltage_max = 2.4;                // CV/absorption stage
     bat->time_limit_CV = 120*60;                // sec
-    bat->current_cutoff_CV = 2.0;               // A
 
-    bat->trickle_enabled = true;                // float/trickle state (not needed for li-ion chemistries)
-    bat->cell_voltage_trickle = 2.3;            // target voltage for trickle charging of lead-acid batteries
-    bat->time_trickle_recharge = 30*60;         // sec
+    switch (type)
+    {
+        case BAT_TYPE_FLOODED:
+        case BAT_TYPE_AGM:
+        case BAT_TYPE_GEL:
+            
+            bat->cell_voltage_max = 2.4;                // CV/absorption stage
+            bat->cell_voltage_recharge = 2.3;           // V
+            bat->cell_voltage_absolute_min = 1.8;       // V   (under this voltage, battery is considered damaged)
 
-    bat->equalization_enabled = false;          // only for lead acid
-    bat->cell_voltage_equalization = 2.5;       // V
-    bat->time_limit_equalization = 60*60;       // sec
-    bat->current_limit_equalization = 1.0;      // A
-    bat->equalization_trigger_time = 8;         // weeks
-    bat->equalization_trigger_deep_cycles = 10; // times
+            bat->cell_voltage_load_disconnect = 1.9;    // 1.95
+            bat->cell_voltage_load_reconnect = 2.0;     // 2.2
 
-    bat->cell_voltage_load_disconnect = 1.9;    // 1.95
-    bat->cell_voltage_load_reconnect = 2.0;     // 2.2
+            bat->cell_ocv_full = 2.2;
+            bat->cell_ocv_empty = 1.9;
 
-    bat->cell_ocv_full = 2.2;
-    bat->cell_ocv_empty = 1.9;
+            
+            bat->current_cutoff_CV = (2.0 /7.0) * bat->capacity ;               // A
 
-    // not yet implemented...
-    bat->temperature_compensation = -0.003;     // -3 mV/°C/cell
+            bat->trickle_enabled = true;                // float/trickle state (not needed for li-ion chemistries)
+            bat->time_trickle_recharge = 30*60;         // sec
 
-    if (type == BAT_TYPE_FLOODED) {
-        // http://batteryuniversity.com/learn/article/charging_the_lead_acid_battery
-        bat->cell_voltage_trickle = 2.25;
-    }
-    else if (type == BAT_TYPE_LFP) {    // 12V LiFePO4 battery
-        bat->num_cells = 4;
-        bat->cell_voltage_max = 3.55;               // CV voltage
-        bat->current_cutoff_CV = capacity_Ah / 10;  // C/10 cut-off at end of CV phase
-        bat->cell_voltage_recharge = 3.35;
-        bat->trickle_enabled = false;
-        bat->cell_voltage_load_disconnect = 3.0;
-        bat->cell_voltage_load_reconnect  = 3.15;
-        bat->temperature_compensation = 0.0;
+            // Trickle Charge Voltage Configuration
+            bat->cell_voltage_trickle = 2.3;            // target voltage for trickle charging of lead-acid batteries
+
+            if (type == BAT_TYPE_FLOODED) {
+                // http://batteryuniversity.com/learn/article/charging_the_lead_acid_battery
+                bat->cell_voltage_trickle = 2.25;
+            }
+
+            bat->equalization_enabled = false;          // only for lead acid
+            bat->cell_voltage_equalization = 2.5;       // V
+            bat->time_limit_equalization = 60*60;       // sec
+            bat->current_limit_equalization = (1.0 /7.0) * bat->capacity;      // A
+            bat->equalization_trigger_time = 8;         // weeks
+            bat->equalization_trigger_deep_cycles = 10; // times
+
+
+            // not yet implemented...
+            bat->temperature_compensation = -0.003;     // -3 mV/°C/cell
+            bat->valid_config = true;
+            break;
+        case BAT_TYPE_LFP:
+                // 12V LiFePO4 battery
+            bat->cell_voltage_max = 3.55;               // CV voltage
+            bat->cell_voltage_recharge = 3.35;
+            bat->cell_voltage_load_disconnect = 3.0;
+            bat->cell_voltage_load_reconnect  = 3.15;
+            
+            bat->trickle_enabled = false;
+            bat->equalization_enabled = false;
+            bat->temperature_compensation = 0.0;
+            bat->current_cutoff_CV = bat->capacity / 10;  // C/10 cut-off at end of CV phase
+            bat->valid_config = true;
+            break;
+        case BAT_TYPE_NMC:
+            bat->cell_voltage_max = 4.20;               // CV voltage
+            bat->cell_voltage_recharge = 4.00;
+            bat->cell_voltage_load_disconnect = 3.3;
+            bat->cell_voltage_load_reconnect  = 3.6;
+
+            bat->trickle_enabled = false;
+            bat->equalization_enabled = false;
+            bat->temperature_compensation = 0.0;
+            bat->current_cutoff_CV = bat->capacity / 10;  // C/10 cut-off at end of CV phase
+            bat->valid_config = true;
+            break;
+        default:
+            bat->valid_config = false;
     }
 }
 

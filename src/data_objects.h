@@ -35,7 +35,6 @@ extern dcdc_port_t ls_port;
 extern const data_object_t dataObjects[]; // see output_can.cpp
 extern const size_t dataObjectsCount;
 
-static bool pub_data_enabled = 0;
 
 // stores object-ids of values to be stored in EEPROM
 static const int eeprom_data_objects[] = {
