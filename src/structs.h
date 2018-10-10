@@ -19,6 +19,7 @@ extern "C" {
 
 typedef struct
 {
+    // configuration data (r any time, write only at startup / init, change requires reinit of charger )
     int num_cells;
     int capacity;
 
@@ -56,6 +57,10 @@ typedef struct
 
     float temperature_compensation;     // voltage compensation (suggested: -3 mV/°C/cell)
 
+    bool valid_config;
+
+    // operational data below (r/w during operation)
+
     float temperature;                  // °C from ext. temperature sensor (if existing)
     
     float input_Wh_day;
@@ -76,7 +81,7 @@ typedef struct
 
 // battery types 
 enum {
-    BAT_TYPE_DEFAULT,        // stafe standard settings
+    BAT_TYPE_NONE,        // stafe standard settings
     BAT_TYPE_FLOODED,        // old flooded (wet) lead-acid batteries
     BAT_TYPE_GEL,            // VRLA gel batteries (maintainance-free)
     BAT_TYPE_AGM,            // AGM batteries (maintainance-free)

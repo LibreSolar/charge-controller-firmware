@@ -76,6 +76,9 @@ Timer tim;
 void setup();
 void energy_counter();
 
+// static variables (only visible in this  file)
+static bool pub_data_enabled;
+
 void check_overcurrent()
 {
     if (load.current > load.current_max) {
@@ -191,8 +194,8 @@ void setup()
     //printf("\nSerial interface started...\n");
     //freopen("/serial", "w", stdout);  // retarget stdout
 
-    battery_init(&bat, BAT_TYPE_FLOODED, 7);
-    //battery_init(&bat, BAT_TYPE_LFP, 20);
+    battery_init(&bat, BAT_TYPE_FLOODED, 7, 6);
+    //battery_init(&bat, BAT_TYPE_LFP, 20, 4);
 
     dcdc_init(&dcdc);
 
