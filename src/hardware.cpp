@@ -1,20 +1,7 @@
 
-
-#ifndef UNIT_TEST
-
 #include "hardware.h"
-
 #include "half_bridge.h"
-
 #include "data_objects.h"
-//#include "config.h"
-
-//#include "structs.h"
-
-
-// LED1 (red, top): Duty cycle shows state of charge, i.e. continuously on = full, 3s on/1s off = 75% full, short flash with long pauses in between = almost empty
-// LED2 (green, middle): Solar indicator: on = charging, off = not charging
-// LED3 (green, bottom close to USB port): Load indicator: on = load switch and USB charging on, off = both switched off because of low battery
 
 #ifdef PIN_LOAD_EN
 DigitalOut load_enable(PIN_LOAD_EN);
@@ -23,9 +10,8 @@ DigitalOut load_disable(PIN_LOAD_DIS);
 #endif
 
 #ifdef PIN_LED_SOC
-DigitalOut led_soc(PIN_LED_SOC);
+DigitalOut led_soc(PIN_LED_SOC);    // only one LED
 #else
-DigitalOut led_soc_12(PIN_LED_SOC_12);
 DigitalOut led_soc_3(PIN_LED_SOC_3);
 #endif
 
@@ -35,11 +21,10 @@ DigitalOut led_solar(PIN_LED_SOLAR);
 DigitalOut led_load(PIN_LED_LOAD);
 #endif
 
-#ifdef PIN_LED_GND
-DigitalOut led_gnd(PIN_LED_GND);
-#endif
-
 //extern battery_t bat;
+
+int led1_CCR;   // CCR for TIM21 to switch LED1 on
+int led2_CCR;   // CCR for TIM21 to switch LED2 on
 
 //----------------------------------------------------------------------------
 void enable_load()
@@ -69,11 +54,79 @@ void disable_load()
 #endif
 }
 
+// mbed-os uses TIM21 on L0 for us-ticker
+// https://github.com/ARMmbed/mbed-os/issues/6854
+// fix: patch targets/TARGET_STM/TARGET_STM32L0/TARGET_NUCLEO_L073RZ/device/us_ticker_data.h
+
 void init_leds()
 {
-#ifdef PIN_LED_GND
-    // TODO: generate PWM signal
-    led_gnd = 0;
+#ifdef PIN_LED_SOC_3
+    led_soc_3 = 1;      // always enabled (0-20% SOC)
+#endif
+
+#ifdef PIN_LED_LOAD
+    led_load = 1;       // switch on during start-up
+#endif
+
+led_solar = 1;          // switch on during start-up
+
+#if defined(PIN_LED_GND) && defined(STM32L0)
+    // PB13 / TIM21_CH1: LED_SOC12  --> high for LED2, PWM for LED1 + 2
+    // PB14 / TIM21_CH2: LED_GND    --> always PWM
+
+    const int freq = 1;     // kHz
+    const float duty_target = 0.2;
+
+    RCC->IOPENR |= RCC_IOPENR_IOPBEN;
+
+    // Enable TIM21 clock
+    RCC->APB2ENR |= RCC_APB2ENR_TIM21EN;
+
+    // Select alternate function mode on PB13 and PB14 (first bit _1 = 1, second bit _0 = 0)
+    GPIOB->MODER = (GPIOB->MODER & ~(GPIO_MODER_MODE13)) | GPIO_MODER_MODE13_1;
+    GPIOB->MODER = (GPIOB->MODER & ~(GPIO_MODER_MODE14)) | GPIO_MODER_MODE14_1;
+
+    // Select AF6 on PB13 and PB14
+    GPIOB->AFR[1] |= 0x6 << GPIO_AFRH_AFRH5_Pos;        // 5 + 8 = PB13
+    GPIOB->AFR[1] |= 0x6 << GPIO_AFRH_AFRH6_Pos;        // 6 + 8 = PB14
+
+    // No prescaler --> timer frequency = 32 MHz        // TODO!
+    TIM21->PSC = 0;
+
+    // Capture/Compare Mode Register 1
+    // OCxM = 110: Select PWM mode 1 on OCx
+    // OCxPE = 1:  Enable preload register on OCx (reset value)
+    TIM21->CCMR1 |= TIM_CCMR1_OC1M_2 | TIM_CCMR1_OC1M_1 | TIM_CCMR1_OC1PE;
+    TIM21->CCMR1 |= TIM_CCMR1_OC2M_2 | TIM_CCMR1_OC2M_1 | TIM_CCMR1_OC2PE;
+
+    // Capture/Compare Enable Register
+    // CCxP: Active high polarity on OCx (default = 0)
+    TIM21->CCER &= ~(TIM_CCER_CC1P);     // PB13
+    TIM21->CCER |= TIM_CCER_CC2P;        // PB14
+
+    // Control Register 1
+    // TIM_CR1_CMS = 01: Select center-aligned mode 1
+    // TIM_CR1_CEN =  1: Counter enable
+    TIM21->CR1 |= TIM_CR1_CMS_0 | TIM_CR1_CEN;
+
+    // Force update generation (UG = 1)
+    TIM21->EGR |= TIM_EGR_UG;
+
+    // set PWM frequency and resolution
+    int _pwm_resolution = SystemCoreClock / (freq * 1000);
+
+    // Auto Reload Register
+    // center-aligned mode --> divide resolution by 2
+    TIM21->ARR = _pwm_resolution / 2;
+
+    TIM21->CCR2 = _pwm_resolution / 2 * duty_target; // LED_GND
+    
+    led1_CCR = TIM21->ARR - TIM21->CCR2;        // LED1 + LED2
+    led2_CCR = TIM21->ARR;                      // only LED2
+    TIM21->CCR1 = led1_CCR;         // start with all LEDs on
+    
+    TIM21->CCER |= TIM_CCER_CC1E;   // enable PWM on LED_12
+    TIM21->CCER |= TIM_CCER_CC2E;   // enable PWM on LED_GND
 #endif
 }
 
@@ -112,6 +165,18 @@ void flash_led_soc(battery_t *bat)
         else {
             led_soc = 0;
         }
+    }
+#elif defined(PIN_LED_SOC_3) // 3-bar SOC gauge
+    if (bat->soc > 80) {
+        TIM21->CCR1 = led1_CCR;
+        TIM21->CCER |= TIM_CCER_CC1E;
+    }
+    else if (bat->soc > 20) {
+        TIM21->CCR1 = led2_CCR;
+        TIM21->CCER |= TIM_CCER_CC1E;        
+    }
+    else {
+        TIM21->CCER &= ~(TIM_CCER_CC1E);
     }
 #endif
 }
@@ -201,5 +266,3 @@ void mbed_die(void)
         feed_the_dog();
     }
 }
-
-#endif /* UNIT_TEST */

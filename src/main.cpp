@@ -76,7 +76,7 @@ Timer tim;
 void setup();
 void energy_counter();
 
-// static variables (only visible in this  file)
+// static variables (only visible in this file)
 static bool pub_data_enabled;
 
 void check_overcurrent()
@@ -96,9 +96,11 @@ int main()
 
     time_t last_second = time(NULL);
 
-    // configure high-side and low-side port of DC/DC (defines control mode)
-    dcdc_port_init_solar(&hs_port);
-    //dcdc_port_init_nanogrid(&hs_port);
+    // high-side port of DC/DC (solar for typical MPPT)
+    //dcdc_port_init_solar(&hs_port);
+    dcdc_port_init_nanogrid(&hs_port);
+    
+    // low-side port (battery in most cases)
     dcdc_port_init_bat(&ls_port, &bat);
 
     while(1) {
@@ -185,10 +187,8 @@ void setup()
     usb_pwr_en = 1;
 #endif
 
-    init_leds();
     disable_load();
-
-    //led_soc_12 = 1;
+    init_leds();
 
     serial.baud(57600);
     //printf("\nSerial interface started...\n");

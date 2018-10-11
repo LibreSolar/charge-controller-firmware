@@ -4,7 +4,6 @@
 #define __HARDWARE_H_
 
 #include "mbed.h"
-//#include "structs.h"
 #include "data_objects.h"
 
 void enable_load();
