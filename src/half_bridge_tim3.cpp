@@ -35,9 +35,9 @@ static bool _enabled;
 
 void _init_registers(int freq_kHz)
 {
+    // Enable peripheral clock of GPIOB
 #if defined(STM32F0)
-    // Enable peripheral clock of GPIOA and GPIOB
-    RCC->AHBENR |= RCC_AHBENR_GPIOAEN | RCC_AHBENR_GPIOBEN;
+    RCC->AHBENR |= RCC_AHBENR_GPIOBEN;
 #elif defined(STM32L0)
     RCC->IOPENR |= RCC_IOPENR_IOPBEN;
 #endif
@@ -54,12 +54,6 @@ void _init_registers(int freq_kHz)
     GPIOB->MODER = (GPIOB->MODER & ~(GPIO_MODER_MODE1)) | GPIO_MODER_MODE1_1;
 #endif
 
-    // Select AF2 on PB10 (TIM3_CH3)
-    //GPIOB->AFR[1] |= 0x2 << ((10 - 8)*4);  // AFR[1] for pins 8-15
-
-    // Select AF2 on PB11 (TIM3_CH4)
-    //GPIOB->AFR[1] |= 0x2 << ((11 - 8)*4);  // AFR[1] for pins 8-15
-
 #if defined(STM32F0)
     // Select AF1 on PB0 and PB1
     GPIOB->AFR[0] |= 0x1 << GPIO_AFRL_AFSEL0_Pos;
@@ -70,7 +64,7 @@ void _init_registers(int freq_kHz)
     GPIOB->AFR[0] |= 0x2 << GPIO_AFRL_AFRL1_Pos;
 #endif
 
-    // No prescaler --> timer frequency = 48 MHz
+    // No prescaler --> timer frequency = 32/48 MHz (for L0/F0)
     TIM3->PSC = 0;
 
     // Capture/Compare Mode Register 1
@@ -139,22 +133,13 @@ void half_bridge_set_duty_cycle(float duty)
 void half_bridge_duty_cycle_step(int delta)
 {
     float duty_target;
-    duty_target = (float)(TIM3->CCR1 + delta) / (_pwm_resolution / 2);
+    duty_target = (float)(TIM3->CCR3 + delta) / (_pwm_resolution / 2);
 
-    // protection against wrong settings which could destroy the hardware
-    if (duty_target < _min_duty) {
-        half_bridge_set_duty_cycle(_min_duty);
-    }
-    else if (duty_target > _max_duty) {
-        half_bridge_set_duty_cycle(_max_duty);
-    }
-    else {
-        TIM3->CCR1 = TIM3->CCR1 + delta;
-    }
+    half_bridge_set_duty_cycle(duty_target);
 }
 
 float half_bridge_get_duty_cycle() {
-    return (float)(TIM3->CCR1) / (_pwm_resolution / 2);;
+    return (float)(TIM3->CCR3) / (_pwm_resolution / 2);;
 }
 
 void half_bridge_start(float pwm_duty)
@@ -174,8 +159,8 @@ void half_bridge_start(float pwm_duty)
 
 void half_bridge_stop()
 {
-    TIM3->CCER &= ~(TIM_CCER_CC4E);
     TIM3->CCER &= ~(TIM_CCER_CC3E);
+    TIM3->CCER &= ~(TIM_CCER_CC4E);
 
     _enabled = false;
 }
