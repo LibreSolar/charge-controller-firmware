@@ -19,14 +19,16 @@ extern "C" {
 
 typedef struct
 {
-    // configuration data (r any time, write only at startup / init, change requires reinit of charger )
+    // configuration data (read any time, write only at startup / init, change requires reinit of charger )
     int num_cells;
-    int capacity;
+    float capacity;                   // Ah
 
     // State: Standby
     int time_limit_recharge;         // sec
     float cell_voltage_recharge;     // V
+
     float cell_voltage_absolute_min; // V   (below this voltage the battery is considered damaged)
+    float cell_voltage_absolute_max; // V   (above this voltage the battery can be damaged)
 
     // State: CC/bulk
     float charge_current_max;        // A
@@ -52,6 +54,7 @@ typedef struct
     float cell_voltage_load_disconnect;
     float cell_voltage_load_reconnect;
 
+    // used to calculate state of charge information 
     float cell_ocv_full;
     float cell_ocv_empty;
 
@@ -80,13 +83,14 @@ typedef struct
 } battery_t;
 
 // battery types 
-enum {
-    BAT_TYPE_NONE,        // stafe standard settings
-    BAT_TYPE_FLOODED,        // old flooded (wet) lead-acid batteries
-    BAT_TYPE_GEL,            // VRLA gel batteries (maintainance-free)
-    BAT_TYPE_AGM,            // AGM batteries (maintainance-free)
-    BAT_TYPE_LFP,            // LiFePO4 Li-ion batteries (3.3V nominal)
-    BAT_TYPE_NMC             // NMC/Graphite Li-ion batteries (3.7V nominal)
+enum BatteryType {
+    BAT_TYPE_NONE = 0,        // stafe standard settings
+    BAT_TYPE_FLOODED,         // old flooded (wet) lead-acid batteries
+    BAT_TYPE_GEL,             // VRLA gel batteries (maintainance-free)
+    BAT_TYPE_AGM,             // AGM batteries (maintainance-free)
+    BAT_TYPE_LFP,             // LiFePO4 Li-ion batteries (3.3V nominal)
+    BAT_TYPE_NMC,             // NMC/Graphite Li-ion batteries (3.7V nominal)
+    BAT_TYPE_NMC_HV,          // NMC/Graphite High Voltage Li-ion batteries (3.7V nominal, 4.35 max)
 };
 
 // possible charger states
