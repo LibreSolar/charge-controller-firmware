@@ -24,7 +24,7 @@
 extern "C" {
 #endif
 
-void battery_init(battery_t* bat, BatteryType type, float capacity_Ah, int num_cells_series);
+void battery_init(battery_t* bat, BatteryConfigUser&);
 
 /* Initialize DC/DC and DC/DC port structs
  *

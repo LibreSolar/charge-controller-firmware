@@ -73,13 +73,19 @@ static void set_default_if_out_of_range(float& value, const float defaultValue, 
 // optional: cell_voltage_max,  cell_voltage_recharge,cell_voltage_load_disconnect, cell_voltage_load_reconnect
 // leave values at 0 to get default values
 
-void battery_init(battery_t* bat, BatteryType type, float capacity_Ah, int num_cells)
+void battery_init(battery_t* bat, BatteryConfigUser& batDesc)
 {
 
     // battery pack specific information
-    bat->num_cells = num_cells; 
-
-    bat->capacity = capacity_Ah;
+    bat->num_cells = batDesc.num_cells; 
+    bat->capacity = batDesc.capacity;
+    
+    bat->cell_voltage_max = batDesc.cell_voltage_max;
+    bat->cell_voltage_recharge = batDesc.cell_voltage_recharge;
+    bat->cell_voltage_load_disconnect = batDesc.cell_voltage_load_disconnect;
+    bat->cell_voltage_load_reconnect = batDesc.cell_voltage_load_reconnect;
+    bat->charge_current_max = batDesc.charge_current_max;
+    bat->current_cutoff_CV = batDesc.current_cutoff_CV;
 
     // if we get zero, set to safe 1Ah
     set_to_default_if_zero(bat->capacity, 1.0f);
@@ -106,7 +112,7 @@ void battery_init(battery_t* bat, BatteryType type, float capacity_Ah, int num_c
     bat->time_limit_recharge = 60;              // sec
     bat->time_limit_CV = 120*60;                // sec
 
-    switch (type)
+    switch (batDesc.type)
     {
         case BAT_TYPE_FLOODED:
         case BAT_TYPE_AGM:
@@ -132,7 +138,7 @@ void battery_init(battery_t* bat, BatteryType type, float capacity_Ah, int num_c
             // Trickle Charge Voltage Configuration
             bat->cell_voltage_trickle = 2.3;            // target voltage for trickle charging of lead-acid batteries
 
-            if (type == BAT_TYPE_FLOODED) {
+            if (batDesc.type == BAT_TYPE_FLOODED) {
                 // http://batteryuniversity.com/learn/article/charging_the_lead_acid_battery
                 bat->cell_voltage_trickle = 2.25;
             }
@@ -159,7 +165,7 @@ void battery_init(battery_t* bat, BatteryType type, float capacity_Ah, int num_c
             set_default_if_out_of_range(bat->cell_voltage_load_disconnect,   3.0,                                    2.5,                                    bat->cell_voltage_max - 0.2);
             set_default_if_out_of_range(bat->cell_voltage_load_reconnect,    bat->cell_voltage_load_disconnect+0.15, bat->cell_voltage_load_disconnect+0.1,  bat->cell_voltage_max - 0.1);
             set_default_if_out_of_range(bat->cell_voltage_recharge,          bat->cell_voltage_max - 0.2,            bat->cell_voltage_absolute_min + 0.1,   bat->cell_voltage_max - 0.1);
-            set_default_if_out_of_range(bat->current_cutoff_CV,              bat->capacity / 10.0,                     0.0001,                                 bat->charge_current_max * 0.9) ;  
+            set_default_if_out_of_range(bat->current_cutoff_CV,              bat->capacity / 10.0,                   0.0001,                                 bat->charge_current_max * 0.9) ;  
             // C/10 cut-off at end of CV phase by default
     
             /*
@@ -179,7 +185,7 @@ void battery_init(battery_t* bat, BatteryType type, float capacity_Ah, int num_c
         case BAT_TYPE_NMC:
         case BAT_TYPE_NMC_HV:
             bat->cell_voltage_absolute_min = 2.5;       // V   (under this voltage, battery is considered damaged)
-            bat->cell_voltage_absolute_max = type==BAT_TYPE_NMC_HV? 4.35 : 4.20;
+            bat->cell_voltage_absolute_max = batDesc.type==BAT_TYPE_NMC_HV? 4.35 : 4.20;
 
             set_default_if_out_of_range(bat->cell_voltage_max,               bat->cell_voltage_absolute_max-0.1,     bat->cell_voltage_absolute_min+0.7,     bat->cell_voltage_absolute_max);
             set_default_if_out_of_range(bat->cell_voltage_load_disconnect,   3.3,                                    3.0,                                    bat->cell_voltage_max - 0.2);

@@ -3,8 +3,8 @@
 #ifndef __STRUCTS_H_
 #define __STRUCTS_H_
 
-#include "data_objects.h"
 #include <stdbool.h>
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -50,6 +50,7 @@ typedef struct
     float current_limit_equalization;     // A
     int equalization_trigger_time;        // weeks
     int equalization_trigger_deep_cycles; // times
+
 
     float cell_voltage_load_disconnect;
     float cell_voltage_load_reconnect;
@@ -191,5 +192,50 @@ typedef struct {
 #ifdef __cplusplus
 }
 #endif
+
+// we use this to define the devices basic operation mode
+enum SystemMode
+{
+    MPPT_CHARGER, 
+    // accept input power on the high side port and charge battery / supply load on the low side port
+    NANOGRID, 
+    // accept input power (if available and need for charging) or 
+    // provide output power (if no other power source on the grid and battery charged) on the high side port 
+    // and dis/charge battery on the low side port, battery voltage must be lower than nano grid voltage.
+};
+
+struct BatteryConfigUser
+{
+    BatteryConfigUser();
+
+    enum BatteryType type;  // mandatory, is used to determine charging strategy and cell voltage limits,
+                            // see structs.h BatteryType for complete list
+
+    float capacity;         // mandatory, what is the capacity of the battery (pack), unit: Ah
+                            // if you have cells in parallel, add the individual capacitie
+                            // value is not too critical, it is mainly used to determine charge currents.
+
+    uint8_t num_cells;      // mandatory, how many cells are connected in series
+
+
+    // all batteries will optionally use these values, leave at 0 to have these calculated automatically
+    // State: CC/bulk
+    float charge_current_max;           // never user more than this current for charging, unit: A
+    float current_cutoff_CV;            // stop the final constant voltage charging phase if the charge current falls below this
+                                        // value, unit: A
+
+    // Lithium batteries can optionally will optionally use these values, leave at 0 to have these calculated automatically
+    float cell_voltage_max;         // max charge voltage per cell, switch at this voltage from constant current (CC) to constant 
+                                    // voltage charging (CV) phase. 
+    float cell_voltage_recharge;    // when voltage drops below start charging after battery has been fully charged and charging 
+                                    // was stopped
+                                    // setting it too close to the max voltage will cause more charging stress on lithium based
+                                    // batteries 
+
+    float cell_voltage_load_disconnect; // when discharging, stop power to load measure battery voltage drops below this value
+    float cell_voltage_load_reconnect;  // when charging, only start power to load if reaching this battery voltage  
+
+};
+
 
 #endif // STRUCTS_H
