@@ -1,5 +1,5 @@
-/* mbed library for a battery charge controller
- * Copyright (c) 2017 Martin Jäger (www.libre.solar)
+/* LibreSolar MPPT charge controller firmware
+ * Copyright (c) 2016-2018 Martin Jäger (www.libre.solar)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,46 +14,30 @@
  * limitations under the License.
  */
 
-#include "charger.h"
-
-ChargingProfile profile;
 
 
-ChargingProfile::ChargingProfile()
+#include "data_objects.h"
+
+onst SystemMode system_mode = MPPT_CHARGER; // MPPT_CHARGER or NANOGRID 
+
+BatteryConfigUser battery_config_user;
+
+BatteryConfigUser::BatteryConfigUser()
 {
-    // adjust default values for 12V LiFePO4 battery
-    num_cells = 4;
+    type = BAT_TYPE_LFP; // mandatory
+    capacity = 20; // mandatory
+    num_cells = 4; // mandatory
 
- 
-    // State: Standby
-    time_limit_recharge = 60; // sec
-    cell_voltage_recharge = 3.35; // V
-    cell_voltage_absolute_min = 1.8; // V   (under this voltage, battery is considered damaged)
-
+    // all batteries can optionally use these values, leave at 0 to set automatically
     // State: CC/bulk
-    charge_current_max = 20;  // A        PCB maximum: 20 A
+    charge_current_max = 0;        // A
+    current_cutoff_CV = 0;       // A
 
+    // Lithium batteries can optionally use these values, leave at 0 to set automatically
     // State: CV/absorption
-    cell_voltage_max = 3.55;        // max voltage per cell
-    time_limit_CV = 120*60; // sec
-    current_cutoff_CV = 2.0; // A
+    cell_voltage_max = 0;        // max charge voltage per cell
+    cell_voltage_recharge = 0;   // when voltage drops below start charging after battery full
 
-    // State: float/trickle
-    trickle_enabled = false;
-    cell_voltage_trickle = 2.3;    // target voltage for trickle charging of lead-acid batteries
-    time_trickle_recharge = 30*60;     // sec
-
-    // State: equalization
-    equalization_enabled = false;
-    cell_voltage_equalization = 2.5; // V
-    time_limit_equalization = 60*60; // sec
-    current_limit_equalization = 1.0; // A
-    equalization_trigger_time = 8; // weeks
-    equalization_trigger_deep_cycles = 10; // times
-
-    cell_voltage_load_disconnect = 3.0;
-    cell_voltage_load_reconnect = 3.15;
-
-    // TODO
-    temperature_compensation = 1.0;
+    cell_voltage_load_disconnect = 0; // when discharging, stop power to load measure battery voltage drops below this value
+    cell_voltage_load_reconnect = 0;  // when charging, only start power to load if reaching this battery voltage  
 }

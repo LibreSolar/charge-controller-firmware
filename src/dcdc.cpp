@@ -41,18 +41,23 @@ void dcdc_port_init_bat(dcdc_port_t *port, battery_t *bat)
 {
     port->input_allowed = true;     // discharging allowed
     port->output_allowed = true;    // charging allowed
-    port->voltage_output_target = bat->cell_voltage_max * bat->num_cells;
-    port->current_output_max = bat->charge_current_max;
-    port->current_input_max = -bat->charge_current_max;          // TODO: discharge current
-    port->voltage_output_min = bat->cell_voltage_absolute_min * bat->num_cells;
-    port->voltage_input_stop = bat->cell_voltage_load_disconnect * bat->num_cells;
+
+
     port->voltage_input_target = bat->cell_voltage_load_reconnect * bat->num_cells;
+    port->voltage_input_stop = bat->cell_voltage_load_disconnect * bat->num_cells;
+    port->current_input_max = -bat->charge_current_max;          // TODO: discharge current
+
+    port->voltage_output_target = bat->cell_voltage_max * bat->num_cells;
+    port->voltage_output_min = bat->cell_voltage_absolute_min * bat->num_cells;
+    port->current_output_max = bat->charge_current_max;
+
 }
 
 void dcdc_port_init_solar(dcdc_port_t *port)
 {
     port->input_allowed = true;         // PV panel may provide power to solar input of DC/DC
     port->output_allowed = false;
+    
     port->voltage_input_target = 16.0;
     port->voltage_input_stop = 14.0;
     port->current_input_max = -18.0;
@@ -62,13 +67,15 @@ void dcdc_port_init_nanogrid(dcdc_port_t *port)
 {
     port->input_allowed = true;
     port->output_allowed = true;
-    port->voltage_output_target = 23.0;        // starting idle mode above this point
-    port->droop_resistance = 1.0;           // 1 Ohm means 1V change of target voltage per amp
-    port->current_output_max = 5.0;
-    port->current_input_max = -5.0;
-    port->voltage_output_min = 10.0;
+
     port->voltage_input_target = 25.0;      // starting buck mode above this point
     port->voltage_input_stop = 20.0;        // stopping buck mode below this point
+    port->current_input_max = -5.0;
+    
+    port->voltage_output_target = 23.0;        // starting idle mode above this point
+    port->current_output_max = 5.0;
+    port->voltage_output_min = 10.0;
+    port->droop_resistance = 1.0;           // 1 Ohm means 1V change of target voltage per amp
 }
 
 

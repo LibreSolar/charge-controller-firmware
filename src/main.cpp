@@ -97,8 +97,15 @@ int main()
     time_t last_second = time(NULL);
 
     // high-side port of DC/DC (solar for typical MPPT)
-    //dcdc_port_init_solar(&hs_port);
-    dcdc_port_init_nanogrid(&hs_port);
+    switch(system_mode)
+    {
+        case NANOGRID:
+           dcdc_port_init_nanogrid(&hs_port);
+            break;
+        case MPPT_CHARGER:
+            dcdc_port_init_solar(&hs_port);
+            break;
+    }
     
     // low-side port (battery in most cases)
     dcdc_port_init_bat(&ls_port, &bat);
@@ -194,7 +201,7 @@ void setup()
     //printf("\nSerial interface started...\n");
     //freopen("/serial", "w", stdout);  // retarget stdout
 
-    battery_init(&bat, BAT_TYPE_FLOODED, 7, 6);
+    battery_init(&bat, battery_config_user);
     //battery_init(&bat, BAT_TYPE_LFP, 20, 4);
 
     dcdc_init(&dcdc);

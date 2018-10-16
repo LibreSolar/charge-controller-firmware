@@ -31,6 +31,8 @@ extern load_output_t load;
 extern dcdc_port_t hs_port;
 extern dcdc_port_t ls_port;
 
+extern BatteryConfigUser battery_config_user;
+extern const SystemMode system_mode; // we leave it fixed for the runtime for now
 
 extern const data_object_t dataObjects[]; // see output_can.cpp
 extern const size_t dataObjectsCount;
