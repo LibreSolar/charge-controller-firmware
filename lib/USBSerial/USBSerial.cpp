@@ -18,6 +18,9 @@
 
 #ifndef UNIT_TEST
 
+#ifdef TURN_OFF_MBED_DEPRECATED_WARNNG
+    #define MBED_DEPRECATED(a)
+#endif
 #include "stdint.h"
 #include "USBSerial.h"
 
