@@ -86,9 +86,9 @@ int _dcdc_output_control(dcdc_t *dcdc, dcdc_port_t *out, dcdc_port_t *in)
     float dcdc_power_new = out->voltage * out->current;
     static int pwm_delta = 1;
 
-    //printf("P: %.2f, P_prev: %.2f, v_in: %.2f, v_out: %.2f, i_in: %.2f, i_out: %.2f, v_target: %.2f, i_max: %.2f, PWM: %.1f, chg_en: %d",
+    //printf("P: %.2f, P_prev: %.2f, v_in: %.2f, v_out: %.2f, i_in: %.2f, i_out: %.2f, i_max: %.2f, PWM: %.1f, chg_en: %d",
     //     dcdc_power_new, dcdc->power, in->voltage, out->voltage, in->current, out->current,
-    //     target_voltage, out->current_output_max, half_bridge_get_duty_cycle() * 100.0, out->output_allowed);
+    //     out->current_output_max, half_bridge_get_duty_cycle() * 100.0, out->output_allowed);
 
     if (out->output_allowed == false || in->input_allowed == false
         || (in->voltage < in->voltage_input_stop && out->current < 0.1))
@@ -97,7 +97,7 @@ int _dcdc_output_control(dcdc_t *dcdc, dcdc_port_t *out, dcdc_port_t *in)
     }
     else if (out->voltage > (out->voltage_output_target - out->droop_resistance * out->current)    // output voltage above target
         || out->current > out->current_output_max                                               // output current limit exceeded
-        || in->voltage < (in->voltage_input_target - in->droop_resistance * in->current)        // input voltage below limit
+        || (in->voltage < (in->voltage_input_target - in->droop_resistance * in->current) && out->current > 0.1)        // input voltage below limit
         || in->current < in->current_input_max                                                  // input current (negative signs) above limit
         || fabs(dcdc->ls_current) > dcdc->ls_current_max                                        // current above hardware maximum
         || dcdc->temp_mosfets > 80)                                                             // temperature limits exceeded

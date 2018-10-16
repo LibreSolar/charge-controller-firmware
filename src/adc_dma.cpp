@@ -329,6 +329,7 @@ void setup_adc_timer()
     // Enable TIM6 clock
     RCC->APB1ENR |= RCC_APB1ENR_TIM6EN;
 
+    // TODO for STM32L0
     // timer clock: 48 MHz / 4800 = 10 kHz
     TIM6->PSC = 4799;
 

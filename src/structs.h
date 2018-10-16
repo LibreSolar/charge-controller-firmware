@@ -196,9 +196,11 @@ typedef struct {
 // we use this to define the devices basic operation mode
 enum SystemMode
 {
-    MPPT_CHARGER, 
+    MPPT_BUCK,
     // accept input power on the high side port and charge battery / supply load on the low side port
-    NANOGRID, 
+    MPPT_BOOST,
+    // accept input power on the high side port and charge battery / supply load on the low side port
+    NANOGRID,
     // accept input power (if available and need for charging) or 
     // provide output power (if no other power source on the grid and battery charged) on the high side port 
     // and dis/charge battery on the low side port, battery voltage must be lower than nano grid voltage.

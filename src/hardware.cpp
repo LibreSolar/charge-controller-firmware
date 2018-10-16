@@ -190,6 +190,7 @@ void feed_the_dog()
 // configures IWDG (timeout in seconds)
 void init_watchdog(float timeout) {
 
+    // TODO for STM32L0
     #define LSI_FREQ 40000     // approx. 40 kHz according to RM0091
     
     uint16_t prescaler;

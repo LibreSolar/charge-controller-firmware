@@ -18,8 +18,7 @@
 
 #include "data_objects.h"
 
-const SystemMode system_mode = MPPT_CHARGER; // MPPT_CHARGER or NANOGRID 
-
+const SystemMode system_mode = MPPT_BUCK; // MPPT_BUCK or NANOGRID 
 
 BatteryConfigUser battery_config_user;
 
