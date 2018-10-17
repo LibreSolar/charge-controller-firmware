@@ -1,6 +1,4 @@
 
-#ifndef UNIT_TEST
-
 #include "mbed.h"
 #include "thingset.h"
 
@@ -147,5 +145,3 @@ void usb_serial_pub() {
 }
 
 #endif /* USB_SERIAL_ENABLED */
-
-#endif /* UNIT_TEST */

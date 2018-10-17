@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-#ifndef UNIT_TEST
-
 #ifndef ADC_DMA_H
 #define ADC_DMA_H
 
@@ -33,5 +31,3 @@ void setup_adc(void);
 void start_dma(void);
 
 #endif // ADC_DMA
-
-#endif /* UNIT_TEST */

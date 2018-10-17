@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-#ifndef UNIT_TEST
-
 #include "charger.h"
 
 #include "half_bridge.h"
@@ -356,5 +354,3 @@ void bat_calculate_soc(battery_t *bat, float voltage, float current)
         }
     }
 }
-
-#endif /* UNIT_TEST */

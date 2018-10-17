@@ -1,6 +1,4 @@
 
-#ifndef UNIT_TEST
-
 #include "config.h"
 #include "thingset.h"
 #include "data_objects.h"
@@ -178,5 +176,3 @@ void eeprom_store_data(ts_data_t *ts) {;}
 void eeprom_restore_data(ts_data_t *ts) {;}
 
 #endif 
-
-#endif /* UNIT_TEST */

@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-#ifndef UNIT_TEST
-
 #ifndef CONFIG_H
 #define CONFIG_H
 
@@ -32,5 +30,3 @@
 #endif
 
 #endif /* CONFIG_H */
-
-#endif /* UNIT_TEST */

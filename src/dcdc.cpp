@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-#ifndef UNIT_TEST
-
 #include "dcdc.h"
 
 #include "half_bridge.h"
@@ -165,5 +163,3 @@ void dcdc_control(dcdc_t *dcdc, dcdc_port_t *hs, dcdc_port_t *ls)
         }
     }
 }
-
-#endif /* UNIT_TEST */
