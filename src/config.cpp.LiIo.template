@@ -18,13 +18,13 @@
 
 #include "data_objects.h"
 
-const SystemMode system_mode = MPPT_BUCK; // MPPT_BUCK or NANOGRID 
+const dcdc_control_mode dcdc_mode = MODE_MPPT_BUCK; // MPPT_BUCK or NANOGRID 
 
 BatteryConfigUser battery_config_user;
 
 BatteryConfigUser::BatteryConfigUser()
 {
-    type = BAT_TYPE_NMC; // mandatory
+    type = CELL_TYPE_NMC; // mandatory
     capacity = 12; // mandatory
     num_cells = 3; // mandatory
 

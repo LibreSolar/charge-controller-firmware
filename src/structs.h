@@ -1,5 +1,4 @@
 
-
 #ifndef __STRUCTS_H_
 #define __STRUCTS_H_
 
@@ -83,24 +82,24 @@ typedef struct
     bool full;
 } battery_t;
 
-// battery types 
-enum BatteryType {
-    BAT_TYPE_NONE = 0,        // stafe standard settings
-    BAT_TYPE_FLOODED,         // old flooded (wet) lead-acid batteries
-    BAT_TYPE_GEL,             // VRLA gel batteries (maintainance-free)
-    BAT_TYPE_AGM,             // AGM batteries (maintainance-free)
-    BAT_TYPE_LFP,             // LiFePO4 Li-ion batteries (3.3V nominal)
-    BAT_TYPE_NMC,             // NMC/Graphite Li-ion batteries (3.7V nominal)
-    BAT_TYPE_NMC_HV,          // NMC/Graphite High Voltage Li-ion batteries (3.7V nominal, 4.35 max)
+// battery cell types 
+enum cell_type {
+    CELL_TYPE_NONE = 0,        // stafe standard settings
+    CELL_TYPE_FLOODED,         // old flooded (wet) lead-acid batteries
+    CELL_TYPE_GEL,             // VRLA gel batteries (maintainance-free)
+    CELL_TYPE_AGM,             // AGM batteries (maintainance-free)
+    CELL_TYPE_LFP,             // LiFePO4 Li-ion batteries (3.3V nominal)
+    CELL_TYPE_NMC,             // NMC/Graphite Li-ion batteries (3.7V nominal)
+    CELL_TYPE_NMC_HV,          // NMC/Graphite High Voltage Li-ion batteries (3.7V nominal, 4.35 max)
 };
 
 // possible charger states
-enum charger_states {
-    CHG_IDLE, 
-    CHG_CC, 
-    CHG_CV, 
-    CHG_TRICKLE, 
-    CHG_EQUALIZATION
+enum charger_state {
+    CHG_STATE_IDLE, 
+    CHG_STATE_CC, 
+    CHG_STATE_CV, 
+    CHG_STATE_TRICKLE, 
+    CHG_STATE_EQUALIZATION
 };
 
 /* DC/DC port type
@@ -159,7 +158,21 @@ typedef struct {
     //float offset_voltage_stop;   // V  charging switched off if Vsolar < Vbat + offset
     int restart_interval;   // s    --> when should we retry to start charging after low solar power cut-off?
 } dcdc_t;
-    
+
+/* DC/DC basic operation mode
+ * 
+ * Defines which type of device is connected to the high side and low side ports
+ */
+enum dcdc_control_mode
+{
+    MODE_MPPT_BUCK,     // solar panel at high side port, battery / load at low side port (typical MPPT)
+    MODE_MPPT_BOOST,    // battery at high side port, solar panel at low side (e.g. e-bike charging)
+    MODE_NANOGRID       // accept input power (if available and need for charging) or provide output power 
+                        // (if no other power source on the grid and battery charged) on the high side port 
+                        // and dis/charge battery on the low side port, battery voltage must be lower than 
+                        // nano grid voltage.
+};
+
 /* Load Output type
  * 
  * Stores status of load output incl. 5V USB output (if existing on PCB)
@@ -193,24 +206,11 @@ typedef struct {
 }
 #endif
 
-// we use this to define the devices basic operation mode
-enum SystemMode
-{
-    MPPT_BUCK,
-    // accept input power on the high side port and charge battery / supply load on the low side port
-    MPPT_BOOST,
-    // accept input power on the high side port and charge battery / supply load on the low side port
-    NANOGRID,
-    // accept input power (if available and need for charging) or 
-    // provide output power (if no other power source on the grid and battery charged) on the high side port 
-    // and dis/charge battery on the low side port, battery voltage must be lower than nano grid voltage.
-};
-
 struct BatteryConfigUser
 {
     BatteryConfigUser();
 
-    enum BatteryType type;  // mandatory, is used to determine charging strategy and cell voltage limits,
+    enum cell_type type;  // mandatory, is used to determine charging strategy and cell voltage limits,
                             // see structs.h BatteryType for complete list
 
     float capacity;         // mandatory, what is the capacity of the battery (pack), unit: Ah
@@ -226,7 +226,7 @@ struct BatteryConfigUser
     float current_cutoff_CV;            // stop the final constant voltage charging phase if the charge current falls below this
                                         // value, unit: A
 
-    // Lithium batteries can optionally will optionally use these values, leave at 0 to have these calculated automatically
+    // Lithium batteries can optionally use these values, leave at 0 to have these calculated automatically
     float cell_voltage_max;         // max charge voltage per cell, switch at this voltage from constant current (CC) to constant 
                                     // voltage charging (CV) phase. 
     float cell_voltage_recharge;    // when voltage drops below start charging after battery has been fully charged and charging 

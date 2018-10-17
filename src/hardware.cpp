@@ -142,7 +142,7 @@ void flash_led_soc(battery_t *bat)
     if (bat->full) {
         led_soc = 1;
     }
-    else if (bat->soc > 80 || bat->state == CHG_CV) {
+    else if (bat->soc > 80 || bat->state == CHG_STATE_CV) {
         if (us_ticker_read() % 2000000 < 1800000) {
             led_soc = 1;
         }

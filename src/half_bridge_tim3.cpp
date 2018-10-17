@@ -151,8 +151,8 @@ void half_bridge_start(float pwm_duty)
     // CCxP = 0: Active high polarity on OCx (default)
     // CCxNE = 1: Enable the output on OC1N
     // CCxNP = 0: Active high polarity on OC1N (default)
-    //TIM3->CCER |= TIM_CCER_CC3E;
-    //TIM3->CCER |= TIM_CCER_CC4E;
+    TIM3->CCER |= TIM_CCER_CC3E;
+    TIM3->CCER |= TIM_CCER_CC4E;
 
     _enabled = true;
 }

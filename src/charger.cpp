@@ -114,9 +114,9 @@ void battery_init(battery_t* bat, BatteryConfigUser& batDesc)
 
     switch (batDesc.type)
     {
-        case BAT_TYPE_FLOODED:
-        case BAT_TYPE_AGM:
-        case BAT_TYPE_GEL:
+        case CELL_TYPE_FLOODED:
+        case CELL_TYPE_AGM:
+        case CELL_TYPE_GEL:
             bat->cell_voltage_absolute_min = 1.8;       // V   (under this voltage, battery is considered damaged)
             bat->cell_voltage_absolute_max = 2.5;       // V   (above this voltage, battery may become damaged)
             
@@ -138,7 +138,7 @@ void battery_init(battery_t* bat, BatteryConfigUser& batDesc)
             // Trickle Charge Voltage Configuration
             bat->cell_voltage_trickle = 2.3;            // target voltage for trickle charging of lead-acid batteries
 
-            if (batDesc.type == BAT_TYPE_FLOODED) {
+            if (batDesc.type == CELL_TYPE_FLOODED) {
                 // http://batteryuniversity.com/learn/article/charging_the_lead_acid_battery
                 bat->cell_voltage_trickle = 2.25;
             }
@@ -156,7 +156,7 @@ void battery_init(battery_t* bat, BatteryConfigUser& batDesc)
             bat->valid_config = true;
             break;
 
-        case BAT_TYPE_LFP:
+        case CELL_TYPE_LFP:
             bat->cell_voltage_absolute_min = 2.0;       // V   (under this voltage, battery is considered damaged)
             bat->cell_voltage_absolute_max = 3.6;
 
@@ -182,10 +182,10 @@ void battery_init(battery_t* bat, BatteryConfigUser& batDesc)
             bat->valid_config = true;
             break;
 
-        case BAT_TYPE_NMC:
-        case BAT_TYPE_NMC_HV:
+        case CELL_TYPE_NMC:
+        case CELL_TYPE_NMC_HV:
             bat->cell_voltage_absolute_min = 2.5;       // V   (under this voltage, battery is considered damaged)
-            bat->cell_voltage_absolute_max = batDesc.type==BAT_TYPE_NMC_HV? 4.35 : 4.20;
+            bat->cell_voltage_absolute_max = batDesc.type==CELL_TYPE_NMC_HV? 4.35 : 4.20;
 
             set_default_if_out_of_range(bat->cell_voltage_max,               bat->cell_voltage_absolute_max-0.1,     bat->cell_voltage_absolute_min+0.7,     bat->cell_voltage_absolute_max);
             set_default_if_out_of_range(bat->cell_voltage_load_disconnect,   3.3,                                    3.0,                                    bat->cell_voltage_max - 0.2);
@@ -268,7 +268,7 @@ void charger_state_machine(dcdc_port_t *port, battery_t *bat, float voltage, flo
 
     // state machine
     switch (bat->state) {
-    case CHG_IDLE: {
+    case CHG_STATE_IDLE: {
         if  (voltage < bat->num_cells * bat->cell_voltage_recharge
                 && (time(NULL) - bat->time_state_changed) > bat->time_limit_recharge)
         {
@@ -276,18 +276,18 @@ void charger_state_machine(dcdc_port_t *port, battery_t *bat, float voltage, flo
             port->current_output_max = bat->charge_current_max;
             port->output_allowed = true;
             bat->full = false;
-            _enter_state(bat, CHG_CC);
+            _enter_state(bat, CHG_STATE_CC);
         }
         break;
     }
-    case CHG_CC: {
+    case CHG_STATE_CC: {
         if (voltage > port->voltage_output_target) {
             port->voltage_output_target = bat->num_cells * bat->cell_voltage_max;
-            _enter_state(bat, CHG_CV);
+            _enter_state(bat, CHG_STATE_CV);
         }
         break;
     }
-    case CHG_CV: {
+    case CHG_STATE_CV: {
         if (voltage >= port->voltage_output_target) {
             bat->time_voltage_limit_reached = time(NULL);
         }
@@ -304,21 +304,21 @@ void charger_state_machine(dcdc_port_t *port, battery_t *bat, float voltage, flo
                 // TODO: additional conditions!
                 port->voltage_output_target = bat->num_cells * bat->cell_voltage_equalization;
                 port->current_output_max = bat->current_limit_equalization;
-                _enter_state(bat, CHG_EQUALIZATION);
+                _enter_state(bat, CHG_STATE_EQUALIZATION);
             }
             else if (bat->trickle_enabled) {
                 port->voltage_output_target = bat->num_cells * bat->cell_voltage_trickle;
-                _enter_state(bat, CHG_TRICKLE);
+                _enter_state(bat, CHG_STATE_TRICKLE);
             }
             else {
                 port->current_output_max = 0;
                 port->output_allowed = false;
-                _enter_state(bat, CHG_IDLE);
+                _enter_state(bat, CHG_STATE_IDLE);
             }
         }
         break;
     }
-    case CHG_TRICKLE: {
+    case CHG_STATE_TRICKLE: {
         if (voltage >= port->voltage_output_target) {
             bat->time_voltage_limit_reached = time(NULL);
         }
@@ -328,7 +328,7 @@ void charger_state_machine(dcdc_port_t *port, battery_t *bat, float voltage, flo
             port->current_output_max = bat->charge_current_max;
             port->voltage_output_target = bat->num_cells * bat->cell_voltage_max;
             bat->full = false;
-            _enter_state(bat, CHG_CC);
+            _enter_state(bat, CHG_STATE_CC);
         }
         // assumtion: trickle does not harm the battery --> never go back to idle
         // (for Li-ion battery: disable trickle!)

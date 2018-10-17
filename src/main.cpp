@@ -122,23 +122,24 @@ int main()
 
     time_t last_second = time(NULL);
 
-    switch(system_mode)
+    switch(dcdc_mode)
     {
-        case NANOGRID:
+        case MODE_NANOGRID:
             dcdc_port_init_nanogrid(&hs_port);
             dcdc_port_init_bat(&ls_port, &bat);
+            bat_port = &ls_port;
             break;
-        case MPPT_BUCK:     // typical MPPT charge controller operation
+        case MODE_MPPT_BUCK:     // typical MPPT charge controller operation
             dcdc_port_init_solar(&hs_port);
             dcdc_port_init_bat(&ls_port, &bat);
+            bat_port = &ls_port;
             break;
-        case MPPT_BOOST:    // for charging of e-bike battery via solar panel
+        case MODE_MPPT_BOOST:    // for charging of e-bike battery via solar panel
             dcdc_port_init_solar(&ls_port);
             dcdc_port_init_bat(&hs_port, &bat);
+            bat_port = &hs_port;
             break;
     }
-
-    bat_port = &ls_port;            // to be adjusted (depending on battery)
 
     while(1) {
 
@@ -189,8 +190,6 @@ int main()
                 uart_serial_pub();
             }
             
-            //usbSerial.printf("I am a USB serial port\r\n"); // 12 Mbit/s (USB full-speed)
-
             fflush(stdout);
         }
         feed_the_dog();
