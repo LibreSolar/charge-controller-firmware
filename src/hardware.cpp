@@ -130,13 +130,13 @@ led_solar = 1;          // switch on during start-up
 #endif
 }
 
-void update_solar_led(bool enabled)
+void update_dcdc_led(bool enabled)
 {
     led_solar = enabled;
 }
 
 //----------------------------------------------------------------------------
-void flash_led_soc(battery_t *bat)
+void update_soc_led(battery_t *bat)
 {
 #ifdef PIN_LED_SOC
     if (bat->full) {
@@ -180,6 +180,68 @@ void flash_led_soc(battery_t *bat)
     }
 #endif
 }
+
+
+#if defined(STM32F0)
+
+void setup_control_timer(int freq_Hz)   // max. 10 kHz
+{
+    // Enable TIM16 clock
+    RCC->APB2ENR |= RCC_APB2ENR_TIM16EN;
+
+    // Set timer clock to 10 kHz
+    TIM16->PSC = SystemCoreClock / 10000 - 1;
+
+    // Interrupt on timer update
+    TIM16->DIER |= TIM_DIER_UIE;
+
+    // Auto Reload Register sets interrupt frequency
+    TIM16->ARR = 10000 / freq_Hz - 1;
+
+    NVIC_EnableIRQ(TIM16_IRQn);
+
+    // Control Register 1
+    // TIM_CR1_CEN =  1: Counter enable
+    TIM16->CR1 |= TIM_CR1_CEN;
+}
+
+extern "C" void TIM16_IRQHandler(void)
+{
+    TIM16->SR &= ~TIM_SR_UIF;       // clear update interrupt flag to restart timer
+    system_control();
+}
+
+#elif defined(STM32L0)
+
+void setup_control_timer(int freq_Hz)   // max. 10 kHz
+{
+    // Enable TIM7 clock
+    RCC->APB1ENR |= RCC_APB1ENR_TIM7EN;
+
+    // Set timer clock to 10 kHz
+    TIM7->PSC = SystemCoreClock / 10000 - 1;
+
+    // Interrupt on timer update
+    TIM7->DIER |= TIM_DIER_UIE;
+
+    // Auto Reload Register sets interrupt frequency
+    TIM7->ARR = 10000 / freq_Hz - 1;
+
+    NVIC_EnableIRQ(TIM7_IRQn);
+
+    // Control Register 1
+    // TIM_CR1_CEN =  1: Counter enable
+    TIM7->CR1 |= TIM_CR1_CEN;
+}
+
+extern "C" void TIM7_IRQHandler(void)
+{
+    TIM7->SR &= ~(1 << 0);
+    system_control();
+}
+
+#endif
+
 
 // Reset the watchdog timer
 void feed_the_dog()

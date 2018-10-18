@@ -74,13 +74,13 @@ Timer tim;
 // temporary to check timer for control part
 extern int num_adc_conversions;
 volatile int num_control_calls;
+volatile int num_control_calls_prev;
 
 //----------------------------------------------------------------------------
 // function prototypes
 
 void setup();
-void energy_counter();
-void setup_control_timer();
+void energy_counter(float timespan);
 
 // static variables (only visible in this file)
 static bool pub_data_enabled;
@@ -93,22 +93,16 @@ void check_overcurrent()
     }
 }
 
-
-// will be called by timer interrupt in the future
-void system_control()
+void system_control()       // called by control timer (see hardware.cpp)
 {
     num_control_calls++;
-    if (new_reading_available) {
 
-        update_measurements(&dcdc, &bat, &load, &hs_port, &ls_port);
-        dcdc_control(&dcdc, &hs_port, &ls_port);
-        //printf("duration: %d us\n", tim.read_us());
+    update_measurements(&dcdc, &bat, &load, &hs_port, &ls_port);
+    dcdc_control(&dcdc, &hs_port, &ls_port);
 
-        check_overcurrent();
-        update_solar_led(half_bridge_enabled());
-        new_reading_available = false;
-        //printf("SysControl %d s / %d us\n", (int)time(NULL), tim.read_us());
-    }
+    check_overcurrent();
+
+    update_dcdc_led(half_bridge_enabled());
 }
 
 //----------------------------------------------------------------------------
@@ -120,7 +114,8 @@ int main()
     wait(1);
     init_watchdog(10);      // 10s should be enough for communication ports
 
-    time_t last_second = time(NULL);
+    time_t now = time(NULL);
+    time_t last_second = now;
 
     switch(dcdc_mode)
     {
@@ -141,19 +136,24 @@ int main()
             break;
     }
 
+    // the main loop is suitable for slow tasks like communication (even blocking wait allowed)
     while(1) {
 
-        system_control();       // call to be moved to timer interrupt
+        update_soc_led(&bat);
 
-        flash_led_soc(&bat);
         uart_serial_process();
         //usb_serial_process();
 
-        // called once per second
-        if (time(NULL) - last_second >= 1) {
-            last_second = time(NULL);
+        now = time(NULL);
 
-            //printf("Still alive... time: %d, num_adc: %d, num_control: %d\n", (int)time(NULL), num_adc_conversions, num_control_calls);
+        // called once per second (or slower if blocking wait occured somewhere)
+        if (now >= last_second + 1) {
+
+            float control_frequency = (num_control_calls - num_control_calls_prev) / tim.read();
+            num_control_calls_prev = num_control_calls;
+            tim.reset();
+
+            printf("Still alive... time: %d, contr_freq: %.1f Hz\n", (int)time(NULL), control_frequency);
 
             charger_state_machine(bat_port, &bat, bat_port->voltage, bat_port->current);
 
@@ -181,7 +181,7 @@ int main()
                     //usb_pwr_en = 0;
                 }
             }
-            energy_counter();   // TODO: include delta time if >1 sec
+            energy_counter(last_second - now);
 
             output_oled(&dcdc, &hs_port, &ls_port, &bat, &load);
             //output_serial(&meas, &chg);
@@ -191,6 +191,7 @@ int main()
             }
             
             fflush(stdout);
+            last_second = now;
         }
         feed_the_dog();
         sleep();    // wake-up by timer interrupts
@@ -220,7 +221,6 @@ void setup()
     //freopen("/serial", "w", stdout);  // retarget stdout
 
     battery_init(&bat, battery_config_user);
-    //battery_init(&bat, BAT_TYPE_LFP, 20, 4);
 
     dcdc_init(&dcdc);
 
@@ -236,7 +236,7 @@ void setup()
     
     eeprom_restore_data(&ts);
 
-    setup_adc_timer();
+    setup_adc_timer(1000);  // 1 kHz
     setup_adc();
     start_dma();
 
@@ -246,13 +246,12 @@ void setup()
     calibrate_current_sensors(&dcdc, &load);
     update_measurements(&dcdc, &bat, &load, &hs_port, &ls_port);            // second time to get proper values of power measurement
 
-    //setup_control_timer();
-    //output_sdcard();
+    setup_control_timer(50);  // 50 Hz
 }
 
 //----------------------------------------------------------------------------
-// must be called once per second
-void energy_counter()
+// timespan in seconds since last call
+void energy_counter(float timespan)
 {
     float dcdc_power = ls_port.voltage * ls_port.current;
 
@@ -280,78 +279,10 @@ void energy_counter()
         seconds_day++;
     }
 
-    bat.input_Wh_day += dcdc_power / 3600.0;
-    bat.output_Wh_day += load.current * ls_port.voltage / 3600.0;
-    bat.input_Wh_total += dcdc_power / 3600.0;
-    bat.output_Wh_total += dcdc.ls_current * ls_port.voltage/ 3600.0;
-}
-
-#endif
-
-#if defined(STM32F0)
-/*
-void setup_dcdc_timer()
-{
-    // Enable peripheral clock of GPIOA and GPIOB
-    RCC->AHBENR |= RCC_AHBENR_GPIOAEN | RCC_AHBENR_GPIOBEN;
-
-    // Enable TIM1 clock
-    RCC->APB2ENR |= RCC_APB2ENR_TIM15EN;
-
-    // timer clock: 48 MHz / 4800 = 10 kHz
-    TIM15->PSC = 4799;
-
-    // interrupt on timer update
-    TIM15->DIER |= TIM_DIER_UIE;
-
-    // Auto Reload Register
-    TIM15->ARR = 10;        // 1 kHz sample frequency at 10 kHz clock
-
-    //NVIC_SetPriority(DMA1_Channel1_IRQn, 16);
-    NVIC_EnableIRQ(TIM15_IRQn);
-
-    // Control Register 1
-    // TIM_CR1_CEN =  1: Counter enable
-    TIM15->CR1 |= TIM_CR1_CEN;
-}
-
-extern "C" void TIM15_IRQHandler(void)
-{
-    TIM15->SR &= ~(1 << 0);
-    ADC1->CR |= ADC_CR_ADSTART;
-}
-*/
-#elif defined(STM32L0)
-
-void setup_control_timer()
-{
-    // Enable peripheral clock of GPIOA and GPIOB
-    //RCC->AHBENR |= RCC_AHBENR_GPIOAEN | RCC_AHBENR_GPIOBEN;
-
-    // Enable TIM7 clock
-    RCC->APB1ENR |= RCC_APB1ENR_TIM7EN;
-
-    // timer clock: 48 MHz / 4800 = 1 kHz
-    TIM7->PSC = 47999;
-
-    // interrupt on timer update
-    TIM7->DIER |= TIM_DIER_UIE;
-
-    // Auto Reload Register
-    TIM7->ARR = 10;        // 1 kHz sample frequency at 10 kHz clock
-
-    //NVIC_SetPriority(DMA1_Channel1_IRQn, 16);
-    NVIC_EnableIRQ(TIM7_IRQn);
-
-    // Control Register 1
-    // TIM_CR1_CEN =  1: Counter enable
-    TIM7->CR1 |= TIM_CR1_CEN;
-}
-
-extern "C" void TIM7_IRQHandler(void)
-{
-    TIM7->SR &= ~(1 << 0);
-    //system_control();
+    bat.input_Wh_day += dcdc_power * timespan / 3600.0;
+    bat.output_Wh_day += load.current * ls_port.voltage * timespan / 3600.0;
+    bat.input_Wh_total += dcdc_power * timespan / 3600.0;
+    bat.output_Wh_total += dcdc.ls_current * ls_port.voltage * timespan / 3600.0;
 }
 
 #endif

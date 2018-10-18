@@ -13,10 +13,13 @@ void enable_usb();
 void disable_usb();
 
 void init_leds();
-void update_solar_led(bool enabled);
-void flash_led_soc(battery_t *bat);
+void update_dcdc_led(bool enabled);
+void update_soc_led(battery_t *bat);
 
 void init_watchdog(float timeout);      // timeout in seconds
 void feed_the_dog();
+
+void setup_control_timer(int freq_Hz);
+void system_control();  // is implemented in main.cpp
 
 #endif /* HARDWARE_H */

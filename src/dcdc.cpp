@@ -40,7 +40,6 @@ void dcdc_port_init_bat(dcdc_port_t *port, battery_t *bat)
     port->input_allowed = true;     // discharging allowed
     port->output_allowed = true;    // charging allowed
 
-
     port->voltage_input_target = bat->cell_voltage_load_reconnect * bat->num_cells;
     port->voltage_input_stop = bat->cell_voltage_load_disconnect * bat->num_cells;
     port->current_input_max = -bat->charge_current_max;          // TODO: discharge current
@@ -135,12 +134,12 @@ void dcdc_control(dcdc_t *dcdc, dcdc_port_t *hs, dcdc_port_t *ls)
     if (half_bridge_enabled()) {
         int step;
         if (ls->current > 0.1) {    // buck mode
-            printf("-");
+            //printf("-");
             step = _dcdc_output_control(dcdc, ls, hs);
             half_bridge_duty_cycle_step(step);
         }
         else {
-            printf("+");
+            //printf("+");
             step = _dcdc_output_control(dcdc, hs, ls);
             half_bridge_duty_cycle_step(-step);
         }

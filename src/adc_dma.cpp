@@ -43,11 +43,9 @@ float load_current_offset;
 // for ADC and DMA
 volatile uint16_t adc_readings[NUM_ADC_CH] = {0};
 volatile uint32_t adc_filtered[NUM_ADC_CH] = {0};
-volatile int num_adc_conversions;
+//volatile int num_adc_conversions;
 
 #define ADC_FILTER_CONST 5          // filter multiplier = 1/(2^ADC_FILTER_CONST)
-
-bool new_reading_available = false;
 
 extern Serial serial;
 
@@ -68,7 +66,8 @@ void update_measurements(dcdc_t *dcdc, battery_t *bat, load_output_t *load, dcdc
     // internal STM reference voltage
     int vcc = VREFINT_VALUE * VREFINT_CAL / (adc_filtered[ADC_POS_VREF_MCU] >> (4 + ADC_FILTER_CONST));
     
-    //int vcc = 3300;   // rely on LDO accuracy
+    // rely on LDO accuracy
+    //int vcc = 3300;
 
     ls->voltage = 
         (float)(((adc_filtered[ADC_POS_V_BAT] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
@@ -192,11 +191,7 @@ extern "C" void DMA1_Channel1_IRQHandler(void)
             // adc_readings: 12-bit ADC values left-aligned in uint16_t
             adc_filtered[i] += (uint32_t)adc_readings[i] - (adc_filtered[i] >> ADC_FILTER_CONST);
         }
-        num_adc_conversions++;
-        if (num_adc_conversions % 100 == 0) {
-            new_reading_available = true;
-        }
-        //DMA1->IFCR |= DMA_IFCR_CTCIF1;
+        //num_adc_conversions++;
     }
     DMA1->IFCR |= 0x0FFFFFFF;       // clear all interrupt registers
 /*
@@ -274,11 +269,6 @@ void setup_adc()
     // Select ADC channels based on setup in config.h
     ADC1->CHSELR = ADC_CHSEL;
 
-    //ADC1->CFGR1 &= ~(ADC_CFGR1_EXTEN_0 | ADC_CFGR1_EXTEN_1);
-    //ADC1->CFGR1 |= ADC_CFGR1_EXTEN_0;       // enable external trigger (e.g. timer)
-
-    //ADC1->CFGR1 |= ADC_CFGR1_EXTSEL_2;      // set TIM15 as trigger source
-
     // Enable internal voltage reference and temperature sensor
     // ToDo check sample rate
     ADC->CCR |= ADC_CCR_TSEN | ADC_CCR_VREFEN;
@@ -286,24 +276,20 @@ void setup_adc()
 
 #if defined(STM32F0)
 
-void setup_adc_timer()
+void setup_adc_timer(int freq_Hz)   // max. 10 kHz
 {
-    // Enable peripheral clock of GPIOA and GPIOB
-    RCC->AHBENR |= RCC_AHBENR_GPIOAEN | RCC_AHBENR_GPIOBEN;
-
-    // Enable TIM1 clock
+    // Enable TIM15 clock
     RCC->APB2ENR |= RCC_APB2ENR_TIM15EN;
 
-    // timer clock: 48 MHz / 4800 = 10 kHz
-    TIM15->PSC = 4799;
+    // Set timer clock to 10 kHz
+    TIM15->PSC = SystemCoreClock / 10000 - 1;
 
-    // interrupt on timer update
+    // Interrupt on timer update
     TIM15->DIER |= TIM_DIER_UIE;
 
-    // Auto Reload Register
-    TIM15->ARR = 10;        // 1 kHz sample frequency at 10 kHz clock
+    // Auto Reload Register sets interrupt frequency
+    TIM15->ARR = 10000 / freq_Hz - 1;
 
-    //NVIC_SetPriority(DMA1_Channel1_IRQn, 16);
     NVIC_EnableIRQ(TIM15_IRQn);
 
     // Control Register 1
@@ -319,25 +305,20 @@ extern "C" void TIM15_IRQHandler(void)
 
 #elif defined(STM32L0)
 
-void setup_adc_timer()
+void setup_adc_timer(int freq_Hz)   // max. 10 kHz
 {
-    // Enable peripheral clock of GPIOA and GPIOB
-    //RCC->AHBENR |= RCC_AHBENR_GPIOAEN | RCC_AHBENR_GPIOBEN;
-
     // Enable TIM6 clock
     RCC->APB1ENR |= RCC_APB1ENR_TIM6EN;
 
-    // TODO for STM32L0
-    // timer clock: 48 MHz / 4800 = 10 kHz
-    TIM6->PSC = 4799;
+    // Set timer clock to 10 kHz
+    TIM6->PSC = SystemCoreClock / 10000 - 1;
 
-    // interrupt on timer update
+    // Interrupt on timer update
     TIM6->DIER |= TIM_DIER_UIE;
 
-    // Auto Reload Register
-    TIM6->ARR = 10;        // 1 kHz sample frequency at 10 kHz clock
+    // Auto Reload Register sets interrupt frequency
+    TIM6->ARR = 10000 / freq_Hz - 1;
 
-    //NVIC_SetPriority(DMA1_Channel1_IRQn, 16);
     NVIC_EnableIRQ(TIM6_IRQn);
 
     // Control Register 1
