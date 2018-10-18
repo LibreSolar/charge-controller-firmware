@@ -17,7 +17,7 @@
 #ifndef UNIT_TEST
 
 #include "half_bridge.h"
-#include "config.h"
+#include "pcb.h"
 
 #if defined(STM32F0) && (PWM_TIM == 1)
 

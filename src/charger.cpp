@@ -73,7 +73,6 @@ static void set_default_if_out_of_range(float& value, const float defaultValue, 
 
 void battery_init(battery_t* bat, BatteryConfigUser& batDesc)
 {
-
     // battery pack specific information
     bat->num_cells = batDesc.num_cells; 
     bat->capacity = batDesc.capacity;

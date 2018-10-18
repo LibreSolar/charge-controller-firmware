@@ -15,7 +15,7 @@
  */
 
 #include "mbed.h"
-#include "config.h"
+#include "pcb.h"
 #include "data_objects.h"
 #include <math.h>     // log for thermistor calculation
 

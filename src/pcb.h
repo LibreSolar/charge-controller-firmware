@@ -1,5 +1,5 @@
 /* LibreSolar MPPT charge controller firmware
- * Copyright (c) 2016-2017 Martin Jäger (www.libre.solar)
+ * Copyright (c) 2016-2018 Martin Jäger (www.libre.solar)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,12 @@
  * limitations under the License.
  */
 
-#ifndef CONFIG_H
-#define CONFIG_H
+#ifndef _PCB_H_
+#define _PCB_H_
+
+/* This file includes the PCB specific settings depending on the PCB selected
+ * as a compiler define flag in platformio.h
+ */
 
 #if defined(PCB_LS_005)
     #include "pcb_ls_005.h"
@@ -29,4 +33,4 @@
     #error "PCB has to be specified!"
 #endif
 
-#endif /* CONFIG_H */
+#endif /* _PCB_H_ */

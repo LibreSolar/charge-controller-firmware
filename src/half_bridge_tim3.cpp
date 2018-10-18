@@ -21,7 +21,7 @@
 #ifndef UNIT_TEST
 
 #include "half_bridge.h"
-#include "config.h"
+#include "pcb.h"
 
 // timer used for PWM generation has to be globally selected for the used PCB
 #if (PWM_TIM == 3)

@@ -19,7 +19,7 @@
 #include "mbed.h"
 
 #include "thingset.h"
-#include "config.h"
+#include "pcb.h"
 #include "data_objects.h"
 
 #include "half_bridge.h"        // PWM generation for DC/DC converter
@@ -27,8 +27,7 @@
 #include "dcdc.h"               // DC/DC converter control (hardware independent)
 #include "charger.h"            // battery charging state machine
 #include "adc_dma.h"            // ADC using DMA and conversion to measurement values
-#include "output.h"
-#include "communication.h"
+#include "interface.h"          // communication interfaces, displays, etc.
 #include "eeprom.h"             // external I2C EEPROM
 
 //----------------------------------------------------------------------------

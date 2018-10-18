@@ -21,7 +21,7 @@
 #include <stdbool.h>
 
 #include "thingset.h"
-#include "config.h"
+#include "pcb.h"
 #include "structs.h"
 
 extern log_data_t log_data;

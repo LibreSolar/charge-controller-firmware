@@ -2,7 +2,7 @@
 #include "mbed.h"
 #include "thingset.h"
 
-#include "communication.h"
+#include "interface.h"
 #include "data_objects.h"
 
 #ifdef USB_SERIAL_ENABLED
