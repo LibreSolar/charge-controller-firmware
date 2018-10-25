@@ -10,7 +10,6 @@
 
 See the Libre Solar website for a detailed instruction how to [develop software](http://libre.solar/docs/toolchain/) and [flash new firmware](http://libre.solar/docs/flashing/).
 
-Please note that you have to create the file **config.cpp** by using / changing one of the provided templates to your needs before the software compiles successfully. The file config.cpp is **not** tracked in git since it represents a specific configuration. Please do not add it in a pull request, change the templates if necessary.  
 
 ## Timer configuration
 
@@ -23,3 +22,5 @@ Please note that you have to create the file **config.cpp** by using / changing 
 - DC/DC control function (100 Hz)
     - TIM16 for STM32F0
     - TIM7 for STM32L0
+- LED light control
+    - TIM21 (only present in STM32L0 version)

@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-/*
+#include "config.h"
+
+#ifdef CAN_ENABLED
+
 #include "mbed.h"
 #include "config.h"
 #include "output.h"
@@ -273,4 +276,4 @@ void can_receive() {
     }
 }
 
-*/
+#endif /* CAN_ENABLED */

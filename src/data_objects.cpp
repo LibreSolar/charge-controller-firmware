@@ -27,6 +27,12 @@ const data_object_t dataObjects[] = {
     // info
     {0x1003, TS_ACCESS_READ, TS_T_STRING, 0, (void*) &(deviceID), "deviceID"},
 
+/*
+    calibration data
+    "vLoadDisconnect"   // on battery level
+    "vLoadReconnect"    // on battery level
+*/
+
     // input data
     {0x3001, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_BOOL, 0, (void*) &(load.enabled_target), "loadEnTarget"},
     {0x3002, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_BOOL, 0, (void*) &(load.usb_enabled_target), "usbEnTarget"},
@@ -54,6 +60,10 @@ const data_object_t dataObjects[] = {
 /*
     // rpc
     {0x5001, TS_ACCESS_EXEC, TS_T_BOOL, 0, (void*) &(cal.dcdc_current_min), "dfu"},
+
+    "setBatCustom"      // only if custom battery is set, vLoadDisconnect (see above) etc. are considered
+    "setBatLFP12V"
+    "setBatFlooded12V"
 */
     // calibration data
     {0x6001, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 1, (void*) &(dcdc.ls_current_min), "iDcdcMin"},

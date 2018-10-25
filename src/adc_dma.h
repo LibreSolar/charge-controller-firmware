@@ -24,8 +24,8 @@
 void calibrate_current_sensors(dcdc_t *dcdc, load_output_t *load);
 void update_measurements(dcdc_t *dcdc, battery_t *bat, load_output_t *load, dcdc_port_t *hs, dcdc_port_t *ls);
 
-void setup_adc_timer(int freq_Hz);
-void setup_adc(void);
-void start_dma(void);
+void adc_timer_setup(int freq_Hz);
+void adc_setup(void);
+void dma_setup(void);
 
 #endif // ADC_DMA

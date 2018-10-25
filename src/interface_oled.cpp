@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 
+#include "config.h"
+
+#ifdef OLED_ENABLED     // otherwise don't compile code to reduce firmware size
+
 #include "pcb.h"
 #include "data_objects.h"
 
@@ -24,10 +28,10 @@
 
 #include "interface.h"
 
-extern I2C i2c;
+I2C i2c(PIN_UEXT_SDA, PIN_UEXT_SCL);
 Adafruit_SSD1306_I2c oled(i2c, PIN_UEXT_SSEL, 0x78, 64, 128);
 
-void output_oled(dcdc_t *dcdc, dcdc_port_t *solar_port,  dcdc_port_t *bat_port, battery_t *bat, load_output_t *load)
+void oled_output(dcdc_t *dcdc, dcdc_port_t *solar_port,  dcdc_port_t *bat_port, battery_t *bat, load_output_t *load)
 {
     float tmp;
 
@@ -96,3 +100,5 @@ void output_oled(dcdc_t *dcdc, dcdc_port_t *solar_port,  dcdc_port_t *bat_port, 
 
     oled.display();
 }
+
+#endif /* OLED_ENABLED */

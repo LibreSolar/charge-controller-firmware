@@ -12,7 +12,18 @@ The software is configurable to support different charge controller PCBs with ei
 - [Libre Solar MPPT 12A (v0.5)](https://github.com/LibreSolar/MPPT-Charger_20A/tree/legacy-12A-version)
 - CloudSolar (not yet published)
 
-## Firmware documentation (see docs folder)
+## Toolchain and flashing instructions
 
-- [MPPT charger firmware structure](docs/firmware.md)
+See the Libre Solar website for a detailed instruction how to [develop software](http://libre.solar/docs/toolchain/) and [flash new firmware](http://libre.solar/docs/flashing/).
+
+
+## Initial software setup (IMPORTANT!)
+
+1. Select the correct board in `platformio.ini` by removing the comment before the board name under [platformio]
+2. Copy `config.h_template` to `config.h` and adjust basic settings (`config.h` is ignored by git, so your changes are kept after software updates using `git pull`)
+3. (optional) To perform more advanced battery settings, copy `config.cpp_template` to `config.cpp` and change according to your needs. (also `config.cpp` is excluded from git versioning)
+
+## Additional firmware documentation (docs folder)
+
+- [MPPT charger firmware details](docs/firmware.md)
 - [Charger state machine](docs/charger.md)

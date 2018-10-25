@@ -2,11 +2,20 @@
 #include "hardware.h"
 #include "half_bridge.h"
 #include "data_objects.h"
+#include "us_ticker_data.h"
 
 #ifdef PIN_LOAD_EN
 DigitalOut load_enable(PIN_LOAD_EN);
 #else
 DigitalOut load_disable(PIN_LOAD_DIS);
+#endif
+
+#ifdef PIN_USB_PWR_EN
+DigitalOut usb_pwr_en(PIN_USB_PWR_EN);
+#endif
+
+#ifdef PIN_UEXT_DIS
+DigitalOut uext_dis(PIN_UEXT_DIS);
 #endif
 
 #ifdef PIN_LED_SOC
@@ -25,6 +34,20 @@ DigitalOut led_load(PIN_LED_LOAD);
 
 int led1_CCR;   // CCR for TIM21 to switch LED1 on
 int led2_CCR;   // CCR for TIM21 to switch LED2 on
+
+
+//----------------------------------------------------------------------------
+void init_load()
+{
+#ifdef PIN_UEXT_DIS
+    uext_dis = 0;
+#endif
+
+#ifdef PIN_USB_PWR_EN
+    usb_pwr_en = 1;
+#endif
+}
+
 
 //----------------------------------------------------------------------------
 void enable_load()
@@ -73,6 +96,11 @@ led_solar = 1;          // switch on during start-up
 #if defined(PIN_LED_GND) && defined(STM32L0)
     // PB13 / TIM21_CH1: LED_SOC12  --> high for LED2, PWM for LED1 + 2
     // PB14 / TIM21_CH2: LED_GND    --> always PWM
+
+    // TODO: throw error during compile time... but how?
+    if (TIM_MST == TIM21) {
+        error("Error: Timer conflict --> change us_ticker_data.h to use TIM22 instead of TIM21!");
+    }
 
     const int freq = 1;     // kHz
     const float duty_target = 0.2;
@@ -184,7 +212,7 @@ void update_soc_led(battery_t *bat)
 
 #if defined(STM32F0)
 
-void setup_control_timer(int freq_Hz)   // max. 10 kHz
+void control_timer_start(int freq_Hz)   // max. 10 kHz
 {
     // Enable TIM16 clock
     RCC->APB2ENR |= RCC_APB2ENR_TIM16EN;
@@ -213,7 +241,7 @@ extern "C" void TIM16_IRQHandler(void)
 
 #elif defined(STM32L0)
 
-void setup_control_timer(int freq_Hz)   // max. 10 kHz
+void control_timer_start(int freq_Hz)   // max. 10 kHz
 {
     // Enable TIM7 clock
     RCC->APB1ENR |= RCC_APB1ENR_TIM7EN;

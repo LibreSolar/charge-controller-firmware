@@ -5,9 +5,9 @@
 #include "interface.h"
 #include "data_objects.h"
 
-#ifdef USB_SERIAL_ENABLED
-#include "USBSerial.h"
-extern USBSerial usbSerial;
+#ifdef STM32F0
+//#include "USBSerial.h"
+//USBSerial usbSerial(0x1f00, 0x2012, 0x0001,  false);    // connection is not blocked when USB is not plugged in
 #endif
 
 uint8_t buf_req_uart[TS_REQ_BUFFER_LEN];
@@ -32,6 +32,9 @@ Serial* ser_uart;
 
 bool uart_serial_command_flag = false;
 bool usb_serial_command_flag = false;
+
+// static variables (only visible in this file)
+//static bool pub_data_enabled;
 
 void uart_serial_isr()
 {

@@ -21,25 +21,21 @@
 #include "thingset.h"
 #include "pcb.h"
 #include "data_objects.h"
+#include "config.h"
 
 #include "half_bridge.h"        // PWM generation for DC/DC converter
 #include "hardware.h"           // hardware-related functions like load switch, LED control, watchdog, etc.
 #include "dcdc.h"               // DC/DC converter control (hardware independent)
-#include "charger.h"            // battery charging state machine
+#include "bat_charger.h"        // battery settings and charger state machine
 #include "adc_dma.h"            // ADC using DMA and conversion to measurement values
 #include "interface.h"          // communication interfaces, displays, etc.
 #include "eeprom.h"             // external I2C EEPROM
+#include "load.h"               // load and USB output management
 
 //----------------------------------------------------------------------------
 // global variables
 
 Serial serial(PIN_SWD_TX, PIN_SWD_RX, "serial");
-I2C i2c(PIN_UEXT_SDA, PIN_UEXT_SCL);
-
-#ifdef STM32F0
-//#include "USBSerial.h"
-//USBSerial usbSerial(0x1f00, 0x2012, 0x0001,  false);    // connection is not blocked when USB is not plugged in
-#endif
 
 dcdc_t dcdc = {};
 dcdc_port_t hs_port = {};       // high-side (solar for typical MPPT)
@@ -50,57 +46,33 @@ load_output_t load;
 log_data_t log_data;
 ts_data_t ts;
 
-#ifdef PIN_USB_PWR_EN
-DigitalOut usb_pwr_en(PIN_USB_PWR_EN);
-#endif
-
-#ifdef PIN_UEXT_DIS
-DigitalOut uext_dis(PIN_UEXT_DIS);
-#endif
-
-#ifdef PIN_REF_I_DCDC
-AnalogOut ref_i_dcdc(PIN_REF_I_DCDC);
-#endif 
-
-// for daily energy counting
-int seconds_zero_solar = 0;
-int seconds_day = 0;
-int day_counter = 0;
-bool nighttime = false;
-
-Timer tim;
-
-// temporary to check timer for control part
-extern int num_adc_conversions;
-volatile int num_control_calls;
-volatile int num_control_calls_prev;
-
 //----------------------------------------------------------------------------
 // function prototypes
 
 void setup();
 void energy_counter(float timespan);
 
-// static variables (only visible in this file)
-static bool pub_data_enabled;
+void setup_interfaces();
+void update_interfaces_1s();   // called every second
 
-void check_overcurrent()
+void check_overcurrent(load_output_t *load)
 {
-    if (load.current > load.current_max) {
+    if (load->current > load->current_max) {
         disable_load();
-        load.overcurrent_flag = true;
+        load->overcurrent_flag = true;
     }
 }
 
 void system_control()       // called by control timer (see hardware.cpp)
 {
-    num_control_calls++;
-
+    // convert ADC readings to meaningful measurement values
     update_measurements(&dcdc, &bat, &load, &hs_port, &ls_port);
+
+    // control PWM of the DC/DC according to hs and ls port settings
+    // (this function includes MPPT algorithm)
     dcdc_control(&dcdc, &hs_port, &ls_port);
 
-    check_overcurrent();
-
+    check_overcurrent(&load);
     update_dcdc_led(half_bridge_enabled());
 }
 
@@ -108,15 +80,12 @@ void system_control()       // called by control timer (see hardware.cpp)
 int main()
 {
     setup();
-    wait(1);    // safety feature: be able to re-flash before starting
-    output_oled(&dcdc, &hs_port, &ls_port, &bat, &load);
-    wait(1);
+    setup_interfaces();
+
+    wait(2);    // safety feature: be able to re-flash before starting
     init_watchdog(10);      // 10s should be enough for communication ports
 
-    time_t now = time(NULL);
-    time_t last_second = now;
-
-    switch(dcdc_mode)
+    switch(dcdc.mode)
     {
         case MODE_NANOGRID:
             dcdc_port_init_nanogrid(&hs_port);
@@ -134,29 +103,24 @@ int main()
             bat_port = &hs_port;
             break;
     }
+    control_timer_start(50);  // 50 Hz
+
+    time_t now = time(NULL);
+    time_t last_second = now;
 
     // the main loop is suitable for slow tasks like communication (even blocking wait allowed)
     while(1) {
 
         update_soc_led(&bat);
 
-        uart_serial_process();
-        //usb_serial_process();
-
         now = time(NULL);
+        if (now >= last_second + 1) {   // called once per second (or slower if blocking wait occured somewhere)
 
-        // called once per second (or slower if blocking wait occured somewhere)
-        if (now >= last_second + 1) {
-
-            float control_frequency = (num_control_calls - num_control_calls_prev) / tim.read();
-            num_control_calls_prev = num_control_calls;
-            tim.reset();
-
-            printf("Still alive... time: %d, contr_freq: %.1f Hz\n", (int)time(NULL), control_frequency);
+            printf("Still alive... time: %d, mode: %d\n", (int)time(NULL), dcdc.mode);
 
             charger_state_machine(bat_port, &bat, bat_port->voltage, bat_port->current);
-
-            bat_calculate_soc(&bat, bat_port->voltage, bat_port->current);
+            
+            battery_update_energy(&bat, bat_port->voltage, bat_port->current, last_second - now);      // also does energy counting
 
             // load management
             if (ls_port.input_allowed == false || load.overcurrent_flag == true) {
@@ -180,16 +144,9 @@ int main()
                     //usb_pwr_en = 0;
                 }
             }
-            energy_counter(last_second - now);
 
-            output_oled(&dcdc, &hs_port, &ls_port, &bat, &load);
-            //output_serial(&meas, &chg);
-            if (pub_data_enabled) {
-                //usb_serial_pub();
-                uart_serial_pub();
-            }
+            update_interfaces_1s();
             
-            fflush(stdout);
             last_second = now;
         }
         feed_the_dog();
@@ -197,29 +154,53 @@ int main()
     }
 }
 
+void update_interfaces_1s()
+{
+#ifdef OLED_ENABLED
+    oled_output(&dcdc, &hs_port, &ls_port, &bat, &load);
+#endif
+
+#ifdef CAN_ENABLED
+
+#endif
+
+#ifdef USB_SERIAL_ENABLED
+
+#endif
+
+#ifdef UART_SERIAL_ENABLED
+    uart_serial_process();
+    //output_serial(&meas, &chg);
+#endif
+
+    fflush(stdout);
+}
+
+void setup_interfaces()
+{
+#ifdef UART_SERIAL_ENABLED
+    serial.baud(57600);
+    //freopen("/serial", "w", stdout);  // retarget stdout
+    uart_serial_init(&serial);
+    //usb_serial_init(&usbSerial);
+#endif
+
+#ifdef GSM_ENABLED
+    gsm_init();
+#endif
+
+#ifdef LORA_ENABLED
+    lora_init();
+#endif
+}
+
 //----------------------------------------------------------------------------
 void setup()
 {
-#ifdef PIN_REF_I_DCDC
-    ref_i_dcdc = 0.5;    // reference voltage for zero current (0.1 for buck, 0.9 for boost, 0.5 for bi-directional)
-#endif
-
-#ifdef PIN_UEXT_DIS
-    uext_dis = 0;
-#endif
-
-#ifdef PIN_USB_PWR_EN
-    usb_pwr_en = 1;
-#endif
-
     disable_load();
     init_leds();
 
-    serial.baud(57600);
-    //printf("\nSerial interface started...\n");
-    //freopen("/serial", "w", stdout);  // retarget stdout
-
-    battery_init(&bat, battery_config_user);
+    battery_init(&bat);
 
     dcdc_init(&dcdc);
 
@@ -230,58 +211,18 @@ void setup()
     load.enabled_target = true;
     load.usb_enabled_target = true;
 
-    uart_serial_init(&serial);
-    //usb_serial_init(&usbSerial);
-    
     eeprom_restore_data(&ts);
 
-    setup_adc_timer(1000);  // 1 kHz
-    setup_adc();
-    start_dma();
+    adc_setup();
+    dma_setup();
+
+    adc_timer_setup(1000);  // 1 kHz
 
     wait(0.2);      // wait for ADC to collect some measurement values
 
     update_measurements(&dcdc, &bat, &load, &hs_port, &ls_port);
     calibrate_current_sensors(&dcdc, &load);
-    update_measurements(&dcdc, &bat, &load, &hs_port, &ls_port);            // second time to get proper values of power measurement
 
-    setup_control_timer(50);  // 50 Hz
-}
-
-//----------------------------------------------------------------------------
-// timespan in seconds since last call
-void energy_counter(float timespan)
-{
-    float dcdc_power = ls_port.voltage * ls_port.current;
-
-    if (dcdc_power < 0.1) {
-        seconds_zero_solar++;
-    }
-    else {
-        seconds_zero_solar = 0;
-    }
-
-    // detect night time for reset of daily counter in the morning
-    if (seconds_zero_solar > 60*60*5) {
-        nighttime = true;
-    }
-
-    if (nighttime && dcdc_power > 0.1) {
-        nighttime = false;
-        bat.input_Wh_day = 0.0;
-        bat.output_Wh_day = 0.0;
-        seconds_day = 0;
-        day_counter++;
-        eeprom_store_data(&ts);
-    }
-    else {
-        seconds_day++;
-    }
-
-    bat.input_Wh_day += dcdc_power * timespan / 3600.0;
-    bat.output_Wh_day += load.current * ls_port.voltage * timespan / 3600.0;
-    bat.input_Wh_total += dcdc_power * timespan / 3600.0;
-    bat.output_Wh_total += dcdc.ls_current * ls_port.voltage * timespan / 3600.0;
 }
 
 #endif

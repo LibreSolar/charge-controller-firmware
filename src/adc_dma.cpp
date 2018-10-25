@@ -36,6 +36,9 @@
     #define TSENSE_CAL2_VALUE 130.0  // temperature of second calibration point
 #endif
 
+#ifdef PIN_REF_I_DCDC
+AnalogOut ref_i_dcdc(PIN_REF_I_DCDC);
+#endif 
 
 float dcdc_current_offset;
 float load_current_offset;
@@ -141,7 +144,7 @@ void update_measurements(dcdc_t *dcdc, battery_t *bat, load_output_t *load, dcdc
 }
 
 
-void start_dma()
+void dma_setup()
 {
     //__HAL_RCC_DMA1_CLK_ENABLE();
 
@@ -202,8 +205,12 @@ extern "C" void DMA1_Channel1_IRQHandler(void)
     }*/
 }
 
-void setup_adc()
+void adc_setup()
 {
+#ifdef PIN_REF_I_DCDC
+    ref_i_dcdc = 0.5;    // reference voltage for zero current (0.1 for buck, 0.9 for boost, 0.5 for bi-directional)
+#endif
+
     ADC_HandleTypeDef hadc;
     ADC_ChannelConfTypeDef sConfig = {0};
 
@@ -276,7 +283,7 @@ void setup_adc()
 
 #if defined(STM32F0)
 
-void setup_adc_timer(int freq_Hz)   // max. 10 kHz
+void adc_timer_setup(int freq_Hz)   // max. 10 kHz
 {
     // Enable TIM15 clock
     RCC->APB2ENR |= RCC_APB2ENR_TIM15EN;
@@ -305,7 +312,7 @@ extern "C" void TIM15_IRQHandler(void)
 
 #elif defined(STM32L0)
 
-void setup_adc_timer(int freq_Hz)   // max. 10 kHz
+void adc_timer_setup(int freq_Hz)   // max. 10 kHz
 {
     // Enable TIM6 clock
     RCC->APB1ENR |= RCC_APB1ENR_TIM6EN;

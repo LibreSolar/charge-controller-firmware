@@ -14,27 +14,24 @@
  * limitations under the License.
  */
 
-#ifndef _PCB_H_
-#define _PCB_H_
+#include "config.h"
 
-/* This file includes the PCB specific settings depending on the PCB selected
- * as a compiler define flag in platformio.h
- */
+#ifdef GSM_ENABLED     // otherwise don't compile code to reduce firmware size
 
-// generic settings (for all charge controller boards)
-#define LOW_SIDE_VOLTAGE_MAX    32
-#define HIGH_SIDE_VOLTAGE_MAX   55
+#include "pcb.h"
+#include "interface.h"
+#include "data_objects.h"
 
-#if defined(PCB_LS_005)
-    #include "pcb_ls_005.h"
-#elif defined(PCB_LS_010)
-    #include "pcb_ls_010.h"
-#elif defined(PCB_CS_02)
-    #include "pcb_cs_02.h"
-#elif defined(PCB_CS_03)
-    #include "pcb_cs_03.h"
-#else
-    #error "PCB has to be specified!"
-#endif
+Serial serial_uext(PIN_UEXT_TX, PIN_UEXT_RX);
 
-#endif /* _PCB_H_ */
+void gsm_init(void)
+{
+    // TODO
+}
+
+void gsm_output(void)
+{
+    // TODO
+}
+
+#endif /* LORA_ENABLED */

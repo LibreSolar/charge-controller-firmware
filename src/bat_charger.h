@@ -24,24 +24,30 @@
 extern "C" {
 #endif
 
-void battery_init(battery_t* bat, BatteryConfigUser&);
-
-/* Initialize DC/DC and DC/DC port structs
+/* Basic initialization of battery
  *
- * See http://libre.solar/docs/dcdc_control for detailed information
+ * Configures battery based on settings defined in config.h
  */
-//void dcdc_init(dcdc_t *dcdc);
-//void dcdc_port_init_bat(dcdc_port_t *port, battery_t *bat);
-//void dcdc_port_init_solar(dcdc_port_t *port);
-//void dcdc_port_init_nanogrid(dcdc_port_t *port);
+void battery_init(battery_t *bat);
+
+/* User settings of battery
+ *
+ * This function should be implemented in config.cpp
+ */
+void battery_init_user(battery_t *bat);
+
+/* Update battery settings
+ *
+ * Most important settings specified in update will be copied to actual battery_t,
+ * if suggested updates are valid (includes plausibility check!)
+ */
+bool battery_update_settings(battery_t *actual, battery_t *update);
 
 /* Charger state machine update, should be called exactly once per second
  */
 void charger_state_machine(dcdc_port_t *port, battery_t *bat, float voltage, float current);
 
-void bat_calculate_soc(battery_t *bat, float voltage, float current);
-
-//void dcdc_control(dcdc_t *dcdc, dcdc_port_t *high_side, dcdc_port_t *low_side);
+void battery_update_energy(battery_t *bat, float voltage, float current, float timespan);
 
 #ifdef __cplusplus
 }
