@@ -32,12 +32,12 @@ void can_send_object_name(int obj_id, uint8_t can_dest_id);
 /* GSM mobile interface via UEXT connector serial interface
  */
 void gsm_init();
-void gsm_output();
+void gsm_process();
 
 /* LoRa interface via UEXT connector SPI interface
  */
 void lora_init();
-void lora_output();
+void lora_process();
 
 /* SD card connected to UEXT connector (e.g. via Olimex adapter)
  *

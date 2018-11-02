@@ -21,17 +21,32 @@
 #include "pcb.h"
 #include "interface.h"
 #include "data_objects.h"
+#include "GSM_MQTT.h"
 
-Serial serial_uext(PIN_UEXT_TX, PIN_UEXT_RX);
+Serial serial_uext(PIN_UEXT_TX, PIN_UEXT_RX, 9600);
+GSM_MQTT MQTT(serial_uext, 120);
+
+extern Serial serial;  // tx, rx for USB Debug on PC
+
+int last_call = 0;
+const int interval = 60*5;  // 5 minutes
 
 void gsm_init(void)
 {
-    // TODO
+    MQTT.begin();
 }
 
-void gsm_output(void)
+void gsm_process(void)
 {
-    // TODO
+    if (time(NULL) > last_call + interval) {
+        last_call = time(NULL);
+        if (MQTT.available())
+        {
+            serial.printf("Publishing MQTT test message\n");
+            MQTT.publish("MyTopic", "Hello");
+        }
+        MQTT.processing();
+    }
 }
 
-#endif /* LORA_ENABLED */
+#endif /* GSM_ENABLED */

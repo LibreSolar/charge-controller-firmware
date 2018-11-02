@@ -23,15 +23,29 @@ const char* manufacturer = "Libre Solar";
 const char* deviceName = "MPPT Solar Charge Controller 20A";
 const char* deviceID = "LSMPPT-00001";
 
+extern bool pub_uart_enabled;
+
 const data_object_t dataObjects[] = {
     // info
-    {0x1003, TS_ACCESS_READ, TS_T_STRING, 0, (void*) &(deviceID), "deviceID"},
+    {0x1001, TS_ACCESS_READ, TS_T_STRING, 0, (void*) &(manufacturer), "manufacturer"},
+    {0x1002, TS_ACCESS_READ, TS_T_STRING, 0, (void*) &(deviceName), "deviceName"},
+    {0x1003, TS_ACCESS_READ | TS_ACCESS_WRITE_AUTH, TS_T_STRING, 0, (void*) &(deviceID), "deviceID"},
 
-/*
-    calibration data
-    "vLoadDisconnect"   // on battery level
-    "vLoadReconnect"    // on battery level
-*/
+    // settings
+    {0x2001, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 1, (void*) &(bat_user.capacity),                 "cBat_Ah"},
+    {0x2002, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 2, (void*) &(bat_user.voltage_recharge),         "vBatRecharge"},
+    {0x2003, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 2, (void*) &(bat_user.voltage_absolute_min),     "vBatAbsMin"},
+    {0x2004, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 1, (void*) &(bat_user.charge_current_max),       "iBatChgMax"},
+    {0x2005, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 2, (void*) &(bat_user.voltage_max),              "vBatTarget"},
+    {0x2006, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 1, (void*) &(bat_user.current_cutoff_CV),        "iBatCutoff"},
+    {0x2007, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_INT32,   0, (void*) &(bat_user.time_limit_CV),            "tBatCutoff"},
+    {0x2008, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_BOOL,    0, (void*) &(bat_user.trickle_enabled),          "trickleEn"},
+    {0x2009, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_INT32,   0, (void*) &(bat_user.time_trickle_recharge),    "tTrickleRecharge"},
+    {0x2010, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 2, (void*) &(bat_user.voltage_load_disconnect),  "vLoadDisconnect"},
+    {0x2011, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 2, (void*) &(bat_user.voltage_load_reconnect),   "vLoadReconnect"},
+    {0x2012, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 2, (void*) &(bat_user.temperature_compensation), "tempFactor"},
+    //{0x2013, TS_ACCESS_READ,                   TS_T_UINT32,  0, (void*) &(??), "timestamp"},         // TODO
+    {0x2014, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_BOOL, 0, (void*) &(pub_uart_enabled), "pubSerial"},
 
     // input data
     {0x3001, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_BOOL, 0, (void*) &(load.enabled_target), "loadEnTarget"},
@@ -59,18 +73,15 @@ const data_object_t dataObjects[] = {
     {0x4013, TS_ACCESS_READ, TS_T_INT32,   1, (void*) &(bat.soc), "SOC"},
 /*
     // rpc
-    {0x5001, TS_ACCESS_EXEC, TS_T_BOOL, 0, (void*) &(cal.dcdc_current_min), "dfu"},
-
-    "setBatCustom"      // only if custom battery is set, vLoadDisconnect (see above) etc. are considered
-    "setBatLFP12V"
-    "setBatFlooded12V"
+    {0x5001, TS_ACCESS_EXEC, TS_T_BOOL, 0, (void*) (bootloader()), "dfu"},
+    {0x5002, TS_ACCESS_EXEC, TS_T_BOOL, 0, (void*) (TODO!!()), "applySettings"},        // applies settings in bat_user (TODO!)
 */
-    // calibration data
-    {0x6001, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 1, (void*) &(dcdc.ls_current_min), "iDcdcMin"},
-    {0x6002, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 1, (void*) &(dcdc.hs_voltage_max), "vSolarAbsMax"},
-    {0x6003, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_INT32,   0, (void*) &(dcdc.restart_interval), "tDcdcRestart"},
-    //{0x6004, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 1, (void*) &(dcdc.offset_voltage_start), "vSolarOffsetStart"},
-    //{0x6005, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 1, (void*) &(dcdc.offset_voltage_stop), "vSolarOffsetStop"}
+    // calibration data (write only after authentication)
+    {0x6001, TS_ACCESS_READ | TS_ACCESS_WRITE_AUTH, TS_T_FLOAT32, 1, (void*) &(dcdc.ls_current_min), "iDcdcMin"},
+    {0x6002, TS_ACCESS_READ | TS_ACCESS_WRITE_AUTH, TS_T_FLOAT32, 1, (void*) &(dcdc.hs_voltage_max), "vSolarAbsMax"},
+    {0x6003, TS_ACCESS_READ | TS_ACCESS_WRITE_AUTH, TS_T_INT32,   0, (void*) &(dcdc.restart_interval), "tDcdcRestart"},
+    //{0x6004, TS_ACCESS_READ | TS_ACCESS_WRITE_AUTH, TS_T_FLOAT32, 1, (void*) &(dcdc.offset_voltage_start), "vSolarOffsetStart"},
+    //{0x6005, TS_ACCESS_READ | TS_ACCESS_WRITE_AUTH, TS_T_FLOAT32, 1, (void*) &(dcdc.offset_voltage_stop), "vSolarOffsetStop"}
 };
 
 const size_t dataObjectsCount = sizeof(dataObjects)/sizeof(data_object_t);

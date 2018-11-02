@@ -21,24 +21,51 @@
 #include "data_objects.h"
 #include "bat_charger.h"
 
-
-// specify battery parameters to overwrite default settings here (be sure you understand what you are doing!)
-void battery_init_user(battery_t *bat)
+/* Battery User Settings
+ * 
+ * Specify battery parameters to overwrite default settings here.
+ * 
+ * IMPORTANT: All settings (e.g. voltages) have to be defined on battery level,
+ *            not cell level!
+ */
+void battery_init_user(battery_t *bat, battery_user_settings_t *bat_user)
 {
-    battery_t bat_user;
+    // bat_user was initialized in battery_init function already (based on 
+    // config.h settings) --> only change the settings you want to adjust
 
-    bat_user = *bat;        // start with already initialized default
+    // DO NOT CHANGE ANYTHING in battery_t *bat!
 
 /*
-    bat_user.num_cells = ?;
-    bat_user.capacity  = ?;
-    bat_user.cell_voltage_max = ?;
-    bat_user.cell_voltage_recharge = ?;
-    bat_user.current_cutoff_CV = ?;
-    bat_user.cell_voltage_load_disconnect = ?;
-    bat_user.cell_voltage_load_reconnect = ?;
+    bat_user.capacity = ?;              // Ah   Cell capacity or sum of parallel cells capacity
+                                        //      Capacity is currently mainly used to define current limits, but might
+                                        //      become important for improved SOC calculation algorithms
 
+    // State: Standby
+    bat_user.voltage_recharge = ?;      // V    below this voltage start charging again after battery has been fully charged
+                                        //      Remark: setting the value too close to the max voltage will cause more 
+                                        //      charging stress on lithium based batteries 
+
+    bat_user.voltage_absolute_min = ?;  // V    below this voltage the battery is considered damaged
+
+    // State: CC/bulk
+    bat_user.charge_current_max = ?;    // A    limits the current if PCB allows more than the battery
+
+    // State: CV/absorption
+    bat_user.voltage_max = ?;           // V    charger target voltage per cell, switching from CC to CV at this voltage
+    bat_user.current_cutoff_CV = ?;     // A    constant voltage charging phase stopped if current is below this value
+    bat_user.time_limit_CV = ?;         // sec  after this time limit, CV charging is stopped independent of current
+
+    // State: float/trickle
+    bat_user.trickle_enabled = ?;
+    bat_user.voltage_trickle = ?;       // V     charger target voltage for trickle charging of lead-acid batteries
+    bat_user.time_trickle_recharge = ?; // sec
+
+    bat_user.voltage_load_disconnect = ?; // V     when discharging, stop power to load if battery voltage drops below this value
+    bat_user.voltage_load_reconnect = ?;  // V     re-enable the load only after charged beyond this value
+
+    bat_user.temperature_compensation = ?; // voltage compensation (suggested: -3 mV/°C/cell)
 */
+
     // try to update settings (checks input values for plausibility)
-    battery_update_settings(bat, &bat_user);
+    battery_user_settings(bat, bat_user);
 }

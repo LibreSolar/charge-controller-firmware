@@ -40,14 +40,15 @@ void _enter_state(battery_t* bat, int next_state)
 }
 
 // weak function to be overridden by user in config.cpp
-WEAK void battery_init_user(battery_t *bat) {;}
+WEAK void battery_init_user(battery_t *bat, battery_user_settings_t *bat_user) {;}
 
-void battery_init(battery_t *bat)
+void battery_init(battery_t *bat, battery_user_settings_t *bat_user)
 {
     // core battery pack specification (set in config.h)
     bat->type = BATTERY_TYPE;
     bat->num_cells = BATTERY_NUM_CELLS; 
     bat->capacity = BATTERY_CAPACITY;
+    bat->num_batteries = 1;             // initialize with only one battery in series
 
     // common values for all batteries
     bat->charge_current_max = bat->capacity;        // 1C should be safe for all batteries
@@ -130,41 +131,66 @@ void battery_init(battery_t *bat)
         break;
     }
 
-    battery_init_user(bat);
+    // initialize bat_user
+    bat_user->capacity                      = bat->capacity;
+    bat_user->voltage_max                   = bat->num_cells * bat->cell_voltage_max;
+    bat_user->voltage_recharge              = bat->num_cells * bat->cell_voltage_recharge;
+    bat_user->voltage_load_reconnect        = bat->num_cells * bat->cell_voltage_load_reconnect;
+    bat_user->voltage_load_disconnect       = bat->num_cells * bat->cell_voltage_load_disconnect;
+    bat_user->voltage_absolute_min          = bat->num_cells * bat->cell_voltage_absolute_min;
+    bat_user->charge_current_max            = bat->charge_current_max;
+    bat_user->current_cutoff_CV             = bat->current_cutoff_CV;
+    bat_user->time_limit_CV                 = bat->time_limit_CV;
+    bat_user->trickle_enabled               = bat->trickle_enabled;
+    bat_user->time_trickle_recharge         = bat->time_trickle_recharge;
+    bat_user->temperature_compensation      = bat->temperature_compensation;
+
+    // call user function (defined in config.cpp to overwrite above initializations)
+    battery_init_user(bat, bat_user);
 }
 
-// checks settings in bat_updates for plausibility and writes them to bat if everything is fine
-// Remark: copies only the values checked for plausibiliety, nothing else!
-bool battery_update_settings(battery_t *actual, battery_t *update)
+// checks settings in bat_user for plausibility and writes them to bat if everything is fine
+bool battery_user_settings(battery_t *bat, battery_user_settings_t *bat_user)
 {
     // things to check:
-    // - num_cells * cell_voltage_XXX in the range of what the charger can handle?
+    // - cell_voltage_XXX in the range of what the charger can handle?
     // - load_disconnect/reconnect hysteresis makes sense?
     // - cutoff current not extremely low/high
     // - capacity plausible
 
-    if (update->num_cells > 0 &&
-        update->num_cells * update->cell_voltage_max > LOW_SIDE_VOLTAGE_MAX &&
-        update->cell_voltage_load_reconnect > (update->cell_voltage_load_disconnect + 0.1) &&
-        update->cell_voltage_recharge < (update->cell_voltage_max - 0.2) &&
-        update->cell_voltage_recharge > (update->cell_voltage_load_disconnect + 0.2) &&
-        update->cell_voltage_load_disconnect > (update->cell_voltage_absolute_min + 0.2) && 
-        update->current_cutoff_CV < (update->capacity / 9.0) &&        // C/10 or lower allowed
-        update->current_cutoff_CV > 0.01
+    if (bat_user->voltage_max > LOW_SIDE_VOLTAGE_MAX &&
+        bat_user->voltage_load_reconnect > (bat_user->voltage_load_disconnect + 0.8) &&
+        bat_user->voltage_recharge < (bat_user->voltage_max - 0.6) &&
+        bat_user->voltage_recharge > (bat_user->voltage_load_disconnect + 1) &&
+        bat_user->voltage_load_disconnect > (bat_user->voltage_absolute_min + 0.5) && 
+        bat_user->current_cutoff_CV < (bat_user->capacity / 9.0) &&        // C/10 or lower allowed
+        bat_user->current_cutoff_CV > 0.01 &&
+        (bat_user->trickle_enabled == false || 
+            (bat_user->voltage_trickle < bat_user->voltage_max && 
+             bat_user->voltage_trickle > bat_user->voltage_load_disconnect))
        ) {
 
         // TODO: stop DC/DC
-        actual->type                            = BAT_TYPE_CUSTOM;
-        actual->num_cells                       = update->num_cells;
-        actual->capacity                        = update->capacity;
-        actual->cell_voltage_max                = update->cell_voltage_max;
-        actual->cell_voltage_recharge           = update->cell_voltage_recharge;
-        actual->current_cutoff_CV               = update->current_cutoff_CV;
-        actual->cell_voltage_load_disconnect    = update->cell_voltage_load_disconnect;
-        actual->cell_voltage_load_reconnect     = update->cell_voltage_load_reconnect;
+
+        bat->type                           = BAT_TYPE_CUSTOM;
+        bat->num_cells                      = 1;    // custom battery defines voltages on battery level
+        bat->capacity                       = bat_user->capacity;
+        bat->cell_voltage_max               = bat_user->voltage_max;
+        bat->cell_voltage_recharge          = bat_user->voltage_recharge;
+        bat->cell_voltage_load_reconnect    = bat_user->voltage_load_reconnect;
+        bat->cell_voltage_load_disconnect   = bat_user->voltage_load_disconnect;
+        bat->cell_voltage_absolute_min      = bat_user->voltage_absolute_min;
+        bat->charge_current_max             = bat_user->charge_current_max;
+        bat->current_cutoff_CV              = bat_user->current_cutoff_CV;
+        bat->time_limit_CV                  = bat_user->time_limit_CV;
+        bat->trickle_enabled                = bat_user->trickle_enabled;
+        bat->time_trickle_recharge          = bat_user->time_trickle_recharge;
+        bat->temperature_compensation       = bat_user->temperature_compensation;
+
         // TODO:
-        // - update also DC/DC etc.
+        // - update also DC/DC etc. (now this function only works at system startup)
         // - restart DC/DC
+
         return true;
     }
 

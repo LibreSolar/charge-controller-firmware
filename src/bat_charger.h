@@ -26,22 +26,23 @@ extern "C" {
 
 /* Basic initialization of battery
  *
- * Configures battery based on settings defined in config.h
+ * Configures battery based on settings defined in config.h and initializes
+ * bat_user with same values
  */
-void battery_init(battery_t *bat);
+void battery_init(battery_t *bat, battery_user_settings_t *bat_user);
 
 /* User settings of battery
  *
  * This function should be implemented in config.cpp
  */
-void battery_init_user(battery_t *bat);
+void battery_init_user(battery_t *bat, battery_user_settings_t *bat_user);
 
 /* Update battery settings
  *
- * Most important settings specified in update will be copied to actual battery_t,
+ * Settings specified in bat_user will be copied to actual battery_t,
  * if suggested updates are valid (includes plausibility check!)
  */
-bool battery_update_settings(battery_t *actual, battery_t *update);
+bool battery_user_settings(battery_t *bat, battery_user_settings_t *bat_user);
 
 /* Charger state machine update, should be called exactly once per second
  */

@@ -16,45 +16,41 @@ uint8_t buf_resp[TS_RESP_BUFFER_LEN];
 
 ts_data_t data;
 
-str_buffer_t req_uart;
-str_buffer_t req_usb;
-str_buffer_t resp;
-
-
-int uart_pos = 0;
-int usb_pos = 0;
+ts_buffer_t req_uart;
+ts_buffer_t req_usb;
+ts_buffer_t resp;
 
 Serial* ser_uart;
 
-#if PCB_VERSION < 003
-//USBSerial* ser_usb;
-#endif
+// stores object-ids of values to be published via Serial
+static uint16_t pub_serial_data_objects[] = {
+    0x4001, 0x4003, 0x4005, 0x4007, 0x400A,     // V, I, T
+    0x400C, // loadEn
+    0x400D, 0x400E, // daily energy throughput
+    0x4013  // SOC
+};
 
 bool uart_serial_command_flag = false;
 bool usb_serial_command_flag = false;
 
-// static variables (only visible in this file)
-//static bool pub_data_enabled;
+bool pub_uart_enabled;
 
 void uart_serial_isr()
 {
     while (ser_uart->readable() && uart_serial_command_flag == false) {
         if (req_uart.pos < TS_REQ_BUFFER_LEN) {
-            req_uart.data[req_uart.pos] = ser_uart->getc();
+            req_uart.data.bin[req_uart.pos] = ser_uart->getc();
 
-            // echo back the character
-            //ser_uart->putc(req_uart.data[req_uart.pos]);
-
-            if (req_uart.data[req_uart.pos] == '\n') {
-                if (req_uart.pos > 0 && req_uart.data[req_uart.pos-1] == '\r')
-                    req_uart.data[req_uart.pos-1] = '\0';
+            if (req_uart.data.bin[req_uart.pos] == '\n') {
+                if (req_uart.pos > 0 && req_uart.data.bin[req_uart.pos-1] == '\r')
+                    req_uart.data.bin[req_uart.pos-1] = '\0';
                 else
-                    req_uart.data[req_uart.pos] = '\0';
+                    req_uart.data.bin[req_uart.pos] = '\0';
                 
                 // start processing
                 uart_serial_command_flag = true;
             }
-            else if (req_uart.pos > 0 && req_uart.data[req_uart.pos] == '\b') { // backspace
+            else if (req_uart.pos > 0 && req_uart.data.bin[req_uart.pos] == '\b') { // backspace
                 req_uart.pos--;
             }
             else {
@@ -70,12 +66,24 @@ void uart_serial_init(Serial* s)
     s->attach(uart_serial_isr);
     data.objects = dataObjects;
     data.size = dataObjectsCount;
+    req_uart.data.bin = buf_req_uart;
+    req_uart.size = TS_REQ_BUFFER_LEN;
+    resp.data.bin = buf_resp;
+    resp.size = TS_RESP_BUFFER_LEN;
+}
+
+void uart_serial_pub()
+{
+    if (pub_uart_enabled) {
+        thingset_pub_msg_json(&resp, &data, pub_serial_data_objects, sizeof(pub_serial_data_objects)/sizeof(uint16_t));
+        ser_uart->printf("%s\n", resp.data.str);
+    }
 }
 
 void uart_serial_process()
 {
     if (uart_serial_command_flag) {
-        if (req_uart.pos > 0) {
+        if (req_uart.pos > 1) {
             ser_uart->printf("Received Request: %s\n", req_uart.data);
             thingset_process(&req_uart, &resp, &data);
             ser_uart->printf("%s\n", resp.data);
@@ -85,11 +93,6 @@ void uart_serial_process()
         uart_serial_command_flag = false;
         req_uart.pos = 0;
     }
-}
-
-void uart_serial_pub() {
-    //thingset_pub_json(buf_resp, TS_RESP_BUFFER_LEN);
-    //ser_uart->printf("%s", buf_resp);
 }
 
 #ifdef USB_SERIAL_ENABLED
@@ -124,7 +127,8 @@ void usb_serial_init(USBSerial* s)
     s->attach(usb_serial_isr);
     data.objects = dataObjects;
     data.size = sizeof(dataObjects) / sizeof(data_object_t);
-    //req_usb.data = buf_req_usb;
+    req_usb.data.str = buf_req_uart;
+    req_usb.size = TS_REQ_BUFFER_LEN;
 }
 
 void usb_serial_process()

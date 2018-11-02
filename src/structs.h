@@ -51,7 +51,7 @@ typedef struct
     int time_limit_recharge;        // sec  
 
     float cell_voltage_absolute_min; // V   below this voltage the battery is considered damaged
-    float cell_voltage_absolute_max; // V   above this voltage the battery can be damaged
+    //float cell_voltage_absolute_max; // V   above this voltage the battery can be damaged
 
     // State: CC/bulk
     float charge_current_max;       // A    limits the current if PCB allows more than the battery
@@ -86,6 +86,9 @@ typedef struct
     /* Operational data (updated during operation)
      */
 
+    int num_batteries;      // used for automatic 12V/24V battery detection at start-up
+                            // can be 1 or 2 only.
+
     float temperature;                  // °C from ext. temperature sensor (if existing)
     
     float input_Wh_day;
@@ -104,6 +107,42 @@ typedef struct
     bool full;
 
 } battery_t;
+
+
+// these voltages are defined on BATTERY level, NOT CELL!
+typedef struct
+{
+    float capacity;                 // Ah   cell capacity or sum of parallel cells capacity
+                                    //      Capacity is currently mainly used to define current limits, but might
+                                    //      become important for improved SOC calculation algorithms
+
+    // State: Standby
+    float voltage_recharge;         // V    below this voltage start charging again after battery has been fully charged
+                                    //      Remark: setting the value too close to the max voltage will cause more 
+                                    //      charging stress on lithium based batteries 
+
+    float voltage_absolute_min;     // V    below this voltage the battery is considered damaged
+
+    // State: CC/bulk
+    float charge_current_max;       // A    limits the current if PCB allows more than the battery
+
+    // State: CV/absorption
+    float voltage_max;              // V    charger target voltage per cell, switching from CC to CV at this voltage
+    float current_cutoff_CV;        // A    constant voltage charging phase stopped if current is below this value
+    int time_limit_CV;              // sec  after this time limit, CV charging is stopped independent of current
+
+    // State: float/trickle
+    bool trickle_enabled;
+    float voltage_trickle;         // V     charger target voltage for trickle charging of lead-acid batteries
+    int time_trickle_recharge;     // sec
+
+    float voltage_load_disconnect; // V     when discharging, stop power to load if battery voltage drops below this value
+    float voltage_load_reconnect;  // V     re-enable the load only after charged beyond this value
+
+    float temperature_compensation;     // voltage compensation (suggested: -3 mV/°C/cell)
+
+} battery_user_settings_t;
+
 
 // possible charger states
 enum charger_state {

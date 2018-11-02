@@ -42,6 +42,7 @@ dcdc_port_t hs_port = {};       // high-side (solar for typical MPPT)
 dcdc_port_t ls_port = {};       // low-side (battery for typical MPPT)
 dcdc_port_t *bat_port = NULL;
 battery_t bat;
+battery_user_settings_t bat_user;
 load_output_t load;
 log_data_t log_data;
 ts_data_t ts;
@@ -52,8 +53,9 @@ ts_data_t ts;
 void setup();
 void energy_counter(float timespan);
 
-void setup_interfaces();
-void update_interfaces_1s();   // called every second
+void interfaces_init();
+void interfaces_process_asap();     // called each time the main loop is in idle
+void interfaces_process_1s();       // called every second
 
 void check_overcurrent(load_output_t *load)
 {
@@ -80,7 +82,7 @@ void system_control()       // called by control timer (see hardware.cpp)
 int main()
 {
     setup();
-    setup_interfaces();
+    interfaces_init();
 
     wait(2);    // safety feature: be able to re-flash before starting
     init_watchdog(10);      // 10s should be enough for communication ports
@@ -111,12 +113,13 @@ int main()
     // the main loop is suitable for slow tasks like communication (even blocking wait allowed)
     while(1) {
 
+        interfaces_process_asap();
         update_soc_led(&bat);
 
         now = time(NULL);
         if (now >= last_second + 1) {   // called once per second (or slower if blocking wait occured somewhere)
 
-            printf("Still alive... time: %d, mode: %d\n", (int)time(NULL), dcdc.mode);
+            //printf("Still alive... time: %d, mode: %d\n", (int)time(NULL), dcdc.mode);
 
             charger_state_machine(bat_port, &bat, bat_port->voltage, bat_port->current);
             
@@ -145,7 +148,7 @@ int main()
                 }
             }
 
-            update_interfaces_1s();
+            interfaces_process_1s();
             
             last_second = now;
         }
@@ -154,29 +157,7 @@ int main()
     }
 }
 
-void update_interfaces_1s()
-{
-#ifdef OLED_ENABLED
-    oled_output(&dcdc, &hs_port, &ls_port, &bat, &load);
-#endif
-
-#ifdef CAN_ENABLED
-
-#endif
-
-#ifdef USB_SERIAL_ENABLED
-
-#endif
-
-#ifdef UART_SERIAL_ENABLED
-    uart_serial_process();
-    //output_serial(&meas, &chg);
-#endif
-
-    fflush(stdout);
-}
-
-void setup_interfaces()
+void interfaces_init()
 {
 #ifdef UART_SERIAL_ENABLED
     serial.baud(57600);
@@ -194,13 +175,49 @@ void setup_interfaces()
 #endif
 }
 
+void interfaces_process_asap()
+{
+#ifdef UART_SERIAL_ENABLED
+    uart_serial_process();
+#endif
+}
+
+void interfaces_process_1s()
+{
+#ifdef OLED_ENABLED
+    oled_output(&dcdc, &hs_port, &ls_port, &bat, &load);
+#endif
+
+#ifdef CAN_ENABLED
+
+#endif
+
+#ifdef USB_SERIAL_ENABLED
+
+#endif
+
+#ifdef GSM_ENABLED
+    gsm_process();
+#endif
+
+#ifdef LORA_ENABLED
+    lora_process();
+#endif
+
+#ifdef UART_SERIAL_ENABLED
+    uart_serial_pub();
+#endif
+
+    fflush(stdout);
+}
+
 //----------------------------------------------------------------------------
 void setup()
 {
     disable_load();
     init_leds();
 
-    battery_init(&bat);
+    battery_init(&bat, &bat_user);
 
     dcdc_init(&dcdc);
 

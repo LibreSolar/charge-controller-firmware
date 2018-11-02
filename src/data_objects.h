@@ -31,26 +31,41 @@ extern load_output_t load;
 extern dcdc_port_t hs_port;
 extern dcdc_port_t ls_port;
 
-//extern BatteryConfigUser battery_config_user;
+extern battery_user_settings_t bat_user;
 extern const dcdc_control_mode dcdc_mode; // we leave it fixed for the runtime for now
 
-extern const data_object_t dataObjects[]; // see output_can.cpp
+extern const data_object_t dataObjects[];
 extern const size_t dataObjectsCount;
 
 
 // stores object-ids of values to be stored in EEPROM
-static const int eeprom_data_objects[] = {
+static const uint16_t eeprom_data_objects[] = {
     0x4002, 0x4004, 0x4006, 0x4008, 0x400B,     // V, I, T max
     0x400F, 0x4010, // energy throughput
     0x4011, 0x4012, // num full charge / deep-discharge
     0x3001, 0x3002  // switch targets
 };
-
-// stores object-ids of values to be stored in EEPROM
-static const int pub_data_objects[] = {
-    0x4001, 0x4003, 0x4005, 0x4007, 0x400A,     // V, I, T
-    0x400D, 0x400E, // energy throughput
+/*
+// stores object-ids of values to be published via GSM
+static uint16_t pub_gsm_data_objects[] = {
+    0x1003, // deviceID
+    //0x2013, // time
+    0x4002, 0x4004, 0x4006, 0x4008, 0x400B,     // V, I, T max
+    0x400C, // loadEn
+    0x400F, 0x4010, // total energy throughput
+    0x4011, 0x4012, // nFullChg, nDeepDis
     0x4013  // SOC
 };
+
+// stores object-ids of values to be published via LoRa
+static uint16_t pub_lora_data_objects[] = {
+    0x1003, // deviceID
+    0x4002, 0x4004, 0x4006, 0x4008, 0x400B,     // V, I, T max
+    0x400C, // loadEn
+    0x400F, 0x4010, // total energy throughput
+    0x4011, 0x4012, // nFullChg, nDeepDis
+    0x4013  // SOC
+};
+*/
 
 #endif
