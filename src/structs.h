@@ -93,8 +93,8 @@ typedef struct
     
     float input_Wh_day;
     float output_Wh_day;
-    float input_Wh_total;
-    float output_Wh_total;
+    uint32_t input_Wh_total;
+    uint32_t output_Wh_total;
 
     int num_full_charges;
     int num_deep_discharges;

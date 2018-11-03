@@ -24,13 +24,6 @@
 #include <math.h>       // for fabs function
 
 
-// for daily energy counting
-int seconds_zero_solar = 0;
-int seconds_day = 0;
-int day_counter = 0;
-bool nighttime = false;
-
-
 // private function
 void _enter_state(battery_t* bat, int next_state)
 {
@@ -322,9 +315,15 @@ void load_update(dcdc_port_t *bat_port, battery_t *spec)
 
 //----------------------------------------------------------------------------
 // timespan in seconds since last call
-void battery_update_energy(battery_t *bat, float voltage, float current, float timespan)
+void battery_update_energy(battery_t *bat, float voltage, float current, int timespan)
 {
-/*    float dcdc_power = voltage * current;
+    // static variables so that the are not reset during each function call
+    static int seconds_zero_solar = 0;
+    static int seconds_day = 0;
+    static int day_counter = 0;
+    static bool nighttime = false;
+
+    float dcdc_power = voltage * current;
 
     if (dcdc_power < 0.1) {
         seconds_zero_solar++;
@@ -340,6 +339,8 @@ void battery_update_energy(battery_t *bat, float voltage, float current, float t
 
     if (nighttime && dcdc_power > 0.1) {
         nighttime = false;
+        bat->input_Wh_total += bat->input_Wh_day;
+        bat->output_Wh_total += bat->output_Wh_day;
         bat->input_Wh_day = 0.0;
         bat->output_Wh_day = 0.0;
         seconds_day = 0;
@@ -352,9 +353,7 @@ void battery_update_energy(battery_t *bat, float voltage, float current, float t
 
     bat->input_Wh_day += dcdc_power * timespan / 3600.0;
     bat->output_Wh_day += load.current * ls_port.voltage * timespan / 3600.0;
-    bat->input_Wh_total += dcdc_power * timespan / 3600.0;
-    bat->output_Wh_total += dcdc.ls_current * ls_port.voltage * timespan / 3600.0;
- */
+ 
     if (fabs(current) < 0.5) {
         bat->soc = (int)((voltage / bat->num_cells - bat->cell_ocv_empty) /
                    (bat->cell_ocv_full - bat->cell_ocv_empty) * 100.0);

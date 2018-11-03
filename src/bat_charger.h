@@ -48,7 +48,7 @@ bool battery_user_settings(battery_t *bat, battery_user_settings_t *bat_user);
  */
 void charger_state_machine(dcdc_port_t *port, battery_t *bat, float voltage, float current);
 
-void battery_update_energy(battery_t *bat, float voltage, float current, float timespan);
+void battery_update_energy(battery_t *bat, float voltage, float current, int timespan);
 
 #ifdef __cplusplus
 }

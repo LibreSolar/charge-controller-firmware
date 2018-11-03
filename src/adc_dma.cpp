@@ -61,7 +61,7 @@ void calibrate_current_sensors(dcdc_t *dcdc, load_output_t *load)
 //----------------------------------------------------------------------------
 void update_measurements(dcdc_t *dcdc, battery_t *bat, load_output_t *load, dcdc_port_t *hs, dcdc_port_t *ls)
 {
-    int v_temp, rts;
+    //int v_temp, rts;
 
     // reference voltage of 2.5 V at PIN_V_REF
     //int vcc = 2500 * 4096 / (adc_filtered[ADC_POS_V_REF] >> (4 + ADC_FILTER_CONST));
