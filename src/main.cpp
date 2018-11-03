@@ -57,13 +57,6 @@ void interfaces_init();
 void interfaces_process_asap();     // called each time the main loop is in idle
 void interfaces_process_1s();       // called every second
 
-void check_overcurrent(load_output_t *load)
-{
-    if (load->current > load->current_max) {
-        disable_load();
-        load->overcurrent_flag = true;
-    }
-}
 
 void system_control()       // called by control timer (see hardware.cpp)
 {
@@ -74,7 +67,7 @@ void system_control()       // called by control timer (see hardware.cpp)
     // (this function includes MPPT algorithm)
     dcdc_control(&dcdc, &hs_port, &ls_port);
 
-    check_overcurrent(&load);
+    load_check_overcurrent(&load);
     update_dcdc_led(half_bridge_enabled());
 }
 
@@ -114,6 +107,7 @@ int main()
     while(1) {
 
         interfaces_process_asap();
+
         update_soc_led(&bat);
 
         now = time(NULL);
@@ -121,32 +115,11 @@ int main()
 
             //printf("Still alive... time: %d, mode: %d\n", (int)time(NULL), dcdc.mode);
 
-            charger_state_machine(bat_port, &bat, bat_port->voltage, bat_port->current);
-            
             battery_update_energy(&bat, bat_port->voltage, bat_port->current, last_second - now);      // also does energy counting
 
-            // load management
-            if (ls_port.input_allowed == false || load.overcurrent_flag == true) {
-                disable_load();
-                //usb_pwr_en = 0;
-                load.enabled = false;
-            }
-            else {
-                if (load.enabled_target == true) {
-                    enable_load();
-                    load.enabled = true;
-                }
-                else {
-                    disable_load();
-                    load.enabled = false;
-                }
-                if (load.usb_enabled_target == true) {
-                    //usb_pwr_en = 1;
-                }
-                else {
-                    //usb_pwr_en = 0;
-                }
-            }
+            charger_state_machine(bat_port, &bat, bat_port->voltage, bat_port->current);
+
+            load_state_machine(&load, ls_port.input_allowed);
 
             interfaces_process_1s();
             
@@ -214,7 +187,7 @@ void interfaces_process_1s()
 //----------------------------------------------------------------------------
 void setup()
 {
-    disable_load();
+    load_init(&load);
     init_leds();
 
     battery_init(&bat, &bat_user);
@@ -222,11 +195,6 @@ void setup()
     dcdc_init(&dcdc);
 
     half_bridge_init(PWM_FREQUENCY, 300, 12 / dcdc.hs_voltage_max, 0.97);       // lower duty limit might have to be adjusted dynamically depending on LS voltage
-
-    load.current_max = LOAD_CURRENT_MAX;
-    load.overcurrent_flag = false;
-    load.enabled_target = true;
-    load.usb_enabled_target = true;
 
     eeprom_restore_data(&ts);
 
@@ -239,7 +207,6 @@ void setup()
 
     update_measurements(&dcdc, &bat, &load, &hs_port, &ls_port);
     calibrate_current_sensors(&dcdc, &load);
-
 }
 
 #endif

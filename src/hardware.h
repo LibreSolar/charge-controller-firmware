@@ -7,11 +7,8 @@
 #include "data_objects.h"
 
 void init_load();
-void enable_load();
-void disable_load();
-
-void enable_usb();
-void disable_usb();
+void hw_load_switch(bool enabled);
+void hw_usb_out(bool enabled);
 
 void init_leds();
 void update_dcdc_led(bool enabled);

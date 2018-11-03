@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include "structs.h"
+#include "load.h"
 
 /* OLED display based on SSD1306 IC, connected to UEXT port via I2C
  */

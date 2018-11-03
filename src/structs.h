@@ -226,19 +226,6 @@ typedef struct {
     int restart_interval;   // s    --> when should we retry to start charging after low solar power cut-off?
 } dcdc_t;
 
-/* Load Output type
- * 
- * Stores status of load output incl. 5V USB output (if existing on PCB)
- */
-typedef struct {
-    float current;              // actual measurement
-    float current_max;          // maximum allowed current
-    bool overcurrent_flag;
-    bool enabled;               // actual current setting
-    bool enabled_target;        // target setting defined via communication 
-                                // port (overruled if battery is empty)
-    bool usb_enabled_target;    // same for USB output
-} load_output_t;
 
 /* Log Data
  *

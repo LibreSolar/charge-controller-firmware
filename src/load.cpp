@@ -14,4 +14,63 @@
  * limitations under the License.
  */
 
+#include "mbed.h"
+#include "data_objects.h"
+
+#include "structs.h"
 #include "pcb.h"
+
+#include "load.h"
+#include "hardware.h"
+
+void load_init(load_output_t *load)
+{
+    load->current_max = LOAD_CURRENT_MAX;
+    load->enabled = false;
+    load->enabled_target = true;
+    load->usb_enabled_target = true;
+    hw_load_switch(false);
+    hw_usb_out(false);
+    load->state = LOAD_STATE_OFF;
+}
+
+void load_state_machine(load_output_t *load, bool source_enabled)
+{
+    switch (load->state) {
+    case LOAD_STATE_ON:
+        if (source_enabled == false || load->enabled_target == false) {
+            hw_load_switch(false);
+            hw_usb_out(false);
+            load->enabled = false;
+            load->state = LOAD_STATE_OFF;
+        } else {
+            hw_usb_out(load->usb_enabled_target);
+        }
+        break;
+    case LOAD_STATE_OFF:
+        if (source_enabled == true && load->enabled_target == true) {
+            hw_load_switch(true);
+            load->enabled = true;
+            load->state = LOAD_STATE_ON;
+        }
+        break;
+    case LOAD_STATE_OVERCURRENT:
+        if (time(NULL) > load->overcurrent_timestamp + 30*60) {         // wait 5 min (TODO: make configurable)
+            load->state = LOAD_STATE_OFF;   // switch to normal mode again
+        }
+        break;
+    }
+}
+
+// this function is called more often than the state machine
+void load_check_overcurrent(load_output_t *load)
+{
+    if (load->current > load->current_max) {
+        hw_load_switch(false);
+        hw_usb_out(false);
+        load->enabled = false;
+        load->state = LOAD_STATE_OVERCURRENT;
+        load->overcurrent_timestamp = time(NULL);
+    }
+}
+

@@ -50,32 +50,31 @@ void init_load()
 
 
 //----------------------------------------------------------------------------
-void enable_load()
+void hw_load_switch(bool enabled)
 {
 #ifdef PIN_LOAD_EN
-    load_enable = 1;
+    if (enabled) load_enable = 1;
+    else load_enable = 0;
 #else
-    load_disable = 0;
+    if (enabled) load_disable = 0;
+    else load_disable = 1;
 #endif
 
 #ifdef PIN_LED_LOAD
-    led_load = 1;
+    if (enabled) led_load = 1;
+    else led_load = 0;
 #endif
 }
 
 //----------------------------------------------------------------------------
-void disable_load()
+void hw_usb_out(bool enabled)
 {
-#ifdef PIN_LOAD_EN
-    load_enable = 0;
-#else
-    load_disable = 1;
-#endif
-
-#ifdef PIN_LED_LOAD
-    led_load = 0;
+#ifdef PIN_USB_PWR_EN
+    if (enabled) usb_pwr_en = 1;
+    else usb_pwr_en = 0;
 #endif
 }
+
 
 // mbed-os uses TIM21 on L0 for us-ticker
 // https://github.com/ARMmbed/mbed-os/issues/6854
@@ -333,7 +332,8 @@ void init_watchdog(float timeout) {
 void mbed_die(void)
 {
     half_bridge_stop();
-    disable_load();
+    hw_load_switch(false);
+    hw_usb_out(false);
 
     while (1) {
         #ifdef PIN_LED_SOC

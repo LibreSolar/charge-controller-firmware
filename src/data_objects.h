@@ -23,6 +23,7 @@
 #include "thingset.h"
 #include "pcb.h"
 #include "structs.h"
+#include "load.h"
 
 extern log_data_t log_data;
 extern battery_t bat;

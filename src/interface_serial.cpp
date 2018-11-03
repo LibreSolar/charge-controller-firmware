@@ -2,8 +2,8 @@
 #include "mbed.h"
 #include "thingset.h"
 
-#include "interface.h"
 #include "data_objects.h"
+#include "interface.h"
 
 #ifdef STM32F0
 //#include "USBSerial.h"
