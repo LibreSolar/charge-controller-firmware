@@ -17,8 +17,6 @@
 #ifndef __HALF_BRIDGE_H_
 #define __HALF_BRIDGE_H_
 
-#include "mbed.h"
-
 /** Initiatializes the registers to generate the PWM signal and sets duty
  *  cycle limits
  *

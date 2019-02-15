@@ -1,11 +1,55 @@
 
 #include "pcb.h"
 #include "thingset.h"
-#include "data_objects.h"
 #include "mbed.h"
 #include "eeprom.h"
 
+// versioning of EEPROM layout (2 bytes)
+// change the version number each time the data object array below is changed!
+#define EEPROM_VERSION 2
+
+#define EEPROM_HEADER_SIZE 8    // bytes
+
+#define EEPROM_UPDATE_INTERVAL  (6*60*60)       // update every 6 hours
+
+extern ThingSet ts;
+
+// stores object-ids of values to be stored in EEPROM
+const uint16_t eeprom_data_objects[] = {
+    0x01, // timestamp
+    0x03, 0x04, // load settings
+    0x07, 0x08, // input / output wh
+    0x10, 0x11, // num full charge / deep-discharge
+    0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2A,   // config data
+    0x42, 0x44, 0x46, 0x48, 0x49,     // V, I, T max
+    0x51 // day count
+};
+
+uint32_t _calc_crc(uint8_t *buf, size_t len)
+{
+    RCC->AHBENR |= RCC_AHBENR_CRCEN;
+
+    // we keep standard polynomial 0x04C11DB7 (same for STM32L0 and STM32F0)
+    // and we don't care for endianness here
+    CRC->CR |= CRC_CR_RESET;
+    for (size_t i = 0; i < len; i += 4) {
+        //printf("CRC buf: %.8x, CRC->DR: %.8x\n", *((uint32_t*)&buf[i]), CRC->DR);
+        CRC->DR = *((uint32_t*)&buf[i]);
+    }
+
+    RCC->AHBENR &= ~(RCC_AHBENR_CRCEN);
+    return CRC->DR;
+}
+
 #if defined(PIN_EEPROM_SDA) && defined(PIN_EEPROM_SCL)
+
+#ifdef PCB_LS_010
+#define EEPROM_PAGE_SIZE 8      // see datasheet of 24AA01
+#define EEPROM_ADDRESS_SIZE 1   // bytes
+#else
+#define EEPROM_PAGE_SIZE 32     // see datasheet of 24AA32
+#define EEPROM_ADDRESS_SIZE 2   // bytes
+#endif
 
 int device = 0b1010000 << 1;	// 8-bit address
 I2C i2c_eeprom(PIN_EEPROM_SDA, PIN_EEPROM_SCL);
@@ -15,164 +59,198 @@ void eeprom_init (int i2c_address)
 	device = i2c_address;
 }
 
-int eeprom_write (int addr, char* data, int len)
+int eeprom_write (unsigned int addr, uint8_t* data, int len)
 {
-	int err;
-	char buf[PAGE_SIZE + 2];  // page size + 2 address bytes
+	int err = 0;
+	uint8_t buf[EEPROM_PAGE_SIZE + 2];  // page size + 2 address bytes
 
-	if (len > PAGE_SIZE)
-		return -1;  // too long
-    
-    buf[0] = addr >> 8;    // high byte
-    buf[1] = addr & 0xFF;  // low byte
+    for (uint16_t pos = 0; pos < len; pos += EEPROM_PAGE_SIZE) {
+        if (EEPROM_ADDRESS_SIZE == 1) {
+            buf[0] = (addr + pos) & 0xFF;
+        }
+        else {
+            buf[0] = (addr + pos) >> 8;    // high byte
+            buf[1] = (addr + pos) & 0xFF;  // low byte
+        }
 
-	for (int i = 0; i < len; i++) {
-		buf[i+2] = data[i];
-	}
+        int page_len = 0;
+        for (int i = 0; i < EEPROM_PAGE_SIZE && pos + i < len; i++) {
+            buf[i+EEPROM_ADDRESS_SIZE] = data[pos + i];
+            page_len++;
+        }
 
-	// send I2C start + device address + memory address + data + I2C stop
-	err =  i2c_eeprom.write(device, buf, len + 2);
+        // send I2C start + device address + memory address + data + I2C stop
+        err =  i2c_eeprom.write(device, (char*)buf, page_len + 2);
 
-	if (err != 0)
-		return -1;	// write error
-    
-	// ACK polling as described in datasheet.
-	// EEPROM wont send an ACK from a new request until it finished writing.
-	for (int counter = 0; counter < 100; counter++) {
-		err =  i2c_eeprom.write(device, buf, 2);
-		if (err == 0) {
-			//printf("EEPROM write finished, counter: %d\n", counter);
-			break;
-		}
+        if (err != 0)
+            return -1;	// write error
+
+        // ACK polling as described in datasheet.
+        // EEPROM won't send an ACK from a new request until it finished writing.
+        for (int counter = 0; counter < 100; counter++) {
+            err =  i2c_eeprom.write(device, (char*)buf, 2);
+            if (err == 0) {
+                //printf("EEPROM write finished, counter: %d\n", counter);
+                break;
+            }
+        }
+
     }
 	return err;
- } 
-  
-int eeprom_read (int addr, char* ret, int len )
-{
-	char buf[2];
+ }
 
-	// write the address we want to read
-    buf[0] = addr >> 8;    // high byte
-    buf[1] = addr & 0xFF;  // low byte
-    
-	// send memory address without stop (repeated = true)
-	if (i2c_eeprom.write(device, buf, 2, true) != 0)
+int eeprom_read (unsigned int addr, uint8_t* ret, int len)
+{
+	uint8_t buf[2];
+    int err = 0;
+
+    if (EEPROM_ADDRESS_SIZE == 1) {
+    	// write the address we want to read
+        buf[0] = addr & 0xFF;
+    	// send memory address without stop (repeated = true)
+        err = i2c_eeprom.write(device, (char*)buf, 1, true);
+    }
+    else {
+        // same as above, but with 2 bytes address
+        buf[0] = addr >> 8;    // high byte
+        buf[1] = addr & 0xFF;  // low byte
+        err = i2c_eeprom.write(device, (char*)buf, 2, true);
+    }
+
+	if (err != 0)
 		return -1;  // read error
-  
+
 	wait(0.02);
 
-	return i2c_eeprom.read(device, ret, len);
-} 
+	return i2c_eeprom.read(device, (char*)ret, len);
+}
+
+#elif defined(STM32L0)  // internal EEPROM
+
+int eeprom_write (unsigned int addr, uint8_t* data, int len)
+{
+    int timeout = 0;
+
+    // Wait till no operation is on going
+    while ((FLASH->SR & FLASH_SR_BSY) != 0 && timeout < 100) {
+        timeout++;
+    }
+
+    // Perform unlock sequence if EEPROM is locked
+    if ((FLASH->PECR & FLASH_PECR_PELOCK) != 0) {
+        FLASH->PEKEYR = FLASH_PEKEY1;
+        FLASH->PEKEYR = FLASH_PEKEY2;
+    }
+
+    if (addr + len > DATA_EEPROM_BANK1_END - DATA_EEPROM_BASE)
+        return -1;
+
+    // write data byte-wise to EEPROM
+	for (int i = 0; i < len; i++) {
+        *(uint8_t *)(DATA_EEPROM_BASE + addr + i) = data[i];
+	}
+
+    // Wait till no operation is on going
+    while ((FLASH->SR & FLASH_SR_BSY) != 0 && timeout < 200) {
+        timeout++;
+    }
+    // Lock the NVM again by setting PELOCK in PECR
+    FLASH->PECR |= FLASH_PECR_PELOCK;
+
+	return 0;
+}
+
+int eeprom_read (unsigned int addr, uint8_t* ret, int len)
+{
+    if (addr + len > DATA_EEPROM_BANK1_END - DATA_EEPROM_BASE)
+        return -1;
+
+    memcpy(ret, ((uint8_t*)addr) + DATA_EEPROM_BASE, len);
+    return 0;
+}
+
+#endif // STM32L0
+
+
+#if (defined(PIN_EEPROM_SDA) && defined(PIN_EEPROM_SCL)) || defined(STM32L0)
 
 // EEPROM layout:
 // bytes 0-1: Version number
-// bytes 2-3: number of saved data bytes
-// byte 10: start of data
+// bytes 2-3: number of data bytes
+// bytes 4-7: CRC32
+// byte 8: start of data
 
-void eeprom_restore_data(ts_data_t *ts)
+void eeprom_restore_data()
 {
-    union float2bytes { float f; char b[4]; } f2b;     // for conversion of bytes to float
-    char buf[6];
-    int stored_bytes;
-    int addr = 10;
+    uint8_t buf_req[200] = {0};  // ThingSet request buffer, initialize with zeros
 
-    eeprom_read(0, buf, 4);
-
-    if (((buf[0] << 8) + buf[1]) != EEPROM_VERSION)
+    // EEPROM header
+    uint8_t buf_header[EEPROM_HEADER_SIZE];
+    if (eeprom_read(0, buf_header, EEPROM_HEADER_SIZE) < 0) {
+        printf("EEPROM: read error!\n");
         return;
+    }
+    uint16_t version = *((uint16_t*)&buf_header[0]);
+    uint16_t len     = *((uint16_t*)&buf_header[2]);
+    uint32_t crc     = *((uint32_t*)&buf_header[4]);
 
-    stored_bytes = (buf[2] << 8) + buf[3];
-    //printf("Stored bytes: %d\n", stored_bytes);
+    //printf("EEPROM header restore: ver %d, len %d, CRC %.8x\n", version, len, (unsigned int)crc);
+    //printf("Header: %.2x %.2x %.2x %.2x %.2x %.2x %.2x %.2x\n",
+    //    buf_header[0], buf_header[1], buf_header[2], buf_header[3],
+    //    buf_header[4], buf_header[5], buf_header[6], buf_header[7]);
 
-    while (addr < stored_bytes + 10) {
+    if (version == EEPROM_VERSION && len <= sizeof(buf_req)) {
+        eeprom_read(EEPROM_HEADER_SIZE, buf_req, len);
+        //printf("Data: %.2x %.2x %.2x %.2x %.2x %.2x %.2x %.2x\n",
+        //    ts_req.data.bin[0], ts_req.data.bin[1], ts_req.data.bin[2], ts_req.data.bin[3],
+        //    ts_req.data.bin[4], ts_req.data.bin[5], ts_req.data.bin[6], ts_req.data.bin[7]);
 
-        eeprom_read(addr, buf, 6);
-        const data_object_t* data_obj = thingset_data_object_by_id(ts, (buf[0] << 8) + buf[1]);
-        if (data_obj == NULL) {
-            //printf("ID %d not found\n", (buf[0] << 8) + buf[1]);
-            return;
+        if (_calc_crc(buf_req, len) == crc) {
+            int status = ts.init_cbor(buf_req, sizeof(buf_req));     // first byte is ignored
+            printf("EEPROM: Data objects read and updated, ThingSet result: %d\n", status);
         }
-    
-        switch (data_obj->type) {
-            case TS_T_FLOAT32:
-                f2b.b[0] = buf[5];
-                f2b.b[1] = buf[4];
-                f2b.b[2] = buf[3];
-                f2b.b[3] = buf[2];
-                *((float*)data_obj->data) = f2b.f;
-                addr += 6;
-                //printf("Restored %s = %f\n", data_obj->name, f2b.f);
-                break;
-            case TS_T_INT32:
-                *((int*)data_obj->data) =
-                    (buf[2] << 24) + (buf[3] << 16) + (buf[4] << 8) + buf[5];
-                addr += 6;
-                //printf("Restored %s = %d\n", data_obj->name, *((int*)data_obj->data));
-                break;
-            case TS_T_BOOL:
-                *((bool*)data_obj->data) = buf[2];
-                addr += 3;
-                //printf("Restored %s = %d\n", data_obj->name, *((bool*)data_obj->data));
-                break;
+        else {
+            printf("EEPROM: CRC of data not correct, expected 0x%x (data_len = %d)\n", (unsigned int)crc, len);
         }
     }
 }
 
-void eeprom_store_data(ts_data_t *ts)
+void eeprom_store_data()
 {
-    union float2bytes { float f; char b[4]; } f2b;     // for conversion of bytes to float
-    char buf[6];
-    int len = 0, value;
-    int addr = 10;      // first 10 bytes reserved
+    uint8_t buf[200] = {0};  // initialize with zeros
 
-    for (unsigned int i = 0; i < sizeof(eeprom_data_objects)/sizeof(eeprom_data_objects[0]); i++) {
-        const data_object_t* data_obj = thingset_data_object_by_id(ts, eeprom_data_objects[i]);
-        if (data_obj == NULL) {
-            continue;
-        }
-        buf[0] = data_obj->id >> 8;
-        buf[1] = data_obj->id;
+    int len = ts.pub_msg_cbor(buf + EEPROM_HEADER_SIZE, sizeof(buf) - EEPROM_HEADER_SIZE, eeprom_data_objects, sizeof(eeprom_data_objects)/sizeof(uint16_t));
+    uint32_t crc = _calc_crc(buf + EEPROM_HEADER_SIZE, len);
 
-        // byte order: most significant byte first (big endian) like CBOR
-        switch (data_obj->type) {
-            case TS_T_FLOAT32:
-                f2b.f = *((float*)data_obj->data);
-                buf[2] = f2b.b[3];
-                buf[3] = f2b.b[2];
-                buf[4] = f2b.b[1];
-                buf[5] = f2b.b[0];
-                len = 6;
-                break;
-            case TS_T_INT32:
-                value = *((int*)data_obj->data);
-                buf[2] = value >> 24;
-                buf[3] = value >> 16;
-                buf[4] = value >> 8;
-                buf[5] = value;
-                len = 6;
-                break;
-            case TS_T_BOOL:
-                buf[2] = *((bool*)data_obj->data);
-                len = 3;
-                break;
-        }
-        eeprom_write(addr, buf, len);
-        //printf("Written %s to address %d\n", data_obj->name, addr);
-        addr += len;
+    // store EEPROM_VERSION, number of bytes and CRC
+    *((uint16_t*)&buf[0]) = (uint16_t)EEPROM_VERSION;
+    *((uint16_t*)&buf[2]) = (uint16_t)(len);   // length of data
+    *((uint32_t*)&buf[4]) = crc;
+
+    //printf("Header: %.2x %.2x %.2x %.2x %.2x %.2x %.2x %.2x\n",
+    //    buf[0], buf[1], buf[2], buf[3], buf[4], buf[5], buf[6], buf[7]);
+
+    if (len == 0) {
+        printf("EEPROM: Data could not be stored, ThingSet error: %d\n", len);
     }
-
-    // store EEPROM_VERSION and amount of used bytes
-    buf[0] = EEPROM_VERSION >> 8;
-    buf[1] = EEPROM_VERSION;
-    buf[2] = (addr - 10) >> 8;
-    buf[3] = (addr - 10);
-    eeprom_write(0, buf, 4);
+    else if (eeprom_write(0, buf, len + EEPROM_HEADER_SIZE) < 0) {
+        printf("EEPROM: Write error.\n");
+    }
+    else {
+        printf("EEPROM: Data successfully stored.\n");
+    }
 }
 
 #else
 
-void eeprom_store_data(ts_data_t *ts) {;}
-void eeprom_restore_data(ts_data_t *ts) {;}
+void eeprom_store_data() {;}
+void eeprom_restore_data() {;}
 
-#endif 
+#endif
+
+void eeprom_update()
+{
+    if (time(NULL) % EEPROM_UPDATE_INTERVAL == 0) {
+        eeprom_store_data();
+    }
+}

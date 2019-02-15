@@ -20,9 +20,9 @@ install:
     #
     # https://platformio.org/lib/show/4ee/
     # https://platformio.org/lib/show/c23/
-    # - platformio lib -g install 4ee c23 
+    # - platformio lib -g install 4ee c23
 
 script:
         - cp src/config.h_template src/config.h
-        # - platformio ci --lib="lib/Adafruit_GFX" --lib="lib/ThingSet" --project-conf=platformio.ini -e libresolar_0_10,libresolar_0_05 
-        - platformio run -e libresolar_0_10 -e libresolar_0_05 -e cloudsolar_0_2 -e cloudsolar_0_3
+        # - platformio ci --lib="lib/Adafruit_GFX" --lib="lib/ThingSet" --project-conf=platformio.ini -e libresolar_0_10,libresolar_0_05
+        - platformio run -e libresolar_0_10 -e libresolar_0_05 -e cloudsolar_0_2 -e cloudsolar_0_4

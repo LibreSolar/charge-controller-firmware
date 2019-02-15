@@ -16,13 +16,19 @@
 
 #include "bat_charger.h"
 #include "config.h"
+#include "pcb.h"
 #include "half_bridge.h"
+#include "load.h"
 
-//#include "thingset.h"
-#include "data_objects.h"
 #include <time.h>       // for time(NULL) function
 #include <math.h>       // for fabs function
 
+
+extern load_output_t load;      // ToDo: Remove global definitions!
+extern dcdc_port_t ls_port;
+extern dcdc_port_t hs_port;
+extern log_data_t log_data;
+extern dcdc_t dcdc;
 
 // private function
 void _enter_state(battery_t* bat, int next_state)
@@ -39,12 +45,13 @@ void battery_init(battery_t *bat, battery_user_settings_t *bat_user)
 {
     // core battery pack specification (set in config.h)
     bat->type = BATTERY_TYPE;
-    bat->num_cells = BATTERY_NUM_CELLS; 
-    bat->capacity = BATTERY_CAPACITY;
+    bat->num_cells = BATTERY_NUM_CELLS;
+    bat->nominal_capacity = BATTERY_CAPACITY;
     bat->num_batteries = 1;             // initialize with only one battery in series
+    bat->soh = 100;                     // assume new battery
 
     // common values for all batteries
-    bat->charge_current_max = bat->capacity;        // 1C should be safe for all batteries
+    bat->charge_current_max = bat->nominal_capacity;   // 1C should be safe for all batteries
 
     bat->time_limit_recharge = 60;              // sec
     bat->time_limit_CV = 120*60;                // sec
@@ -64,7 +71,8 @@ void battery_init(battery_t *bat, battery_user_settings_t *bat_user)
         bat->cell_ocv_full = 2.2;
         bat->cell_ocv_empty = 1.9;
 
-        bat->current_cutoff_CV = bat->capacity / 5.0;
+        // https://batteryuniversity.com/learn/article/charging_the_lead_acid_battery
+        bat->current_cutoff_CV = bat->nominal_capacity * 0.04;  // 3-5 % of C/1
 
         bat->trickle_enabled = true;
         bat->time_trickle_recharge = 30*60;
@@ -74,7 +82,7 @@ void battery_init(battery_t *bat, battery_user_settings_t *bat_user)
         bat->equalization_enabled = false;
         bat->cell_voltage_equalization = 2.5;
         bat->time_limit_equalization = 60*60;
-        bat->current_limit_equalization = (1.0 /7.0) * bat->capacity;
+        bat->current_limit_equalization = (1.0 /7.0) * bat->nominal_capacity;
         bat->equalization_trigger_time = 8;         // weeks
         bat->equalization_trigger_deep_cycles = 10; // times
 
@@ -93,7 +101,7 @@ void battery_init(battery_t *bat, battery_user_settings_t *bat_user)
         bat->cell_ocv_full = 3.4;       // will give really bad SOC calculation
         bat->cell_ocv_empty = 3.0;      // because of flat OCV of LFP cells...
 
-        bat->current_cutoff_CV = bat->capacity / 10;    // C/10 cut-off at end of CV phase by default
+        bat->current_cutoff_CV = bat->nominal_capacity / 10;    // C/10 cut-off at end of CV phase by default
 
         bat->trickle_enabled = false;
         bat->equalization_enabled = false;
@@ -112,7 +120,7 @@ void battery_init(battery_t *bat, battery_user_settings_t *bat_user)
         bat->cell_ocv_full = 4.0;
         bat->cell_ocv_empty = 3.0;
 
-        bat->current_cutoff_CV = bat->capacity / 10;    // C/10 cut-off at end of CV phase by default
+        bat->current_cutoff_CV = bat->nominal_capacity / 10;    // C/10 cut-off at end of CV phase by default
 
         bat->trickle_enabled = false;
         bat->equalization_enabled = false;
@@ -125,7 +133,7 @@ void battery_init(battery_t *bat, battery_user_settings_t *bat_user)
     }
 
     // initialize bat_user
-    bat_user->capacity                      = bat->capacity;
+    bat_user->nominal_capacity              = bat->nominal_capacity;
     bat_user->voltage_max                   = bat->num_cells * bat->cell_voltage_max;
     bat_user->voltage_recharge              = bat->num_cells * bat->cell_voltage_recharge;
     bat_user->voltage_load_reconnect        = bat->num_cells * bat->cell_voltage_load_reconnect;
@@ -155,11 +163,11 @@ bool battery_user_settings(battery_t *bat, battery_user_settings_t *bat_user)
         bat_user->voltage_load_reconnect > (bat_user->voltage_load_disconnect + 0.8) &&
         bat_user->voltage_recharge < (bat_user->voltage_max - 0.6) &&
         bat_user->voltage_recharge > (bat_user->voltage_load_disconnect + 1) &&
-        bat_user->voltage_load_disconnect > (bat_user->voltage_absolute_min + 0.5) && 
-        bat_user->current_cutoff_CV < (bat_user->capacity / 9.0) &&        // C/10 or lower allowed
+        bat_user->voltage_load_disconnect > (bat_user->voltage_absolute_min + 0.5) &&
+        bat_user->current_cutoff_CV < (bat_user->nominal_capacity / 9.0) &&    // C/10 or lower allowed
         bat_user->current_cutoff_CV > 0.01 &&
-        (bat_user->trickle_enabled == false || 
-            (bat_user->voltage_trickle < bat_user->voltage_max && 
+        (bat_user->trickle_enabled == false ||
+            (bat_user->voltage_trickle < bat_user->voltage_max &&
              bat_user->voltage_trickle > bat_user->voltage_load_disconnect))
        ) {
 
@@ -167,7 +175,7 @@ bool battery_user_settings(battery_t *bat, battery_user_settings_t *bat_user)
 
         bat->type                           = BAT_TYPE_CUSTOM;
         bat->num_cells                      = 1;    // custom battery defines voltages on battery level
-        bat->capacity                       = bat_user->capacity;
+        bat->nominal_capacity               = bat_user->nominal_capacity;
         bat->cell_voltage_max               = bat_user->voltage_max;
         bat->cell_voltage_recharge          = bat_user->voltage_recharge;
         bat->cell_voltage_load_reconnect    = bat_user->voltage_load_reconnect;
@@ -231,6 +239,16 @@ void charger_state_machine(dcdc_port_t *port, battery_t *bat, float voltage, flo
     {
         port->input_allowed = false;
         bat->num_deep_discharges++;
+
+        if (bat->useable_capacity < 0.1) {
+            bat->useable_capacity = bat->discharged_Ah;
+        } else {
+            // slowly adapt new measurements with low-pass filter
+            bat->useable_capacity = 0.8 * bat->useable_capacity + 0.2 * bat->discharged_Ah;
+        }
+
+        // simple SOH estimation
+        bat->soh = bat->useable_capacity / bat->nominal_capacity;
     }
     if (voltage >= bat->cell_voltage_load_reconnect * bat->num_cells) {
         port->input_allowed = true;
@@ -269,6 +287,7 @@ void charger_state_machine(dcdc_port_t *port, battery_t *bat, float voltage, flo
         {
             bat->full = true;
             bat->num_full_charges++;
+            bat->discharged_Ah = 0;         // reset coulomb counter
 
             if (bat->equalization_enabled) {
                 // TODO: additional conditions!
@@ -307,61 +326,61 @@ void charger_state_machine(dcdc_port_t *port, battery_t *bat, float voltage, flo
     }
 }
 
-// battery port input state (i.e. battery discharging direction) defines load state
-void load_update(dcdc_port_t *bat_port, battery_t *spec)
-{
-    // TODO
-}
-
 //----------------------------------------------------------------------------
-// timespan in seconds since last call
-void battery_update_energy(battery_t *bat, float voltage, float current, int timespan)
+// must be called exactly once per second, otherwise energy calculation gets wrong
+void battery_update_energy(battery_t *bat, float voltage, float current)
 {
     // static variables so that the are not reset during each function call
     static int seconds_zero_solar = 0;
-    static int seconds_day = 0;
-    static int day_counter = 0;
-    static bool nighttime = false;
+    static int soc_filtered = 0;       // SOC / 100 for better filtering
 
-    float dcdc_power = voltage * current;
+    // stores the input/output energy status of previous day and to add
+    // xxx_Wh_day only once per day and increase accuracy
+    static uint32_t input_Wh_total_prev = bat->input_Wh_total;
+    static uint32_t output_Wh_total_prev = bat->output_Wh_total;
 
-    if (dcdc_power < 0.1) {
-        seconds_zero_solar++;
+    if (hs_port.voltage < ls_port.voltage) {
+        seconds_zero_solar += 1;
     }
     else {
+        // solar voltage > battery voltage after 5 hours of night time means sunrise in the morning
+        // --> reset daily energy counters
+        if (seconds_zero_solar > 60*60*5) {
+            //printf("Night!\n");
+            log_data.day_counter++;
+            input_Wh_total_prev = bat->input_Wh_total;
+            output_Wh_total_prev = bat->output_Wh_total;
+            bat->input_Wh_day = 0.0;
+            bat->output_Wh_day = 0.0;
+        }
         seconds_zero_solar = 0;
     }
 
-    // detect night time for reset of daily counter in the morning
-    if (seconds_zero_solar > 60*60*5) {
-        nighttime = true;
-    }
+    bat->input_Wh_day += voltage * current / 3600.0;    // timespan = 1s, so no multiplication with time
+    bat->output_Wh_day += load.current * ls_port.voltage / 3600.0;
+    bat->input_Wh_total = input_Wh_total_prev + (bat->input_Wh_day > 0 ? bat->input_Wh_day : 0);
+    bat->output_Wh_total = output_Wh_total_prev + (bat->output_Wh_day > 0 ? bat->output_Wh_day : 0);
+    bat->discharged_Ah += (load.current - current) / 3600.0;
 
-    if (nighttime && dcdc_power > 0.1) {
-        nighttime = false;
-        bat->input_Wh_total += bat->input_Wh_day;
-        bat->output_Wh_total += bat->output_Wh_day;
-        bat->input_Wh_day = 0.0;
-        bat->output_Wh_day = 0.0;
-        seconds_day = 0;
-        day_counter++;
-        //eeprom_store_data(&ts);
-    }
-    else {
-        seconds_day++;
-    }
+    if (fabs(current) < 0.2) {
+        int soc_new = (int)((voltage / bat->num_cells - bat->cell_ocv_empty) /
+                   (bat->cell_ocv_full - bat->cell_ocv_empty) * 10000.0);
 
-    bat->input_Wh_day += dcdc_power * timespan / 3600.0;
-    bat->output_Wh_day += load.current * ls_port.voltage * timespan / 3600.0;
- 
-    if (fabs(current) < 0.5) {
-        bat->soc = (int)((voltage / bat->num_cells - bat->cell_ocv_empty) /
-                   (bat->cell_ocv_full - bat->cell_ocv_empty) * 100.0);
-        if (bat->soc > 100) {
-            bat->soc = 100;
+        if (soc_new > 10000) {
+            soc_new = 10000;
         }
-        else if (bat->soc < 0) {
-            bat->soc = 0;
+        else if (soc_new < 0) {
+            soc_new = 0;
         }
+
+        if (soc_new > 500 && soc_filtered == 0) {
+            // bypass filter during initialization
+            soc_filtered = soc_new;
+        }
+        else {
+            // filtering to adjust SOC very slowly
+            soc_filtered += (soc_new - soc_filtered) / 100;
+        }
+        bat->soc = soc_filtered / 100;
     }
 }

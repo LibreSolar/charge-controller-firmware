@@ -20,7 +20,6 @@
 
 #include "thingset.h"
 #include "pcb.h"
-#include "data_objects.h"
 #include "config.h"
 
 #include "half_bridge.h"        // PWM generation for DC/DC converter
@@ -31,11 +30,14 @@
 #include "interface.h"          // communication interfaces, displays, etc.
 #include "eeprom.h"             // external I2C EEPROM
 #include "load.h"               // load and USB output management
+#include "leds.h"
 
 //----------------------------------------------------------------------------
 // global variables
 
 Serial serial(PIN_SWD_TX, PIN_SWD_RX, "serial");
+
+bool led_states[NUM_LEDS];
 
 dcdc_t dcdc = {};
 dcdc_port_t hs_port = {};       // high-side (solar for typical MPPT)
@@ -45,13 +47,16 @@ battery_t bat;
 battery_user_settings_t bat_user;
 load_output_t load;
 log_data_t log_data;
-ts_data_t ts;
+extern ThingSet ts;       // defined in data_objects.cpp
+
+time_t timestamp;    // current unix timestamp (independent of time(NULL), as it is user-configurable)
+
+#define CONTROL_FREQUENCY 10    // Hz (higher frequency caused issues with MPPT control)
 
 //----------------------------------------------------------------------------
 // function prototypes
 
 void setup();
-void energy_counter(float timespan);
 
 void interfaces_init();
 void interfaces_process_asap();     // called each time the main loop is in idle
@@ -60,6 +65,8 @@ void interfaces_process_1s();       // called every second
 
 void system_control()       // called by control timer (see hardware.cpp)
 {
+    static int counter = 0;
+
     // convert ADC readings to meaningful measurement values
     update_measurements(&dcdc, &bat, &load, &hs_port, &ls_port);
 
@@ -69,61 +76,69 @@ void system_control()       // called by control timer (see hardware.cpp)
 
     load_check_overcurrent(&load);
     update_dcdc_led(half_bridge_enabled());
+
+    counter++;
+    if (counter % CONTROL_FREQUENCY == 0) {
+        // called once per second (this timer is much more accurate than time(NULL) based on LSI)
+        // see also here: https://github.com/ARMmbed/mbed-os/issues/9065
+        timestamp++;
+        counter = 0;
+        battery_update_energy(&bat, bat_port->voltage, bat_port->current); // must be called once per second
+    }
 }
 
 //----------------------------------------------------------------------------
 int main()
 {
     setup();
-    interfaces_init();
-
     wait(2);    // safety feature: be able to re-flash before starting
+
+    interfaces_init();
     init_watchdog(10);      // 10s should be enough for communication ports
 
     switch(dcdc.mode)
     {
-        case MODE_NANOGRID:
-            dcdc_port_init_nanogrid(&hs_port);
-            dcdc_port_init_bat(&ls_port, &bat);
-            bat_port = &ls_port;
-            break;
-        case MODE_MPPT_BUCK:     // typical MPPT charge controller operation
-            dcdc_port_init_solar(&hs_port);
-            dcdc_port_init_bat(&ls_port, &bat);
-            bat_port = &ls_port;
-            break;
-        case MODE_MPPT_BOOST:    // for charging of e-bike battery via solar panel
-            dcdc_port_init_solar(&ls_port);
-            dcdc_port_init_bat(&hs_port, &bat);
-            bat_port = &hs_port;
-            break;
+    case MODE_NANOGRID:
+        dcdc_port_init_nanogrid(&hs_port);
+        dcdc_port_init_bat(&ls_port, &bat);
+        bat_port = &ls_port;
+        break;
+    case MODE_MPPT_BUCK:     // typical MPPT charge controller operation
+        dcdc_port_init_solar(&hs_port);
+        dcdc_port_init_bat(&ls_port, &bat);
+        bat_port = &ls_port;
+        break;
+    case MODE_MPPT_BOOST:    // for charging of e-bike battery via solar panel
+        dcdc_port_init_solar(&ls_port);
+        dcdc_port_init_bat(&hs_port, &bat);
+        bat_port = &hs_port;
+        break;
     }
-    control_timer_start(50);  // 50 Hz
+    control_timer_start(CONTROL_FREQUENCY);
 
-    time_t now = time(NULL);
-    time_t last_second = now;
+    time_t last_call = timestamp;
 
     // the main loop is suitable for slow tasks like communication (even blocking wait allowed)
     while(1) {
 
         interfaces_process_asap();
 
-        update_soc_led(&bat);
+        update_soc_led(bat.soc);
 
-        now = time(NULL);
-        if (now >= last_second + 1) {   // called once per second (or slower if blocking wait occured somewhere)
+        time_t now = timestamp;
+        if (now >= last_call + 1 || now < last_call) {   // called once per second (or slower if blocking wait occured somewhere)
 
             //printf("Still alive... time: %d, mode: %d\n", (int)time(NULL), dcdc.mode);
-
-            battery_update_energy(&bat, bat_port->voltage, bat_port->current, last_second - now);      // also does energy counting
 
             charger_state_machine(bat_port, &bat, bat_port->voltage, bat_port->current);
 
             load_state_machine(&load, ls_port.input_allowed);
 
+            eeprom_update();
             interfaces_process_1s();
-            
-            last_second = now;
+            toggle_led_blink();
+
+            last_call = now;
         }
         feed_the_dog();
         sleep();    // wake-up by timer interrupts
@@ -132,12 +147,8 @@ int main()
 
 void interfaces_init()
 {
-#ifdef UART_SERIAL_ENABLED
-    serial.baud(57600);
-    //freopen("/serial", "w", stdout);  // retarget stdout
     uart_serial_init(&serial);
-    //usb_serial_init(&usbSerial);
-#endif
+    usb_serial_init();
 
 #ifdef GSM_ENABLED
     gsm_init();
@@ -146,27 +157,23 @@ void interfaces_init()
 #ifdef LORA_ENABLED
     lora_init();
 #endif
+
+#ifdef WIFI_ENABLED
+    wifi_init();
+#endif
 }
 
 void interfaces_process_asap()
 {
-#ifdef UART_SERIAL_ENABLED
     uart_serial_process();
-#endif
+    usb_serial_process();
+    update_rxtx_led();
 }
 
 void interfaces_process_1s()
 {
 #ifdef OLED_ENABLED
     oled_output(&dcdc, &hs_port, &ls_port, &bat, &load);
-#endif
-
-#ifdef CAN_ENABLED
-
-#endif
-
-#ifdef USB_SERIAL_ENABLED
-
 #endif
 
 #ifdef GSM_ENABLED
@@ -177,9 +184,13 @@ void interfaces_process_1s()
     lora_process();
 #endif
 
-#ifdef UART_SERIAL_ENABLED
-    uart_serial_pub();
+#ifdef WIFI_ENABLED
+    wifi_process();
 #endif
+
+    // will only actually publish the messages if enabled via ThingSet
+    uart_serial_pub();
+    usb_serial_pub();
 
     fflush(stdout);
 }
@@ -187,16 +198,20 @@ void interfaces_process_1s()
 //----------------------------------------------------------------------------
 void setup()
 {
-    load_init(&load);
-    init_leds();
+    serial.baud(115200);
+    //freopen("/serial", "w", stdout);  // retarget stdout
+
+    leds_init();
+    led_timer_start(5000);  // 5 kHz
 
     battery_init(&bat, &bat_user);
-
+    load_init(&load);
     dcdc_init(&dcdc);
 
     half_bridge_init(PWM_FREQUENCY, 300, 12 / dcdc.hs_voltage_max, 0.97);       // lower duty limit might have to be adjusted dynamically depending on LS voltage
 
-    eeprom_restore_data(&ts);
+    eeprom_restore_data();
+    ts.set_conf_callback(eeprom_store_data);    // after each configuration change, data should be written back to EEPROM
 
     adc_setup();
     dma_setup();

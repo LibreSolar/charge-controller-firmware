@@ -17,23 +17,36 @@
 #ifndef __LOAD_H_
 #define __LOAD_H_
 
-#include "mbed.h"
+#include <stdbool.h>
 
-enum load_state {
-    LOAD_STATE_ON, LOAD_STATE_OFF, LOAD_STATE_OVERCURRENT
+enum load_state_t {
+    LOAD_STATE_DISABLED = 0,        // Load actively disabled
+    LOAD_STATE_ON,                  // Normal state: Load on
+    LOAD_STATE_OFF_LOW_SOC,         // Load off to protect battery (overrules remote setting)
+    LOAD_STATE_OFF_OVERCURRENT      // Load off to protect charge controller (overrules remote setting)
 };
 
+
+enum usb_state_t {
+    USB_STATE_DISABLED = 0,        // USB port actively disabled
+    USB_STATE_ON,                  // Normal state: USB on
+    USB_STATE_OFF_LOW_SOC,         // USB off to protect battery (overrules target setting)
+    USB_STATE_OFF_OVERCURRENT      // USB off to protect charge controller (overrules target setting)
+};
+
+
 /* Load Output type
- * 
+ *
  * Stores status of load output incl. 5V USB output (if existing on PCB)
  */
 typedef struct {
-    load_state state;
+    load_state_t state;
+    usb_state_t usb_state;
     float current;              // actual measurement
     float current_max;          // maximum allowed current
     int overcurrent_timestamp;  // time at which an overcurrent event occured
     bool enabled;               // actual status
-    bool enabled_target;        // target setting defined via communication 
+    bool enabled_target;        // target setting defined via communication
                                 // port (overruled if battery is empty)
     bool usb_enabled_target;    // same for USB output
 } load_output_t;

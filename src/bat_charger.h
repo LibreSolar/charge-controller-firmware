@@ -17,8 +17,10 @@
 #ifndef __CHARGER_H_
 #define __CHARGER_H_
 
-#include "data_objects.h"
 #include <stdbool.h>
+#include <stdint.h>
+
+#include "dcdc.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -48,7 +50,7 @@ bool battery_user_settings(battery_t *bat, battery_user_settings_t *bat_user);
  */
 void charger_state_machine(dcdc_port_t *port, battery_t *bat, float voltage, float current);
 
-void battery_update_energy(battery_t *bat, float voltage, float current, int timespan);
+void battery_update_energy(battery_t *bat, float voltage, float current);
 
 #ifdef __cplusplus
 }

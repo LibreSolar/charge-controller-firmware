@@ -2,7 +2,7 @@
 
 Software based on ARM mbed framework for the LibreSolar MPPT solar charge controllers
 
-**Remark:** See also development branch for most recent updates.
+**Remark:** See also development branch for more recent updates.
 
 ## Supported devices
 
@@ -10,11 +10,15 @@ The software is configurable to support different charge controller PCBs with ei
 
 - [Libre Solar MPPT 20A (v0.10)](https://github.com/LibreSolar/MPPT-Charger_20A)
 - [Libre Solar MPPT 12A (v0.5)](https://github.com/LibreSolar/MPPT-Charger_20A/tree/legacy-12A-version)
-- CloudSolar (not yet published)
+- [Libre Solar / CloudSolar MPPT 10A (v0.2 and v0.4)](https://github.com/LibreSolar/MPPT-Charger_10A)
 
 ## Toolchain and flashing instructions
 
 See the Libre Solar website for a detailed instruction how to [develop software](http://libre.solar/docs/toolchain/) and [flash new firmware](http://libre.solar/docs/flashing/).
+
+**Remark:** The 10A charge controller with STM32L0 often needs several attempts until the software is flashed with OpenOCD (integrated in PlatformIO). The ST-Link tools seem to be better for this MCU. For Windows there is a GUI tool. Under Linux use following command:
+
+    st-flash write .pioenvs/cloudsolar_0_4/firmware.bin 0x08000000
 
 
 ## Initial software setup (IMPORTANT!)

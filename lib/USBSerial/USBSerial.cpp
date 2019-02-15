@@ -16,11 +16,11 @@
 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef UNIT_TEST
-
-#ifdef TURN_OFF_MBED_DEPRECATED_WARNNG
+// remove annoying compiler warnings because of old USB library
+#ifdef TURN_OFF_MBED_DEPRECATED_WARNING
     #define MBED_DEPRECATED(a)
 #endif
+
 #include "stdint.h"
 #include "USBSerial.h"
 
@@ -70,5 +70,3 @@ bool USBSerial::EPBULK_OUT_callback() {
 uint8_t USBSerial::available() {
     return buf.available();
 }
-
-#endif /* UNIT_TEST */

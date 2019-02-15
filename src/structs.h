@@ -3,7 +3,7 @@
 #define __STRUCTS_H_
 
 #include <stdbool.h>
-
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -17,7 +17,7 @@ extern "C" {
  */
 
 
-// battery types 
+// battery types
 enum bat_type {
     BAT_TYPE_NONE = 0,      // safe standard settings
     BAT_TYPE_FLOODED,       // old flooded (wet) lead-acid batteries
@@ -32,23 +32,24 @@ enum bat_type {
 typedef struct
 {
     /* Configuration data
-     * 
-     * Data will is initialized in battery_int depending on configured cell type in config.h. It can 
+     *
+     * Data will is initialized in battery_int depending on configured cell type in config.h. It can
      * be customized by overloading the weak function battery_init_user.
      */
 
     // Core battery information
     bat_type type;                  // -    see above for allowed types
     unsigned int num_cells;         // -    number of cells in series
-    float capacity;                 // Ah   cell capacity or sum of parallel cells capacity
+    float nominal_capacity;         // Ah   cell capacity or sum of parallel cells capacity
                                     //      Capacity is currently mainly used to define current limits, but might
                                     //      become important for improved SOC calculation algorithms
+    float useable_capacity;         // Ah   estimated useable capacity based on coulomb counting
 
     // State: Standby
     float cell_voltage_recharge;    // V    below this voltage start charging again after battery has been fully charged
-                                    //      Remark: setting the value too close to the max voltage will cause more 
-                                    //      charging stress on lithium based batteries 
-    int time_limit_recharge;        // sec  
+                                    //      Remark: setting the value too close to the max voltage will cause more
+                                    //      charging stress on lithium based batteries
+    int time_limit_recharge;        // sec
 
     float cell_voltage_absolute_min; // V   below this voltage the battery is considered damaged
     //float cell_voltage_absolute_max; // V   above this voltage the battery can be damaged
@@ -77,12 +78,12 @@ typedef struct
     float cell_voltage_load_disconnect; // V    when discharging, stop power to load if battery voltage drops below this value
     float cell_voltage_load_reconnect;  // V    re-enable the load only after charged beyond this value
 
-    // used to calculate state of charge information 
+    // used to calculate state of charge information
     float cell_ocv_full;
     float cell_ocv_empty;
 
     float temperature_compensation;     // voltage compensation (suggested: -3 mV/°C/cell)
- 
+
     /* Operational data (updated during operation)
      */
 
@@ -90,20 +91,23 @@ typedef struct
                             // can be 1 or 2 only.
 
     float temperature;                  // °C from ext. temperature sensor (if existing)
-    
+
     float input_Wh_day;
     float output_Wh_day;
     uint32_t input_Wh_total;
     uint32_t output_Wh_total;
 
-    int num_full_charges;
-    int num_deep_discharges;
-    
-    int soc;
-    int state;                         // valid states: enum charger_states
+    float discharged_Ah;                // coloumb counter for SOH calculation
+
+    uint16_t num_full_charges;
+    uint16_t num_deep_discharges;
+
+    uint16_t soc;
+    uint16_t soh;
+    unsigned int state;                // valid states: enum charger_states
     int time_state_changed;            // timestamp of last state change
     int time_voltage_limit_reached;    // last time the CV limit was reached
-    
+
     bool full;
 
 } battery_t;
@@ -112,14 +116,14 @@ typedef struct
 // these voltages are defined on BATTERY level, NOT CELL!
 typedef struct
 {
-    float capacity;                 // Ah   cell capacity or sum of parallel cells capacity
+    float nominal_capacity;         // Ah   cell capacity or sum of parallel cells capacity
                                     //      Capacity is currently mainly used to define current limits, but might
                                     //      become important for improved SOC calculation algorithms
 
     // State: Standby
     float voltage_recharge;         // V    below this voltage start charging again after battery has been fully charged
-                                    //      Remark: setting the value too close to the max voltage will cause more 
-                                    //      charging stress on lithium based batteries 
+                                    //      Remark: setting the value too close to the max voltage will cause more
+                                    //      charging stress on lithium based batteries
 
     float voltage_absolute_min;     // V    below this voltage the battery is considered damaged
 
@@ -146,85 +150,12 @@ typedef struct
 
 // possible charger states
 enum charger_state {
-    CHG_STATE_IDLE, 
-    CHG_STATE_CC, 
-    CHG_STATE_CV, 
-    CHG_STATE_TRICKLE, 
+    CHG_STATE_IDLE,
+    CHG_STATE_CC,
+    CHG_STATE_CV,
+    CHG_STATE_TRICKLE,
     CHG_STATE_EQUALIZATION
 };
-
-/* DC/DC port type
- * 
- * Saves current target settings of either high-side or low-side port of a
- * DC/DC converter. In this way, e.g. a battery can be configured to be
- * connected to high or low side of DC/DC converter w/o having to rewrite
- * the control algorithm.
- */
-typedef struct {
-    // actual measurements
-    float voltage;
-    float current;
-
-    // target voltage if port is configured as output
-    float voltage_output_target;
-    float droop_resistance;     // v_target = v_out_max - r_droop * current
-    
-    // minimum voltage to allow current output (necessary to prevent charging of deep-discharged Li-ion batteries)
-    float voltage_output_min;
-
-    // minimum voltage to allow current input (= discharging of batteries)
-    float voltage_input_target;  // = starting point for discharging of batteries
-    float voltage_input_stop;    // = absolute minimum
-
-    float current_output_max;   // for battery charging
-    float current_input_max;
-    
-    bool output_allowed;        // batteries: charging
-    bool input_allowed;         // batteries: discharging
-} dcdc_port_t;
-
-/* DC/DC basic operation mode
- * 
- * Defines which type of device is connected to the high side and low side ports
- */
-enum dcdc_control_mode
-{
-    MODE_MPPT_BUCK,     // solar panel at high side port, battery / load at low side port (typical MPPT)
-    MODE_MPPT_BOOST,    // battery at high side port, solar panel at low side (e.g. e-bike charging)
-    MODE_NANOGRID       // accept input power (if available and need for charging) or provide output power 
-                        // (if no other power source on the grid and battery charged) on the high side port 
-                        // and dis/charge battery on the low side port, battery voltage must be lower than 
-                        // nano grid voltage.
-};
-
-/* DC/DC type
- * 
- * Contains all data belonging to the DC/DC sub-component of the PCB, incl.
- * actual measurements and calibration parameters.
- */
-typedef struct {
-    dcdc_control_mode mode;
-
-    // actual measurements
-    float ls_current;           // inductor current
-    float temp_mosfets;
-
-    // current state
-    float power;                // power at low-side (calculated by dcdc controller)
-    int pwm_delta;              // direction of PWM change for MPPT
-    int off_timestamp;          // time when DC/DC was switched off last time
-
-    // maximum allowed values
-    float ls_current_max;       // PCB inductor maximum
-    float ls_current_min;       // --> if lower, charger is switched off
-    float hs_voltage_max;
-    float ls_voltage_max;
-
-    // calibration parameters
-    //float offset_voltage_start;  // V  charging switched on if Vsolar > Vbat + offset
-    //float offset_voltage_stop;   // V  charging switched off if Vsolar < Vbat + offset
-    int restart_interval;   // s    --> when should we retry to start charging after low solar power cut-off?
-} dcdc_t;
 
 
 /* Log Data
@@ -239,6 +170,7 @@ typedef struct {
     float temp_int;             // °C (internal MCU temperature sensor)
     float temp_int_max;         // °C
     float temp_mosfets_max;
+    int day_counter;
 } log_data_t;
 
 

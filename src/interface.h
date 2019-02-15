@@ -1,7 +1,9 @@
 #ifndef _INTERFACE_H_
 #define _INTERFACE_H_
 
+#include "mbed.h"
 #include <stdint.h>
+#include "dcdc.h"
 #include "structs.h"
 #include "load.h"
 
@@ -39,6 +41,11 @@ void gsm_process();
  */
 void lora_init();
 void lora_process();
+
+/* GSM mobile interface via UEXT connector serial interface
+ */
+void wifi_init();
+void wifi_process();
 
 /* SD card connected to UEXT connector (e.g. via Olimex adapter)
  *

@@ -16,6 +16,7 @@
 
 #include "dcdc.h"
 #include "config.h"
+#include "pcb.h"
 
 #include "half_bridge.h"
 
@@ -42,7 +43,7 @@ void dcdc_port_init_bat(dcdc_port_t *port, battery_t *bat)
     port->input_allowed = true;     // discharging allowed
     port->output_allowed = true;    // charging allowed
 
-    port->voltage_input_target = bat->cell_voltage_load_reconnect * bat->num_cells;
+    port->voltage_input_start = bat->cell_voltage_load_reconnect * bat->num_cells;
     port->voltage_input_stop = bat->cell_voltage_load_disconnect * bat->num_cells;
     port->current_input_max = -bat->charge_current_max;          // TODO: discharge current
 
@@ -55,8 +56,8 @@ void dcdc_port_init_solar(dcdc_port_t *port)
 {
     port->input_allowed = true;         // PV panel may provide power to solar input of DC/DC
     port->output_allowed = false;
-    
-    port->voltage_input_target = 16.0;
+
+    port->voltage_input_start = 16.0;
     port->voltage_input_stop = 14.0;
     port->current_input_max = -18.0;
 }
@@ -66,10 +67,10 @@ void dcdc_port_init_nanogrid(dcdc_port_t *port)
     port->input_allowed = true;
     port->output_allowed = true;
 
-    port->voltage_input_target = 30.0;      // starting buck mode above this point
+    port->voltage_input_start = 30.0;      // starting buck mode above this point
     port->voltage_input_stop = 20.0;        // stopping buck mode below this point
     port->current_input_max = -5.0;
-    
+
     port->voltage_output_target = 28.0;        // starting idle mode above this point
     port->current_output_max = 5.0;
     port->voltage_output_min = 10.0;
@@ -95,7 +96,7 @@ int _dcdc_output_control(dcdc_t *dcdc, dcdc_port_t *out, dcdc_port_t *in)
     }
     else if (out->voltage > (out->voltage_output_target - out->droop_resistance * out->current)    // output voltage above target
         || out->current > out->current_output_max                                               // output current limit exceeded
-        || (in->voltage < (in->voltage_input_target - in->droop_resistance * in->current) && out->current > 0.1)        // input voltage below limit
+        || (in->voltage < (in->voltage_input_start - in->droop_resistance * in->current) && out->current > 0.1)        // input voltage below limit
         || in->current < in->current_input_max                                                  // input current (negative signs) above limit
         || fabs(dcdc->ls_current) > dcdc->ls_current_max                                        // current above hardware maximum
         || dcdc->temp_mosfets > 80)                                                             // temperature limits exceeded
@@ -103,7 +104,7 @@ int _dcdc_output_control(dcdc_t *dcdc, dcdc_port_t *out, dcdc_port_t *in)
         //printf("   dec\n");
         return -1;  // decrease output power
     }
-    else if (out->current < 0.1 && out->voltage < out->voltage_input_target)  // no load condition (e.g. start-up of nanogrid) --> raise voltage
+    else if (out->current < 0.1 && out->voltage < out->voltage_input_start)  // no load condition (e.g. start-up of nanogrid) --> raise voltage
     {
         //printf("   inc\n");
         return 1;   // increase output power
@@ -125,7 +126,7 @@ bool _dcdc_check_start_conditions(dcdc_t *dcdc, dcdc_port_t *out, dcdc_port_t *i
         && out->voltage < out->voltage_output_target
         && out->voltage > out->voltage_output_min
         && in->input_allowed == true
-        && in->voltage > in->voltage_input_target
+        && in->voltage > in->voltage_input_start
         //&& dcdc->hs_voltage - dcdc->ls_voltage > dcdc->offset_voltage_start
         && time(NULL) > (dcdc->off_timestamp + dcdc->restart_interval);
 }
@@ -149,10 +150,10 @@ void dcdc_control(dcdc_t *dcdc, dcdc_port_t *hs, dcdc_port_t *ls)
             dcdc->off_timestamp = time(NULL);
             printf("DC/DC stop.\n");
         }
-    } 
+    }
     else {
         if (_dcdc_check_start_conditions(dcdc, ls, hs)) {
-            // Vmpp at approx. 0.8 * Voc --> take 0.9 as starting point for MPP tracking             
+            // Vmpp at approx. 0.8 * Voc --> take 0.9 as starting point for MPP tracking
             half_bridge_start(ls->voltage / (hs->voltage * 0.9));
             printf("DC/DC buck mode start.\n");
         }

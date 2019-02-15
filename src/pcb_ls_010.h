@@ -38,10 +38,10 @@
 
 #define PIN_SWD_TX    PA_9
 #define PIN_SWD_RX    PA_10
-
-#define PIN_LED_SOC   PB_14
-#define PIN_LED_SOLAR PB_15
-
+/*
+#define PIN_LED_PWR   PB_14
+#define PIN_LED_LOAD  PB_15
+*/
 #define PIN_LOAD_DIS    PB_2
 //#define PIN_5V_OUT_EN PB_12
 #define PIN_USB_PWR_EN  PB_12       // normally should be named 5V_OUT_EN, as no USB is existing here
@@ -56,7 +56,28 @@
 #define PIN_EEPROM_SCL PB_10
 #define PIN_EEPROM_SDA PB_11
 
-#define EEPROM_VERSION 1      // versioning of EEPROM layout (2 bytes)
+enum pin_state_t { PIN_HIGH, PIN_LOW, PIN_FLOAT };
+
+// assignment LED numbers on PCB to their meaning
+#define NUM_LEDS 2
+
+#define LED_PWR  0     // LED1
+#define LED_LOAD 1     // LED2
+
+// LED pins and pin state configuration to switch above LEDs on
+#define NUM_LED_PINS 2
+static const PinName led_pins[NUM_LED_PINS] = {
+    //  PWR      LOAD
+       PB_14,   PB_15
+};
+static const pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
+    { PIN_HIGH, PIN_LOW  }, // LED1
+    { PIN_LOW,  PIN_HIGH }  // LED2
+};
+
+// pin definition only needed in adc_dma.cpp to detect if they are present on the PCB
+#define PIN_ADC_TEMP_BAT    PA_0
+#define PIN_ADC_TEMP_FETS   PA_1
 
 // typical value for Semitec 103AT-5 thermistor: 3435
 #define NTC_BETA_VALUE 3435

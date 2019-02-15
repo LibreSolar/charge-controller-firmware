@@ -31,8 +31,8 @@
     #include "pcb_ls_010.h"
 #elif defined(PCB_CS_02)
     #include "pcb_cs_02.h"
-#elif defined(PCB_CS_03)
-    #include "pcb_cs_03.h"
+#elif defined(PCB_CS_04)
+    #include "pcb_cs_04.h"
 #else
     #error "PCB has to be specified!"
 #endif

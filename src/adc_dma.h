@@ -17,8 +17,8 @@
 #ifndef ADC_DMA_H
 #define ADC_DMA_H
 
-#include "mbed.h"
-#include "data_objects.h"
+#include "dcdc.h"
+#include "load.h"
 #include "structs.h"
 
 void calibrate_current_sensors(dcdc_t *dcdc, load_output_t *load);

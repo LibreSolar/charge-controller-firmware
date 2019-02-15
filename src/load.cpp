@@ -14,13 +14,8 @@
  * limitations under the License.
  */
 
-#include "mbed.h"
-#include "data_objects.h"
-
-#include "structs.h"
-#include "pcb.h"
-
 #include "load.h"
+#include "pcb.h"
 #include "hardware.h"
 
 void load_init(load_output_t *load)
@@ -31,35 +26,98 @@ void load_init(load_output_t *load)
     load->usb_enabled_target = true;
     hw_load_switch(false);
     hw_usb_out(false);
-    load->state = LOAD_STATE_OFF;
+    load->state = LOAD_STATE_DISABLED;
+    load->usb_state = USB_STATE_DISABLED;
+}
+
+
+void usb_state_machine(load_output_t *load)
+{
+    switch (load->usb_state) {
+    case USB_STATE_DISABLED:
+        if (load->enabled && load->usb_enabled_target == true) {
+            hw_usb_out(true);
+            load->usb_state = USB_STATE_ON;
+        }
+        break;
+    case USB_STATE_ON:
+        // currently still same cut-off SOC limit as the load
+        if (load->state == LOAD_STATE_OFF_LOW_SOC) {
+            hw_usb_out(false);
+            load->usb_state = USB_STATE_OFF_LOW_SOC;
+        }
+        else if (load->state == LOAD_STATE_OFF_OVERCURRENT) {
+            hw_usb_out(false);
+            load->usb_state = USB_STATE_OFF_OVERCURRENT;
+        }
+        else if (load->usb_enabled_target == false) {
+            hw_usb_out(false);
+            load->usb_state = USB_STATE_DISABLED;
+        }
+        break;
+    case USB_STATE_OFF_LOW_SOC:
+        // currently still same cut-off SOC limit as the load
+        if (load->state == LOAD_STATE_ON) {
+            if (load->usb_enabled_target == true) {
+                hw_usb_out(true);
+                load->usb_state = USB_STATE_ON;
+            }
+            else {
+                load->usb_state = USB_STATE_DISABLED;
+            }
+        }
+        break;
+    case USB_STATE_OFF_OVERCURRENT:
+        if (load->state != LOAD_STATE_OFF_OVERCURRENT) {
+            load->usb_state = USB_STATE_DISABLED;
+        }
+        break;
+    }
 }
 
 void load_state_machine(load_output_t *load, bool source_enabled)
 {
+    //printf("Load State: %d\n", load->state);
     switch (load->state) {
-    case LOAD_STATE_ON:
-        if (source_enabled == false || load->enabled_target == false) {
-            hw_load_switch(false);
-            hw_usb_out(false);
-            load->enabled = false;
-            load->state = LOAD_STATE_OFF;
-        } else {
-            hw_usb_out(load->usb_enabled_target);
-        }
-        break;
-    case LOAD_STATE_OFF:
+    case LOAD_STATE_DISABLED:
         if (source_enabled == true && load->enabled_target == true) {
             hw_load_switch(true);
             load->enabled = true;
             load->state = LOAD_STATE_ON;
         }
         break;
-    case LOAD_STATE_OVERCURRENT:
+    case LOAD_STATE_ON:
+        if (load->enabled_target == false) {
+            hw_load_switch(false);
+            load->enabled = false;
+            load->state = LOAD_STATE_DISABLED;
+        }
+        else if (source_enabled == false) {
+            hw_load_switch(false);
+            load->enabled = false;
+            load->state = LOAD_STATE_OFF_LOW_SOC;
+        }
+        break;
+    case LOAD_STATE_OFF_LOW_SOC:
+        if (source_enabled == true) {
+            if (load->enabled_target == true) {
+                hw_load_switch(true);
+                load->enabled = true;
+                load->state = LOAD_STATE_ON;
+            }
+            else {
+                load->state = LOAD_STATE_DISABLED;
+            }
+        }
+        break;
+    case LOAD_STATE_OFF_OVERCURRENT:
         if (time(NULL) > load->overcurrent_timestamp + 30*60) {         // wait 5 min (TODO: make configurable)
-            load->state = LOAD_STATE_OFF;   // switch to normal mode again
+            load->state = LOAD_STATE_DISABLED;   // switch to normal mode again
         }
         break;
     }
+
+    usb_state_machine(load);
 }
 
 // this function is called more often than the state machine
@@ -69,7 +127,7 @@ void load_check_overcurrent(load_output_t *load)
         hw_load_switch(false);
         hw_usb_out(false);
         load->enabled = false;
-        load->state = LOAD_STATE_OVERCURRENT;
+        load->state = LOAD_STATE_OFF_OVERCURRENT;
         load->overcurrent_timestamp = time(NULL);
     }
 }

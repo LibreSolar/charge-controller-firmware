@@ -1,8 +1,12 @@
 
 #include "hardware.h"
+#include "pcb.h"
+
+#include "mbed.h"
 #include "half_bridge.h"
-#include "data_objects.h"
 #include "us_ticker_data.h"
+
+extern bool led_states[];
 
 #ifdef PIN_LOAD_EN
 DigitalOut load_enable(PIN_LOAD_EN);
@@ -17,24 +21,6 @@ DigitalOut usb_pwr_en(PIN_USB_PWR_EN);
 #ifdef PIN_UEXT_DIS
 DigitalOut uext_dis(PIN_UEXT_DIS);
 #endif
-
-#ifdef PIN_LED_SOC
-DigitalOut led_soc(PIN_LED_SOC);    // only one LED
-#else
-DigitalOut led_soc_3(PIN_LED_SOC_3);
-#endif
-
-DigitalOut led_solar(PIN_LED_SOLAR);
-
-#ifdef PIN_LED_LOAD
-DigitalOut led_load(PIN_LED_LOAD);
-#endif
-
-//extern battery_t bat;
-
-int led1_CCR;   // CCR for TIM21 to switch LED1 on
-int led2_CCR;   // CCR for TIM21 to switch LED2 on
-
 
 //----------------------------------------------------------------------------
 void init_load()
@@ -60,9 +46,9 @@ void hw_load_switch(bool enabled)
     else load_disable = 1;
 #endif
 
-#ifdef PIN_LED_LOAD
-    if (enabled) led_load = 1;
-    else led_load = 0;
+#ifdef LED_LOAD
+    if (enabled) led_states[LED_LOAD] = 1;
+    else led_states[LED_LOAD] = 0;
 #endif
 }
 
@@ -74,140 +60,6 @@ void hw_usb_out(bool enabled)
     else usb_pwr_en = 0;
 #endif
 }
-
-
-// mbed-os uses TIM21 on L0 for us-ticker
-// https://github.com/ARMmbed/mbed-os/issues/6854
-// fix: patch targets/TARGET_STM/TARGET_STM32L0/TARGET_NUCLEO_L073RZ/device/us_ticker_data.h
-
-void init_leds()
-{
-#ifdef PIN_LED_SOC_3
-    led_soc_3 = 1;      // always enabled (0-20% SOC)
-#endif
-
-#ifdef PIN_LED_LOAD
-    led_load = 1;       // switch on during start-up
-#endif
-
-led_solar = 1;          // switch on during start-up
-
-#if defined(PIN_LED_GND) && defined(STM32L0)
-    // PB13 / TIM21_CH1: LED_SOC12  --> high for LED2, PWM for LED1 + 2
-    // PB14 / TIM21_CH2: LED_GND    --> always PWM
-
-    // TODO: throw error during compile time... but how?
-    if (TIM_MST == TIM21) {
-        error("Error: Timer conflict --> change us_ticker_data.h to use TIM22 instead of TIM21!");
-    }
-
-    const int freq = 1;     // kHz
-    const float duty_target = 0.2;
-
-    RCC->IOPENR |= RCC_IOPENR_IOPBEN;
-
-    // Enable TIM21 clock
-    RCC->APB2ENR |= RCC_APB2ENR_TIM21EN;
-
-    // Select alternate function mode on PB13 and PB14 (first bit _1 = 1, second bit _0 = 0)
-    GPIOB->MODER = (GPIOB->MODER & ~(GPIO_MODER_MODE13)) | GPIO_MODER_MODE13_1;
-    GPIOB->MODER = (GPIOB->MODER & ~(GPIO_MODER_MODE14)) | GPIO_MODER_MODE14_1;
-
-    // Select AF6 on PB13 and PB14
-    GPIOB->AFR[1] |= 0x6 << GPIO_AFRH_AFRH5_Pos;        // 5 + 8 = PB13
-    GPIOB->AFR[1] |= 0x6 << GPIO_AFRH_AFRH6_Pos;        // 6 + 8 = PB14
-
-    // No prescaler --> timer frequency = 32 MHz        // TODO!
-    TIM21->PSC = 0;
-
-    // Capture/Compare Mode Register 1
-    // OCxM = 110: Select PWM mode 1 on OCx
-    // OCxPE = 1:  Enable preload register on OCx (reset value)
-    TIM21->CCMR1 |= TIM_CCMR1_OC1M_2 | TIM_CCMR1_OC1M_1 | TIM_CCMR1_OC1PE;
-    TIM21->CCMR1 |= TIM_CCMR1_OC2M_2 | TIM_CCMR1_OC2M_1 | TIM_CCMR1_OC2PE;
-
-    // Capture/Compare Enable Register
-    // CCxP: Active high polarity on OCx (default = 0)
-    TIM21->CCER &= ~(TIM_CCER_CC1P);     // PB13
-    TIM21->CCER |= TIM_CCER_CC2P;        // PB14
-
-    // Control Register 1
-    // TIM_CR1_CMS = 01: Select center-aligned mode 1
-    // TIM_CR1_CEN =  1: Counter enable
-    TIM21->CR1 |= TIM_CR1_CMS_0 | TIM_CR1_CEN;
-
-    // Force update generation (UG = 1)
-    TIM21->EGR |= TIM_EGR_UG;
-
-    // set PWM frequency and resolution
-    int _pwm_resolution = SystemCoreClock / (freq * 1000);
-
-    // Auto Reload Register
-    // center-aligned mode --> divide resolution by 2
-    TIM21->ARR = _pwm_resolution / 2;
-
-    TIM21->CCR2 = _pwm_resolution / 2 * duty_target; // LED_GND
-    
-    led1_CCR = TIM21->ARR - TIM21->CCR2;        // LED1 + LED2
-    led2_CCR = TIM21->ARR;                      // only LED2
-    TIM21->CCR1 = led1_CCR;         // start with all LEDs on
-    
-    TIM21->CCER |= TIM_CCER_CC1E;   // enable PWM on LED_12
-    TIM21->CCER |= TIM_CCER_CC2E;   // enable PWM on LED_GND
-#endif
-}
-
-void update_dcdc_led(bool enabled)
-{
-    led_solar = enabled;
-}
-
-//----------------------------------------------------------------------------
-void update_soc_led(battery_t *bat)
-{
-#ifdef PIN_LED_SOC
-    if (bat->full) {
-        led_soc = 1;
-    }
-    else if (bat->soc > 80 || bat->state == CHG_STATE_CV) {
-        if (us_ticker_read() % 2000000 < 1800000) {
-            led_soc = 1;
-        }
-        else {
-            led_soc = 0;
-        }
-    }
-    else if (bat->soc <= 80 && bat->soc >= 30) {
-        if (time(NULL) % 2 == 0) {
-            led_soc = 1;
-        }
-        else {
-            led_soc = 0;
-        }
-    }
-    else {
-        if (us_ticker_read() % 2000000 < 200000) {
-            led_soc = 1;
-        }
-        else {
-            led_soc = 0;
-        }
-    }
-#elif defined(PIN_LED_SOC_3) // 3-bar SOC gauge
-    if (bat->soc > 80) {
-        TIM21->CCR1 = led1_CCR;
-        TIM21->CCER |= TIM_CCER_CC1E;
-    }
-    else if (bat->soc > 20) {
-        TIM21->CCR1 = led2_CCR;
-        TIM21->CCER |= TIM_CCER_CC1E;        
-    }
-    else {
-        TIM21->CCER &= ~(TIM_CCER_CC1E);
-    }
-#endif
-}
-
 
 #if defined(STM32F0)
 
@@ -225,6 +77,8 @@ void control_timer_start(int freq_Hz)   // max. 10 kHz
     // Auto Reload Register sets interrupt frequency
     TIM16->ARR = 10000 / freq_Hz - 1;
 
+    // 1 = second-highest priority of STM32L0/F0
+    NVIC_SetPriority(TIM16_IRQn, 1);
     NVIC_EnableIRQ(TIM16_IRQn);
 
     // Control Register 1
@@ -254,6 +108,8 @@ void control_timer_start(int freq_Hz)   // max. 10 kHz
     // Auto Reload Register sets interrupt frequency
     TIM7->ARR = 10000 / freq_Hz - 1;
 
+    // 1 = second-highest priority of STM32L0/F0
+    NVIC_SetPriority(TIM7_IRQn, 1);
     NVIC_EnableIRQ(TIM7_IRQn);
 
     // Control Register 1
@@ -281,7 +137,7 @@ void init_watchdog(float timeout) {
 
     // TODO for STM32L0
     #define LSI_FREQ 40000     // approx. 40 kHz according to RM0091
-    
+
     uint16_t prescaler;
 
     IWDG->KR = 0x5555; // Disable write protection of IWDG registers
@@ -315,13 +171,13 @@ void init_watchdog(float timeout) {
         IWDG->PR = IWDG_PRESCALER_256;
         prescaler = 256;
     }
-    
+
     // set reload value (between 0 and 0x0FFF)
     IWDG->RLR = (uint32_t)(timeout * (LSI_FREQ/prescaler));
-    
+
     //float calculated_timeout = ((float)(prescaler * IWDG->RLR)) / LSI_FREQ;
     //printf("WATCHDOG set with prescaler:%d reload value: 0x%X - timeout:%f\n", prescaler, (unsigned int)IWDG->RLR, calculated_timeout);
-    
+
     IWDG->KR = 0xAAAA;  // reload
     IWDG->KR = 0xCCCC;  // start
 
@@ -335,25 +191,92 @@ void mbed_die(void)
     hw_load_switch(false);
     hw_usb_out(false);
 
+    for (int i = 0; i < NUM_LEDS; i++) {
+        led_states[i] = 0;
+    }
+
+    int led_blink = 1;
+
     while (1) {
-        #ifdef PIN_LED_SOC
-        led_soc = 1;
-        #endif
-        led_solar = 0;
-        #ifdef PIN_LED_LOAD
-        led_load = 1;
-        #endif
-        wait_ms(100);
-        #ifdef PIN_LED_SOC
-        led_soc = 0;
-        #endif
-        led_solar = 1;
-        #ifdef PIN_LED_LOAD
-        led_load = 0;
-        #endif
+
+        for (int led = 0; led < NUM_LEDS; led++) {
+            led_states[led] = (led % 2) ^ led_blink;
+        }
+
+        led_blink = !led_blink;
         wait_ms(100);
 
         // stay here to indicate something was wrong
         feed_the_dog();
+    }
+}
+
+#if defined(STM32F0)
+#define SYS_MEM_START       0x1FFFC800
+#define SRAM_END            0x20003FFF  // 16k
+#elif defined(STM32L0)
+#define SYS_MEM_START       0x1FF00000
+#define SRAM_END            0X20004FFF  // 20k
+#endif
+
+#define MAGIC_CODE          0xDEADBEEF
+
+void start_dfu_bootloader()
+{
+    // place magic code at end of RAM and initiate reset
+    *((unsigned long *)(SRAM_END - 0xF)) = MAGIC_CODE;
+    NVIC_SystemReset();
+}
+
+// https://stackoverflow.com/questions/42020893/stm32l073rz-rev-z-iap-jump-to-bootloader-system-memory
+
+// This function should be called at the beginning of SystemInit in system_clock.c (mbed target directory)
+// As mbed does not provide this functionality, you have to patch the file manually
+extern "C" void system_init_hook()
+{
+    if (*((unsigned long *)(SRAM_END - 0xF)) == MAGIC_CODE) {
+
+        *((unsigned long *)(SRAM_END - 0xF)) =  0xCAFEFEED;  // reset the trigger
+
+        // jump function pointer to be initialized and called later
+        void (*SysMemJump)(void);
+
+        // TODO for STM32L0
+/*
+        FLASH_EraseInitTypeDef EraseInitStruct;
+        EraseInitStruct.TypeErase   = FLASH_TYPEERASE_PAGES;
+        EraseInitStruct.PageAddress = Data_Address;
+        EraseInitStruct.NbPages     = 1;
+
+        First_jump = *(__IO uint32_t *)(Data_Address);
+
+        if (First_jump == 0) {
+            HAL_FLASH_Unlock();
+            HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, Data_Address, 0xAAAAAAAA);
+            HAL_FLASH_Lock();
+
+            // Reinitialize the Stack pointer and jump to application address
+            //JumpAddress = *(__IO uint32_t *)(0x1FF00004);
+            SysMemJump = (void (*)(void)) (*((uint32_t *) (SYS_MEM_START + 4)));
+        }
+        else {
+            HAL_FLASH_Unlock();
+            HAL_FLASHEx_Erase(&EraseInitStruct, &PAGEError);
+            HAL_FLASH_Lock();
+
+            // Reinitialize the Stack pointer and jump to application address
+            //JumpAddress =  (0x1FF00369);
+            SysMemJump = (void (*)(void)) (*((uint32_t *) (0x1FF00369)));
+        }
+*/
+        //__set_MSP(0x20002250);  // set stack pointer for STM32F0
+        __set_MSP(SYS_MEM_START);
+        //__set_MSP(*(__IO uint32_t *)(0x1FF00000));
+
+        // point the PC to the System Memory reset vector (+4)
+        SysMemJump = (void (*)(void)) (*((uint32_t *) (SYS_MEM_START + 4))); // for STM32F0
+        SysMemJump();
+
+        while (42);
     }
 }

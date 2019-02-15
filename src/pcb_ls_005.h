@@ -37,15 +37,36 @@
 
 #define PIN_SWD_TX    PB_10
 #define PIN_SWD_RX    PB_11
-
-#define PIN_LED_SOC   PA_9
-#define PIN_LED_SOLAR PA_10
+/*
+#define PIN_LED_PWR   PA_9
+#define PIN_LED_DCDC  PA_10
 #define PIN_LED_LOAD  PB_12
-
+*/
 #define PIN_LOAD_DIS  PB_2
 
 #define PIN_CAN_RX    PB_8
 #define PIN_CAN_TX    PB_9
+
+enum pin_state_t { PIN_HIGH, PIN_LOW, PIN_FLOAT };
+
+// assignment LED numbers on PCB to their meaning
+#define NUM_LEDS 3
+
+#define LED_PWR  0     // LED1
+#define LED_DCDC 1     // LED2
+#define LED_LOAD 2     // LED3
+
+// LED pins and pin state configuration to switch above LEDs on
+#define NUM_LED_PINS 3
+static const PinName led_pins[NUM_LED_PINS] = {
+    //  PWR      DCDC      LOAD
+       PA_9,    PA_10,    PB_12
+};
+static const pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
+    { PIN_HIGH, PIN_LOW,  PIN_LOW  }, // LED1
+    { PIN_LOW,  PIN_HIGH, PIN_LOW  }, // LED2
+    { PIN_LOW,  PIN_LOW,  PIN_HIGH }  // LED3
+};
 
 // typical value for Semitec 103AT-5 thermistor: 3435
 #define NTC_BETA_VALUE 3435

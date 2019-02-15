@@ -18,7 +18,6 @@
  * at the UEXT port should be used.
  */
 
-#include "data_objects.h"
 #include "bat_charger.h"
 
 /* Battery User Settings
