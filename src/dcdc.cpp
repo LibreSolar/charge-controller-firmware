@@ -1,5 +1,5 @@
-/* mbed library for half bridge driver PWM generation
- * Copyright (c) 2016-2017 Martin Jäger (www.libre.solar)
+/* LibreSolar MPPT charge controller firmware
+ * Copyright (c) 2016-2018 Martin Jäger (www.libre.solar)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,167 +15,152 @@
  */
 
 #include "dcdc.h"
+#include "config.h"
+#include "pcb.h"
 
+#include "half_bridge.h"
 
-static int _pwm_resolution;
-static float _min_duty;
-static float _max_duty;
-static int _pwm_delta;
+//#include "data_objects.h"
+#include <time.h>       // for time(NULL) function
+#include <math.h>       // for fabs function
 
-static bool _enabled;
-
-void dcdc_init(int freq_kHz) {
-
-    // Enable peripheral clock of GPIOA and GPIOB
-    RCC->AHBENR |= RCC_AHBENR_GPIOAEN | RCC_AHBENR_GPIOBEN;
-
-    // Enable TIM1 clock
-    RCC->APB2ENR |= RCC_APB2ENR_TIM1EN;
-
-    // Select alternate function mode on PA8 und PB13
-    GPIOA->MODER = (GPIOA->MODER & ~(GPIO_MODER_MODER8)) | GPIO_MODER_MODER8_1;
-    GPIOB->MODER = (GPIOB->MODER & ~(GPIO_MODER_MODER13)) | GPIO_MODER_MODER13_1;
-
-    // Select AF2 on PA8 (TIM1_CH1)
-    GPIOA->AFR[1] |= 0x2 << ((8 - 8)*4);   // AFR[1] for pins 8-15
-
-    // Select AF2 on PB13 (TIM1_CH1N)
-    GPIOB->AFR[1] |= 0x2 << ((13 - 8)*4);  // AFR[1] for pins 8-15
-
-    // No prescaler --> timer frequency = 48 MHz
-    TIM1->PSC = 0;
-
-    // Capture/Compare Mode Register 1
-    // OC1M = 110: Select PWM mode 1 on OC1
-    // OC1PE = 1:  Enable preload register on OC1 (reset value)
-    TIM1->CCMR1 |= TIM_CCMR1_OC1M_2 | TIM_CCMR1_OC1M_1 | TIM_CCMR1_OC1PE;
-
-    // Capture/Compare Enable Register
-    // CC1E = 1: Enable the output on OC1
-    // CC1P = 0: Active high polarity on OC1 (default)
-    // CC1NE = 1: Enable the output on OC1N
-    // CC1NP = 0: Active high polarity on OC1N (default)
-    TIM1->CCER |= TIM_CCER_CC1E | TIM_CCER_CC1NE;// | TIM_CCER_CC1NP;
-
-    // Control Register 1
-    // TIM_CR1_CMS = 01: Select center-aligned mode 1
-    // TIM_CR1_CEN =  1: Counter enable
-    TIM1->CR1 |= TIM_CR1_CMS_0 | TIM_CR1_CEN;
-
-    // Control Register 2
-    // OIS1 = OIS1N = 0: Output Idle State is set to off
-    //TIM1->CR2 |= ;
-
-    // Force update generation (UG = 1)
-    TIM1->EGR |= TIM_EGR_UG;
-
-    // set PWM frequency and resolution
-    _pwm_resolution = SystemCoreClock / (freq_kHz * 1000);
-
-    // Auto Reload Register
-    // center-aligned mode --> divide resolution by 2
-    TIM1->ARR = _pwm_resolution / 2;
-
-    _pwm_delta = 1;
-    _enabled = false;
-}
-
-void dcdc_set_duty_cycle(float duty) {
-
-    float duty_target;
-    // protection against wrong settings which could destroy the hardware
-    if (duty < _min_duty) {
-        duty_target = _min_duty;
-    }
-    else if (duty > _max_duty) {
-        duty_target = _max_duty;
-    }
-    else {
-        duty_target = duty;
-    }
-
-    TIM1->CCR1 = _pwm_resolution / 2 * duty_target;
-}
-
-void dcdc_duty_cycle_step(int delta)
+void dcdc_init(dcdc_t *dcdc)
 {
-    float duty_target;
-    duty_target = (float)(TIM1->CCR1 + delta) / (_pwm_resolution / 2);
+    dcdc->mode           = DCDC_MODE_INIT;
+    dcdc->ls_current_max = DCDC_CURRENT_MAX;
+    dcdc->ls_current_min = 0.05;                // A   if lower, charger is switched off
+    dcdc->hs_voltage_max = 55.0;                // V
+    dcdc->ls_voltage_max = 30.0;                // V
+    //dcdc->offset_voltage_start = 4.0;         // V  charging switched on if Vsolar > Vbat + offset
+    //dcdc->offset_voltage_stop = 1.0;          // V  charging switched off if Vsolar < Vbat + offset
+    dcdc->restart_interval = 60;                // s    --> when should we retry to start charging after low solar power cut-off?
+    dcdc->off_timestamp = -10000;               // start immediately
+    dcdc->pwm_delta = 1;
+}
 
-    // protection against wrong settings which could destroy the hardware
-    if (duty_target < _min_duty) {
-        dcdc_set_duty_cycle(_min_duty);
+void dcdc_port_init_bat(dcdc_port_t *port, battery_t *bat)
+{
+    port->input_allowed = true;     // discharging allowed
+    port->output_allowed = true;    // charging allowed
+
+    port->voltage_input_start = bat->cell_voltage_load_reconnect * bat->num_cells;
+    port->voltage_input_stop = bat->cell_voltage_load_disconnect * bat->num_cells;
+    port->current_input_max = -bat->charge_current_max;          // TODO: discharge current
+
+    port->voltage_output_target = bat->cell_voltage_max * bat->num_cells;
+    port->voltage_output_min = bat->cell_voltage_absolute_min * bat->num_cells;
+    port->current_output_max = bat->charge_current_max;
+}
+
+void dcdc_port_init_solar(dcdc_port_t *port)
+{
+    port->input_allowed = true;         // PV panel may provide power to solar input of DC/DC
+    port->output_allowed = false;
+
+    port->voltage_input_start = 16.0;
+    port->voltage_input_stop = 14.0;
+    port->current_input_max = -18.0;
+}
+
+void dcdc_port_init_nanogrid(dcdc_port_t *port)
+{
+    port->input_allowed = true;
+    port->output_allowed = true;
+
+    port->voltage_input_start = 30.0;      // starting buck mode above this point
+    port->voltage_input_stop = 20.0;        // stopping buck mode below this point
+    port->current_input_max = -5.0;
+
+    port->voltage_output_target = 28.0;        // starting idle mode above this point
+    port->current_output_max = 5.0;
+    port->voltage_output_min = 10.0;
+    port->droop_resistance = 1.0;           // 1 Ohm means 1V change of target voltage per amp
+}
+
+
+// returns if output power should be increased (1), decreased (-1) or switched off (0)
+int _dcdc_output_control(dcdc_t *dcdc, dcdc_port_t *out, dcdc_port_t *in)
+{
+    //static float dcdc_power;
+    float dcdc_power_new = out->voltage * out->current;
+    static int pwm_delta = 1;
+
+    //printf("P: %.2f, P_prev: %.2f, v_in: %.2f, v_out: %.2f, i_in: %.2f, i_out: %.2f, i_max: %.2f, PWM: %.1f, chg_en: %d",
+    //     dcdc_power_new, dcdc->power, in->voltage, out->voltage, in->current, out->current,
+    //     out->current_output_max, half_bridge_get_duty_cycle() * 100.0, out->output_allowed);
+
+    if (out->output_allowed == false || in->input_allowed == false
+        || (in->voltage < in->voltage_input_stop && out->current < 0.1))
+    {
+        return 0;
     }
-    else if (duty_target > _max_duty) {
-        dcdc_set_duty_cycle(_max_duty);
+    else if (out->voltage > (out->voltage_output_target - out->droop_resistance * out->current)    // output voltage above target
+        || out->current > out->current_output_max                                               // output current limit exceeded
+        || (in->voltage < (in->voltage_input_start - in->droop_resistance * in->current) && out->current > 0.1)        // input voltage below limit
+        || in->current < in->current_input_max                                                  // input current (negative signs) above limit
+        || fabs(dcdc->ls_current) > dcdc->ls_current_max                                        // current above hardware maximum
+        || dcdc->temp_mosfets > 80)                                                             // temperature limits exceeded
+    {
+        //printf("   dec\n");
+        return -1;  // decrease output power
+    }
+    else if (out->current < 0.1 && out->voltage < out->voltage_input_start)  // no load condition (e.g. start-up of nanogrid) --> raise voltage
+    {
+        //printf("   inc\n");
+        return 1;   // increase output power
     }
     else {
-        TIM1->CCR1 = TIM1->CCR1 + delta;
+        //printf("   MPPT\n");
+        // start MPPT
+        if (dcdc->power > dcdc_power_new) {
+            pwm_delta = -pwm_delta;
+        }
+        dcdc->power = dcdc_power_new;
+        return pwm_delta;
     }
 }
 
-
-float dcdc_get_duty_cycle() {
-    return (float)(TIM1->CCR1) / (_pwm_resolution / 2);;
+bool _dcdc_check_start_conditions(dcdc_t *dcdc, dcdc_port_t *out, dcdc_port_t *in)
+{
+    return out->output_allowed == true
+        && out->voltage < out->voltage_output_target
+        && out->voltage > out->voltage_output_min
+        && in->input_allowed == true
+        && in->voltage > in->voltage_input_start
+        //&& dcdc->hs_voltage - dcdc->ls_voltage > dcdc->offset_voltage_start
+        && time(NULL) > (dcdc->off_timestamp + dcdc->restart_interval);
 }
 
-
-void dcdc_deadtime_ns(int deadtime) {
-
-    uint8_t deadtime_clocks = (SystemCoreClock / 1000 / 1000) * deadtime / 1000;
-
-    // Break and Dead-Time Register
-    // MOE  = 1: Main output enable
-    // OSSR = 0: Off-state selection for Run mode -> OC/OCN = 0
-    // OSSI = 0: Off-state selection for Idle mode -> OC/OCN = 0
-    TIM1->BDTR |= (deadtime_clocks & (uint32_t)0x7F); // ensure that only the last 7 bits are changed
-}
-
-
-void dcdc_start(float pwm_duty) {
-    dcdc_set_duty_cycle(pwm_duty);
-
-    // Break and Dead-Time Register
-    // MOE  = 1: Main output enable
-    TIM1->BDTR |= TIM_BDTR_MOE;
-
-    _enabled = true;
-}
-
-
-void dcdc_stop() {
-
-    // Break and Dead-Time Register
-    // MOE  = 1: Main output enable
-    TIM1->BDTR &= ~(TIM_BDTR_MOE);
-
-    _enabled = false;
-}
-
-bool dcdc_enabled() {
-
-    return _enabled;
-}
-
-
-void dcdc_lock_settings() {
-
-    // TODO: does not work properly... maybe HW bug?
-
-    // Break and Dead-Time Register
-    TIM1->BDTR |= TIM_BDTR_LOCK_1 | TIM_BDTR_LOCK_0;
-}
-
-void dcdc_duty_cycle_limits(float min_duty, float max_duty) {
-
-    _min_duty = min_duty;
-    _max_duty = max_duty;
-
-    // adjust set value to new limits
-    if (dcdc_get_duty_cycle() < _min_duty) {
-        dcdc_set_duty_cycle(_min_duty);
+void dcdc_control(dcdc_t *dcdc, dcdc_port_t *hs, dcdc_port_t *ls)
+{
+    if (half_bridge_enabled()) {
+        int step;
+        if (ls->current > 0.1) {    // buck mode
+            //printf("-");
+            step = _dcdc_output_control(dcdc, ls, hs);
+            half_bridge_duty_cycle_step(step);
+        }
+        else {
+            //printf("+");
+            step = _dcdc_output_control(dcdc, hs, ls);
+            half_bridge_duty_cycle_step(-step);
+        }
+        if (step == 0) {
+            half_bridge_stop();
+            dcdc->off_timestamp = time(NULL);
+            printf("DC/DC stop.\n");
+        }
     }
-    else if (dcdc_get_duty_cycle() > _max_duty) {
-        dcdc_set_duty_cycle(_max_duty);
+    else {
+        if (_dcdc_check_start_conditions(dcdc, ls, hs)) {
+            // Vmpp at approx. 0.8 * Voc --> take 0.9 as starting point for MPP tracking
+            half_bridge_start(ls->voltage / (hs->voltage * 0.9));
+            printf("DC/DC buck mode start.\n");
+        }
+        else if (_dcdc_check_start_conditions(dcdc, hs, ls)) {
+            // will automatically start with max. duty (0.97) if connected to a nanogrid not yet started up (zero voltage)
+            half_bridge_start((ls->voltage * 0.9) / hs->voltage);
+            printf("DC/DC boost mode start.\n");
+        }
     }
 }

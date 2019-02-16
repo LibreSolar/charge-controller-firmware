@@ -1,5 +1,5 @@
-/* mbed library for half bridge driver PWM generation
- * Copyright (c) 2016-2017 Martin Jäger (www.libre.solar)
+/* LibreSolar MPPT charge controller firmware
+ * Copyright (c) 2016-2018 Martin Jäger (www.libre.solar)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,70 +14,101 @@
  * limitations under the License.
  */
 
-#ifndef DCDC_H
-#define DCDC_H
+#ifndef __DCDC_H_
+#define __DCDC_H_
 
-#include "mbed.h"
+#include <stdbool.h>
+#include "structs.h"
 
-/** Initiatializes the registers to generate the PWM signal
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/* DC/DC port type
  *
- *  @param freq Frequency in kHz
+ * Saves current target settings of either high-side or low-side port of a
+ * DC/DC converter. In this way, e.g. a battery can be configured to be
+ * connected to high or low side of DC/DC converter w/o having to rewrite
+ * the control algorithm.
  */
-void dcdc_init(int freq_kHz);
+typedef struct {
+    float voltage;                  // actual measurements
+    float current;
 
-/** Set the deadtime between switching the two FETs on/off
+    float voltage_output_target;    // target voltage if port is configured as output
+    float droop_resistance;         // v_target = v_out_max - r_droop * current
+    float voltage_output_min;       // minimum voltage to allow current output (necessary
+                                    // to prevent charging of deep-discharged Li-ion batteries)
+
+    // minimum voltage to allow current input (= discharging of batteries)
+    float voltage_input_start;      // starting point for discharging of batteries (load reconnect)
+    float voltage_input_stop;       // absolute minimum = load disconnect for batteries
+
+    float current_output_max;       // charging direction for battery port
+    float current_input_max;        // discharging direction for battery port: must be negative value !!!
+
+    bool output_allowed;            // charging direction for battery port
+    bool input_allowed;             // discharging direction for battery port
+} dcdc_port_t;
+
+/* DC/DC basic operation mode
  *
- *  @param deadtime Deadtime in ns
+ * Defines which type of device is connected to the high side and low side ports
  */
-void dcdc_deadtime_ns(int deadtime);
+enum dcdc_control_mode
+{
+    MODE_MPPT_BUCK,     // solar panel at high side port, battery / load at low side port (typical MPPT)
+    MODE_MPPT_BOOST,    // battery at high side port, solar panel at low side (e.g. e-bike charging)
+    MODE_NANOGRID       // accept input power (if available and need for charging) or provide output power
+                        // (if no other power source on the grid and battery charged) on the high side port
+                        // and dis/charge battery on the low side port, battery voltage must be lower than
+                        // nano grid voltage.
+};
 
-/** Lock the settings of PWM generation to prevent accidental changes
- *  (does not work properly, yet! --> TODO)
- */
-void dcdc_lock_settings(void);
-
-/** Start the PWM generation
+/* DC/DC type
  *
- *  @param pwm_duty Duty cycle between 0.0 and 1.0
+ * Contains all data belonging to the DC/DC sub-component of the PCB, incl.
+ * actual measurements and calibration parameters.
  */
-void dcdc_start(float pwm_duty);
+typedef struct {
+    dcdc_control_mode mode;
 
-/** Stop the PWM generation
- */
-void dcdc_stop();
+    // actual measurements
+    float ls_current;           // inductor current
+    float temp_mosfets;
 
-/** Get status of the PWM output
+    // current state
+    float power;                // power at low-side (calculated by dcdc controller)
+    int pwm_delta;              // direction of PWM change for MPPT
+    int off_timestamp;          // time when DC/DC was switched off last time
+
+    // maximum allowed values
+    float ls_current_max;       // PCB inductor maximum
+    float ls_current_min;       // --> if lower, charger is switched off
+    float hs_voltage_max;
+    float ls_voltage_max;
+
+    // calibration parameters
+    //float offset_voltage_start;  // V  charging switched on if Vsolar > Vbat + offset
+    //float offset_voltage_stop;   // V  charging switched off if Vsolar < Vbat + offset
+    int restart_interval;   // s    --> when should we retry to start charging after low solar power cut-off?
+} dcdc_t;
+
+
+/* Initialize DC/DC and DC/DC port structs
  *
- *  @returns
- *    True if PWM output enabled
+ * See http://libre.solar/docs/dcdc_control for detailed information
  */
-bool dcdc_enabled();
+void dcdc_init(dcdc_t *dcdc);
 
-/** Set the duty cycle of the PWM signal between 0.0 and 1.0
- *
- *  @param duty Duty cycle between 0.0 and 1.0
- */
-void dcdc_set_duty_cycle(float duty);
+void dcdc_port_init_bat(dcdc_port_t *port, battery_t *bat);
+void dcdc_port_init_solar(dcdc_port_t *port);
+void dcdc_port_init_nanogrid(dcdc_port_t *port);
 
-/** Adjust the duty cycle with minimum step size
- *
- *  @param delta Number of steps (positive or negative)
- */
-void dcdc_duty_cycle_step(int delta);
+void dcdc_control(dcdc_t *dcdc, dcdc_port_t *high_side, dcdc_port_t *low_side);
 
-/** Read the currently set duty cycle
- *
- *  @returns
- *    Duty cycle between 0.0 and 1.0
- */
-float dcdc_get_duty_cycle();
+#ifdef __cplusplus
+}
+#endif
 
-/** Set limits for the duty cycle to prevent hardware damages
- *
- *  @param min_duty Minimum duty cycle (e.g. 0.5 for limiting input voltage)
- *  @param max_duty Maximum duty cycle (e.g. 0.97 for charge pump)
- */
-void dcdc_duty_cycle_limits(float min_duty, float max_duty);
-
-
-#endif // HALFBRIDGE_H
+#endif // DCDC_H

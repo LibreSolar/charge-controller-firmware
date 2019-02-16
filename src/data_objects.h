@@ -17,99 +17,56 @@
 #ifndef DATA_OBJECTS_H
 #define DATA_OBJECTS_H
 
-#include "stdint.h"
+#include <stdint.h>
+#include <stdbool.h>
 
-/*
-const char* manufacturer = "Libre Solar";
-const char* deviceName = "MPPT Solar Charge Controller 20A";
-*/
+#include "thingset.h"
+#include "pcb.h"
+#include "structs.h"
+#include "load.h"
 
-// rename to OutputData
-struct DeviceState {
-    float bus_voltage;
-    float input_voltage;
-    float bus_current;
-    float input_current;
-    float load_current;
-    float external_temperature;
-    float internal_temperature;
-    bool load_enabled;
-    float input_Wh_day = 0.0;
-    float output_Wh_day = 0.0;
-    float input_Wh_total = 0.0;
-    float output_Wh_total = 0.0;
-};
-extern DeviceState device;
+extern log_data_t log_data;
+extern battery_t bat;
+extern dcdc_t dcdc;
+extern load_output_t load;
+extern dcdc_port_t hs_port;
+extern dcdc_port_t ls_port;
 
-struct CalibrationData {
-    float dcdc_current_min = 0.05;  // A     --> if lower, charger is switched off
-    float solar_voltage_max = 55.0; // V
-    int32_t dcdc_restart_interval = 60; // s    --> when should we retry to start charging after low solar power cut-off?
-    float solar_voltage_offset_start = 5.0; // V  charging switched on if Vsolar > Vbat + offset
-    float solar_voltage_offset_stop = 1.0;  // V  charging switched off if Vsolar < Vbat + offset
-    int32_t thermistor_beta_value = 3435;  // typical value for Semitec 103AT-5 thermistor: 3435
-};
-extern CalibrationData cal;
+extern battery_user_settings_t bat_user;
+extern const dcdc_control_mode dcdc_mode; // we leave it fixed for the runtime for now
 
-typedef struct {
-    const uint16_t id;
-    const uint8_t access;
-    const uint8_t category;
-    const uint8_t type;
-    const int8_t exponent;     // only for int and uint types
-    void* data;
-    const char* name;
-} DataObject_t;
-
-
-// ThingSet CAN standard data types
-#define TS_T_POS_INT8  0
-#define TS_T_POS_INT16 1
-#define TS_T_POS_INT32 2
-#define TS_T_POS_INT64 3
-#define TS_T_NEG_INT8  4
-#define TS_T_NEG_INT16 5
-#define TS_T_NEG_INT32 6
-#define TS_T_NEG_INT64 7
-#define TS_T_BYTE_STRING 8  
-#define TS_T_UTF8_STRING 12  // 0x0C
-#define TS_T_FLOAT32 30  // 0x1E
-#define TS_T_FLOAT64 31  // 0x1F
-
-#define TS_T_ARRAY 16    // 0x10
-#define TS_T_MAP   20    // 0x14
-
-// ThingSet CAN special types and simple values
-#define TS_T_TIMESTAMP    32  // 0x20
-#define TS_T_DECIMAL_FRAC 36  // 0x24
-#define TS_T_FALSE        60  // 0x3C
-#define TS_T_TRUE         61  // 0x3D
-#define TS_T_NULL         62  // 0x3E
-#define TS_T_UNDEFINED    63  // 0x3F
-
-// C variable types
-#define T_BOOL 0
-//#define T_UINT32 1
-#define T_INT32 2
-#define T_FLOAT32 3
-#define T_STRING 4
-
-// ThingSet data object categories
-#define TS_C_ALL 0
-#define TS_C_DEVICE 1      // read-only device information (e.g. manufacturer, etc.)
-#define TS_C_SETTINGS 2    // user-configurable settings (open access, maybe with user password)
-#define TS_C_CAL 3         // factory-calibrated settings (access restricted)
-#define TS_C_DIAGNOSIS 4   // error memory, etc (at least partly access restricted)
-#define TS_C_INPUT 5       // free access
-#define TS_C_OUTPUT 6      // free access
-
-// internal access rights to data objects
-#define ACCESS_READ (0x1U)
-#define ACCESS_WRITE (0x1U << 1)
-#define ACCESS_READ_AUTH (0x1U << 2)       // read after authentication
-#define ACCESS_WRITE_AUTH (0x1U << 3)      // write after authentication
-
-extern const DataObject_t dataObjects[]; // see output_can.cpp
+extern const data_object_t dataObjects[];
 extern const size_t dataObjectsCount;
+
+
+// stores object-ids of values to be stored in EEPROM
+static const uint16_t eeprom_data_objects[] = {
+    0x4002, 0x4004, 0x4006, 0x4008, 0x400B,     // V, I, T max
+    0x400F, 0x4010, // energy throughput
+    0x4011, 0x4012, // num full charge / deep-discharge
+    0x3001, 0x3002  // switch targets
+};
+/*
+// stores object-ids of values to be published via GSM
+static uint16_t pub_gsm_data_objects[] = {
+    0x1003, // deviceID
+    //0x2013, // time
+    0x4002, 0x4004, 0x4006, 0x4008, 0x400B,     // V, I, T max
+    0x400C, // loadEn
+    0x400F, 0x4010, // total energy throughput
+    0x4011, 0x4012, // nFullChg, nDeepDis
+    0x4013  // SOC
+};
+
+// stores object-ids of values to be published via LoRa
+static uint16_t pub_lora_data_objects[] = {
+    0x1003, // deviceID
+    0x4002, 0x4004, 0x4006, 0x4008, 0x400B,     // V, I, T max
+    0x400C, // loadEn
+    0x400F, 0x4010, // total energy throughput
+    0x4011, 0x4012, // nFullChg, nDeepDis
+    0x4013  // SOC
+};
+*/
 
 #endif

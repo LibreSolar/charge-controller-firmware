@@ -1,0 +1,79 @@
+/* LibreSolar MPPT charge controller firmware
+ * Copyright (c) 2016-2018 Martin Jäger (www.libre.solar)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#ifndef _CONFIG_H_
+#define _CONFIG_H_
+
+/* This file is used to define personal settings, e.g. which type of interface
+ * at the UEXT port should be used.
+ */
+
+#define DCDC_MODE_INIT      MODE_MPPT_BUCK
+//#define DCDC_MODE_INIT      MODE_NANOGRID
+
+// basic battery configuration
+#define BATTERY_TYPE        BAT_TYPE_FLOODED        // see enum battery_types in structs.h
+#define BATTERY_NUM_CELLS   6
+#define BATTERY_CAPACITY    40
+
+#define DEVICE_ID 12345678
+
+// OLED display at UEXT port
+//#define OLED_ENABLED
+
+// UART serial at SWD connector
+#define UART_SERIAL_ENABLED
+
+// USB serial
+//#define USB_SERIAL_ENABLED
+
+// CAN bus drivers (not supported by all charge controllers)
+//#define CAN_ENABLED
+
+// LoRa board RFM9x connected to UEXT port
+// https://github.com/LibreSolar/UEXT_LoRa
+//#define LORA_ENABLED
+
+// GSM board based on SIM800L connected to UEXT port
+// https://github.com/LibreSolar/UEXT_GSM
+//#define GSM_ENABLED
+#define GSM_APN  "internet.t-d1.de"     // Access point name of network provider
+#define GSM_NUMBER ""                   // empty if not needed
+#define GSM_PIN "1234"                  // empty if not needed
+#define GSM_USER ""                     // empty if not needed
+#define GSM_PASS ""                     // empty if not needed
+
+// WiFi board based on ESP32 connected to UEXT port
+//#define WIFI_ENABLED
+#define WIFI_SSID "ssid"
+#define WIFI_PASS "pass"
+
+// OpenEnergyMonitor emoncms configuration (used in WiFi interface)
+#define EMONCMS_ENABLED true
+#define EMONCMS_HOST    ""
+#define EMONCMS_APIKEY  ""          // get from emoncms webinterface
+#define EMONCMS_NODE    "mppt"      // name of your device
+
+// MQTT server configuration (used in GSM or WiFi interface)
+#define MQTT_ENABLED false
+#define MQTT_HOST "your-host-or-ip"
+#define MQTT_PORT "1883"
+#define MQTT_USER "you"
+#define MQTT_PASS "pass"
+#define MQTT_PUBLISH_TOPIC "nodes2server/report"
+#define MQTT_SUBSCRIBE_TOPIC "server2node/state-req"
+
+#endif /* _CONFIG_H_ */

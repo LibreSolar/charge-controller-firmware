@@ -9,3 +9,5 @@
 .vscode/*.db
 .vscode/.browse.c_cpp.db*
 src/config.cpp
+src/config.h
+memory.map

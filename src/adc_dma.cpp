@@ -14,79 +14,145 @@
  * limitations under the License.
  */
 
-
+#include "adc_dma.h"
 #include "mbed.h"
-#include "config.h"
-#include "data_objects.h"
+#include "pcb.h"        // contains defines for pins
+#include <math.h>       // log for thermistor calculation
 
-// for DMA and ADC configuration using ST HAL (see below)
-#include "pinmap.h"
-extern const PinMap PinMap_ADC[];
-extern const PinMap PinMap_ADC_Internal[];
+// factory calibration values for internal voltage reference and temperature sensor (see MCU datasheet, not RM)
+#if defined(STM32F0)
+    const uint16_t VREFINT_CAL = *((uint16_t *)0x1FFFF7BA); // VREFINT @3.3V/30°C
+    #define VREFINT_VALUE 3300 // mV
+    const uint16_t TSENSE_CAL1 = *((uint16_t *)0x1FFFF7B8);
+    const uint16_t TSENSE_CAL2 = *((uint16_t *)0x1FFFF7C2);
+    #define TSENSE_CAL1_VALUE 30.0   // temperature of first calibration point
+    #define TSENSE_CAL2_VALUE 110.0  // temperature of second calibration point
+#elif defined(STM32L0)
+    const uint16_t VREFINT_CAL = *((uint16_t *)0x1FF80078);   // VREFINT @3.0V/25°C
+    #define VREFINT_VALUE 3000 // mV
+    const uint16_t TSENSE_CAL1 = *((uint16_t *)0x1FF8007A);
+    const uint16_t TSENSE_CAL2 = *((uint16_t *)0x1FF8007E);
+    #define TSENSE_CAL1_VALUE 30.0   // temperature of first calibration point
+    #define TSENSE_CAL2_VALUE 130.0  // temperature of second calibration point
+#endif
 
+#ifdef PIN_REF_I_DCDC
+AnalogOut ref_i_dcdc(PIN_REF_I_DCDC);
+#endif
+
+float dcdc_current_offset;
+float load_current_offset;
 
 // for ADC and DMA
-#define NUM_ADC_CH 7
-volatile uint16_t adc_readings[NUM_ADC_CH] = {0,0,0,0,0,0,0};
-volatile uint32_t adc_filtered[NUM_ADC_CH] = {0,0,0,0,0,0,0};
+volatile uint16_t adc_readings[NUM_ADC_CH] = {0};
+volatile uint32_t adc_filtered[NUM_ADC_CH] = {0};
+//volatile int num_adc_conversions;
+
 #define ADC_FILTER_CONST 5          // filter multiplier = 1/(2^ADC_FILTER_CONST)
-volatile int num_adc_conversions;
-
-bool new_reading_available = false;
-
-extern float solar_voltage;
-extern float battery_voltage;
-extern float dcdc_current;
-extern float dcdc_current_offset;
-extern float load_current;     
-extern float load_current_offset;
-extern float temp_mosfets;
-extern float temp_battery;
 
 extern Serial serial;
-extern CalibrationData cal;
+extern log_data_t log_data;
+
+void calibrate_current_sensors(dcdc_t *dcdc, load_output_t *load)
+{
+    dcdc_current_offset = -dcdc->ls_current;
+    load_current_offset = -load->current;
+}
 
 //----------------------------------------------------------------------------
-void update_measurements()
+void update_measurements(dcdc_t *dcdc, battery_t *bat, load_output_t *load, dcdc_port_t *hs, dcdc_port_t *ls)
 {
-    int v_temp, rts;
+    //int v_temp, rts;
 
     // reference voltage of 2.5 V at PIN_V_REF
-    int vcc = 2500 * 4096 / (adc_filtered[2] >> (4 + ADC_FILTER_CONST));        // mV
+    //int vcc = 2500 * 4096 / (adc_filtered[ADC_POS_V_REF] >> (4 + ADC_FILTER_CONST));
 
-    battery_voltage = 
-        (float)(((adc_filtered[3] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
-        adc_channels[3].multiplier / 1000.0;
+    // internal STM reference voltage
+    int vcc = VREFINT_VALUE * VREFINT_CAL / (adc_filtered[ADC_POS_VREF_MCU] >> (4 + ADC_FILTER_CONST));
 
-    solar_voltage = 
-        (float)(((adc_filtered[4] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
-        adc_channels[4].multiplier / 1000.0;
+    // rely on LDO accuracy
+    //int vcc = 3300;
 
-    load_current = 
-        (float)(((adc_filtered[5] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
-        adc_channels[5].multiplier / 1000.0 + load_current_offset;
+    ls->voltage =
+        (float)(((adc_filtered[ADC_POS_V_BAT] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
+        ADC_GAIN_V_BAT / 1000.0;
 
-    dcdc_current = 
-        (float)(((adc_filtered[6] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
-        adc_channels[6].multiplier / 1000.0 + dcdc_current_offset;
+    hs->voltage =
+        (float)(((adc_filtered[ADC_POS_V_SOLAR] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
+        ADC_GAIN_V_SOLAR / 1000.0;
 
+    load->current =
+        (float)(((adc_filtered[ADC_POS_I_LOAD] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
+        ADC_GAIN_I_LOAD / 1000.0 + load_current_offset;
+
+    ls->current =
+        (float)(((adc_filtered[ADC_POS_I_DCDC] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
+        ADC_GAIN_I_LOAD / 1000.0 + dcdc_current_offset;
+    dcdc->ls_current = ls->current;
+
+    hs->current = -ls->current * ls->voltage / hs->voltage;
+
+    // ToDo: improved (faster) temperature calculation:
+    // https://www.embeddedrelated.com/showarticle/91.php
+
+    float v_temp, rts;
+
+#ifdef PIN_ADC_TEMP_BAT
     // battery temperature calculation
-    v_temp = ((adc_filtered[0] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096;  // voltage read by ADC (mV)
+    v_temp = ((adc_filtered[ADC_POS_TEMP_BAT] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096;  // voltage read by ADC (mV)
     rts = 10000 * v_temp / (vcc - v_temp); // resistance of NTC (Ohm)
 
     // Temperature calculation using Beta equation for 10k thermistor
     // (25°C reference temperature for Beta equation assumed)
-    temp_battery = 1.0/(1.0/(273.15+25) + 1.0/cal.thermistor_beta_value*log(rts/10000.0)) - 273.15; // °C
-    
+    bat->temperature = 1.0/(1.0/(273.15+25) + 1.0/NTC_BETA_VALUE*log(rts/10000.0)) - 273.15; // °C
+#endif
+
+#ifdef PIN_ADC_TEMP_FETS
     // MOSFET temperature calculation
-    v_temp = ((adc_filtered[1] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096;  // voltage read by ADC (mV)
+    v_temp = ((adc_filtered[ADC_POS_TEMP_FETS] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096;  // voltage read by ADC (mV)
     rts = 10000 * v_temp / (vcc - v_temp); // resistance of NTC (Ohm)
-    temp_mosfets = 1.0/(1.0/(273.15+25) + 1.0/cal.thermistor_beta_value*log(rts/10000.0)) - 273.15; // °C
+    dcdc->temp_mosfets = 1.0/(1.0/(273.15+25) + 1.0/NTC_BETA_VALUE*log(rts/10000.0)) - 273.15; // °C
+#endif
+
+/*
+    // internal MCU temperature
+    uint16_t adcval = (adc_filtered[ADC_POS_TEMP_MCU] >> (4 + ADC_FILTER_CONST));
+    meas->temp_int = (TSENSE_CAL2_VALUE - TSENSE_CAL1_VALUE) / (TSENSE_CAL2 - TSENSE_CAL1) * (adcval - TSENSE_CAL1) + TSENSE_CAL1_VALUE;
+    //printf("TS_CAL1:%d TS_CAL2:%d ADC:%d, temp_int:%f\n", TS_CAL1, TS_CAL2, adcval, meas->temp_int);
+*/
+
+    if (ls->voltage > log_data.battery_voltage_max) {
+        log_data.battery_voltage_max = ls->voltage;
+    }
+
+    if (hs->voltage > log_data.solar_voltage_max) {
+        log_data.solar_voltage_max = hs->voltage;
+    }
+
+    if (dcdc_current_offset > 0.1) {    // already calibrated
+        if (ls->current > log_data.dcdc_current_max) {
+            log_data.dcdc_current_max = ls->current;
+        }
+
+        if (load->current > log_data.load_current_max) {
+            log_data.load_current_max = load->current;
+        }
+    }
+
+    if (dcdc->temp_mosfets > log_data.temp_mosfets_max) {
+        log_data.temp_mosfets_max = dcdc->temp_mosfets;
+    }
+
+    //if (meas->temp_int > log_data.temp_int_max) {
+    //    log_data.temp_int_max = meas->temp_int;
+    //}
 }
 
 
-void start_dma()
+void dma_setup()
 {
+    //__HAL_RCC_DMA1_CLK_ENABLE();
+
     /* Enable the peripheral clock on DMA */
     RCC->AHBENR |= RCC_AHBENR_DMA1EN;
 
@@ -103,7 +169,7 @@ void start_dma()
     DMA1_Channel1->CNDTR = NUM_ADC_CH;
 
     /* Configure increment, size, interrupts and circular mode */
-    DMA1_Channel1->CCR = 
+    DMA1_Channel1->CCR =
         DMA_CCR_MINC |          /* memory increment mode enabled */
         DMA_CCR_MSIZE_0 |       /* memory size 16-bit */
         DMA_CCR_PSIZE_0 |       /* peripheral size 16-bit */
@@ -115,8 +181,8 @@ void start_dma()
     /* Enable DMA Channel 1 */
     DMA1_Channel1->CCR |= DMA_CCR_EN;
 
-    /* Configure NVIC for DMA (priority 16: default value according to startup code) */
-    NVIC_SetPriority(DMA1_Channel1_IRQn, 16);
+    /* Configure NVIC for DMA (priority 2: second-lowest value for STM32L0/F0) */
+    NVIC_SetPriority(DMA1_Channel1_IRQn, 2);
     NVIC_EnableIRQ(DMA1_Channel1_IRQn);
 
     // Trigger ADC conversions
@@ -129,118 +195,75 @@ extern "C" void DMA1_Channel1_IRQHandler(void)
     {
         // low pass filter with filter constant c = 1/16
         // y(n) = c * x(n) + (c - 1) * y(n-1)
-        for (int i = 0; i < NUM_ADC_CH; i++) {
+        for (unsigned int i = 0; i < NUM_ADC_CH; i++) {
             // adc_readings: 12-bit ADC values left-aligned in uint16_t
             adc_filtered[i] += (uint32_t)adc_readings[i] - (adc_filtered[i] >> ADC_FILTER_CONST);
         }
-        num_adc_conversions++;
-        if (num_adc_conversions % 100 == 0) {
-            new_reading_available = true;
-        }
-        //DMA1->IFCR |= DMA_IFCR_CTCIF1;
+        //num_adc_conversions++;
     }
     DMA1->IFCR |= 0x0FFFFFFF;       // clear all interrupt registers
 /*
     if (num_adc_conversions % 100 == 0) {
-        serial.printf("Filtered: %d %d %d %d %d %d %d (num_conv: %d)\n", 
-            adc_filtered[0] >> (4+ADC_FILTER_CONST), adc_filtered[1] >> (4+ADC_FILTER_CONST), adc_filtered[2] >> (4+ADC_FILTER_CONST), adc_filtered[3] >> (4+ADC_FILTER_CONST), 
+        serial.printf("Filtered: %d %d %d %d %d %d %d (num_conv: %d)\n",
+            adc_filtered[0] >> (4+ADC_FILTER_CONST), adc_filtered[1] >> (4+ADC_FILTER_CONST), adc_filtered[2] >> (4+ADC_FILTER_CONST), adc_filtered[3] >> (4+ADC_FILTER_CONST),
             adc_filtered[4] >> (4+ADC_FILTER_CONST), adc_filtered[5] >> (4+ADC_FILTER_CONST), adc_filtered[6] >> (4+ADC_FILTER_CONST), num_adc_conversions);
-    }
-  */  
+    }*/
 }
 
-
-// ToDo: Change to more clean function with direct register access without using ST HAL
-void setup_adc()
+void adc_setup()
 {
-    uint32_t function = (uint32_t)NC;
-    analogin_t _adc;
-    analogin_t* obj = &_adc;
-    static bool adc_calibrated = false;
+#ifdef PIN_REF_I_DCDC
+    ref_i_dcdc = 0.1;    // reference voltage for zero current (0.1 for buck, 0.9 for boost, 0.5 for bi-directional)
+#endif
 
-    for (unsigned int i = 0; i < sizeof(adc_channels)/sizeof(AnalogValue_t); i++) {
+    ADC_HandleTypeDef hadc;
+    ADC_ChannelConfTypeDef sConfig = {0};
 
-        obj->pin = adc_channels[i].pin;
-    
-        // Get the peripheral name from the pin and assign it to the object
-        obj->handle.Instance = (ADC_TypeDef *)pinmap_peripheral(obj->pin, PinMap_ADC);
-        // Get the functions (adc channel) from the pin and assign it to the object
-        function = pinmap_function(obj->pin, PinMap_ADC);
-        // Configure GPIO
-        pinmap_pinout(obj->pin, PinMap_ADC);
-
-        MBED_ASSERT(obj->handle.Instance != (ADC_TypeDef *)NC);
-        MBED_ASSERT(function != (uint32_t)NC);
-
-        obj->channel = STM_PIN_CHANNEL(function);
-
-        // Configure ADC object structures
-        obj->handle.State = HAL_ADC_STATE_RESET;
-        obj->handle.Init.ClockPrescaler        = ADC_CLOCK_SYNC_PCLK_DIV4;
-        obj->handle.Init.Resolution            = ADC_RESOLUTION_12B;
-        obj->handle.Init.DataAlign             = ADC_DATAALIGN_RIGHT;
-        obj->handle.Init.ScanConvMode          = ADC_SCAN_DIRECTION_FORWARD;
-        obj->handle.Init.EOCSelection          = ADC_EOC_SINGLE_CONV;
-        obj->handle.Init.LowPowerAutoWait      = DISABLE;
-        obj->handle.Init.LowPowerAutoPowerOff  = DISABLE;
-        obj->handle.Init.ContinuousConvMode    = DISABLE;
-        obj->handle.Init.DiscontinuousConvMode = DISABLE;
-        obj->handle.Init.ExternalTrigConv      = ADC_SOFTWARE_START;
-        obj->handle.Init.ExternalTrigConvEdge  = ADC_EXTERNALTRIGCONVEDGE_NONE;
-        obj->handle.Init.DMAContinuousRequests = DISABLE;
-        obj->handle.Init.Overrun               = ADC_OVR_DATA_OVERWRITTEN;
-
-        __HAL_RCC_ADC1_CLK_ENABLE();
-
-        if (HAL_ADC_Init(&obj->handle) != HAL_OK) {
-            error("Cannot initialize ADC");
-        }
-
-        // ADC calibration is done only once
-        if (!adc_calibrated) {
-            adc_calibrated = true;
-            HAL_ADCEx_Calibration_Start(&obj->handle);
-        }
-
-        ADC_ChannelConfTypeDef sConfig = {0};
-
-        // Configure ADC channel
-        sConfig.Rank         = ADC_RANK_CHANNEL_NUMBER;
-        sConfig.SamplingTime = ADC_SAMPLETIME_7CYCLES_5;
-
-        // Clear all channels as it is not done in HAL_ADC_ConfigChannel()
-        obj->handle.Instance->CHSELR = 0;
-
-        HAL_ADC_ConfigChannel(&obj->handle, &sConfig);
-
-        HAL_ADC_Start(&obj->handle); // Start conversion
-
-        // Read out value at one time to finish ADC configuration
-        if (HAL_ADC_PollForConversion(&obj->handle, 10) == HAL_OK) {
-            HAL_ADC_GetValue(&obj->handle);
-        }
-    }
+    __HAL_RCC_ADC1_CLK_ENABLE();
 
     // Configure ADC object structures
-    obj->handle.State = HAL_ADC_STATE_RESET;
-    obj->handle.Init.ClockPrescaler        = ADC_CLOCK_SYNC_PCLK_DIV4;
-    obj->handle.Init.Resolution            = ADC_RESOLUTION_12B;
-    obj->handle.Init.DataAlign             = ADC_DATAALIGN_LEFT;        // for exeponential moving average filter
-    obj->handle.Init.ScanConvMode          = ADC_SCAN_DIRECTION_FORWARD;
-    obj->handle.Init.EOCSelection          = ADC_EOC_SINGLE_CONV;
-    obj->handle.Init.LowPowerAutoWait      = DISABLE;
-    obj->handle.Init.LowPowerAutoPowerOff  = DISABLE;
-    obj->handle.Init.ContinuousConvMode    = DISABLE;
-    obj->handle.Init.DiscontinuousConvMode = DISABLE;
-    obj->handle.Init.ExternalTrigConv      = ADC_SOFTWARE_START;
-    //obj->handle.Init.ExternalTrigConv      = ADC_EXTERNALTRIGCONV_T15_TRGO; //ADC_SOFTWARE_START;
-    obj->handle.Init.ExternalTrigConvEdge  = ADC_EXTERNALTRIGCONVEDGE_NONE;
-    //obj->handle.Init.ExternalTrigConvEdge  = ADC_EXTERNALTRIGCONVEDGE_RISING; //ADC_EXTERNALTRIGCONVEDGE_NONE;
-    obj->handle.Init.DMAContinuousRequests = ENABLE; //DISABLE;
-    obj->handle.Init.Overrun               = ADC_OVR_DATA_OVERWRITTEN;
+    hadc.Instance                   = ADC1;
+    hadc.State                      = HAL_ADC_STATE_RESET;
+    hadc.Init.ClockPrescaler        = ADC_CLOCK_SYNC_PCLK_DIV4;
+    hadc.Init.Resolution            = ADC_RESOLUTION_12B;
+    hadc.Init.DataAlign             = ADC_DATAALIGN_LEFT;       // for exponential moving average filter
+    hadc.Init.ScanConvMode          = ADC_SCAN_DIRECTION_FORWARD;
+    hadc.Init.EOCSelection          = ADC_EOC_SINGLE_CONV;
+    hadc.Init.LowPowerAutoWait      = DISABLE;
+    hadc.Init.LowPowerAutoPowerOff  = DISABLE;
+    hadc.Init.ContinuousConvMode    = DISABLE;
+    hadc.Init.DiscontinuousConvMode = DISABLE;
+    hadc.Init.ExternalTrigConv      = ADC_SOFTWARE_START;
+    hadc.Init.ExternalTrigConvEdge  = ADC_EXTERNALTRIGCONVEDGE_NONE;
+    hadc.Init.DMAContinuousRequests = ENABLE; //DISABLE;
+    hadc.Init.Overrun               = ADC_OVR_DATA_OVERWRITTEN;
 
-    if (HAL_ADC_Init(&obj->handle) != HAL_OK) {
+    if (HAL_ADC_Init(&hadc) != HAL_OK) {
         error("Cannot initialize ADC");
+    }
+
+#if defined(STM32L0)
+    HAL_ADCEx_Calibration_Start(&hadc, ADC_SINGLE_ENDED);
+#else
+    HAL_ADCEx_Calibration_Start(&hadc);
+#endif
+
+    // Configure ADC channel
+    sConfig.Channel     = ADC_CHANNEL_0;            // can be any channel for initialization
+    sConfig.Rank        = ADC_RANK_CHANNEL_NUMBER;
+
+    // Clear all channels as it is not done in HAL_ADC_ConfigChannel()
+    hadc.Instance->CHSELR = 0;
+
+    if (HAL_ADC_ConfigChannel(&hadc, &sConfig) != HAL_OK) {
+        error("Cannot initialize ADC");
+    }
+
+    HAL_ADC_Start(&hadc); // Start conversion
+
+    // Read out value one time to finish ADC configuration
+    if (HAL_ADC_PollForConversion(&hadc, 10) == HAL_OK) {
+        HAL_ADC_GetValue(&hadc);
     }
 
     // ADC sampling time register
@@ -252,42 +275,35 @@ void setup_adc()
     // 101: 55.5 ADC clock cycles
     // 110: 71.5 ADC clock cycles
     // 111: 239.5 ADC clock cycles
-    ADC1->SMPR = ADC_SMPR_SMP_1;
+    //ADC1->SMPR = ADC_SMPR_SMP_1;      // for normal ADC OK
+    ADC1->SMPR |= ADC_SMPR_SMP_0 | ADC_SMPR_SMP_1 | ADC_SMPR_SMP_2;      // necessary for internal reference and temperature
 
-    // Select ADC channels
-    ADC1->CHSELR = 
-        ADC_CHSELR_CHSEL0 |     /* PIN_TEMP_BAT PA_0 */
-        ADC_CHSELR_CHSEL1 |     /* PIN_TEMP_INT PA_1 */
-        ADC_CHSELR_CHSEL5 |     /* PIN_V_REF    PA_5 */
-        ADC_CHSELR_CHSEL6 |     /* PIN_V_BAT    PA_6 */
-        ADC_CHSELR_CHSEL7 |     /* PIN_V_SOLAR  PA_7 */
-        ADC_CHSELR_CHSEL8 |     /* PIN_I_LOAD   PB_0 */
-        ADC_CHSELR_CHSEL9;      /* PIN_I_DCDC   PB_1 */
+    // Select ADC channels based on setup in config.h
+    ADC1->CHSELR = ADC_CHSEL;
 
-    //ADC1->CFGR1 &= ~(ADC_CFGR1_EXTEN_0 | ADC_CFGR1_EXTEN_1);
-    //ADC1->CFGR1 |= ADC_CFGR1_EXTEN_0;       // enable external trigger (e.g. timer)
-
-    //ADC1->CFGR1 |= ADC_CFGR1_EXTSEL_2;      // set TIM15 as trigger source
+    // Enable internal voltage reference and temperature sensor
+    // ToDo check sample rate
+    ADC->CCR |= ADC_CCR_TSEN | ADC_CCR_VREFEN;
 }
 
-void setup_adc_timer()
-{
-    // Enable peripheral clock of GPIOA and GPIOB
-    RCC->AHBENR |= RCC_AHBENR_GPIOAEN | RCC_AHBENR_GPIOBEN;
+#if defined(STM32F0)
 
-    // Enable TIM1 clock
+void adc_timer_setup(int freq_Hz)   // max. 10 kHz
+{
+    // Enable TIM15 clock
     RCC->APB2ENR |= RCC_APB2ENR_TIM15EN;
 
-    // timer clock: 48 MHz / 4800 = 10 kHz
-    TIM15->PSC = 4799;
+    // Set timer clock to 10 kHz
+    TIM15->PSC = SystemCoreClock / 10000 - 1;
 
-    // interrupt on timer update
+    // Interrupt on timer update
     TIM15->DIER |= TIM_DIER_UIE;
 
-    // Auto Reload Register
-    TIM15->ARR = 10;        // 1 kHz sample frequency at 10 kHz clock
+    // Auto Reload Register sets interrupt frequency
+    TIM15->ARR = 10000 / freq_Hz - 1;
 
-    //NVIC_SetPriority(DMA1_Channel1_IRQn, 16);
+    // 2 = second-lowest priority of STM32L0/F0
+    NVIC_SetPriority(TIM15_IRQn, 2);
     NVIC_EnableIRQ(TIM15_IRQn);
 
     // Control Register 1
@@ -300,3 +316,36 @@ extern "C" void TIM15_IRQHandler(void)
     TIM15->SR &= ~(1 << 0);
     ADC1->CR |= ADC_CR_ADSTART;
 }
+
+#elif defined(STM32L0)
+
+void adc_timer_setup(int freq_Hz)   // max. 10 kHz
+{
+    // Enable TIM6 clock
+    RCC->APB1ENR |= RCC_APB1ENR_TIM6EN;
+
+    // Set timer clock to 10 kHz
+    TIM6->PSC = SystemCoreClock / 10000 - 1;
+
+    // Interrupt on timer update
+    TIM6->DIER |= TIM_DIER_UIE;
+
+    // Auto Reload Register sets interrupt frequency
+    TIM6->ARR = 10000 / freq_Hz - 1;
+
+    // 2 = second-lowest priority of STM32L0/F0
+    NVIC_SetPriority(TIM6_IRQn, 2);
+    NVIC_EnableIRQ(TIM6_IRQn);
+
+    // Control Register 1
+    // TIM_CR1_CEN =  1: Counter enable
+    TIM6->CR1 |= TIM_CR1_CEN;
+}
+
+extern "C" void TIM6_IRQHandler(void)
+{
+    TIM6->SR &= ~(1 << 0);
+    ADC1->CR |= ADC_CR_ADSTART;
+}
+
+#endif
