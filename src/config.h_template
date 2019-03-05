@@ -26,8 +26,8 @@
 
 // basic battery configuration
 #define BATTERY_TYPE        BAT_TYPE_FLOODED        // see enum battery_types in structs.h
-#define BATTERY_NUM_CELLS   6
-#define BATTERY_CAPACITY    40
+#define BATTERY_NUM_CELLS   6                       // Number of Cell (12V=6 / 24V=12)
+#define BATTERY_CAPACITY    40                     // Ah   Cell capacity or sum of parallel cells capacity
 
 #define DEVICE_ID 12345678
 
