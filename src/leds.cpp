@@ -85,7 +85,7 @@ void charlieplexing()
     static int flicker_count = 0;
 
     // could be increased to value >NUM_LEDS to reduce on-time
-    if (led_count > NUM_LEDS) {
+    if (led_count >= NUM_LEDS) {
         led_count = 0;
     }
 
@@ -96,16 +96,18 @@ void charlieplexing()
 
     if (led_count < NUM_LEDS && led_states[led_count] == true) {
         for (int pin_number = 0; pin_number < NUM_LED_PINS; pin_number++) {
-            DigitalOut pin(led_pins[pin_number]);
+            DigitalInOut pin(led_pins[pin_number]);
             switch (led_pin_setup[led_count][pin_number]) {
             case PIN_HIGH:
+                pin.output();
                 pin = 1;
                 break;
             case PIN_LOW:
+                pin.output();
                 pin = 0;
                 break;
             case PIN_FLOAT:
-                // TODO
+                pin.input();
                 break;
             }
         }

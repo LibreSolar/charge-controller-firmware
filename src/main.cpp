@@ -205,7 +205,7 @@ void setup()
     serial.baud(115200);
 
     leds_init();
-    led_timer_start(5000);  // 5 kHz
+    led_timer_start(NUM_LEDS * 60);     // 60 Hz
 
     battery_init(&bat, &bat_user);
     load_init(&load);
