@@ -1,5 +1,5 @@
-/* LibreSolar MPPT charge controller firmware
- * Copyright (c) 2016-2018 Martin Jäger (www.libre.solar)
+/* LibreSolar charge controller firmware
+ * Copyright (c) 2016-2019 Martin Jäger (www.libre.solar)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,13 @@
  * limitations under the License.
  */
 
-#ifndef _PCB_H_
-#define _PCB_H_
+#ifndef PCB_H
+#define PCB_H
 
-/* This file includes the PCB specific settings depending on the PCB selected
- * as a compiler define flag in platformio.h
+/** @file
+ *
+ * @brief
+ * Includes PCB hardware specific settings like pin names depending on the compiler flags set in platformio.ini.
  */
 
 // generic settings (for all charge controller boards)
@@ -26,15 +28,17 @@
 #define HIGH_SIDE_VOLTAGE_MAX   55
 
 #if defined(PCB_LS_005)
-    #include "pcb_ls_005.h"
+    #include "pcbs/pcb_ls_005.h"
 #elif defined(PCB_LS_010)
-    #include "pcb_ls_010.h"
+    #include "pcbs/pcb_ls_010.h"
 #elif defined(PCB_CS_02)
-    #include "pcb_cs_02.h"
+    #include "pcbs/pcb_cs_02.h"
 #elif defined(PCB_CS_04)
-    #include "pcb_cs_04.h"
+    #include "pcbs/pcb_cs_04.h"
+#elif defined(PCB_PWM_01)
+    #include "pcbs/pcb_pwm_01.h"
 #else
     #error "PCB has to be specified!"
 #endif
 
-#endif /* _PCB_H_ */
+#endif /* PCB_H */
