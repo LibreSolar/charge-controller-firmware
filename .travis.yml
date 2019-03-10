@@ -22,15 +22,21 @@ install:
     # https://platformio.org/lib/show/c23/
     # - platformio lib -g install 4ee c23
 
+addons:
+    apt:
+        packages:
+            - doxygen
+
 script:
-        - cp src/config.h_template src/config.h
-        # - platformio ci --lib="lib/Adafruit_GFX" --lib="lib/ThingSet" --project-conf=platformio.ini -e libresolar_0_10,libresolar_0_05
-        - platformio run -e libresolar_0_10 -e libresolar_0_05 -e cloudsolar_0_2 -e cloudsolar_0_4
+    - cp src/config.h_template src/config.h
+    # - platformio ci --lib="lib/Adafruit_GFX" --lib="lib/ThingSet" --project-conf=platformio.ini -e libresolar_0_10,libresolar_0_05
+    - platformio run -e libresolar_0_10 -e libresolar_0_05 -e cloudsolar_0_2 -e cloudsolar_0_4
+    - doxygen Doxyfile
 
 deploy:
     provider: pages
-    skip-cleanup: true
-    github-token: $GH_REPO_TOKEN
-    keep-history: true
+    skip_cleanup: true
+    local_dir: html
+    github_token: $GH_REPO_TOKEN
     on:
         branch: master
