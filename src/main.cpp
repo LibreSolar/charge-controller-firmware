@@ -34,6 +34,7 @@
 #include "load.h"               // load and USB output management
 #include "leds.h"
 #include "log.h"
+#include "data_objects.h"
 
 //----------------------------------------------------------------------------
 // global variables
@@ -47,8 +48,9 @@ power_port_t hs_port = {};       // high-side (solar for typical MPPT)
 power_port_t ls_port = {};       // low-side (battery for typical MPPT)
 power_port_t *bat_port = NULL;
 pwm_chg_t pwm_chg = {};         // only for PWM charger
-battery_t bat;
-battery_user_settings_t bat_user;
+battery_conf_t bat_conf;        // actual (used) battery configuration
+battery_conf_t bat_conf_user;   // temporary storage where the user can write to
+battery_state_t bat_state;      // battery state information
 load_output_t load;
 log_data_t log_data;
 extern ThingSet ts;             // defined in data_objects.cpp
@@ -72,7 +74,7 @@ void system_control()       // called by control timer (see hardware.cpp)
     static int counter = 0;
 
     // convert ADC readings to meaningful measurement values
-    update_measurements(&dcdc, &bat, &load, &hs_port, &ls_port);
+    update_measurements(&dcdc, &bat_state, &load, &hs_port, &ls_port);
 
     // control PWM of the DC/DC according to hs and ls port settings
     // (this function includes MPPT algorithm)
@@ -87,7 +89,7 @@ void system_control()       // called by control timer (see hardware.cpp)
         // see also here: https://github.com/ARMmbed/mbed-os/issues/9065
         timestamp++;
         counter = 0;
-        battery_update_energy(&bat, bat_port->voltage, bat_port->current); // must be called once per second
+        battery_update_energy(&bat_conf, &bat_state, bat_port->voltage, bat_port->current); // must be called once per second
     }
 }
 
@@ -104,17 +106,17 @@ int main()
     {
     case MODE_NANOGRID:
         power_port_init_nanogrid(&hs_port);
-        power_port_init_bat(&ls_port, &bat);
+        power_port_init_bat(&ls_port, &bat_conf);
         bat_port = &ls_port;
         break;
     case MODE_MPPT_BUCK:     // typical MPPT charge controller operation
         power_port_init_solar(&hs_port);
-        power_port_init_bat(&ls_port, &bat);
+        power_port_init_bat(&ls_port, &bat_conf);
         bat_port = &ls_port;
         break;
     case MODE_MPPT_BOOST:    // for charging of e-bike battery via solar panel
         power_port_init_solar(&ls_port);
-        power_port_init_bat(&hs_port, &bat);
+        power_port_init_bat(&hs_port, &bat_conf);
         bat_port = &hs_port;
         break;
     }
@@ -127,18 +129,18 @@ int main()
 
         interfaces_process_asap();
 
-        update_soc_led(bat.soc);
+        update_soc_led(bat_state.soc);
 
         time_t now = timestamp;
         if (now >= last_call + 1 || now < last_call) {   // called once per second (or slower if blocking wait occured somewhere)
 
             //printf("Still alive... time: %d, mode: %d\n", (int)time(NULL), dcdc.mode);
 
-            charger_state_machine(bat_port, &bat, bat_port->voltage, bat_port->current);
+            charger_state_machine(bat_port, &bat_conf, &bat_state, bat_port->voltage, bat_port->current);
 
             load_state_machine(&load, ls_port.input_allowed);
 
-            eeprom_update();
+            //eeprom_update();
             interfaces_process_1s();
             toggle_led_blink();
 
@@ -177,7 +179,7 @@ void interfaces_process_asap()
 void interfaces_process_1s()
 {
 #ifdef OLED_ENABLED
-    oled_output(&dcdc, &hs_port, &ls_port, &bat, &load);
+    oled_output(&dcdc, &hs_port, &ls_port, &bat_state, &load);
 #endif
 
 #ifdef GSM_ENABLED
@@ -207,14 +209,17 @@ void setup()
     leds_init();
     led_timer_start(NUM_LEDS * 60);     // 60 Hz
 
-    battery_init(&bat, &bat_user);
+    battery_conf_init(&bat_conf, BATTERY_TYPE, BATTERY_NUM_CELLS, BATTERY_CAPACITY);
+    battery_conf_overwrite(&bat_conf, &bat_conf_user);  // initialize conf_user with same values
+    battery_state_init(&bat_state);
+
     load_init(&load);
 
     dcdc_init(&dcdc);
     half_bridge_init(PWM_FREQUENCY, 300, 12 / dcdc.hs_voltage_max, 0.97);       // lower duty limit might have to be adjusted dynamically depending on LS voltage
 
-    eeprom_restore_data();
-    ts.set_conf_callback(eeprom_store_data);    // after each configuration change, data should be written back to EEPROM
+    data_objects_read_eeprom();
+    ts.set_conf_callback(data_objects_update_conf);    // after each configuration change, data should be written back to EEPROM
 
     adc_setup();
     dma_setup();
@@ -223,7 +228,7 @@ void setup()
 
     wait(0.5);      // wait for ADC to collect some measurement values
 
-    update_measurements(&dcdc, &bat, &load, &hs_port, &ls_port);
+    update_measurements(&dcdc, &bat_state, &load, &hs_port, &ls_port);
     calibrate_current_sensors(&dcdc, &load);
 }
 

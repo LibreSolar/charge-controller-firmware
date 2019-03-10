@@ -1,5 +1,5 @@
-/* LibreSolar MPPT charge controller firmware
- * Copyright (c) 2016-2018 Martin Jäger (www.libre.solar)
+/* LibreSolar charge controller firmware
+ * Copyright (c) 2016-2019 Martin Jäger (www.libre.solar)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,13 @@
  * limitations under the License.
  */
 
-#ifndef _CONFIG_H_
-#define _CONFIG_H_
+#ifndef CONFIG_H
+#define CONFIG_H
 
-/* This file is used to define personal settings, e.g. which type of interface
- * at the UEXT port should be used.
+/** @file
+ *
+ * @brief
+ * Used to define personal settings, e.g. which type of interface at the UEXT port should be used.
  */
 
 #define DCDC_MODE_INIT      MODE_MPPT_BUCK
@@ -62,13 +64,13 @@
 #define WIFI_PASS "pass"
 
 // OpenEnergyMonitor emoncms configuration (used in WiFi interface)
-#define EMONCMS_ENABLED true
+#define EMONCMS_ENABLED
 #define EMONCMS_HOST    ""
 #define EMONCMS_APIKEY  ""          // get from emoncms webinterface
 #define EMONCMS_NODE    "mppt"      // name of your device
 
 // MQTT server configuration (used in GSM or WiFi interface)
-#define MQTT_ENABLED false
+#define MQTT_ENABLED
 #define MQTT_HOST "your-host-or-ip"
 #define MQTT_PORT "1883"
 #define MQTT_USER "you"
@@ -76,4 +78,4 @@
 #define MQTT_PUBLISH_TOPIC "nodes2server/report"
 #define MQTT_SUBSCRIBE_TOPIC "server2node/state-req"
 
-#endif /* _CONFIG_H_ */
+#endif /* CONFIG_H */

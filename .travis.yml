@@ -26,3 +26,11 @@ script:
         - cp src/config.h_template src/config.h
         # - platformio ci --lib="lib/Adafruit_GFX" --lib="lib/ThingSet" --project-conf=platformio.ini -e libresolar_0_10,libresolar_0_05
         - platformio run -e libresolar_0_10 -e libresolar_0_05 -e cloudsolar_0_2 -e cloudsolar_0_4
+
+deploy:
+    provider: pages
+    skip-cleanup: true
+    github-token: $GH_REPO_TOKEN
+    keep-history: true
+    on:
+        branch: master

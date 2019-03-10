@@ -1,5 +1,5 @@
-/* LibreSolar MPPT charge controller firmware
- * Copyright (c) 2016-2018 Martin Jäger (www.libre.solar)
+/* LibreSolar charge controller firmware
+ * Copyright (c) 2016-2019 Martin Jäger (www.libre.solar)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,17 +14,18 @@
  * limitations under the License.
  */
 
-#ifndef __POWER_PORT_H__
-#define __POWER_PORT_H__
+#ifndef POWER_PORT_H
+#define POWER_PORT_H
+
+/** @file
+ *
+ * @brief Definition of power ports of a DC/DC converter (high-side or low-side terminal)
+ */
 
 #include <stdbool.h>
 #include "battery.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/* Power port type
+/** Power port type
  *
  * Saves current target settings of either high-side or low-side port of a
  * DC/DC converter. In this way, e.g. a battery can be configured to be
@@ -51,14 +52,10 @@ typedef struct {
     bool input_allowed;             // discharging direction for battery port
 } power_port_t;
 
-void power_port_init_bat(power_port_t *port, battery_t *bat);
+void power_port_init_bat(power_port_t *port, battery_conf_t *bat);
 
 void power_port_init_solar(power_port_t *port);
 
 void power_port_init_nanogrid(power_port_t *port);
 
-#ifdef __cplusplus
-}
-#endif
-
-#endif // __POWER_PORT_H__
+#endif /* POWER_PORT_H */

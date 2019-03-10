@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-#include "mbed.h"
 #include "battery.h"
 #include "config.h"
 #include "pcb.h"
@@ -31,14 +30,9 @@ extern power_port_t hs_port;
 extern load_output_t load;
 extern log_data_t log_data;
 
-void battery_init(battery_t *bat, battery_user_settings_t *bat_user)
+void battery_conf_init(battery_conf_t *bat, bat_type type, int num_cells, float nominal_capacity)
 {
-    // core battery pack specification (set in config.h)
-    bat->type = BATTERY_TYPE;
-    bat->num_cells = BATTERY_NUM_CELLS;
-    bat->nominal_capacity = BATTERY_CAPACITY;
-    bat->num_batteries = 1;             // initialize with only one battery in series
-    bat->soh = 100;                     // assume new battery
+    bat->nominal_capacity = nominal_capacity;
 
     // common values for all batteries
     bat->charge_current_max = bat->nominal_capacity;   // 1C should be safe for all batteries
@@ -46,20 +40,20 @@ void battery_init(battery_t *bat, battery_user_settings_t *bat_user)
     bat->time_limit_recharge = 60;              // sec
     bat->time_limit_CV = 120*60;                // sec
 
-    switch (bat->type)
+    switch (type)
     {
     case BAT_TYPE_FLOODED:
     case BAT_TYPE_AGM:
     case BAT_TYPE_GEL:
-        bat->cell_voltage_max = 2.4;
-        bat->cell_voltage_recharge = 2.3;
+        bat->voltage_max = num_cells * 2.4;
+        bat->voltage_recharge = num_cells * 2.3;
 
-        bat->cell_voltage_load_disconnect = 1.95;
-        bat->cell_voltage_load_reconnect = 2.1;
-        bat->cell_voltage_absolute_min = 1.8;
+        bat->voltage_load_disconnect = num_cells * 1.95;
+        bat->voltage_load_reconnect = num_cells * 2.1;
+        bat->voltage_absolute_min = num_cells * 1.8;
 
-        bat->cell_ocv_full = 2.2;
-        bat->cell_ocv_empty = 1.9;
+        bat->ocv_full = num_cells * 2.2;
+        bat->ocv_empty = num_cells * 1.9;
 
         // https://batteryuniversity.com/learn/article/charging_the_lead_acid_battery
         bat->current_cutoff_CV = bat->nominal_capacity * 0.04;  // 3-5 % of C/1
@@ -67,12 +61,12 @@ void battery_init(battery_t *bat, battery_user_settings_t *bat_user)
         bat->trickle_enabled = true;
         bat->time_trickle_recharge = 30*60;
         // http://batteryuniversity.com/learn/article/charging_the_lead_acid_battery
-        bat->cell_voltage_trickle = (bat->type == BAT_TYPE_FLOODED) ? 2.25 : 2.3;
+        bat->voltage_trickle = num_cells * ((type == BAT_TYPE_FLOODED) ? 2.25 : 2.3);
 
         bat->equalization_enabled = false;
-        bat->cell_voltage_equalization = 2.5;
+        bat->voltage_equalization = num_cells * 2.5;
         bat->time_limit_equalization = 60*60;
-        bat->current_limit_equalization = (1.0 /7.0) * bat->nominal_capacity;
+        bat->current_limit_equalization = (1.0 / 7.0) * bat->nominal_capacity;
         bat->equalization_trigger_time = 8;         // weeks
         bat->equalization_trigger_deep_cycles = 10; // times
 
@@ -81,15 +75,15 @@ void battery_init(battery_t *bat, battery_user_settings_t *bat_user)
         break;
 
     case BAT_TYPE_LFP:
-        bat->cell_voltage_max = 3.55;               // CV voltage
-        bat->cell_voltage_recharge = 3.35;
+        bat->voltage_max = num_cells * 3.55;               // CV voltage
+        bat->voltage_recharge = num_cells * 3.35;
 
-        bat->cell_voltage_load_disconnect = 3.0;
-        bat->cell_voltage_load_reconnect  = 3.15;
-        bat->cell_voltage_absolute_min = 2.0;
+        bat->voltage_load_disconnect = num_cells * 3.0;
+        bat->voltage_load_reconnect  = num_cells * 3.15;
+        bat->voltage_absolute_min = num_cells * 2.0;
 
-        bat->cell_ocv_full = 3.4;       // will give really bad SOC calculation
-        bat->cell_ocv_empty = 3.0;      // because of flat OCV of LFP cells...
+        bat->ocv_full = num_cells * 3.4;       // will give really bad SOC calculation
+        bat->ocv_empty = num_cells * 3.0;      // because of flat OCV of LFP cells...
 
         bat->current_cutoff_CV = bat->nominal_capacity / 10;    // C/10 cut-off at end of CV phase by default
 
@@ -100,15 +94,15 @@ void battery_init(battery_t *bat, battery_user_settings_t *bat_user)
 
     case BAT_TYPE_NMC:
     case BAT_TYPE_NMC_HV:
-        bat->cell_voltage_max = (bat->type == BAT_TYPE_NMC_HV) ? 4.35 : 4.20;
-        bat->cell_voltage_recharge = 3.9;
+        bat->voltage_max = (type == BAT_TYPE_NMC_HV) ? 4.35 : 4.20;
+        bat->voltage_recharge = num_cells * 3.9;
 
-        bat->cell_voltage_load_disconnect = 3.3;
-        bat->cell_voltage_load_reconnect  = 3.6;
-        bat->cell_voltage_absolute_min = 2.5;
+        bat->voltage_load_disconnect = num_cells * 3.3;
+        bat->voltage_load_reconnect  = num_cells * 3.6;
+        bat->voltage_absolute_min = num_cells * 2.5;
 
-        bat->cell_ocv_full = 4.0;
-        bat->cell_ocv_empty = 3.0;
+        bat->ocv_full = num_cells * 4.0;
+        bat->ocv_empty = num_cells * 3.0;
 
         bat->current_cutoff_CV = bat->nominal_capacity / 10;    // C/10 cut-off at end of CV phase by default
 
@@ -118,82 +112,78 @@ void battery_init(battery_t *bat, battery_user_settings_t *bat_user)
         break;
 
     case BAT_TYPE_NONE:
-    case BAT_TYPE_CUSTOM:
         break;
     }
-
-    // initialize bat_user
-    bat_user->nominal_capacity              = bat->nominal_capacity;
-    bat_user->voltage_max                   = bat->num_cells * bat->cell_voltage_max;
-    bat_user->voltage_recharge              = bat->num_cells * bat->cell_voltage_recharge;
-    bat_user->voltage_load_reconnect        = bat->num_cells * bat->cell_voltage_load_reconnect;
-    bat_user->voltage_load_disconnect       = bat->num_cells * bat->cell_voltage_load_disconnect;
-    bat_user->voltage_absolute_min          = bat->num_cells * bat->cell_voltage_absolute_min;
-    bat_user->charge_current_max            = bat->charge_current_max;
-    bat_user->current_cutoff_CV             = bat->current_cutoff_CV;
-    bat_user->time_limit_CV                 = bat->time_limit_CV;
-    bat_user->trickle_enabled               = bat->trickle_enabled;
-    bat_user->time_trickle_recharge         = bat->time_trickle_recharge;
-    bat_user->temperature_compensation      = bat->temperature_compensation;
-
-    // call user function (defined in config.cpp to overwrite above initializations)
-    battery_init_user(bat, bat_user);
 }
 
-// weak function to be overridden by user in config.cpp
-WEAK void battery_init_user(battery_t *bat, battery_user_settings_t *bat_user) {;}
-
-// checks settings in bat_user for plausibility and writes them to bat if everything is fine
-bool battery_user_settings(battery_t *bat, battery_user_settings_t *bat_user)
+// checks settings in bat_conf for plausibility
+bool battery_conf_check(battery_conf_t *bat_conf)
 {
     // things to check:
-    // - cell_voltage_XXX in the range of what the charger can handle?
     // - load_disconnect/reconnect hysteresis makes sense?
     // - cutoff current not extremely low/high
     // - capacity plausible
 
-    if (bat_user->voltage_max > LOW_SIDE_VOLTAGE_MAX &&
-        bat_user->voltage_load_reconnect > (bat_user->voltage_load_disconnect + 0.8) &&
-        bat_user->voltage_recharge < (bat_user->voltage_max - 0.6) &&
-        bat_user->voltage_recharge > (bat_user->voltage_load_disconnect + 1) &&
-        bat_user->voltage_load_disconnect > (bat_user->voltage_absolute_min + 0.5) &&
-        bat_user->current_cutoff_CV < (bat_user->nominal_capacity / 9.0) &&    // C/10 or lower allowed
-        bat_user->current_cutoff_CV > 0.01 &&
-        (bat_user->trickle_enabled == false ||
-            (bat_user->voltage_trickle < bat_user->voltage_max &&
-             bat_user->voltage_trickle > bat_user->voltage_load_disconnect))
-       ) {
+    /*
+    printf("battery_conf_check: %d %d %d %d %d %d %d\n",
+        bat_conf->voltage_load_reconnect > (bat_conf->voltage_load_disconnect + 0.6),
+        bat_conf->voltage_recharge < (bat_conf->voltage_max - 0.4),
+        bat_conf->voltage_recharge > (bat_conf->voltage_load_disconnect + 1),
+        bat_conf->voltage_load_disconnect > (bat_conf->voltage_absolute_min + 0.4),
+        bat_conf->current_cutoff_CV < (bat_conf->nominal_capacity / 10.0),    // C/10 or lower allowed
+        bat_conf->current_cutoff_CV > 0.01,
+        (bat_conf->trickle_enabled == false ||
+            (bat_conf->voltage_trickle < bat_conf->voltage_max &&
+             bat_conf->voltage_trickle > bat_conf->voltage_load_disconnect))
+    );
+    */
 
-        // TODO: stop DC/DC
+    return
+       (bat_conf->voltage_load_reconnect > (bat_conf->voltage_load_disconnect + 0.6) &&
+        bat_conf->voltage_recharge < (bat_conf->voltage_max - 0.4) &&
+        bat_conf->voltage_recharge > (bat_conf->voltage_load_disconnect + 1) &&
+        bat_conf->voltage_load_disconnect > (bat_conf->voltage_absolute_min + 0.4) &&
+        bat_conf->current_cutoff_CV < (bat_conf->nominal_capacity / 10.0) &&    // C/10 or lower allowed
+        bat_conf->current_cutoff_CV > 0.01 &&
+        (bat_conf->trickle_enabled == false ||
+            (bat_conf->voltage_trickle < bat_conf->voltage_max &&
+             bat_conf->voltage_trickle > bat_conf->voltage_load_disconnect))
+       );
+}
 
-        bat->type                           = BAT_TYPE_CUSTOM;
-        bat->num_cells                      = 1;    // custom battery defines voltages on battery level
-        bat->nominal_capacity               = bat_user->nominal_capacity;
-        bat->cell_voltage_max               = bat_user->voltage_max;
-        bat->cell_voltage_recharge          = bat_user->voltage_recharge;
-        bat->cell_voltage_load_reconnect    = bat_user->voltage_load_reconnect;
-        bat->cell_voltage_load_disconnect   = bat_user->voltage_load_disconnect;
-        bat->cell_voltage_absolute_min      = bat_user->voltage_absolute_min;
-        bat->charge_current_max             = bat_user->charge_current_max;
-        bat->current_cutoff_CV              = bat_user->current_cutoff_CV;
-        bat->time_limit_CV                  = bat_user->time_limit_CV;
-        bat->trickle_enabled                = bat_user->trickle_enabled;
-        bat->time_trickle_recharge          = bat_user->time_trickle_recharge;
-        bat->temperature_compensation       = bat_user->temperature_compensation;
+void battery_conf_overwrite(battery_conf_t *source, battery_conf_t *destination)
+{
+    // TODO: stop DC/DC
 
-        // TODO:
-        // - update also DC/DC etc. (now this function only works at system startup)
-        // - restart DC/DC
+    destination->nominal_capacity               = source->nominal_capacity;
+    destination->voltage_max                    = source->voltage_max;
+    destination->voltage_recharge               = source->voltage_recharge;
+    destination->voltage_load_reconnect         = source->voltage_load_reconnect;
+    destination->voltage_load_disconnect        = source->voltage_load_disconnect;
+    destination->voltage_absolute_min           = source->voltage_absolute_min;
+    destination->charge_current_max             = source->charge_current_max;
+    destination->current_cutoff_CV              = source->current_cutoff_CV;
+    destination->time_limit_CV                  = source->time_limit_CV;
+    destination->trickle_enabled                = source->trickle_enabled;
+    destination->voltage_trickle                = source->voltage_trickle;
+    destination->time_trickle_recharge          = source->time_trickle_recharge;
+    destination->temperature_compensation       = source->temperature_compensation;
 
-        return true;
-    }
+    // TODO:
+    // - update also DC/DC etc. (now this function only works at system startup)
+    // - restart DC/DC
+}
 
-    return false;
+
+void battery_state_init(battery_state_t *bat_state)
+{
+    bat_state->num_batteries = 1;             // initialize with only one battery in series
+    bat_state->soh = 100;                     // assume new battery
 }
 
 //----------------------------------------------------------------------------
 // must be called exactly once per second, otherwise energy calculation gets wrong
-void battery_update_energy(battery_t *bat, float voltage, float current)
+void battery_update_energy(battery_conf_t *bat_conf, battery_state_t *bat, float voltage, float current)
 {
     // static variables so that the are not reset during each function call
     static int seconds_zero_solar = 0;
@@ -228,8 +218,8 @@ void battery_update_energy(battery_t *bat, float voltage, float current)
     bat->discharged_Ah += (load.current - current) / 3600.0;
 
     if (fabs(current) < 0.2) {
-        int soc_new = (int)((voltage / bat->num_cells - bat->cell_ocv_empty) /
-                   (bat->cell_ocv_full - bat->cell_ocv_empty) * 10000.0);
+        int soc_new = (int)((voltage - bat_conf->ocv_empty) /
+                   (bat_conf->ocv_full - bat_conf->ocv_empty) * 10000.0);
 
         if (soc_new > 10000) {
             soc_new = 10000;

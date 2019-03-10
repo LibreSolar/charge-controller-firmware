@@ -1,16 +1,32 @@
+/* LibreSolar charge controller firmware
+ * Copyright (c) 2016-2019 Martin Jäger (www.libre.solar)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-#ifndef __LOG_H_
-#define __LOG_H_
+#ifndef LOG_H
+#define LOG_H
+
+/** @file
+ *
+ * @brief
+ * Structs needed for data logging (like max/min values, etc.)
+ */
 
 #include <stdbool.h>
 #include <stdint.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-
-/* Log Data
+/** Log Data
  *
  * Saves maximum ever measured values to EEPROM
  */
@@ -25,9 +41,4 @@ typedef struct {
     int day_counter;
 } log_data_t;
 
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif // __LOG_H_
+#endif /* LOG_H */

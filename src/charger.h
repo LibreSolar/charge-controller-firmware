@@ -1,5 +1,5 @@
-/* LibreSolar MPPT charge controller firmware
- * Copyright (c) 2016-2018 Martin Jäger (www.libre.solar)
+/* LibreSolar charge controller firmware
+ * Copyright (c) 2016-2019 Martin Jäger (www.libre.solar)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,13 @@
  * limitations under the License.
  */
 
-#ifndef __CHARGER_H_
-#define __CHARGER_H_
+/** @file
+ *
+ * @brief Battery charger state machine.
+ */
+
+#ifndef CHARGER_H
+#define CHARGER_H
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -23,11 +28,35 @@
 #include "dcdc.h"
 #include "power_port.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+/** Possible charger states
 
-// possible charger states
+ ## Idle
+ Initial state of the charge controller. If the solar voltage is high enough
+ and the battery is not full, charging in CC mode is started.
+
+ ## CC / bulk charging
+ The battery is charged with maximum possible current (MPPT algorithm is
+ active) until the CV voltage limit is reached.
+
+ ## CV / absorption charging
+ Lead-acid batteries are charged for some time using a slightly higher charge
+ voltage. After a current cutoff limit or a time limit is reached, the charger
+ goes into trickle or equalization mode for lead-acid batteries or back into
+ Standby for Li-ion batteries.
+
+ ## Trickle charging
+ This mode is kept forever for a lead-acid battery and keeps the battery at
+ full state of charge. If too much power is drawn from the battery, the
+ charger switches back into CC / bulk charging mode.
+
+ ## Equalization charging
+ This mode is only used for lead-acid batteries after several deep-discharge
+ cycles or a very long period of time with no equalization. Voltage is
+ increased to 15V or above, so care must be taken for the other system
+ components attached to the battery. (currently, no equalization charging is
+ enabled in the software)
+
+ */
 enum charger_state {
     CHG_STATE_IDLE,
     CHG_STATE_CC,
@@ -36,12 +65,8 @@ enum charger_state {
     CHG_STATE_EQUALIZATION
 };
 
-/* Charger state machine update, should be called exactly once per second
+/** Charger state machine update, should be called once per second
  */
-void charger_state_machine(power_port_t *port, battery_t *bat, float voltage, float current);
+void charger_state_machine(power_port_t *port, battery_conf_t *bat_conf, battery_state_t *bat_state, float voltage, float current);
 
-#ifdef __cplusplus
-}
-#endif
-
-#endif // CHARGER_H
+#endif /* CHARGER_H */

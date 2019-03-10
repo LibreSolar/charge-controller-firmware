@@ -27,12 +27,13 @@
 #include "eeprom.h"
 
 extern log_data_t log_data;
-extern battery_t bat;
+extern battery_state_t bat_state;
+extern battery_conf_t bat_conf;
+extern battery_conf_t bat_conf_user;
 extern dcdc_t dcdc;
 extern load_output_t load;
 extern power_port_t hs_port;
 extern power_port_t ls_port;
-extern battery_user_settings_t bat_user;
 
 const char* manufacturer = "Libre Solar";
 const char* deviceName = "MPPT Solar Charge Controller";
@@ -51,12 +52,12 @@ const data_object_t data_objects[] = {
     {0x04, TS_CAT_CONF,   TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_BOOL,    0, (void*) &(load.usb_enabled_target),       "USBEnDefault"},
     {0x05, TS_CAT_OUTPUT, TS_ACCESS_READ,                   TS_T_INT32,   0, (void*) &(load.state),                    "LoadState"},
     {0x06, TS_CAT_OUTPUT, TS_ACCESS_READ,                   TS_T_INT32,   0, (void*) &(load.usb_state),                "USBState"},
-    {0x07, TS_CAT_OUTPUT, TS_ACCESS_READ,                   TS_T_UINT32,  0, (void*) &(bat.input_Wh_total),            "InputTotal_Wh"},
-    {0x08, TS_CAT_OUTPUT, TS_ACCESS_READ,                   TS_T_UINT32,  0, (void*) &(bat.output_Wh_total),           "OutputTotal_Wh"},
-    {0x09, TS_CAT_OUTPUT, TS_ACCESS_READ,                   TS_T_UINT16,  0, (void*) &(bat.soc),                       "SOC_%"},     // output will be uint8_t
-    {0x0A, TS_CAT_OUTPUT, TS_ACCESS_READ,                   TS_T_UINT16,  0, (void*) &(bat.useable_capacity),          "BatUse_Ah"}, // useable battery capacity
-    {0x10, TS_CAT_OUTPUT, TS_ACCESS_READ,                   TS_T_UINT16,  0, (void*) &(bat.num_full_charges),          "NumFullChg"},
-    {0x11, TS_CAT_OUTPUT, TS_ACCESS_READ,                   TS_T_UINT16,  0, (void*) &(bat.num_deep_discharges),       "NumDeepDis"},
+    {0x07, TS_CAT_OUTPUT, TS_ACCESS_READ,                   TS_T_UINT32,  0, (void*) &(bat_state.input_Wh_total),      "InputTotal_Wh"},
+    {0x08, TS_CAT_OUTPUT, TS_ACCESS_READ,                   TS_T_UINT32,  0, (void*) &(bat_state.output_Wh_total),     "OutputTotal_Wh"},
+    {0x09, TS_CAT_OUTPUT, TS_ACCESS_READ,                   TS_T_UINT16,  0, (void*) &(bat_state.soc),                 "SOC_%"},     // output will be uint8_t
+    {0x0A, TS_CAT_OUTPUT, TS_ACCESS_READ,                   TS_T_UINT16,  0, (void*) &(bat_state.useable_capacity),    "BatUse_Ah"}, // useable battery capacity
+    {0x10, TS_CAT_OUTPUT, TS_ACCESS_READ,                   TS_T_UINT16,  0, (void*) &(bat_state.num_full_charges),    "NumFullChg"},
+    {0x11, TS_CAT_OUTPUT, TS_ACCESS_READ,                   TS_T_UINT16,  0, (void*) &(bat_state.num_deep_discharges), "NumDeepDis"},
 
     // normal priority data objects (IDs > 23 = 0x17)
     {0x18, TS_CAT_INFO, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_UINT32, 0, (void*) &(deviceID),                         "DeviceID"},
@@ -64,19 +65,19 @@ const data_object_t data_objects[] = {
     {0x1A, TS_CAT_INFO, TS_ACCESS_READ,                   TS_T_STRING, 0, (void*) &(deviceName),                       "DeviceName"},
 
     // config
-    {0x20, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 1, (void*) &(bat_user.nominal_capacity),         "BatNom_Ah"},
-    {0x21, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 2, (void*) &(bat_user.voltage_recharge),         "BatRecharge_V"},
-    {0x22, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 2, (void*) &(bat_user.voltage_absolute_min),     "BatAbsMin_V"},
-    {0x23, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 1, (void*) &(bat_user.charge_current_max),       "BatChgMax_A"},
-    {0x24, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 2, (void*) &(bat_user.voltage_max),              "BatTarget_V"},
-    {0x25, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 1, (void*) &(bat_user.current_cutoff_CV),        "BatCutoff_A"},
-    {0x26, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_INT32,   0, (void*) &(bat_user.time_limit_CV),            "BatCutoff_s"},
-    {0x27, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_BOOL,    0, (void*) &(bat_user.trickle_enabled),          "TrickleEn"},
-    {0x28, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 0, (void*) &(bat_user.voltage_trickle),          "Trickle_V"},
-    {0x29, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_INT32,   0, (void*) &(bat_user.time_trickle_recharge),    "TrickleRecharge_s"},
-    {0x2A, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 2, (void*) &(bat_user.voltage_load_disconnect),  "LoadDisconnect_V"},
-    {0x2B, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 2, (void*) &(bat_user.voltage_load_reconnect),   "LoadReconnect_V"},
-    {0x2C, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 2, (void*) &(bat_user.temperature_compensation), "TempFactor"},
+    {0x20, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 1, (void*) &(bat_conf_user.nominal_capacity),         "BatNom_Ah"},
+    {0x21, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 2, (void*) &(bat_conf_user.voltage_recharge),         "BatRecharge_V"},
+    {0x22, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 2, (void*) &(bat_conf_user.voltage_absolute_min),     "BatAbsMin_V"},
+    {0x23, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 1, (void*) &(bat_conf_user.charge_current_max),       "BatChgMax_A"},
+    {0x24, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 2, (void*) &(bat_conf_user.voltage_max),              "BatTarget_V"},
+    {0x25, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 1, (void*) &(bat_conf_user.current_cutoff_CV),        "BatCutoff_A"},
+    {0x26, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_INT32,   0, (void*) &(bat_conf_user.time_limit_CV),            "BatCutoff_s"},
+    {0x27, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_BOOL,    0, (void*) &(bat_conf_user.trickle_enabled),          "TrickleEn"},
+    {0x28, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 0, (void*) &(bat_conf_user.voltage_trickle),          "Trickle_V"},
+    {0x29, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_INT32,   0, (void*) &(bat_conf_user.time_trickle_recharge),    "TrickleRecharge_s"},
+    {0x2A, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 2, (void*) &(bat_conf_user.voltage_load_disconnect),  "LoadDisconnect_V"},
+    {0x2B, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 2, (void*) &(bat_conf_user.voltage_load_reconnect),   "LoadReconnect_V"},
+    {0x2C, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 2, (void*) &(bat_conf_user.temperature_compensation), "TempFactor"},
 
     // input data
     {0x31, TS_CAT_INPUT, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_BOOL,   0, (void*) &(load.enabled_target),     "LoadEnTarget"},
@@ -91,16 +92,16 @@ const data_object_t data_objects[] = {
     {0x46, TS_CAT_OUTPUT, TS_ACCESS_READ, TS_T_FLOAT32, 2, (void*) &(log_data.dcdc_current_max),     "BatMax_A"},
     {0x47, TS_CAT_OUTPUT, TS_ACCESS_READ, TS_T_FLOAT32, 2, (void*) &(load.current),                  "Load_A"},
     {0x48, TS_CAT_OUTPUT, TS_ACCESS_READ, TS_T_FLOAT32, 2, (void*) &(log_data.load_current_max),     "LoadMax_A"},
-    {0x49, TS_CAT_OUTPUT, TS_ACCESS_READ, TS_T_FLOAT32, 1, (void*) &(bat.temperature),               "Bat_°C"},
+    {0x49, TS_CAT_OUTPUT, TS_ACCESS_READ, TS_T_FLOAT32, 1, (void*) &(bat_state.temperature),         "Bat_°C"},
     {0x4A, TS_CAT_OUTPUT, TS_ACCESS_READ, TS_T_FLOAT32, 1, (void*) &(dcdc.temp_mosfets),             "Internal_°C"},
     {0x4B, TS_CAT_OUTPUT, TS_ACCESS_READ, TS_T_FLOAT32, 1, (void*) &(log_data.temp_mosfets_max),     "InternalMax_°C"},
-    {0x4D, TS_CAT_OUTPUT, TS_ACCESS_READ, TS_T_FLOAT32, 2, (void*) &(bat.input_Wh_day),              "InputDay_Wh"},
-    {0x4E, TS_CAT_OUTPUT, TS_ACCESS_READ, TS_T_FLOAT32, 2, (void*) &(bat.output_Wh_day),             "OutputDay_Wh"},
-    {0x50, TS_CAT_OUTPUT, TS_ACCESS_READ, TS_T_UINT16,  0, (void*) &(bat.state),                     "ChgState"},
+    {0x4D, TS_CAT_OUTPUT, TS_ACCESS_READ, TS_T_FLOAT32, 2, (void*) &(bat_state.input_Wh_day),        "InputDay_Wh"},
+    {0x4E, TS_CAT_OUTPUT, TS_ACCESS_READ, TS_T_FLOAT32, 2, (void*) &(bat_state.output_Wh_day),       "OutputDay_Wh"},
+    {0x50, TS_CAT_OUTPUT, TS_ACCESS_READ, TS_T_UINT16,  0, (void*) &(bat_state.chg_state),           "ChgState"},
     {0x51, TS_CAT_OUTPUT, TS_ACCESS_READ, TS_T_INT32,   0, (void*) &(log_data.day_counter),          "DayCount"},
-    {0x52, TS_CAT_OUTPUT, TS_ACCESS_READ, TS_T_UINT16,  0, (void*) &(bat.soh),                       "SOH_%"},     // output will be uint8_t
-    {0x53, TS_CAT_OUTPUT, TS_ACCESS_READ, TS_T_UINT16,  0, (void*) &(bat.discharged_Ah),             "Dis_Ah"},    // coulomb counter
-    {0x54, TS_CAT_OUTPUT, TS_ACCESS_READ, TS_T_UINT16,  0, (void*) &(bat.useable_capacity),          "BatUse_Ah"}, // useable battery capacity
+    {0x52, TS_CAT_OUTPUT, TS_ACCESS_READ, TS_T_UINT16,  0, (void*) &(bat_state.soh),                 "SOH_%"},     // output will be uint8_t
+    {0x53, TS_CAT_OUTPUT, TS_ACCESS_READ, TS_T_UINT16,  0, (void*) &(bat_state.discharged_Ah),       "Dis_Ah"},    // coulomb counter
+    {0x54, TS_CAT_OUTPUT, TS_ACCESS_READ, TS_T_UINT16,  0, (void*) &(bat_state.useable_capacity),    "BatUse_Ah"}, // useable battery capacity
     // ToDo: GPS position (latitude / longitude), see here: https://github.com/allthingstalk/cbor/blob/master/CBOR-Tag103-Geographic-Coordinates.md
 
     // calibration data (write only after authentication)
@@ -136,3 +137,34 @@ ThingSet ts(
     data_objects, sizeof(data_objects)/sizeof(data_object_t),
     pub_channels, sizeof(pub_channels)/sizeof(ts_pub_channel_t)
 );
+
+void data_objects_update_conf()
+{
+    bool changed = false;
+    if (battery_conf_check(&bat_conf_user)) {
+        printf("New config valid and activated.\n");
+        battery_conf_overwrite(&bat_conf_user, &bat_conf);
+        changed = true;
+    }
+    else {
+        printf("Check not passed, getting back old config.\n");
+        battery_conf_overwrite(&bat_conf, &bat_conf_user);
+    }
+
+    // TODO: check also for changes in Load/USB EnDefault
+    changed = true; // temporary hack
+
+    if (changed)
+        eeprom_store_data();
+}
+
+void data_objects_read_eeprom()
+{
+    eeprom_restore_data();
+    if (battery_conf_check(&bat_conf_user)) {
+        battery_conf_overwrite(&bat_conf_user, &bat_conf);
+    }
+    else {
+        battery_conf_overwrite(&bat_conf, &bat_conf_user);
+    }
+}

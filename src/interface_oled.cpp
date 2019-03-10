@@ -49,7 +49,7 @@ const unsigned char bmp_disconnected [] = {
 I2C i2c(PIN_UEXT_SDA, PIN_UEXT_SCL);
 Adafruit_SSD1306_I2c oled(i2c, PIN_UEXT_SSEL, 0x78, 64, 128);
 
-void oled_output(dcdc_t *dcdc, power_port_t *solar_port,  power_port_t *bat_port, battery_t *bat, load_output_t *load)
+void oled_output(dcdc_t *dcdc, power_port_t *solar_port,  power_port_t *bat_port, battery_state_t *bat, load_output_t *load)
 {
     float tmp;
 
@@ -90,10 +90,10 @@ void oled_output(dcdc_t *dcdc, power_port_t *solar_port,  power_port_t *bat_port
         oled.setTextCursor(8, 18);
         oled.printf("n/a");
     }
-    if (solar_port->voltage > bat_port->voltage) {
+    //if (solar_port->voltage > bat_port->voltage) {
         oled.setTextCursor(0, 26);
         oled.printf("%4.1fV", solar_port->voltage);
-    }
+    //}
 
     // battey data
     tmp = bat_port->voltage * (bat_port->current - load->current);

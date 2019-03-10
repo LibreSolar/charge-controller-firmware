@@ -16,17 +16,17 @@
 
 #include "power_port.h"
 
-void power_port_init_bat(power_port_t *port, battery_t *bat)
+void power_port_init_bat(power_port_t *port, battery_conf_t *bat)
 {
     port->input_allowed = true;     // discharging allowed
     port->output_allowed = true;    // charging allowed
 
-    port->voltage_input_start = bat->cell_voltage_load_reconnect * bat->num_cells;
-    port->voltage_input_stop = bat->cell_voltage_load_disconnect * bat->num_cells;
+    port->voltage_input_start = bat->voltage_load_reconnect;
+    port->voltage_input_stop = bat->voltage_load_disconnect;
     port->current_input_max = -bat->charge_current_max;          // TODO: discharge current
 
-    port->voltage_output_target = bat->cell_voltage_max * bat->num_cells;
-    port->voltage_output_min = bat->cell_voltage_absolute_min * bat->num_cells;
+    port->voltage_output_target = bat->voltage_max;
+    port->voltage_output_min = bat->voltage_absolute_min;
     port->current_output_max = bat->charge_current_max;
 }
 

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#include "adc_dma.h"
 #include "mbed.h"
+#include "adc_dma.h"
 #include "pcb.h"        // contains defines for pins
 #include <math.h>       // log for thermistor calculation
 #include "log.h"
@@ -61,7 +61,7 @@ void calibrate_current_sensors(dcdc_t *dcdc, load_output_t *load)
 }
 
 //----------------------------------------------------------------------------
-void update_measurements(dcdc_t *dcdc, battery_t *bat, load_output_t *load, power_port_t *hs, power_port_t *ls)
+void update_measurements(dcdc_t *dcdc, battery_state_t *bat, load_output_t *load, power_port_t *hs, power_port_t *ls)
 {
     //int v_temp, rts;
 

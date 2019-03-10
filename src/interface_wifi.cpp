@@ -28,7 +28,7 @@ extern log_data_t log_data;
 extern power_port_t hs_port;
 extern power_port_t ls_port;
 extern load_output_t load;
-extern battery_t bat;
+extern battery_state_t bat_state;
 extern dcdc_t dcdc;
 extern uint32_t deviceID;
 
@@ -114,8 +114,8 @@ int wifi_send_emoncms_data()
         "dcdcEn:%d,loadEn:%d,chgState:%d,tempInt:%.1f,nFullChg:%d,nDeepDis:%d,"
         "eInputDay_Wh:%.2f,eOutputDay_Wh:%.2f,SOC:%d,day:%d,SOH:%d,qDis_Ah:%.3f,qBatUse_Ah:%.2f}",
         EMONCMS_NODE, hs_port.voltage, ls_port.voltage, ls_port.current, load.current,
-        half_bridge_enabled(), load.enabled, bat.state, dcdc.temp_mosfets, bat.num_full_charges, bat.num_deep_discharges,
-        bat.input_Wh_day, bat.output_Wh_day, bat.soc, log_data.day_counter, bat.soh, bat.discharged_Ah, bat.useable_capacity);
+        half_bridge_enabled(), load.enabled, bat_state.chg_state, dcdc.temp_mosfets, bat_state.num_full_charges, bat_state.num_deep_discharges,
+        bat_state.input_Wh_day, bat_state.output_Wh_day, bat_state.soc, log_data.day_counter, bat_state.soh, bat_state.discharged_Ah, bat_state.useable_capacity);
     strcat(url, "&apikey=" EMONCMS_APIKEY);
     //printf("%s\n", url);
 
@@ -191,7 +191,7 @@ void wifi_process()
             break;
         case STATE_INTERNET_CONN:
             if (wifi_check_internet_connected()) {
-#if EMONCMS_ENABLED == true
+#ifdef EMONCMS_ENABLED
                 wifi_send_emoncms_data();
 #endif
             }
