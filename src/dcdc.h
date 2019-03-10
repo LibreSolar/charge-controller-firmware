@@ -18,38 +18,12 @@
 #define __DCDC_H_
 
 #include <stdbool.h>
-#include "structs.h"
+#include "battery.h"
+#include "power_port.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-/* DC/DC port type
- *
- * Saves current target settings of either high-side or low-side port of a
- * DC/DC converter. In this way, e.g. a battery can be configured to be
- * connected to high or low side of DC/DC converter w/o having to rewrite
- * the control algorithm.
- */
-typedef struct {
-    float voltage;                  // actual measurements
-    float current;
-
-    float voltage_output_target;    // target voltage if port is configured as output
-    float droop_resistance;         // v_target = v_out_max - r_droop * current
-    float voltage_output_min;       // minimum voltage to allow current output (necessary
-                                    // to prevent charging of deep-discharged Li-ion batteries)
-
-    // minimum voltage to allow current input (= discharging of batteries)
-    float voltage_input_start;      // starting point for discharging of batteries (load reconnect)
-    float voltage_input_stop;       // absolute minimum = load disconnect for batteries
-
-    float current_output_max;       // charging direction for battery port
-    float current_input_max;        // discharging direction for battery port: must be negative value !!!
-
-    bool output_allowed;            // charging direction for battery port
-    bool input_allowed;             // discharging direction for battery port
-} dcdc_port_t;
 
 /* DC/DC basic operation mode
  *
@@ -101,11 +75,7 @@ typedef struct {
  */
 void dcdc_init(dcdc_t *dcdc);
 
-void dcdc_port_init_bat(dcdc_port_t *port, battery_t *bat);
-void dcdc_port_init_solar(dcdc_port_t *port);
-void dcdc_port_init_nanogrid(dcdc_port_t *port);
-
-void dcdc_control(dcdc_t *dcdc, dcdc_port_t *high_side, dcdc_port_t *low_side);
+void dcdc_control(dcdc_t *dcdc, power_port_t *high_side, power_port_t *low_side);
 
 #ifdef __cplusplus
 }

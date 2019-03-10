@@ -14,32 +14,22 @@
  * limitations under the License.
  */
 
-#include "bat_charger.h"
+#include "mbed.h"
+#include "battery.h"
 #include "config.h"
 #include "pcb.h"
-#include "half_bridge.h"
-#include "load.h"
 
-#include <time.h>       // for time(NULL) function
+#include "power_port.h"
+#include "load.h"
+#include "log.h"
+
 #include <math.h>       // for fabs function
 
-
-extern load_output_t load;      // ToDo: Remove global definitions!
-extern dcdc_port_t ls_port;
-extern dcdc_port_t hs_port;
+// ToDo: Remove global definitions!
+extern power_port_t ls_port;
+extern power_port_t hs_port;
+extern load_output_t load;
 extern log_data_t log_data;
-extern dcdc_t dcdc;
-
-// private function
-void _enter_state(battery_t* bat, int next_state)
-{
-    //printf("Enter State: %d\n", next_state);
-    bat->time_state_changed = time(NULL);
-    bat->state = next_state;
-}
-
-// weak function to be overridden by user in config.cpp
-WEAK void battery_init_user(battery_t *bat, battery_user_settings_t *bat_user) {;}
 
 void battery_init(battery_t *bat, battery_user_settings_t *bat_user)
 {
@@ -150,6 +140,9 @@ void battery_init(battery_t *bat, battery_user_settings_t *bat_user)
     battery_init_user(bat, bat_user);
 }
 
+// weak function to be overridden by user in config.cpp
+WEAK void battery_init_user(battery_t *bat, battery_user_settings_t *bat_user) {;}
+
 // checks settings in bat_user for plausibility and writes them to bat if everything is fine
 bool battery_user_settings(battery_t *bat, battery_user_settings_t *bat_user)
 {
@@ -196,134 +189,6 @@ bool battery_user_settings(battery_t *bat, battery_user_settings_t *bat_user)
     }
 
     return false;
-}
-
-/*****************************************************************************
- *  Charger state machine
-
- ## Idle
- Initial state of the charge controller. If the solar voltage is high enough
- and the battery is not full, charging in CC mode is started.
-
- ## CC / bulk charging
- The battery is charged with maximum possible current (MPPT algorithm is
- active) until the CV voltage limit is reached.
-
- ## CV / absorption charging
- Lead-acid batteries are charged for some time using a slightly higher charge
- voltage. After a current cutoff limit or a time limit is reached, the charger
- goes into trickle or equalization mode for lead-acid batteries or back into
- Standby for Li-ion batteries.
-
- ## Trickle charging
- This mode is kept forever for a lead-acid battery and keeps the battery at
- full state of charge. If too much power is drawn from the battery, the
- charger switches back into CC / bulk charging mode.
-
- ## Equalization charging
- This mode is only used for lead-acid batteries after several deep-discharge
- cycles or a very long period of time with no equalization. Voltage is
- increased to 15V or above, so care must be taken for the other system
- components attached to the battery. (currently, no equalization charging is
- enabled in the software)
-
- */
-void charger_state_machine(dcdc_port_t *port, battery_t *bat, float voltage, float current)
-{
-    //printf("time_state_change = %d, time = %d, v_bat = %f, i_bat = %f\n", bat->time_state_changed, time(NULL), voltage, current);
-
-    // Load management
-    // battery port input state (i.e. battery discharging direction) defines load state
-    if (port->input_allowed == true &&
-        voltage < bat->cell_voltage_load_disconnect * bat->num_cells)
-    {
-        port->input_allowed = false;
-        bat->num_deep_discharges++;
-
-        if (bat->useable_capacity < 0.1) {
-            bat->useable_capacity = bat->discharged_Ah;
-        } else {
-            // slowly adapt new measurements with low-pass filter
-            bat->useable_capacity = 0.8 * bat->useable_capacity + 0.2 * bat->discharged_Ah;
-        }
-
-        // simple SOH estimation
-        bat->soh = bat->useable_capacity / bat->nominal_capacity;
-    }
-    if (voltage >= bat->cell_voltage_load_reconnect * bat->num_cells) {
-        port->input_allowed = true;
-    }
-
-    // state machine
-    switch (bat->state) {
-    case CHG_STATE_IDLE: {
-        if  (voltage < bat->num_cells * bat->cell_voltage_recharge
-                && (time(NULL) - bat->time_state_changed) > bat->time_limit_recharge)
-        {
-            port->voltage_output_target = bat->num_cells * bat->cell_voltage_max;
-            port->current_output_max = bat->charge_current_max;
-            port->output_allowed = true;
-            bat->full = false;
-            _enter_state(bat, CHG_STATE_CC);
-        }
-        break;
-    }
-    case CHG_STATE_CC: {
-        if (voltage > port->voltage_output_target) {
-            port->voltage_output_target = bat->num_cells * bat->cell_voltage_max;
-            _enter_state(bat, CHG_STATE_CV);
-        }
-        break;
-    }
-    case CHG_STATE_CV: {
-        if (voltage >= port->voltage_output_target) {
-            bat->time_voltage_limit_reached = time(NULL);
-        }
-
-        // cut-off limit reached because battery full (i.e. CV mode still
-        // reached by available solar power within last 2s) or CV period long enough?
-        if ((current < bat->current_cutoff_CV && (time(NULL) - bat->time_voltage_limit_reached) < 2)
-            || (time(NULL) - bat->time_state_changed) > bat->time_limit_CV)
-        {
-            bat->full = true;
-            bat->num_full_charges++;
-            bat->discharged_Ah = 0;         // reset coulomb counter
-
-            if (bat->equalization_enabled) {
-                // TODO: additional conditions!
-                port->voltage_output_target = bat->num_cells * bat->cell_voltage_equalization;
-                port->current_output_max = bat->current_limit_equalization;
-                _enter_state(bat, CHG_STATE_EQUALIZATION);
-            }
-            else if (bat->trickle_enabled) {
-                port->voltage_output_target = bat->num_cells * bat->cell_voltage_trickle;
-                _enter_state(bat, CHG_STATE_TRICKLE);
-            }
-            else {
-                port->current_output_max = 0;
-                port->output_allowed = false;
-                _enter_state(bat, CHG_STATE_IDLE);
-            }
-        }
-        break;
-    }
-    case CHG_STATE_TRICKLE: {
-        if (voltage >= port->voltage_output_target) {
-            bat->time_voltage_limit_reached = time(NULL);
-        }
-
-        if (time(NULL) - bat->time_voltage_limit_reached > bat->time_trickle_recharge)
-        {
-            port->current_output_max = bat->charge_current_max;
-            port->voltage_output_target = bat->num_cells * bat->cell_voltage_max;
-            bat->full = false;
-            _enter_state(bat, CHG_STATE_CC);
-        }
-        // assumtion: trickle does not harm the battery --> never go back to idle
-        // (for Li-ion battery: disable trickle!)
-        break;
-    }
-    }
 }
 
 //----------------------------------------------------------------------------

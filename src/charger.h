@@ -21,36 +21,24 @@
 #include <stdint.h>
 
 #include "dcdc.h"
+#include "power_port.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/* Basic initialization of battery
- *
- * Configures battery based on settings defined in config.h and initializes
- * bat_user with same values
- */
-void battery_init(battery_t *bat, battery_user_settings_t *bat_user);
-
-/* User settings of battery
- *
- * This function should be implemented in config.cpp
- */
-void battery_init_user(battery_t *bat, battery_user_settings_t *bat_user);
-
-/* Update battery settings
- *
- * Settings specified in bat_user will be copied to actual battery_t,
- * if suggested updates are valid (includes plausibility check!)
- */
-bool battery_user_settings(battery_t *bat, battery_user_settings_t *bat_user);
+// possible charger states
+enum charger_state {
+    CHG_STATE_IDLE,
+    CHG_STATE_CC,
+    CHG_STATE_CV,
+    CHG_STATE_TRICKLE,
+    CHG_STATE_EQUALIZATION
+};
 
 /* Charger state machine update, should be called exactly once per second
  */
-void charger_state_machine(dcdc_port_t *port, battery_t *bat, float voltage, float current);
-
-void battery_update_energy(battery_t *bat, float voltage, float current);
+void charger_state_machine(power_port_t *port, battery_t *bat, float voltage, float current);
 
 #ifdef __cplusplus
 }

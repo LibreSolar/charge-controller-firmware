@@ -25,12 +25,15 @@
 #include "half_bridge.h"        // PWM generation for DC/DC converter
 #include "hardware.h"           // hardware-related functions like load switch, LED control, watchdog, etc.
 #include "dcdc.h"               // DC/DC converter control (hardware independent)
-#include "bat_charger.h"        // battery settings and charger state machine
+#include "pwm_chg.h"            // PWM charge controller
+#include "battery.h"            // battery settings
+#include "charger.h"            // charger state machine
 #include "adc_dma.h"            // ADC using DMA and conversion to measurement values
 #include "interface.h"          // communication interfaces, displays, etc.
 #include "eeprom.h"             // external I2C EEPROM
 #include "load.h"               // load and USB output management
 #include "leds.h"
+#include "log.h"
 
 //----------------------------------------------------------------------------
 // global variables
@@ -40,14 +43,15 @@ Serial serial(PIN_SWD_TX, PIN_SWD_RX, "serial");
 bool led_states[NUM_LEDS];
 
 dcdc_t dcdc = {};
-dcdc_port_t hs_port = {};       // high-side (solar for typical MPPT)
-dcdc_port_t ls_port = {};       // low-side (battery for typical MPPT)
-dcdc_port_t *bat_port = NULL;
+power_port_t hs_port = {};       // high-side (solar for typical MPPT)
+power_port_t ls_port = {};       // low-side (battery for typical MPPT)
+power_port_t *bat_port = NULL;
+pwm_chg_t pwm_chg = {};         // only for PWM charger
 battery_t bat;
 battery_user_settings_t bat_user;
 load_output_t load;
 log_data_t log_data;
-extern ThingSet ts;       // defined in data_objects.cpp
+extern ThingSet ts;             // defined in data_objects.cpp
 
 time_t timestamp;    // current unix timestamp (independent of time(NULL), as it is user-configurable)
 
@@ -99,18 +103,18 @@ int main()
     switch(dcdc.mode)
     {
     case MODE_NANOGRID:
-        dcdc_port_init_nanogrid(&hs_port);
-        dcdc_port_init_bat(&ls_port, &bat);
+        power_port_init_nanogrid(&hs_port);
+        power_port_init_bat(&ls_port, &bat);
         bat_port = &ls_port;
         break;
     case MODE_MPPT_BUCK:     // typical MPPT charge controller operation
-        dcdc_port_init_solar(&hs_port);
-        dcdc_port_init_bat(&ls_port, &bat);
+        power_port_init_solar(&hs_port);
+        power_port_init_bat(&ls_port, &bat);
         bat_port = &ls_port;
         break;
     case MODE_MPPT_BOOST:    // for charging of e-bike battery via solar panel
-        dcdc_port_init_solar(&ls_port);
-        dcdc_port_init_bat(&hs_port, &bat);
+        power_port_init_solar(&ls_port);
+        power_port_init_bat(&hs_port, &bat);
         bat_port = &hs_port;
         break;
     }
@@ -148,7 +152,7 @@ int main()
 void interfaces_init()
 {
     uart_serial_init(&serial);
-    usb_serial_init();
+    //usb_serial_init();
 
 #ifdef GSM_ENABLED
     gsm_init();
@@ -199,15 +203,14 @@ void interfaces_process_1s()
 void setup()
 {
     serial.baud(115200);
-    //freopen("/serial", "w", stdout);  // retarget stdout
 
     leds_init();
     led_timer_start(5000);  // 5 kHz
 
     battery_init(&bat, &bat_user);
     load_init(&load);
-    dcdc_init(&dcdc);
 
+    dcdc_init(&dcdc);
     half_bridge_init(PWM_FREQUENCY, 300, 12 / dcdc.hs_voltage_max, 0.97);       // lower duty limit might have to be adjusted dynamically depending on LS voltage
 
     eeprom_restore_data();
@@ -216,9 +219,9 @@ void setup()
     adc_setup();
     dma_setup();
 
-    adc_timer_setup(1000);  // 1 kHz
+    adc_timer_start(1000);  // 1 kHz
 
-    wait(0.2);      // wait for ADC to collect some measurement values
+    wait(0.5);      // wait for ADC to collect some measurement values
 
     update_measurements(&dcdc, &bat, &load, &hs_port, &ls_port);
     calibrate_current_sensors(&dcdc, &load);

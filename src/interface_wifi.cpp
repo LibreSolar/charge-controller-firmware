@@ -8,7 +8,7 @@
 
 #include "pcb.h"
 #include "half_bridge.h"
-#include "ATCmdParser.h"
+#include "log.h"
 
 #include "ESP32.h"
 
@@ -25,8 +25,8 @@ enum wifi_states {
 };
 
 extern log_data_t log_data;
-extern dcdc_port_t hs_port;
-extern dcdc_port_t ls_port;
+extern power_port_t hs_port;
+extern power_port_t ls_port;
 extern load_output_t load;
 extern battery_t bat;
 extern dcdc_t dcdc;

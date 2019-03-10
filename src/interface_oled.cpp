@@ -49,7 +49,7 @@ const unsigned char bmp_disconnected [] = {
 I2C i2c(PIN_UEXT_SDA, PIN_UEXT_SCL);
 Adafruit_SSD1306_I2c oled(i2c, PIN_UEXT_SSEL, 0x78, 64, 128);
 
-void oled_output(dcdc_t *dcdc, dcdc_port_t *solar_port,  dcdc_port_t *bat_port, battery_t *bat, load_output_t *load)
+void oled_output(dcdc_t *dcdc, power_port_t *solar_port,  power_port_t *bat_port, battery_t *bat, load_output_t *load)
 {
     float tmp;
 

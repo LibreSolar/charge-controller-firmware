@@ -18,6 +18,7 @@
 #include "mbed.h"
 #include "pcb.h"        // contains defines for pins
 #include <math.h>       // log for thermistor calculation
+#include "log.h"
 
 // factory calibration values for internal voltage reference and temperature sensor (see MCU datasheet, not RM)
 #if defined(STM32F0)
@@ -60,7 +61,7 @@ void calibrate_current_sensors(dcdc_t *dcdc, load_output_t *load)
 }
 
 //----------------------------------------------------------------------------
-void update_measurements(dcdc_t *dcdc, battery_t *bat, load_output_t *load, dcdc_port_t *hs, dcdc_port_t *ls)
+void update_measurements(dcdc_t *dcdc, battery_t *bat, load_output_t *load, power_port_t *hs, power_port_t *ls)
 {
     //int v_temp, rts;
 
@@ -80,6 +81,10 @@ void update_measurements(dcdc_t *dcdc, battery_t *bat, load_output_t *load, dcdc
     hs->voltage =
         (float)(((adc_filtered[ADC_POS_V_SOLAR] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
         ADC_GAIN_V_SOLAR / 1000.0;
+
+#ifdef ADC_OFFSET_V_SOLAR
+    hs->voltage = ls->voltage + -(vcc * ADC_OFFSET_V_SOLAR / 1000.0 + hs->voltage);
+#endif
 
     load->current =
         (float)(((adc_filtered[ADC_POS_I_LOAD] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
@@ -288,7 +293,7 @@ void adc_setup()
 
 #if defined(STM32F0)
 
-void adc_timer_setup(int freq_Hz)   // max. 10 kHz
+void adc_timer_start(int freq_Hz)   // max. 10 kHz
 {
     // Enable TIM15 clock
     RCC->APB2ENR |= RCC_APB2ENR_TIM15EN;
@@ -319,7 +324,7 @@ extern "C" void TIM15_IRQHandler(void)
 
 #elif defined(STM32L0)
 
-void adc_timer_setup(int freq_Hz)   // max. 10 kHz
+void adc_timer_start(int freq_Hz)   // max. 10 kHz
 {
     // Enable TIM6 clock
     RCC->APB1ENR |= RCC_APB1ENR_TIM6EN;

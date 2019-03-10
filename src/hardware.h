@@ -3,8 +3,6 @@
 #ifndef __HARDWARE_H_
 #define __HARDWARE_H_
 
-#include "structs.h"
-
 void init_load();
 void hw_load_switch(bool enabled);
 void hw_usb_out(bool enabled);

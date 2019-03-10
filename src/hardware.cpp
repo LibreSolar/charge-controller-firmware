@@ -18,6 +18,10 @@ DigitalOut load_disable(PIN_LOAD_DIS);
 DigitalOut usb_pwr_en(PIN_USB_PWR_EN);
 #endif
 
+#ifdef PIN_USB_PWR_DIS
+DigitalOut usb_pwr_dis(PIN_USB_PWR_DIS);
+#endif
+
 #ifdef PIN_UEXT_DIS
 DigitalOut uext_dis(PIN_UEXT_DIS);
 #endif
@@ -41,7 +45,9 @@ void hw_load_switch(bool enabled)
 #ifdef PIN_LOAD_EN
     if (enabled) load_enable = 1;
     else load_enable = 0;
-#else
+#endif
+#ifdef PIN_LOAD_DIS
+    printf("Load enabled = %d\n", enabled);
     if (enabled) load_disable = 0;
     else load_disable = 1;
 #endif
@@ -58,6 +64,10 @@ void hw_usb_out(bool enabled)
 #ifdef PIN_USB_PWR_EN
     if (enabled) usb_pwr_en = 1;
     else usb_pwr_en = 0;
+#endif
+#ifdef PIN_USB_PWR_DIS
+    if (enabled) usb_pwr_dis = 0;
+    else usb_pwr_dis = 1;
 #endif
 }
 

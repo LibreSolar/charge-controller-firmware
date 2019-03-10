@@ -19,12 +19,12 @@
 
 #include "dcdc.h"
 #include "load.h"
-#include "structs.h"
+#include "battery.h"
 
 void calibrate_current_sensors(dcdc_t *dcdc, load_output_t *load);
-void update_measurements(dcdc_t *dcdc, battery_t *bat, load_output_t *load, dcdc_port_t *hs, dcdc_port_t *ls);
+void update_measurements(dcdc_t *dcdc, battery_t *bat, load_output_t *load, power_port_t *hs, power_port_t *ls);
 
-void adc_timer_setup(int freq_Hz);
+void adc_timer_start(int freq_Hz);
 void adc_setup(void);
 void dma_setup(void);
 

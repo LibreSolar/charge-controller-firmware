@@ -4,12 +4,13 @@
 #include "mbed.h"
 #include <stdint.h>
 #include "dcdc.h"
-#include "structs.h"
+#include "power_port.h"
+#include "battery.h"
 #include "load.h"
 
 /* OLED display based on SSD1306 IC, connected to UEXT port via I2C
  */
-void oled_output(dcdc_t *dcdc, dcdc_port_t *solar_port,  dcdc_port_t *bat_port, battery_t *bat, load_output_t *load);
+void oled_output(dcdc_t *dcdc, power_port_t *solar_port, power_port_t *bat_port, battery_t *bat, load_output_t *load);
 
 /* UART serial interface (either in UEXT connector or from additional SWD serial)
  */

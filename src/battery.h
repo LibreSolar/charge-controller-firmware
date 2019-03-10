@@ -1,6 +1,6 @@
 
-#ifndef __STRUCTS_H_
-#define __STRUCTS_H_
+#ifndef __BATTERY_H_
+#define __BATTERY_H_
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -15,7 +15,6 @@ extern "C" {
  * Current: W/100 = 10 mA   --> int16_t max. 327.68 A
  * Voltage: V/100 = 10 mV   --> int16_t max. 327.68 V
  */
-
 
 // battery types
 enum bat_type {
@@ -148,34 +147,31 @@ typedef struct
 } battery_user_settings_t;
 
 
-// possible charger states
-enum charger_state {
-    CHG_STATE_IDLE,
-    CHG_STATE_CC,
-    CHG_STATE_CV,
-    CHG_STATE_TRICKLE,
-    CHG_STATE_EQUALIZATION
-};
-
-
-/* Log Data
+/* Basic initialization of battery
  *
- * Saves maximum ever measured values to EEPROM
+ * Configures battery based on settings defined in config.h and initializes
+ * bat_user with same values
  */
-typedef struct {
-    float battery_voltage_max;
-    float solar_voltage_max;
-    float dcdc_current_max;
-    float load_current_max;
-    float temp_int;             // °C (internal MCU temperature sensor)
-    float temp_int_max;         // °C
-    float temp_mosfets_max;
-    int day_counter;
-} log_data_t;
+void battery_init(battery_t *bat, battery_user_settings_t *bat_user);
+
+/* User settings of battery
+ *
+ * This function should be implemented in config.cpp
+ */
+void battery_init_user(battery_t *bat, battery_user_settings_t *bat_user);
+
+/* Update battery settings
+ *
+ * Settings specified in bat_user will be copied to actual battery_t,
+ * if suggested updates are valid (includes plausibility check!)
+ */
+bool battery_user_settings(battery_t *bat, battery_user_settings_t *bat_user);
+
+void battery_update_energy(battery_t *bat, float voltage, float current);
 
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // STRUCTS_H
+#endif // __BATTERY_H_
