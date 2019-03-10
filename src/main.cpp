@@ -76,9 +76,13 @@ void system_control()       // called by control timer (see hardware.cpp)
     // convert ADC readings to meaningful measurement values
     update_measurements(&dcdc, &bat_state, &load, &hs_port, &ls_port);
 
+#ifdef CHARGER_TYPE_PWM
+    pwm_chg_control(&pwm_chg, &hs_port, bat_port);
+#else
     // control PWM of the DC/DC according to hs and ls port settings
     // (this function includes MPPT algorithm)
     dcdc_control(&dcdc, &hs_port, &ls_port);
+#endif
 
     load_check_overcurrent(&load);
     update_dcdc_led(half_bridge_enabled());
@@ -215,8 +219,12 @@ void setup()
 
     load_init(&load);
 
+#ifdef CHARGER_TYPE_PWM
+    pwm_chg_init(&pwm_chg);
+#else // MPPT
     dcdc_init(&dcdc);
     half_bridge_init(PWM_FREQUENCY, 300, 12 / dcdc.hs_voltage_max, 0.97);       // lower duty limit might have to be adjusted dynamically depending on LS voltage
+#endif
 
     data_objects_read_eeprom();
     ts.set_conf_callback(data_objects_update_conf);    // after each configuration change, data should be written back to EEPROM
