@@ -10,4 +10,5 @@
 .vscode/.browse.c_cpp.db*
 src/config.cpp
 src/config.h
+html
 memory.map
