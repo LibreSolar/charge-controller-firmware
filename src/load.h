@@ -20,34 +20,30 @@
 /** @file
  *
  * @brief
- * Load output functions and data types
+ * Load/USB output functions and data types
  */
 
 #include <stdbool.h>
+#include <stdint.h>
 
+/** Load/USB output states
+ *
+ * Used for USB or normal load outputs connecting to battery via switch.
+ */
 enum load_state_t {
-    LOAD_STATE_DISABLED = 0,        ///< Load actively disabled
-    LOAD_STATE_ON,                  ///< Normal state: Load on
-    LOAD_STATE_OFF_LOW_SOC,         ///< Load off to protect battery (overrules remote setting)
-    LOAD_STATE_OFF_OVERCURRENT      ///< Load off to protect charge controller (overrules remote setting)
+    LOAD_STATE_DISABLED = 0,        ///< Actively disabled
+    LOAD_STATE_ON,                  ///< Normal state: On
+    LOAD_STATE_OFF_LOW_SOC,         ///< Off to protect battery (overrules target setting)
+    LOAD_STATE_OFF_OVERCURRENT      ///< Off to protect charge controller (overrules target setting)
 };
 
-
-enum usb_state_t {
-    USB_STATE_DISABLED = 0,        ///< USB port actively disabled
-    USB_STATE_ON,                  ///< Normal state: USB on
-    USB_STATE_OFF_LOW_SOC,         ///< USB off to protect battery (overrules target setting)
-    USB_STATE_OFF_OVERCURRENT      ///< USB off to protect charge controller (overrules target setting)
-};
-
-
-/** Load Output type
+/** Load output type
  *
  * Stores status of load output incl. 5V USB output (if existing on PCB)
  */
 typedef struct {
-    load_state_t state;
-    usb_state_t usb_state;
+    uint16_t switch_state;      ///< Current state of load output switch
+    uint16_t usb_state;         ///< Current state of USB output
     float current;              ///< actual measurement
     float current_max;          ///< maximum allowed current
     int overcurrent_timestamp;  ///< time at which an overcurrent event occured
@@ -56,10 +52,16 @@ typedef struct {
     bool usb_enabled_target;    ///< same for USB output
 } load_output_t;
 
+/** Initialize load_output_t struct
+ */
 void load_init(load_output_t *load);
 
+/** State machine, called every second.
+ */
 void load_state_machine(load_output_t *load, bool source_enabled);
 
+/** Overcurrent check function, should be called as often as possible
+ */
 void load_check_overcurrent(load_output_t *load);
 
 #endif /* LOAD_H */

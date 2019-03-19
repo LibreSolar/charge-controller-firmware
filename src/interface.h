@@ -55,18 +55,39 @@ void can_process_inbox();
 void can_send_object_name(int obj_id, uint8_t can_dest_id);
 
 /** GSM mobile interface via UEXT connector serial interface
+ *
+ * Initialization (called once at program startup)
  */
 void gsm_init();
+
+/** GSM mobile interface via UEXT connector serial interface
+ *
+ * Process function, called every second
+ */
 void gsm_process();
 
 /** LoRa interface via UEXT connector SPI interface
+ *
+ * Initialization (called once at program startup)
  */
 void lora_init();
+
+/** LoRa interface via UEXT connector SPI interface
+ *
+ * Process function, called every second
+ */
 void lora_process();
 
-/** GSM mobile interface via UEXT connector serial interface
+/** WiFi interface with ESP32
+ *
+ * Initialization (called once at program startup)
  */
 void wifi_init();
+
+/** WiFi interface with ESP32
+ *
+ * Process function, called every second
+ */
 void wifi_process();
 
 /** SD card connected to UEXT connector (e.g. via Olimex adapter)

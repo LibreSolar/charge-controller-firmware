@@ -33,29 +33,36 @@
  * the control algorithm.
  */
 typedef struct {
-    float voltage;                  // actual measurements
-    float current;
+    float voltage;                  ///< measured voltage
+    float current;                  ///< measured current
 
-    float voltage_output_target;    // target voltage if port is configured as output
-    float droop_resistance;         // v_target = v_out_max - r_droop * current
-    float voltage_output_min;       // minimum voltage to allow current output (necessary
-                                    // to prevent charging of deep-discharged Li-ion batteries)
+    float voltage_output_target;    ///< target voltage if port is configured as output
+    float droop_resistance;         ///< v_target = v_out_max - r_droop * current
+    float voltage_output_min;       ///< minimum voltage to allow current output (necessary
+                                    ///< to prevent charging of deep-discharged Li-ion batteries)
 
-    // minimum voltage to allow current input (= discharging of batteries)
-    float voltage_input_start;      // starting point for discharging of batteries (load reconnect)
-    float voltage_input_stop;       // absolute minimum = load disconnect for batteries
 
-    float current_output_max;       // charging direction for battery port
-    float current_input_max;        // discharging direction for battery port: must be negative value !!!
+    float voltage_input_start;      ///< minimum voltage to allow current input (= discharging of batteries),
+                                    ///< starting point for discharging of batteries (load reconnect)
+    float voltage_input_stop;       ///< absolute minimum = load disconnect for batteries
 
-    bool output_allowed;            // charging direction for battery port
-    bool input_allowed;             // discharging direction for battery port
+    float current_output_max;       ///< charging direction for battery port
+    float current_input_max;        ///< discharging direction for battery port: must be negative value !!!
+
+    bool output_allowed;            ///< charging direction for battery port
+    bool input_allowed;             ///< discharging direction for battery port
 } power_port_t;
 
+/** Initialize power port for battery connection
+ */
 void power_port_init_bat(power_port_t *port, battery_conf_t *bat);
 
+/** Initialize power port for solar panel connection
+ */
 void power_port_init_solar(power_port_t *port);
 
+/** Initialize power port for nanogrid connection
+ */
 void power_port_init_nanogrid(power_port_t *port);
 
 #endif /* POWER_PORT_H */
