@@ -12,7 +12,7 @@ The software is configurable to support different charge controller PCBs with ei
 
 ## Toolchain and flashing instructions
 
-See the Libre Solar website for a detailed instruction how to [develop software](http://libre.solar/docs/toolchain/) and [flash new firmware](http://libre.solar/docs/flashing/).
+See the Libre Solar website for a detailed instruction how to [develop software](http://libre.solar/docs/toolchain) and [flash new firmware](http://libre.solar/docs/flashing).
 
 **Remark:** The 10A charge controller with STM32L0 often needs several attempts until the software is flashed with OpenOCD (integrated in PlatformIO). The ST-Link tools seem to be better for this MCU. For Windows there is a GUI tool. Under Linux use following command:
 

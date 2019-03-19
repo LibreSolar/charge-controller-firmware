@@ -70,15 +70,15 @@ void charger_state_machine(power_port_t *port, battery_conf_t *bat_conf, battery
         port->input_allowed = false;
         bat_state->num_deep_discharges++;
 
-        if (bat_state->useable_capacity < 0.1) {
-            bat_state->useable_capacity = bat_state->discharged_Ah;
+        if (bat_state->usable_capacity < 0.1) {
+            bat_state->usable_capacity = bat_state->discharged_Ah;
         } else {
             // slowly adapt new measurements with low-pass filter
-            bat_state->useable_capacity = 0.8 * bat_state->useable_capacity + 0.2 * bat_state->discharged_Ah;
+            bat_state->usable_capacity = 0.8 * bat_state->usable_capacity + 0.2 * bat_state->discharged_Ah;
         }
 
         // simple SOH estimation
-        bat_state->soh = bat_state->useable_capacity / bat_conf->nominal_capacity;
+        bat_state->soh = bat_state->usable_capacity / bat_conf->nominal_capacity;
     }
     if (voltage >= bat_conf->voltage_load_reconnect) {
         port->input_allowed = true;
@@ -119,13 +119,13 @@ void charger_state_machine(power_port_t *port, battery_conf_t *bat_conf, battery
             bat_state->num_full_charges++;
             bat_state->discharged_Ah = 0;         // reset coulomb counter
 
-            if (bat_conf->equalization_enabled) {
+            /*if (bat_conf->equalization_enabled) {
                 // TODO: additional conditions!
                 port->voltage_output_target = bat_conf->voltage_equalization;
                 port->current_output_max = bat_conf->current_limit_equalization;
                 _enter_state(bat_state, CHG_STATE_EQUALIZATION);
             }
-            else if (bat_conf->trickle_enabled) {
+            else */if (bat_conf->trickle_enabled) {
                 port->voltage_output_target = bat_conf->voltage_trickle;
                 _enter_state(bat_state, CHG_STATE_TRICKLE);
             }

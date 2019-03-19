@@ -28,16 +28,26 @@
 
 /** Log Data
  *
- * Saves maximum ever measured values to EEPROM
+ * Stores error counters and some maximum ever measured values to EEPROM
  */
 typedef struct {
+    float solar_in_day_Wh;
+    float load_out_day_Wh;
+    uint32_t solar_in_total_Wh;
+    uint32_t load_out_total_Wh;
+
+    uint16_t solar_power_max_day;
+    uint16_t load_power_max_day;
+    uint16_t solar_power_max_total;
+    uint16_t load_power_max_total;
+
     float battery_voltage_max;
     float solar_voltage_max;
     float dcdc_current_max;
     float load_current_max;
-    float temp_int;             // °C (internal MCU temperature sensor)
-    float temp_int_max;         // °C
-    float temp_mosfets_max;
+    int bat_temp_max;         // °C
+    int int_temp_max;         // °C
+    int mosfet_temp_max;
     int day_counter;
 } log_data_t;
 

@@ -110,12 +110,12 @@ int wifi_send_emoncms_data()
 
     // create link
     sprintf(url, "/emoncms/input/post?node=%s&json={"
-        "vSolar:%.2f,vBat:%.2f,iBat:%.2f,iLoad:%.2f,"
-        "dcdcEn:%d,loadEn:%d,chgState:%d,tempInt:%.1f,nFullChg:%d,nDeepDis:%d,"
-        "eInputDay_Wh:%.2f,eOutputDay_Wh:%.2f,SOC:%d,day:%d,SOH:%d,qDis_Ah:%.3f,qBatUse_Ah:%.2f}",
+        "Solar_V:%.2f,Bat_V:%.2f,Bat_A:%.2f,Load_A:%.2f,"
+        "DcdcEn:%d,LoadState:%d,ChgState:%d,Bat_degC:%.1f,FullChgCount:%d,DeepDisCount:%d,"
+        "SolarInDay_Wh:%.2f,LoadOutDay_Wh:%.2f,SOC:%d,day:%d,SOH:%d,BatDis_Ah:%.3f,BatUsable_Ah:%.2f}",
         EMONCMS_NODE, hs_port.voltage, ls_port.voltage, ls_port.current, load.current,
-        half_bridge_enabled(), load.enabled, bat_state.chg_state, dcdc.temp_mosfets, bat_state.num_full_charges, bat_state.num_deep_discharges,
-        bat_state.input_Wh_day, bat_state.output_Wh_day, bat_state.soc, log_data.day_counter, bat_state.soh, bat_state.discharged_Ah, bat_state.useable_capacity);
+        half_bridge_enabled(), load.switch_state, bat_state.chg_state, dcdc.temp_mosfets, bat_state.num_full_charges, bat_state.num_deep_discharges,
+        log_data.solar_in_day_Wh, log_data.load_out_day_Wh, bat_state.soc, log_data.day_counter, bat_state.soh, bat_state.discharged_Ah, bat_state.usable_capacity);
     strcat(url, "&apikey=" EMONCMS_APIKEY);
     //printf("%s\n", url);
 

@@ -23,8 +23,10 @@
 
 #include "half_bridge.h"
 
-#include "Adafruit_SSD1306.h"
+#include "log.h"
+extern log_data_t log_data;
 
+#include "Adafruit_SSD1306.h"
 
 const unsigned char bmp_load [] = {
     0x20, 0x22, 0x04, 0x70, 0x88, 0x8B, 0x88, 0x70, 0x04, 0x22, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -110,8 +112,8 @@ void oled_output(dcdc_t *dcdc, power_port_t *solar_port,  power_port_t *bat_port
     oled.printf("%5.1fA\n", (abs(load->current) < 0.1) ? 0 : load->current);
 
     oled.setTextCursor(0, 36);
-    oled.printf("Day +%5.0fWh -%5.0fWh", bat->input_Wh_day, fabs(bat->output_Wh_day));
-    oled.printf("Tot +%4.1fkWh -%4.1fkWh", bat->input_Wh_total / 1000.0, fabs(bat->output_Wh_total) / 1000.0);
+    oled.printf("Day +%5.0fWh -%5.0fWh", log_data.solar_in_day_Wh, fabs(log_data.load_out_day_Wh));
+    oled.printf("Tot +%4.1fkWh -%4.1fkWh", log_data.solar_in_total_Wh / 1000.0, fabs(log_data.load_out_total_Wh) / 1000.0);
 
     oled.setTextCursor(0, 56);
     oled.printf("T %.0fC PWM %.0f%% SOC %d%%", dcdc->temp_mosfets, half_bridge_get_duty_cycle() * 100.0, bat->soc);

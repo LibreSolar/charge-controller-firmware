@@ -17,12 +17,12 @@ extern ThingSet ts;
 // stores object-ids of values to be stored in EEPROM
 const uint16_t eeprom_data_objects[] = {
     0x01, // timestamp
-    0x03, 0x04, // load settings
-    0x07, 0x08, // input / output wh
-    0x10, 0x11, // num full charge / deep-discharge
-    0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2A,   // config data
-    0x42, 0x44, 0x46, 0x48, 0x49,     // V, I, T max
-    0x51 // day count
+    0x08, 0x09, 0x0A, 0x0B, // input / output wh
+    0x0C, 0x0D, 0x0E, // num full charge / deep-discharge / usable Ah
+    0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x3F, // battery settings
+    0x40, 0x41, 0x42, 0x43,  // load settings
+    0xB1, 0xB2, 0xB3, 0xB4, 0xB5, 0xB6, 0xB7, 0xB8, 0xB9,     // V, I, T max
+    0xA6 // day count
 };
 
 uint32_t _calc_crc(uint8_t *buf, size_t len)
@@ -201,9 +201,9 @@ void eeprom_restore_data()
 
     if (version == EEPROM_VERSION && len <= sizeof(buf_req)) {
         eeprom_read(EEPROM_HEADER_SIZE, buf_req, len);
-        //printf("Data: %.2x %.2x %.2x %.2x %.2x %.2x %.2x %.2x\n",
-        //    ts_req.data.bin[0], ts_req.data.bin[1], ts_req.data.bin[2], ts_req.data.bin[3],
-        //    ts_req.data.bin[4], ts_req.data.bin[5], ts_req.data.bin[6], ts_req.data.bin[7]);
+
+        //printf("Data (len=%d): ", len);
+        //for (int i = 0; i < len; i++) printf("%.2x ", buf_req[i]);
 
         if (_calc_crc(buf_req, len) == crc) {
             int status = ts.init_cbor(buf_req, sizeof(buf_req));     // first byte is ignored
@@ -226,6 +226,9 @@ void eeprom_store_data()
     *((uint16_t*)&buf[0]) = (uint16_t)EEPROM_VERSION;
     *((uint16_t*)&buf[2]) = (uint16_t)(len);   // length of data
     *((uint32_t*)&buf[4]) = crc;
+
+    //printf("Data (len=%d): ", len);
+    //for (int i = 0; i < len; i++) printf("%.2x ", buf[i + EEPROM_HEADER_SIZE]);
 
     //printf("Header: %.2x %.2x %.2x %.2x %.2x %.2x %.2x %.2x\n",
     //    buf[0], buf[1], buf[2], buf[3], buf[4], buf[5], buf[6], buf[7]);

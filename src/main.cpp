@@ -41,8 +41,6 @@
 
 Serial serial(PIN_SWD_TX, PIN_SWD_RX, "serial");
 
-bool led_states[NUM_LEDS];
-
 dcdc_t dcdc = {};
 power_port_t hs_port = {};       // high-side (solar for typical MPPT)
 power_port_t ls_port = {};       // low-side (battery for typical MPPT)
@@ -87,14 +85,16 @@ void system_control()       // called by control timer (see hardware.cpp)
     load_check_overcurrent(&load);
     update_dcdc_led(half_bridge_enabled());
 
-    counter++;
     if (counter % CONTROL_FREQUENCY == 0) {
         // called once per second (this timer is much more accurate than time(NULL) based on LSI)
         // see also here: https://github.com/ARMmbed/mbed-os/issues/9065
         timestamp++;
         counter = 0;
-        battery_update_energy(&bat_conf, &bat_state, bat_port->voltage, bat_port->current); // must be called once per second
+        // energy + soc calculation must be called exactly once per second
+        battery_update_energy(&bat_state, bat_port->voltage, bat_port->current, dcdc.ls_current, load.current);
+        battery_update_soc(&bat_conf, &bat_state, bat_port->voltage, bat_port->current);
     }
+    counter++;
 }
 
 //----------------------------------------------------------------------------

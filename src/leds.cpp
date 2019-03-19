@@ -4,7 +4,7 @@
 
 #include "mbed.h"
 
-extern bool led_states[];
+bool led_states[NUM_LEDS];
 
 int blink_state = 1;
 bool flicker_state = 1;

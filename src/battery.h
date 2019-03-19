@@ -93,7 +93,6 @@ typedef struct
      */
     int time_limit_CV;
 
-    // State: float/trickle
     /** Enable float/trickle charging
      *
      * Caution: Do not enable trickle charging for lithium-ion batteries
@@ -114,51 +113,93 @@ typedef struct
      */
     int time_trickle_recharge;
 
-    // State: equalization
+    /** Enable equalization charging
+     *
+     * Caution: Do not enable trickle charging for lithium-ion batteries
+     */
     bool equalization_enabled;
-    float voltage_equalization;      // V
-    int time_limit_equalization;          // sec
-    float current_limit_equalization;     // A
-    int equalization_trigger_time;        // weeks
-    int equalization_trigger_deep_cycles; // times
 
-    float voltage_load_disconnect; // V     when discharging, stop power to load if battery voltage drops below this value
-    float voltage_load_reconnect;  // V     re-enable the load only after charged beyond this value
+    /** Equalization voltage (V)
+     *
+     * Charger target voltage for equalization charging of lead-acid batteries
+     */
+    float voltage_equalization;
+
+    /** Equalization phase cut-off time limit (s)
+     *
+     * After this time, CV charging is stopped independent of current.
+     */
+    int time_limit_equalization;
+
+    /** Equalization phase cut-off time limit (s)
+     *
+     * After this time, CV charging is stopped independent of current.
+     */
+    float current_limit_equalization;
+
+    /** Equalization trigger time (weeks)
+     *
+     * After passing specified amount of weeks, an equalization charge is triggered.
+     */
+    int equalization_trigger_time;
+
+    /** Equalization trigger deep-discharge cycles
+     *
+     * After specified number of deep discharges, an equalization charge is triggered.
+     */
+    int equalization_trigger_deep_cycles;
+
+    /** Load disconnect voltage (V)
+     *
+     * When discharging, stop power to load if battery voltage drops below this value
+     */
+    float voltage_load_disconnect;
+
+    /** Load reconnect voltage (V)
+     *
+     * Re-enable the load only after charged beyond this value
+     */
+    float voltage_load_reconnect;
 
     // used to calculate state of charge information
     float ocv_full;
     float ocv_empty;
 
-    float temperature_compensation;     // voltage compensation (suggested: -3 mV/°C/cell)
+    /** Voltage compensation based on battery temperature
+     *
+     * Suggested value: -3 mV/°C/cell
+     *
+     * TODO: Not yet implemented
+     */
+    float temperature_compensation;
 
 } battery_conf_t;
 
 typedef struct
 {
-    int num_batteries;      // used for automatic 12V/24V battery detection at start-up
-                            // can be 1 or 2 only.
+    int num_batteries;      ///< Used for automatic 12V/24V battery detection at start-up (can be 1 or 2 only)
 
-    float temperature;                  // °C from ext. temperature sensor (if existing)
+    float temperature;      ///< Battery temperature in °C from ext. temperature sensor (if existing)
 
-    float input_Wh_day;
-    float output_Wh_day;
-    uint32_t input_Wh_total;
-    uint32_t output_Wh_total;
+    float chg_day_Wh;           ///< Cumulated energy in charge direction of today (Wh)
+    float dis_day_Wh;           ///< Cumulated energy in discharge direction of today (Wh)
+    uint32_t chg_total_Wh;      ///< Cumulated total energy in charge direction (Wh)
+    uint32_t dis_total_Wh;      ///< Cumulated total energy in discharge direction (Wh)
 
-    float useable_capacity;         // Ah   estimated useable capacity based on coulomb counting
+    float usable_capacity;      ///< Estimated usable capacity (Ah) based on coulomb counting
 
-    float discharged_Ah;                // coloumb counter for SOH calculation
+    float discharged_Ah;        ///< Coulomb counter for SOH calculation
 
-    uint16_t num_full_charges;
-    uint16_t num_deep_discharges;
+    uint16_t num_full_charges;      ///< Number of full charge cycles
+    uint16_t num_deep_discharges;   ///< Number of deep-discharge cycles
 
-    uint16_t soc;
-    uint16_t soh;
-    unsigned int chg_state;            // valid states: enum charger_states
-    int time_state_changed;            // timestamp of last state change
-    int time_voltage_limit_reached;    // last time the CV limit was reached
+    uint16_t soc;                   ///< State of Charge (%)
+    uint16_t soh;                   ///< State of Health (%)
+    unsigned int chg_state;            ///< Current charger state (see enum charger_states)
+    int time_state_changed;            ///< Timestamp of last state change
+    int time_voltage_limit_reached;    ///< Last time the CV limit was reached
 
-    bool full;
+    bool full;              ///< Flag to indicate if battery was fully charged
 
 } battery_state_t;
 
@@ -187,10 +228,17 @@ void battery_conf_overwrite(battery_conf_t *source, battery_conf_t *destination)
  */
 void battery_state_init(battery_state_t *bat_state);
 
-/** Energy calculation and SOC estimation
+/** Energy calculation for battery, solar port and load output
  *
  * Must be called exactly once per second, otherwise energy calculation gets wrong.
  */
-void battery_update_energy(battery_conf_t *bat_conf, battery_state_t *bat, float voltage, float current);
+void battery_update_energy(battery_state_t *bat, float bat_voltage, float bat_current, float dcdc_current, float load_current);
+
+/** SOC estimation
+ *
+ * Must be called exactly once per second, otherwise SOC calculation gets wrong.
+ */
+void battery_update_soc(battery_conf_t *bat_conf, battery_state_t *bat_state, float voltage, float current);
+
 
 #endif /* BATTERY_H */

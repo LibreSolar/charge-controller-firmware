@@ -183,16 +183,17 @@ void battery_state_init(battery_state_t *bat_state)
 
 //----------------------------------------------------------------------------
 // must be called exactly once per second, otherwise energy calculation gets wrong
-void battery_update_energy(battery_conf_t *bat_conf, battery_state_t *bat, float voltage, float current)
+void battery_update_energy(battery_state_t *bat, float bat_voltage, float bat_current, float dcdc_current, float load_current)
 {
-    // static variables so that the are not reset during each function call
+    // static variables so that it is not reset for each function call
     static int seconds_zero_solar = 0;
-    static int soc_filtered = 0;       // SOC / 100 for better filtering
 
     // stores the input/output energy status of previous day and to add
-    // xxx_Wh_day only once per day and increase accuracy
-    static uint32_t input_Wh_total_prev = bat->input_Wh_total;
-    static uint32_t output_Wh_total_prev = bat->output_Wh_total;
+    // xxx_day_Wh only once per day and increase accuracy
+    static uint32_t solar_in_total_Wh_prev = log_data.solar_in_total_Wh;
+    static uint32_t load_out_total_Wh_prev = log_data.load_out_total_Wh;
+    static uint32_t bat_chg_total_Wh_prev = bat->chg_total_Wh;
+    static uint32_t bat_dis_total_Wh_prev = bat->dis_total_Wh;
 
     if (hs_port.voltage < ls_port.voltage) {
         seconds_zero_solar += 1;
@@ -203,19 +204,38 @@ void battery_update_energy(battery_conf_t *bat_conf, battery_state_t *bat, float
         if (seconds_zero_solar > 60*60*5) {
             //printf("Night!\n");
             log_data.day_counter++;
-            input_Wh_total_prev = bat->input_Wh_total;
-            output_Wh_total_prev = bat->output_Wh_total;
-            bat->input_Wh_day = 0.0;
-            bat->output_Wh_day = 0.0;
+            solar_in_total_Wh_prev = log_data.solar_in_total_Wh;
+            load_out_total_Wh_prev = log_data.load_out_total_Wh;
+            bat_chg_total_Wh_prev = bat->chg_total_Wh;
+            bat_dis_total_Wh_prev = bat->dis_total_Wh;
+            log_data.solar_in_day_Wh = 0.0;
+            log_data.load_out_day_Wh = 0.0;
+            bat->chg_total_Wh = 0.0;
+            bat->dis_total_Wh = 0.0;
         }
         seconds_zero_solar = 0;
     }
 
-    bat->input_Wh_day += voltage * current / 3600.0;    // timespan = 1s, so no multiplication with time
-    bat->output_Wh_day += load.current * ls_port.voltage / 3600.0;
-    bat->input_Wh_total = input_Wh_total_prev + (bat->input_Wh_day > 0 ? bat->input_Wh_day : 0);
-    bat->output_Wh_total = output_Wh_total_prev + (bat->output_Wh_day > 0 ? bat->output_Wh_day : 0);
-    bat->discharged_Ah += (load.current - current) / 3600.0;
+    float bat_energy = bat_voltage * bat_current / 3600.0;  // timespan = 1s, so no multiplication with time
+    if (bat_energy > 0) {
+        bat->chg_day_Wh += bat_energy;
+    }
+    else {
+        bat->dis_day_Wh += -(bat_energy);
+    }
+    bat->chg_total_Wh = bat_chg_total_Wh_prev + (bat->chg_day_Wh > 0 ? bat->chg_day_Wh : 0);
+    bat->dis_total_Wh = bat_dis_total_Wh_prev + (bat->dis_day_Wh > 0 ? bat->dis_day_Wh : 0);
+    bat->discharged_Ah += (load_current - bat_current) / 3600.0;
+
+    log_data.solar_in_day_Wh += bat_voltage * dcdc_current / 3600.0;    // timespan = 1s, so no multiplication with time
+    log_data.load_out_day_Wh += load.current * ls_port.voltage / 3600.0;
+    log_data.solar_in_total_Wh = solar_in_total_Wh_prev + (log_data.solar_in_day_Wh > 0 ? log_data.solar_in_day_Wh : 0);
+    log_data.load_out_total_Wh = load_out_total_Wh_prev + (log_data.load_out_day_Wh > 0 ? log_data.load_out_day_Wh : 0);
+}
+
+void battery_update_soc(battery_conf_t *bat_conf, battery_state_t *bat_state, float voltage, float current)
+{
+    static int soc_filtered = 0;       // SOC / 100 for better filtering
 
     if (fabs(current) < 0.2) {
         int soc_new = (int)((voltage - bat_conf->ocv_empty) /
@@ -236,6 +256,6 @@ void battery_update_energy(battery_conf_t *bat_conf, battery_state_t *bat, float
             // filtering to adjust SOC very slowly
             soc_filtered += (soc_new - soc_filtered) / 100;
         }
-        bat->soc = soc_filtered / 100;
+        bat_state->soc = soc_filtered / 100;
     }
 }

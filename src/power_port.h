@@ -34,7 +34,7 @@
  */
 typedef struct {
     float voltage;                  ///< measured voltage
-    float current;                  ///< measured current
+    float current;                  ///< measured current (positive sign = out of the port to external device)
 
     float voltage_output_target;    ///< target voltage if port is configured as output
     float droop_resistance;         ///< v_target = v_out_max - r_droop * current
