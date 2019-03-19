@@ -46,11 +46,11 @@ enum dcdc_control_mode
  * actual measurements and calibration parameters.
  */
 typedef struct {
-    dcdc_control_mode mode;
+    dcdc_control_mode mode;     ///< DC/DC mode (buck, boost or nanogrid)
 
     // actual measurements
     float ls_current;           ///< Low-side (inductor) current
-    float temp_mosfets;
+    float temp_mosfets;         ///< MOSFET temperature measurement (if existing)
 
     // current state
     float power;                ///< Power at low-side (calculated by dcdc controller)
@@ -60,8 +60,8 @@ typedef struct {
     // maximum allowed values
     float ls_current_max;       ///< Maximum low-side (inductor) current
     float ls_current_min;       ///< Minimum low-side current (if lower, charger is switched off)
-    float hs_voltage_max;
-    float ls_voltage_max;
+    float hs_voltage_max;       ///< Maximum high-side voltage
+    float ls_voltage_max;       ///< Maximum low-side voltage
 
     // calibration parameters
     //float offset_voltage_start;  // V  charging switched on if Vsolar > Vbat + offset

@@ -28,8 +28,8 @@ void dcdc_init(dcdc_t *dcdc)
     dcdc->mode           = DCDC_MODE_INIT;
     dcdc->ls_current_max = DCDC_CURRENT_MAX;
     dcdc->ls_current_min = 0.05;                // A   if lower, charger is switched off
-    dcdc->hs_voltage_max = 55.0;                // V
-    dcdc->ls_voltage_max = 30.0;                // V
+    dcdc->hs_voltage_max = HIGH_SIDE_VOLTAGE_MAX;   // V
+    dcdc->ls_voltage_max = LOW_SIDE_VOLTAGE_MAX;    // V
     //dcdc->offset_voltage_start = 4.0;         // V  charging switched on if Vsolar > Vbat + offset
     //dcdc->offset_voltage_stop = 1.0;          // V  charging switched off if Vsolar < Vbat + offset
     dcdc->restart_interval = 60;                // s    --> when should we retry to start charging after low solar power cut-off?
@@ -109,8 +109,16 @@ void dcdc_control(dcdc_t *dcdc, power_port_t *hs, power_port_t *ls)
             dcdc->off_timestamp = time(NULL);
             printf("DC/DC stop.\n");
         }
+        if (ls->voltage > dcdc->ls_voltage_max || hs->voltage > dcdc->hs_voltage_max) {
+            half_bridge_stop();
+            dcdc->off_timestamp = time(NULL);
+            printf("DC/DC emergency stop (voltage limits exceeded).\n");
+        }
     }
     else {
+        if (ls->voltage > dcdc->ls_voltage_max || hs->voltage > dcdc->hs_voltage_max) {
+            return;
+        }
         if (_dcdc_check_start_conditions(dcdc, ls, hs)) {
             // Vmpp at approx. 0.8 * Voc --> take 0.9 as starting point for MPP tracking
             half_bridge_start(ls->voltage / (hs->voltage * 0.9));
