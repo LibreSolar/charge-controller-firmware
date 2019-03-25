@@ -26,6 +26,7 @@
 void dcdc_init(dcdc_t *dcdc)
 {
     dcdc->mode           = DCDC_MODE_INIT;
+    dcdc->enabled        = true;
     dcdc->ls_current_max = DCDC_CURRENT_MAX;
     dcdc->ls_current_min = 0.05;                // A   if lower, charger is switched off
     dcdc->hs_voltage_max = HIGH_SIDE_VOLTAGE_MAX;   // V
@@ -40,11 +41,10 @@ void dcdc_init(dcdc_t *dcdc)
 // returns if output power should be increased (1), decreased (-1) or switched off (0)
 int _dcdc_output_control(dcdc_t *dcdc, power_port_t *out, power_port_t *in)
 {
-    //static float dcdc_power;
     float dcdc_power_new = out->voltage * out->current;
     static int pwm_delta = 1;
 
-    //printf("P: %.2f, P_prev: %.2f, v_in: %.2f, v_out: %.2f, i_in: %.2f, i_out: %.2f, i_max: %.2f, PWM: %.1f, chg_en: %d",
+    //printf("P: %.2f, P_prev: %.2f, v_in: %.2f, v_out: %.2f, i_in: %.2f, i_out: %.2f, i_max: %.2f, PWM: %.1f, chg_en: %d\n",
     //     dcdc_power_new, dcdc->power, in->voltage, out->voltage, in->current, out->current,
     //     out->current_output_max, half_bridge_get_duty_cycle() * 100.0, out->output_allowed);
 
@@ -104,19 +104,26 @@ void dcdc_control(dcdc_t *dcdc, power_port_t *hs, power_port_t *ls)
             step = _dcdc_output_control(dcdc, hs, ls);
             half_bridge_duty_cycle_step(-step);
         }
+
         if (step == 0) {
             half_bridge_stop();
             dcdc->off_timestamp = time(NULL);
             printf("DC/DC stop.\n");
         }
-        if (ls->voltage > dcdc->ls_voltage_max || hs->voltage > dcdc->hs_voltage_max) {
+        else if (ls->voltage > dcdc->ls_voltage_max || hs->voltage > dcdc->hs_voltage_max) {
             half_bridge_stop();
             dcdc->off_timestamp = time(NULL);
             printf("DC/DC emergency stop (voltage limits exceeded).\n");
         }
+        else if (dcdc->enabled == false) {
+            half_bridge_stop();
+            printf("DC/DC stop (disabled).\n");
+        }
     }
     else {
-        if (ls->voltage > dcdc->ls_voltage_max || hs->voltage > dcdc->hs_voltage_max) {
+        if (dcdc->enabled == false ||
+            ls->voltage > dcdc->ls_voltage_max ||
+            hs->voltage > dcdc->hs_voltage_max) {
             return;
         }
         if (_dcdc_check_start_conditions(dcdc, ls, hs)) {

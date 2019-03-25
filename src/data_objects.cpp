@@ -101,6 +101,7 @@ const data_object_t data_objects[] = {
 
     {0x60, TS_CAT_INPUT, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_BOOL,   0, (void*) &(load.enabled_target),               "LoadEn"},   // change w/o store setting in NVM
     {0x61, TS_CAT_INPUT, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_BOOL,   0, (void*) &(load.usb_enabled_target),           "USBEn"},
+    {0x62, TS_CAT_INPUT, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_BOOL,   0, (void*) &(dcdc.enabled),                      "DCDCEn"},
 
     // OUTPUT DATA ////////////////////////////////////////////////////////////
     // using IDs >= 0x70 except for high priority data objects

@@ -47,6 +47,7 @@ enum dcdc_control_mode
  */
 typedef struct {
     dcdc_control_mode mode;     ///< DC/DC mode (buck, boost or nanogrid)
+    bool enabled;               ///< Can be used to disable the DC/DC power stage
 
     // actual measurements
     float ls_current;           ///< Low-side (inductor) current
