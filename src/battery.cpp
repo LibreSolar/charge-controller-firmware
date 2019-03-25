@@ -150,12 +150,10 @@ bool battery_conf_check(battery_conf_t *bat_conf)
              bat_conf->voltage_trickle > bat_conf->voltage_load_disconnect))
        );
 }
-
-void battery_conf_overwrite(battery_conf_t *source, battery_conf_t *destination)
+void battery_conf_overwrite(battery_conf_t *source, battery_conf_t *destination, battery_state_t *bat_state)
 {
     // TODO: stop DC/DC
 
-    destination->nominal_capacity               = source->nominal_capacity;
     destination->voltage_max                    = source->voltage_max;
     destination->voltage_recharge               = source->voltage_recharge;
     destination->voltage_load_reconnect         = source->voltage_load_reconnect;
@@ -168,6 +166,16 @@ void battery_conf_overwrite(battery_conf_t *source, battery_conf_t *destination)
     destination->voltage_trickle                = source->voltage_trickle;
     destination->time_trickle_recharge          = source->time_trickle_recharge;
     destination->temperature_compensation       = source->temperature_compensation;
+
+    // reset Ah counter and SOH if battery nominal capacity was changed
+    if (destination->nominal_capacity != source->nominal_capacity) {
+        destination->nominal_capacity = source->nominal_capacity;
+        if (bat_state != NULL) {
+            bat_state->discharged_Ah = 0;
+            bat_state->usable_capacity = 0;
+            bat_state->soh = 0;
+        }
+    }
 
     // TODO:
     // - update also DC/DC etc. (now this function only works at system startup)

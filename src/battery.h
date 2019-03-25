@@ -24,6 +24,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <stddef.h>
 
 /** Battery cell types
  */
@@ -222,7 +223,7 @@ bool battery_conf_check(battery_conf_t *bat);
  * Settings specified in bat_user will be copied to actual battery_t,
  * if suggested updates are valid (includes plausibility check!)
  */
-void battery_conf_overwrite(battery_conf_t *source, battery_conf_t *destination);
+void battery_conf_overwrite(battery_conf_t *source, battery_conf_t *destination, battery_state_t *state = NULL);
 
 /** Basic initialization of battery state (e.g. SOC)
  */

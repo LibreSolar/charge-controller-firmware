@@ -6,7 +6,7 @@
 
 // versioning of EEPROM layout (2 bytes)
 // change the version number each time the data object array below is changed!
-#define EEPROM_VERSION 2
+#define EEPROM_VERSION 3
 
 #define EEPROM_HEADER_SIZE 8    // bytes
 
@@ -17,6 +17,7 @@ extern ThingSet ts;
 // stores object-ids of values to be stored in EEPROM
 const uint16_t eeprom_data_objects[] = {
     0x01, // timestamp
+    0x18, // DeviceID
     0x08, 0x09, 0x0A, 0x0B, // input / output wh
     0x0C, 0x0D, 0x0E, // num full charge / deep-discharge / usable Ah
     0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x3F, // battery settings

@@ -197,7 +197,7 @@ void data_objects_update_conf()
     bool changed = false;
     if (battery_conf_check(&bat_conf_user)) {
         printf("New config valid and activated.\n");
-        battery_conf_overwrite(&bat_conf_user, &bat_conf);
+        battery_conf_overwrite(&bat_conf_user, &bat_conf, &bat_state);
         changed = true;
     }
     else {
@@ -216,7 +216,7 @@ void data_objects_read_eeprom()
 {
     eeprom_restore_data();
     if (battery_conf_check(&bat_conf_user)) {
-        battery_conf_overwrite(&bat_conf_user, &bat_conf);
+        battery_conf_overwrite(&bat_conf_user, &bat_conf, &bat_state);
     }
     else {
         battery_conf_overwrite(&bat_conf, &bat_conf_user);

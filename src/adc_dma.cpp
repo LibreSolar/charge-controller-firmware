@@ -142,6 +142,26 @@ void update_measurements(dcdc_t *dcdc, battery_state_t *bat, load_output_t *load
         if (load->current > log_data.load_current_max) {
             log_data.load_current_max = load->current;
         }
+
+        if (ls->current > 0) {
+            uint16_t solar_power = ls->voltage * ls->current;
+            if (solar_power > log_data.solar_power_max_day) {
+                log_data.solar_power_max_day = solar_power;
+                if (log_data.solar_power_max_day > log_data.solar_power_max_total) {
+                    log_data.solar_power_max_total = log_data.solar_power_max_day;
+                }
+            }
+        }
+
+        if (load->current > 0) {
+            uint16_t load_power = ls->voltage * load->current;
+            if (load_power > log_data.load_power_max_day) {
+                log_data.load_power_max_day = load_power;
+                if (log_data.load_power_max_day > log_data.load_power_max_total) {
+                    log_data.load_power_max_total = log_data.load_power_max_day;
+                }
+            }
+        }
     }
 
     if (dcdc->temp_mosfets > log_data.mosfet_temp_max) {
@@ -151,22 +171,6 @@ void update_measurements(dcdc_t *dcdc, battery_state_t *bat, load_output_t *load
     //if (meas->temp_int > log_data.temp_int_max) {
     //    log_data.temp_int_max = meas->temp_int;
     //}
-
-    uint16_t solar_power = ls->voltage * ls->current;
-    if (solar_power > log_data.solar_power_max_day) {
-        log_data.solar_power_max_day = solar_power;
-        if (log_data.solar_power_max_day > log_data.solar_power_max_total) {
-            log_data.solar_power_max_total = log_data.solar_power_max_day;
-        }
-    }
-
-    uint16_t load_power = ls->voltage * load->current;
-    if (load_power > log_data.load_power_max_day) {
-        log_data.load_power_max_day = solar_power;
-        if (log_data.load_power_max_day > log_data.load_power_max_total) {
-            log_data.load_power_max_total = log_data.load_power_max_day;
-        }
-    }
 }
 
 
