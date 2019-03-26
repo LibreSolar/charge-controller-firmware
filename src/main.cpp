@@ -144,7 +144,7 @@ int main()
 
             load_state_machine(&load, ls_port.input_allowed);
 
-            //eeprom_update();
+            eeprom_update();
             interfaces_process_1s();
             toggle_led_blink();
 

@@ -181,6 +181,7 @@ typedef struct
     int num_batteries;      ///< Used for automatic 12V/24V battery detection at start-up (can be 1 or 2 only)
 
     float temperature;      ///< Battery temperature in °C from ext. temperature sensor (if existing)
+    bool ext_temp_sensor;   ///< True if external temperature sensor was detected
 
     float chg_day_Wh;           ///< Cumulated energy in charge direction of today (Wh)
     float dis_day_Wh;           ///< Cumulated energy in discharge direction of today (Wh)

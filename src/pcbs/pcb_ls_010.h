@@ -81,6 +81,7 @@ static const pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
 
 // typical value for Semitec 103AT-5 thermistor: 3435
 #define NTC_BETA_VALUE 3435
+#define NTC_SERIES_RESISTOR 10000.0
 
 #define ADC_GAIN_V_BAT (110.0 / 10 )    // battery voltage divider 100k + 10k
 #define ADC_GAIN_V_SOLAR (105.6 / 5.6)  // solar voltage divider: 100k + 5.6k

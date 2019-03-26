@@ -45,6 +45,7 @@ extern bool pub_usb_enabled;
 extern uint32_t timestamp;
 float latitude;                 // can be read out via GSM module for some network operators
 float longitude;
+float mcu_temp;
 
 /** Data Objects
  *
@@ -117,8 +118,12 @@ const data_object_t data_objects[] = {
     {0x72, TS_CAT_OUTPUT, TS_ACCESS_READ, TS_T_FLOAT32, 2, (void*) &(ls_port.current),               "Bat_A"},
     {0x73, TS_CAT_OUTPUT, TS_ACCESS_READ, TS_T_FLOAT32, 2, (void*) &(load.current),                  "Load_A"},
     {0x74, TS_CAT_OUTPUT, TS_ACCESS_READ, TS_T_FLOAT32, 1, (void*) &(bat_state.temperature),         "Bat_degC"},
-    {0x75, TS_CAT_OUTPUT, TS_ACCESS_READ, TS_T_FLOAT32, 1, (void*) &(dcdc.temp_mosfets),             "Internal_degC"},
-    {0x76, TS_CAT_OUTPUT, TS_ACCESS_READ, TS_T_UINT16,  0, (void*) &(bat_state.chg_state),           "ChgState"},
+    {0x75, TS_CAT_OUTPUT, TS_ACCESS_READ, TS_T_BOOL,    1, (void*) &(bat_state.ext_temp_sensor),     "BatTempExt"},
+    {0x76, TS_CAT_OUTPUT, TS_ACCESS_READ, TS_T_FLOAT32, 1, (void*) &(mcu_temp),                      "MCU_degC"},
+#ifdef PIN_ADC_TEMP_FETS
+    {0x77, TS_CAT_OUTPUT, TS_ACCESS_READ, TS_T_FLOAT32, 1, (void*) &(dcdc.temp_mosfets),             "FETs_degC"},
+#endif
+    {0x78, TS_CAT_OUTPUT, TS_ACCESS_READ, TS_T_UINT16,  0, (void*) &(bat_state.chg_state),           "ChgState"},
 
     // others
     {0x90, TS_CAT_OUTPUT, TS_ACCESS_READ, TS_T_FLOAT32, 0, (void*) &(latitude),                      "Latitude"},

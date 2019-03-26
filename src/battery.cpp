@@ -187,6 +187,7 @@ void battery_state_init(battery_state_t *bat_state)
 {
     bat_state->num_batteries = 1;             // initialize with only one battery in series
     bat_state->soh = 100;                     // assume new battery
+    bat_state->temperature = 25.0;
 }
 
 //----------------------------------------------------------------------------

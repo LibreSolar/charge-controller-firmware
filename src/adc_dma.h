@@ -32,6 +32,10 @@
  */
 void calibrate_current_sensors(dcdc_t *dcdc, load_output_t *load);
 
+/** Detects if external temperature sensor is attached, otherwise takes internal sensor
+ */
+void detect_battery_temperature(battery_state_t *bat, float bat_temp);
+
 /** Updates structures with data read from ADC
  */
 void update_measurements(dcdc_t *dcdc, battery_state_t *bat, load_output_t *load, power_port_t *hs, power_port_t *ls);

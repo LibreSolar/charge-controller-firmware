@@ -41,6 +41,10 @@
 AnalogOut ref_i_dcdc(PIN_REF_I_DCDC);
 #endif
 
+#ifdef PIN_TEMP_INT_PD
+DigitalInOut temp_pd(PIN_TEMP_INT_PD);
+#endif
+
 float dcdc_current_offset;
 float load_current_offset;
 
@@ -53,6 +57,7 @@ volatile uint32_t adc_filtered[NUM_ADC_CH] = {0};
 
 extern Serial serial;
 extern log_data_t log_data;
+extern float mcu_temp;
 
 void calibrate_current_sensors(dcdc_t *dcdc, load_output_t *load)
 {
@@ -101,16 +106,19 @@ void update_measurements(dcdc_t *dcdc, battery_state_t *bat, load_output_t *load
     // https://www.embeddedrelated.com/showarticle/91.php
 
     float v_temp, rts;
+    float bat_temp = 25.0;
 
 #ifdef PIN_ADC_TEMP_BAT
     // battery temperature calculation
     v_temp = ((adc_filtered[ADC_POS_TEMP_BAT] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096;  // voltage read by ADC (mV)
-    rts = 10000 * v_temp / (vcc - v_temp); // resistance of NTC (Ohm)
+    rts = NTC_SERIES_RESISTOR * v_temp / (vcc - v_temp); // resistance of NTC (Ohm)
 
     // Temperature calculation using Beta equation for 10k thermistor
     // (25°C reference temperature for Beta equation assumed)
-    bat->temperature = 1.0/(1.0/(273.15+25) + 1.0/NTC_BETA_VALUE*log(rts/10000.0)) - 273.15; // °C
+    bat_temp = 1.0/(1.0/(273.15+25) + 1.0/NTC_BETA_VALUE*log(rts/10000.0)) - 273.15; // °C
 #endif
+
+    detect_battery_temperature(bat, bat_temp);
 
 #ifdef PIN_ADC_TEMP_FETS
     // MOSFET temperature calculation
@@ -119,12 +127,10 @@ void update_measurements(dcdc_t *dcdc, battery_state_t *bat, load_output_t *load
     dcdc->temp_mosfets = 1.0/(1.0/(273.15+25) + 1.0/NTC_BETA_VALUE*log(rts/10000.0)) - 273.15; // °C
 #endif
 
-/*
     // internal MCU temperature
-    uint16_t adcval = (adc_filtered[ADC_POS_TEMP_MCU] >> (4 + ADC_FILTER_CONST));
-    meas->temp_int = (TSENSE_CAL2_VALUE - TSENSE_CAL1_VALUE) / (TSENSE_CAL2 - TSENSE_CAL1) * (adcval - TSENSE_CAL1) + TSENSE_CAL1_VALUE;
+    uint16_t adcval = (adc_filtered[ADC_POS_TEMP_MCU] >> (4 + ADC_FILTER_CONST)) * vcc / VREFINT_VALUE;
+    mcu_temp = (TSENSE_CAL2_VALUE - TSENSE_CAL1_VALUE) / (TSENSE_CAL2 - TSENSE_CAL1) * (adcval - TSENSE_CAL1) + TSENSE_CAL1_VALUE;
     //printf("TS_CAL1:%d TS_CAL2:%d ADC:%d, temp_int:%f\n", TS_CAL1, TS_CAL2, adcval, meas->temp_int);
-*/
 
     if (ls->voltage > log_data.battery_voltage_max) {
         log_data.battery_voltage_max = ls->voltage;
@@ -171,6 +177,60 @@ void update_measurements(dcdc_t *dcdc, battery_state_t *bat, load_output_t *load
     //if (meas->temp_int > log_data.temp_int_max) {
     //    log_data.temp_int_max = meas->temp_int;
     //}
+}
+
+void detect_battery_temperature(battery_state_t *bat, float bat_temp)
+{
+#ifdef PIN_TEMP_INT_PD
+
+    // state machine for external sensor detection
+    enum temp_sense_state {
+        TSENSE_STATE_CHECK,
+        TSENSE_STATE_CHECK_WAIT,
+        TSENSE_STATE_MEASURE,
+        TSENSE_STATE_MEASURE_WAIT
+    };
+    static temp_sense_state ts_state = TSENSE_STATE_CHECK;
+
+    static int sensor_change_counter = 0;
+
+    switch (ts_state) {
+        case TSENSE_STATE_CHECK:
+            if (bat_temp < -50) {
+                bat->ext_temp_sensor = false;
+                temp_pd.output();
+                temp_pd = 0;
+                ts_state = TSENSE_STATE_CHECK_WAIT;
+            }
+            else {
+                bat->ext_temp_sensor = true;
+                ts_state = TSENSE_STATE_MEASURE;
+            }
+            break;
+        case TSENSE_STATE_CHECK_WAIT:
+            sensor_change_counter++;
+            if (sensor_change_counter > 5) {
+                sensor_change_counter = 0;
+                ts_state = TSENSE_STATE_MEASURE;
+            }
+            break;
+        case TSENSE_STATE_MEASURE:
+            bat->temperature = bat->temperature * 0.8 + bat_temp * 0.2;
+            //printf("Battery temperature: %.2f (%s sensor)\n", bat_temp, (bat->ext_temp_sensor ? "external" : "internal"));
+            temp_pd.input();
+            ts_state = TSENSE_STATE_MEASURE_WAIT;
+            break;
+        case TSENSE_STATE_MEASURE_WAIT:
+            sensor_change_counter++;
+            if (sensor_change_counter > 10) {
+                sensor_change_counter = 0;
+                ts_state = TSENSE_STATE_CHECK;
+            }
+            break;
+    }
+#else
+    bat->temperature = bat_temp;
+#endif
 }
 
 

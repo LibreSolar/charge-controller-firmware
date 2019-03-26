@@ -43,6 +43,8 @@
 
 #define PIN_REF_I_DCDC  PA_4
 
+#define PIN_TEMP_INT_PD PA_8
+
 enum pin_state_t { PIN_HIGH, PIN_LOW, PIN_FLOAT };
 
 // assignment LED numbers on PCB to their meaning
@@ -73,6 +75,7 @@ static const pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
 
 // typical value for Semitec 103AT-5 thermistor: 3435
 #define NTC_BETA_VALUE 3435
+#define NTC_SERIES_RESISTOR 10400.0
 
 #define ADC_GAIN_V_BAT (132 / 12)
 #define ADC_GAIN_V_SOLAR (1 + 120/12 + 120/8.2)
