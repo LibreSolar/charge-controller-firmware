@@ -80,9 +80,9 @@ const data_object_t data_objects[] = {
     {0x35, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 1, (void*) &(bat_conf_user.current_cutoff_CV),          "BatCutoff_A"},
     {0x36, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_INT32,   0, (void*) &(bat_conf_user.time_limit_CV),              "BatCutoff_s"},
     {0x37, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_BOOL,    0, (void*) &(bat_conf_user.trickle_enabled),            "TrickleEn"},
-    {0x37, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 0, (void*) &(bat_conf_user.voltage_trickle),            "Trickle_V"},
-    {0x38, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_INT32,   0, (void*) &(bat_conf_user.time_trickle_recharge),      "TrickleRecharge_s"},
-    // 0x39-0x3E reserved for equalization charging
+    {0x38, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 1, (void*) &(bat_conf_user.voltage_trickle),            "Trickle_V"},
+    {0x39, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_INT32,   0, (void*) &(bat_conf_user.time_trickle_recharge),      "TrickleRecharge_s"},
+    // 0x3A-0x3E reserved for equalization charging
     {0x3F, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 2, (void*) &(bat_conf_user.temperature_compensation),   "TempFactor"},
 
     // load settings
@@ -125,6 +125,8 @@ const data_object_t data_objects[] = {
 #endif
     {0x78, TS_CAT_OUTPUT, TS_ACCESS_READ, TS_T_UINT16,  0, (void*) &(bat_state.chg_state),           "ChgState"},
     {0x79, TS_CAT_OUTPUT, TS_ACCESS_READ, TS_T_UINT16,  0, (void*) &(dcdc.state),                    "DCDCState"},
+    {0x7A, TS_CAT_OUTPUT, TS_ACCESS_READ, TS_T_FLOAT32, 2, (void*) &(hs_port.current),               "Solar_A"},
+
 
     // others
     {0x90, TS_CAT_OUTPUT, TS_ACCESS_READ, TS_T_FLOAT32, 0, (void*) &(latitude),                      "Latitude"},
@@ -138,7 +140,7 @@ const data_object_t data_objects[] = {
     {0x0A, TS_CAT_REC, TS_ACCESS_READ, TS_T_UINT32,  0, (void*) &(bat_state.chg_total_Wh),               "BatChgTotal_Wh"},
     {0x0B, TS_CAT_REC, TS_ACCESS_READ, TS_T_UINT32,  0, (void*) &(bat_state.dis_total_Wh),               "BatDisTotal_Wh"},
     {0x0C, TS_CAT_REC, TS_ACCESS_READ, TS_T_UINT16,  0, (void*) &(bat_state.num_full_charges),           "FullChgCount"},
-    {0x0D, TS_CAT_REC, TS_ACCESS_READ, TS_T_UINT16,  0, (void*) &(bat_state.num_deep_discharges),        "DeepDisCount"},
+    {0x0D, TS_CAT_REC, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_UINT16,  0, (void*) &(bat_state.num_deep_discharges),        "DeepDisCount"},
     {0x0E, TS_CAT_REC, TS_ACCESS_READ, TS_T_FLOAT32, 0, (void*) &(bat_state.usable_capacity),            "BatUsable_Ah"}, // usable battery capacity
     {0x0F, TS_CAT_REC, TS_ACCESS_READ, TS_T_UINT16,  2, (void*) &(log_data.solar_power_max_day),         "SolarMaxDay_W"},
     {0x10, TS_CAT_REC, TS_ACCESS_READ, TS_T_UINT16,  2, (void*) &(log_data.load_power_max_day),          "LoadMaxDay_W"},
@@ -188,12 +190,29 @@ const uint16_t pub_serial[] = {
     0x06, 0xA4  // SOC, coulomb counter
 };
 
+// stores object-ids of values to be published via Serial
+const uint16_t pub_emoncms[] = {
+    0x01, // internal time stamp
+    0x70, 0x71, 0x72, 0x73, 0x7A,     // voltage + current
+    /*0x74,*/ 0x76, 0x77,           // temperatures
+    0x04, 0x78, 0x79,           // LoadState, ChgState, DCDCState
+    0xA0, 0xA1, 0xA2, 0xA3, // daily energy throughput
+//    0x08, 0x09,     // SolarInTotal_Wh, LoadOutTotal_Wh
+//    0x0A, 0x0B,     // BatChgTotal_Wh, BatDisTotal_Wh
+//    0x0F, 0x10,     // SolarMaxDay_W, LoadMaxDay_W
+    0x0C, 0x0D,     // FullChgCount, DeepDisCount
+    0x0E, 0xA4,     // BatUsable_Ah, coulomb counter
+    0x06, 0xA5, 0xA6      // SOC, SOH, DayCount
+};
+
 const ts_pub_channel_t pub_channels[] = {
     { "Serial_1s",   pub_serial,           sizeof(pub_serial)/sizeof(uint16_t) },
+    { "EmonCMS_10s", pub_emoncms,          sizeof(pub_emoncms)/sizeof(uint16_t) },
 };
 
 // TODO: find better solution than manual configuration of channel number
 volatile const int PUB_CHANNEL_SERIAL = 0;
+volatile const int PUB_CHANNEL_EMONCMS = 1;
 
 ThingSet ts(
     data_objects, sizeof(data_objects)/sizeof(data_object_t),

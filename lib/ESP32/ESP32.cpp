@@ -30,6 +30,7 @@ ESP32::~ESP32()
 // Soft reset of ESP32
 int ESP32::reset(void)
 {
+    _at.set_timeout(3000);
     _at.send("AT+RST");
 
     char buf[100];
@@ -41,6 +42,7 @@ int ESP32::reset(void)
 
 void ESP32::print_firmware()
 {
+    _at.set_timeout(1000);
     char buf[100];
     _at.send("AT+GMR");
     _at.read(buf, sizeof(buf));
@@ -49,6 +51,7 @@ void ESP32::print_firmware()
 
 int ESP32::set_wifi_mode(ESP32_wifi_mode_t mode)
 {
+    _at.set_timeout(1000);
     _at.flush();
     _at.send("AT+CWMODE=%d", mode);
     return _at.recv("OK");
@@ -189,7 +192,7 @@ int ESP32::send_URL(char *url, char *host)
     char request[500];
     snprintf(request, sizeof(request), "GET %s HTTP/1.0\r\nHost: %s\r\nConnection: close\r\n\r\n", url, host);
 
-    _at.send("AT+CIPSEND=%d", strlen(request) + 1);
+    _at.send("AT+CIPSEND=%d", strlen(request));
     _at.recv("> ");
 
     _at.send(request);
