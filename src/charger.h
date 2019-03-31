@@ -32,13 +32,13 @@
 
  ## Idle
  Initial state of the charge controller. If the solar voltage is high enough
- and the battery is not full, charging in CC mode is started.
+ and the battery is not full, bulk charging mode is started.
 
- ## CC / bulk charging
+ ## Bulk / CC / MPPT charging
  The battery is charged with maximum possible current (MPPT algorithm is
  active) until the CV voltage limit is reached.
 
- ## CV / absorption charging
+ ## Topping / CV / absorption charging
  Lead-acid batteries are charged for some time using a slightly higher charge
  voltage. After a current cutoff limit or a time limit is reached, the charger
  goes into trickle or equalization mode for lead-acid batteries or back into
@@ -56,11 +56,15 @@
  components attached to the battery. (currently, no equalization charging is
  enabled in the software)
 
+ Further information:
+ https://en.wikipedia.org/wiki/IUoU_battery_charging
+ https://batteryuniversity.com/learn/article/charging_the_lead_acid_battery
+
  */
 enum charger_state {
     CHG_STATE_IDLE,
-    CHG_STATE_CC,
-    CHG_STATE_CV,
+    CHG_STATE_BULK,
+    CHG_STATE_TOPPING,
     CHG_STATE_TRICKLE,
     CHG_STATE_EQUALIZATION
 };

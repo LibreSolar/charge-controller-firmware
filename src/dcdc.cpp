@@ -27,6 +27,7 @@ void dcdc_init(dcdc_t *dcdc)
 {
     dcdc->mode           = DCDC_MODE_INIT;
     dcdc->enabled        = true;
+    dcdc->state          = DCDC_STATE_OFF;
     dcdc->ls_current_max = DCDC_CURRENT_MAX;
     dcdc->ls_current_min = 0.05;                // A   if lower, charger is switched off
     dcdc->hs_voltage_max = HIGH_SIDE_VOLTAGE_MAX;   // V
@@ -53,24 +54,31 @@ int _dcdc_output_control(dcdc_t *dcdc, power_port_t *out, power_port_t *in)
     {
         return 0;
     }
-    else if (out->voltage > (out->voltage_output_target - out->droop_resistance * out->current)    // output voltage above target
-        || out->current > out->current_output_max                                               // output current limit exceeded
-        || (in->voltage < (in->voltage_input_start - in->droop_resistance * in->current) && out->current > 0.1)        // input voltage below limit
-        || in->current < in->current_input_max                                                  // input current (negative signs) above limit
-        || fabs(dcdc->ls_current) > dcdc->ls_current_max                                        // current above hardware maximum
-        || dcdc->temp_mosfets > 80)                                                             // temperature limits exceeded
+    else if (out->voltage > (out->voltage_output_target - out->droop_resistance * out->current)                     // output voltage above target
+        || (in->voltage < (in->voltage_input_start - in->droop_resistance * in->current) && out->current > 0.1))    // input voltage below limit
     {
-        //printf("   dec\n");
+        dcdc->state = DCDC_STATE_CV;
+        return -1;  // decrease output power
+    }
+    else if (out->current > out->current_output_max         // output current limit exceeded
+        || in->current < in->current_input_max)             // input current (negative signs) limit exceeded
+    {
+        dcdc->state = DCDC_STATE_CC;
+        return -1;  // decrease output power
+    }
+    else if (fabs(dcdc->ls_current) > dcdc->ls_current_max          // current above hardware maximum
+        || dcdc->temp_mosfets > 80)                                 // temperature limits exceeded
+    {
+        dcdc->state = DCDC_STATE_DERATING;
         return -1;  // decrease output power
     }
     else if (out->current < 0.1 && out->voltage < out->voltage_input_start)  // no load condition (e.g. start-up of nanogrid) --> raise voltage
     {
-        //printf("   inc\n");
         return 1;   // increase output power
     }
     else {
-        //printf("   MPPT\n");
         // start MPPT
+        dcdc->state = DCDC_STATE_MPPT;
         if (dcdc->power > dcdc_power_new) {
             pwm_delta = -pwm_delta;
         }
@@ -107,16 +115,19 @@ void dcdc_control(dcdc_t *dcdc, power_port_t *hs, power_port_t *ls)
 
         if (step == 0) {
             half_bridge_stop();
+            dcdc->state = DCDC_STATE_OFF;
             dcdc->off_timestamp = time(NULL);
             printf("DC/DC stop.\n");
         }
         else if (ls->voltage > dcdc->ls_voltage_max || hs->voltage > dcdc->hs_voltage_max) {
             half_bridge_stop();
+            dcdc->state = DCDC_STATE_OFF;
             dcdc->off_timestamp = time(NULL);
             printf("DC/DC emergency stop (voltage limits exceeded).\n");
         }
         else if (dcdc->enabled == false) {
             half_bridge_stop();
+            dcdc->state = DCDC_STATE_OFF;
             printf("DC/DC stop (disabled).\n");
         }
     }

@@ -30,7 +30,7 @@
  *
  * Defines which type of device is connected to the high side and low side ports
  */
-enum dcdc_control_mode
+enum dcdc_operation_mode
 {
     MODE_MPPT_BUCK,     ///< solar panel at high side port, battery / load at low side port (typical MPPT)
     MODE_MPPT_BOOST,    ///< battery at high side port, solar panel at low side (e.g. e-bike charging)
@@ -40,14 +40,28 @@ enum dcdc_control_mode
                         ///< nano grid voltage.
 };
 
+/** DC/DC control state
+ *
+ * Allows to determine the current control state (off, CC, CV and MPPT)
+ */
+enum dcdc_control_state
+{
+    DCDC_STATE_OFF,     ///< DC/DC switched off (low input power available or actively disabled)
+    DCDC_STATE_MPPT,    ///< Maximum Power Point Tracking
+    DCDC_STATE_CC,      ///< Constant-Current control
+    DCDC_STATE_CV,      ///< Constant-Voltage control
+    DCDC_STATE_DERATING ///< Hardware-limits (current or temperature) reached
+};
+
 /** DC/DC type
  *
  * Contains all data belonging to the DC/DC sub-component of the PCB, incl.
  * actual measurements and calibration parameters.
  */
 typedef struct {
-    dcdc_control_mode mode;     ///< DC/DC mode (buck, boost or nanogrid)
+    dcdc_operation_mode mode;   ///< DC/DC mode (buck, boost or nanogrid)
     bool enabled;               ///< Can be used to disable the DC/DC power stage
+    uint16_t state;             ///< Control state (off / MPPT / CC / CV)
 
     // actual measurements
     float ls_current;           ///< Low-side (inductor) current

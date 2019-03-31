@@ -28,36 +28,6 @@ void _enter_state(battery_state_t* bat_state, int next_state)
     bat_state->chg_state = next_state;
 }
 
-/*****************************************************************************
- *  Charger state machine
-
- ## Idle
- Initial state of the charge controller. If the solar voltage is high enough
- and the battery is not full, charging in CC mode is started.
-
- ## CC / bulk charging
- The battery is charged with maximum possible current (MPPT algorithm is
- active) until the CV voltage limit is reached.
-
- ## CV / absorption charging
- Lead-acid batteries are charged for some time using a slightly higher charge
- voltage. After a current cutoff limit or a time limit is reached, the charger
- goes into trickle or equalization mode for lead-acid batteries or back into
- Standby for Li-ion batteries.
-
- ## Trickle charging
- This mode is kept forever for a lead-acid battery and keeps the battery at
- full state of charge. If too much power is drawn from the battery, the
- charger switches back into CC / bulk charging mode.
-
- ## Equalization charging
- This mode is only used for lead-acid batteries after several deep-discharge
- cycles or a very long period of time with no equalization. Voltage is
- increased to 15V or above, so care must be taken for the other system
- components attached to the battery. (currently, no equalization charging is
- enabled in the software)
-
- */
 void charger_state_machine(power_port_t *port, battery_conf_t *bat_conf, battery_state_t *bat_state, float voltage, float current)
 {
     //printf("time_state_change = %d, time = %d, v_bat = %f, i_bat = %f\n", bat_state->time_state_changed, time(NULL), voltage, current);
@@ -94,23 +64,23 @@ void charger_state_machine(power_port_t *port, battery_conf_t *bat_conf, battery
             port->current_output_max = bat_conf->charge_current_max;
             port->output_allowed = true;
             bat_state->full = false;
-            _enter_state(bat_state, CHG_STATE_CC);
+            _enter_state(bat_state, CHG_STATE_BULK);
         }
         break;
     }
-    case CHG_STATE_CC: {
+    case CHG_STATE_BULK: {
         if (voltage > port->voltage_output_target) {
             port->voltage_output_target = bat_conf->voltage_max;
-            _enter_state(bat_state, CHG_STATE_CV);
+            _enter_state(bat_state, CHG_STATE_TOPPING);
         }
         break;
     }
-    case CHG_STATE_CV: {
+    case CHG_STATE_TOPPING: {
         if (voltage >= port->voltage_output_target) {
             bat_state->time_voltage_limit_reached = time(NULL);
         }
 
-        // cut-off limit reached because battery full (i.e. CV mode still
+        // cut-off limit reached because battery full (i.e. CV limit still
         // reached by available solar power within last 2s) or CV period long enough?
         if ((current < bat_conf->current_cutoff_CV && (time(NULL) - bat_state->time_voltage_limit_reached) < 2)
             || (time(NULL) - bat_state->time_state_changed) > bat_conf->time_limit_CV)
@@ -147,7 +117,7 @@ void charger_state_machine(power_port_t *port, battery_conf_t *bat_conf, battery
             port->current_output_max = bat_conf->charge_current_max;
             port->voltage_output_target = bat_conf->voltage_max;
             bat_state->full = false;
-            _enter_state(bat_state, CHG_STATE_CC);
+            _enter_state(bat_state, CHG_STATE_BULK);
         }
         // assumption: trickle does not harm the battery --> never go back to idle
         // (for Li-ion battery: disable trickle!)

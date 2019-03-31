@@ -124,6 +124,7 @@ const data_object_t data_objects[] = {
     {0x77, TS_CAT_OUTPUT, TS_ACCESS_READ, TS_T_FLOAT32, 1, (void*) &(dcdc.temp_mosfets),             "FETs_degC"},
 #endif
     {0x78, TS_CAT_OUTPUT, TS_ACCESS_READ, TS_T_UINT16,  0, (void*) &(bat_state.chg_state),           "ChgState"},
+    {0x79, TS_CAT_OUTPUT, TS_ACCESS_READ, TS_T_UINT16,  0, (void*) &(dcdc.state),                    "DCDCState"},
 
     // others
     {0x90, TS_CAT_OUTPUT, TS_ACCESS_READ, TS_T_FLOAT32, 0, (void*) &(latitude),                      "Latitude"},
@@ -138,7 +139,7 @@ const data_object_t data_objects[] = {
     {0x0B, TS_CAT_REC, TS_ACCESS_READ, TS_T_UINT32,  0, (void*) &(bat_state.dis_total_Wh),               "BatDisTotal_Wh"},
     {0x0C, TS_CAT_REC, TS_ACCESS_READ, TS_T_UINT16,  0, (void*) &(bat_state.num_full_charges),           "FullChgCount"},
     {0x0D, TS_CAT_REC, TS_ACCESS_READ, TS_T_UINT16,  0, (void*) &(bat_state.num_deep_discharges),        "DeepDisCount"},
-    {0x0E, TS_CAT_REC, TS_ACCESS_READ, TS_T_UINT16,  0, (void*) &(bat_state.usable_capacity),            "BatUsable_Ah"}, // usable battery capacity
+    {0x0E, TS_CAT_REC, TS_ACCESS_READ, TS_T_FLOAT32, 0, (void*) &(bat_state.usable_capacity),            "BatUsable_Ah"}, // usable battery capacity
     {0x0F, TS_CAT_REC, TS_ACCESS_READ, TS_T_UINT16,  2, (void*) &(log_data.solar_power_max_day),         "SolarMaxDay_W"},
     {0x10, TS_CAT_REC, TS_ACCESS_READ, TS_T_UINT16,  2, (void*) &(log_data.load_power_max_day),          "LoadMaxDay_W"},
 
@@ -180,14 +181,15 @@ const data_object_t data_objects[] = {
 // stores object-ids of values to be published via Serial
 const uint16_t pub_serial[] = {
     0x01, // internal time stamp
-    0x70, 0x71, 0x72, 0x73, 0x74,     // V, I, T
-    0x04, 0x76, // LoadState, ChgState
-    0xA0, 0xA1, 0xA2, 0xA3, // daily energy throughput
+    0x70, 0x71, 0x72, 0x73,     // voltage + current
+    0x74, 0x76, 0x77,           // temperatures
+    0x04, 0x78, 0x79,           // LoadState, ChgState, DCDCState
+    0xA0, 0xA1, 0xA2, 0xA3,     // daily energy throughput
     0x06, 0xA4  // SOC, coulomb counter
 };
 
 const ts_pub_channel_t pub_channels[] = {
-    { "Serial",  pub_serial,            sizeof(pub_serial)/sizeof(uint16_t) },
+    { "Serial_1s",   pub_serial,           sizeof(pub_serial)/sizeof(uint16_t) },
 };
 
 // TODO: find better solution than manual configuration of channel number
