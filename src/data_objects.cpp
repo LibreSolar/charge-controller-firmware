@@ -25,6 +25,7 @@
 #include "load.h"
 #include "hardware.h"
 #include "eeprom.h"
+#include "pwm_switch.h"
 
 extern log_data_t log_data;
 extern battery_state_t bat_state;
@@ -34,6 +35,7 @@ extern dcdc_t dcdc;
 extern load_output_t load;
 extern power_port_t hs_port;
 extern power_port_t ls_port;
+extern pwm_switch_t pwm_switch;
 
 const char* manufacturer = "Libre Solar";
 const char* deviceName = "MPPT Solar Charge Controller";
@@ -102,7 +104,11 @@ const data_object_t data_objects[] = {
 
     {0x60, TS_CAT_INPUT, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_BOOL,   0, (void*) &(load.enabled_target),               "LoadEn"},   // change w/o store setting in NVM
     {0x61, TS_CAT_INPUT, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_BOOL,   0, (void*) &(load.usb_enabled_target),           "USBEn"},
+#ifdef CHARGER_TYPE_PWM
+    {0x62, TS_CAT_INPUT, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_BOOL,   0, (void*) &(pwm_switch.enabled),                "PWMEn"},
+#else
     {0x62, TS_CAT_INPUT, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_BOOL,   0, (void*) &(dcdc.enabled),                      "DCDCEn"},
+#endif
 
     // OUTPUT DATA ////////////////////////////////////////////////////////////
     // using IDs >= 0x70 except for high priority data objects
@@ -127,7 +133,6 @@ const data_object_t data_objects[] = {
     {0x79, TS_CAT_OUTPUT, TS_ACCESS_READ, TS_T_UINT16,  0, (void*) &(dcdc.state),                    "DCDCState"},
     {0x7A, TS_CAT_OUTPUT, TS_ACCESS_READ, TS_T_FLOAT32, 2, (void*) &(hs_port.current),               "Solar_A"},
 
-
     // others
     {0x90, TS_CAT_OUTPUT, TS_ACCESS_READ, TS_T_FLOAT32, 0, (void*) &(latitude),                      "Latitude"},
     {0x91, TS_CAT_OUTPUT, TS_ACCESS_READ, TS_T_FLOAT32, 0, (void*) &(longitude),                     "Longitude"},
@@ -140,7 +145,7 @@ const data_object_t data_objects[] = {
     {0x0A, TS_CAT_REC, TS_ACCESS_READ, TS_T_UINT32,  0, (void*) &(bat_state.chg_total_Wh),               "BatChgTotal_Wh"},
     {0x0B, TS_CAT_REC, TS_ACCESS_READ, TS_T_UINT32,  0, (void*) &(bat_state.dis_total_Wh),               "BatDisTotal_Wh"},
     {0x0C, TS_CAT_REC, TS_ACCESS_READ, TS_T_UINT16,  0, (void*) &(bat_state.num_full_charges),           "FullChgCount"},
-    {0x0D, TS_CAT_REC, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_UINT16,  0, (void*) &(bat_state.num_deep_discharges),        "DeepDisCount"},
+    {0x0D, TS_CAT_REC, TS_ACCESS_READ, TS_T_UINT16,  0, (void*) &(bat_state.num_deep_discharges),        "DeepDisCount"},
     {0x0E, TS_CAT_REC, TS_ACCESS_READ, TS_T_FLOAT32, 0, (void*) &(bat_state.usable_capacity),            "BatUsable_Ah"}, // usable battery capacity
     {0x0F, TS_CAT_REC, TS_ACCESS_READ, TS_T_UINT16,  2, (void*) &(log_data.solar_power_max_day),         "SolarMaxDay_W"},
     {0x10, TS_CAT_REC, TS_ACCESS_READ, TS_T_UINT16,  2, (void*) &(log_data.load_power_max_day),          "LoadMaxDay_W"},

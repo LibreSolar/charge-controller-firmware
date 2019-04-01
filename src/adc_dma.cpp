@@ -19,6 +19,7 @@
 #include "pcb.h"        // contains defines for pins
 #include <math.h>       // log for thermistor calculation
 #include "log.h"
+#include "pwm_switch.h"
 
 // factory calibration values for internal voltage reference and temperature sensor (see MCU datasheet, not RM)
 #if defined(STM32F0)
@@ -95,9 +96,15 @@ void update_measurements(dcdc_t *dcdc, battery_state_t *bat, load_output_t *load
         (float)(((adc_filtered[ADC_POS_I_LOAD] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
         ADC_GAIN_I_LOAD / 1000.0 + load_current_offset;
 
+#ifdef CHARGER_TYPE_PWM
+    ls->current =
+        (float)(((adc_filtered[ADC_POS_I_SOLAR] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
+        ADC_GAIN_I_SOLAR / 1000.0 + dcdc_current_offset;
+#else // MPPT
     ls->current =
         (float)(((adc_filtered[ADC_POS_I_DCDC] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
-        ADC_GAIN_I_LOAD / 1000.0 + dcdc_current_offset;
+        ADC_GAIN_I_DCDC / 1000.0 + dcdc_current_offset;
+#endif
     dcdc->ls_current = ls->current;
 
     hs->current = -ls->current * ls->voltage / hs->voltage;
@@ -280,19 +287,26 @@ extern "C" void DMA1_Channel1_IRQHandler(void)
     {
         // low pass filter with filter constant c = 1/16
         // y(n) = c * x(n) + (c - 1) * y(n-1)
+#ifdef CHARGER_TYPE_PWM
+        for (unsigned int i = 0; i < NUM_ADC_CH; i++) {
+            if (i == ADC_POS_V_SOLAR || i == ADC_POS_I_SOLAR) {
+                // only read input voltage and current when switch is on or permanently off
+                if (GPIOB->IDR & GPIO_PIN_1 || pwm_switch_enabled() == false) {
+                    adc_filtered[i] += (uint32_t)adc_readings[i] - (adc_filtered[i] >> ADC_FILTER_CONST);
+                }
+            }
+            else {
+                adc_filtered[i] += (uint32_t)adc_readings[i] - (adc_filtered[i] >> ADC_FILTER_CONST);
+            }
+        }
+#else
         for (unsigned int i = 0; i < NUM_ADC_CH; i++) {
             // adc_readings: 12-bit ADC values left-aligned in uint16_t
             adc_filtered[i] += (uint32_t)adc_readings[i] - (adc_filtered[i] >> ADC_FILTER_CONST);
         }
-        //num_adc_conversions++;
+#endif
     }
     DMA1->IFCR |= 0x0FFFFFFF;       // clear all interrupt registers
-/*
-    if (num_adc_conversions % 100 == 0) {
-        serial.printf("Filtered: %d %d %d %d %d %d %d (num_conv: %d)\n",
-            adc_filtered[0] >> (4+ADC_FILTER_CONST), adc_filtered[1] >> (4+ADC_FILTER_CONST), adc_filtered[2] >> (4+ADC_FILTER_CONST), adc_filtered[3] >> (4+ADC_FILTER_CONST),
-            adc_filtered[4] >> (4+ADC_FILTER_CONST), adc_filtered[5] >> (4+ADC_FILTER_CONST), adc_filtered[6] >> (4+ADC_FILTER_CONST), num_adc_conversions);
-    }*/
 }
 
 void adc_setup()

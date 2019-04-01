@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef PWM_CHG_H
-#define PWM_CHG_H
+#ifndef PWM_SWITCH_H
+#define PWM_SWITCH_H
 
 /** @file
  *
@@ -27,10 +27,12 @@
 
 /** PWM charger type
  *
- * Contains all data belonging to the DC/DC sub-component of the PCB, incl.
+ * Contains all data belonging to the PWM switching sub-component of the PCB, incl.
  * actual measurements and calibration parameters.
  */
 typedef struct {
+    bool enabled;                   ///< Can be used to disable the PWM power stage
+
     // actual measurements
     float solar_current;
     float temp_mosfets;
@@ -46,13 +48,15 @@ typedef struct {
     float offset_voltage_start;     // V  charging switched on if Vsolar > Vbat + offset
     float offset_voltage_stop;      // V  charging switched off if Vsolar < Vbat + offset
     int restart_interval;           // s  When should we retry to start charging after low solar power cut-off?
-} pwm_chg_t;
+} pwm_switch_t;
 
 
-void pwm_chg_init(pwm_chg_t *pwm_chg);
+void pwm_switch_init(pwm_switch_t *pwm_switch);
 
-void pwm_chg_control(pwm_chg_t *pwm_chg, power_port_t *solar_port, power_port_t *bat_port);
+void pwm_switch_control(pwm_switch_t *pwm_switch, power_port_t *solar_port, power_port_t *bat_port);
 
-void pwm_chg_duty_cycle_step(int delta);
+void pwm_switch_duty_cycle_step(int delta);
 
-#endif /* PWM_CHG_H */
+bool pwm_switch_enabled();
+
+#endif /* PWM_SWITCH_H */

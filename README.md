@@ -1,6 +1,6 @@
-# MPPT Charger Software
+# Libre Solar Charge Controller Firmware
 
-Software based on ARM mbed framework for the LibreSolar MPPT solar charge controllers
+Software based on ARM mbed framework for the Libre Solar MPPT/PWM solar charge controllers
 
 ## Supported devices
 

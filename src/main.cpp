@@ -25,7 +25,7 @@
 #include "half_bridge.h"        // PWM generation for DC/DC converter
 #include "hardware.h"           // hardware-related functions like load switch, LED control, watchdog, etc.
 #include "dcdc.h"               // DC/DC converter control (hardware independent)
-#include "pwm_chg.h"            // PWM charge controller
+#include "pwm_switch.h"         // PWM charge controller
 #include "battery.h"            // battery settings
 #include "charger.h"            // charger state machine
 #include "adc_dma.h"            // ADC using DMA and conversion to measurement values
@@ -45,7 +45,7 @@ dcdc_t dcdc = {};
 power_port_t hs_port = {};       // high-side (solar for typical MPPT)
 power_port_t ls_port = {};       // low-side (battery for typical MPPT)
 power_port_t *bat_port = NULL;
-pwm_chg_t pwm_chg = {};         // only for PWM charger
+pwm_switch_t pwm_switch = {};   // only for PWM charger
 battery_conf_t bat_conf;        // actual (used) battery configuration
 battery_conf_t bat_conf_user;   // temporary storage where the user can write to
 battery_state_t bat_state;      // battery state information
@@ -75,7 +75,7 @@ void system_control()       // called by control timer (see hardware.cpp)
     update_measurements(&dcdc, &bat_state, &load, &hs_port, &ls_port);
 
 #ifdef CHARGER_TYPE_PWM
-    pwm_chg_control(&pwm_chg, &hs_port, bat_port);
+    pwm_switch_control(&pwm_switch, &hs_port, bat_port);
 #else
     // control PWM of the DC/DC according to hs and ls port settings
     // (this function includes MPPT algorithm)
@@ -220,7 +220,7 @@ void setup()
     load_init(&load);
 
 #ifdef CHARGER_TYPE_PWM
-    pwm_chg_init(&pwm_chg);
+    pwm_switch_init(&pwm_switch);
 #else // MPPT
     dcdc_init(&dcdc);
     half_bridge_init(PWM_FREQUENCY, 300, 12 / dcdc.hs_voltage_max, 0.97);       // lower duty limit might have to be adjusted dynamically depending on LS voltage
