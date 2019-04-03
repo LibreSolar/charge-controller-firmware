@@ -3,6 +3,7 @@
 #include "thingset.h"
 #include "mbed.h"
 #include "eeprom.h"
+#include <inttypes.h>
 
 // versioning of EEPROM layout (2 bytes)
 // change the version number each time the data object array below is changed!
@@ -20,7 +21,7 @@ const uint16_t eeprom_data_objects[] = {
     0x18, // DeviceID
     0x08, 0x09, 0x0A, 0x0B, // input / output wh
     0x0C, 0x0D, 0x0E, // num full charge / deep-discharge / usable Ah
-    0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x3F, // battery settings
+    0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3F, // battery settings
     0x40, 0x41, 0x42, 0x43,  // load settings
     0xB1, 0xB2, 0xB3, 0xB4, 0xB5, 0xB6, 0xB7, 0xB8, 0xB9,     // V, I, T max
     0xA6 // day count
@@ -254,7 +255,7 @@ void eeprom_restore_data() {;}
 
 void eeprom_update()
 {
-    if (time(NULL) % EEPROM_UPDATE_INTERVAL == 0) {
+    if (time(NULL) % EEPROM_UPDATE_INTERVAL == 0 && time(NULL) > 0) {
         eeprom_store_data();
     }
 }
