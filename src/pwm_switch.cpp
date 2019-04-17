@@ -87,7 +87,8 @@ bool pwm_switch_enabled()
 }
 
 float pwm_switch_get_duty_cycle() {
-    return (float)(TIM3->CCR4) / (_pwm_resolution);;
+    // TODO: check why we might get > 100
+    return (float)(TIM3->CCR4) / (_pwm_resolution);
 }
 
 void pwm_switch_start(float pwm_duty)

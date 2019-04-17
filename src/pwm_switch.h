@@ -59,4 +59,10 @@ void pwm_switch_duty_cycle_step(int delta);
 
 bool pwm_switch_enabled();
 
+/** Read the currently set duty cycle
+ *
+ * @returns Duty cycle between 0.0 and 1.0
+ */
+float pwm_switch_get_duty_cycle();
+
 #endif /* PWM_SWITCH_H */

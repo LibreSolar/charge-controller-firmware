@@ -60,10 +60,12 @@ void uart_serial_init(Serial* s)
     s->attach(uart_serial_isr);
 }
 
+extern const int PUB_CHANNEL_SERIAL;
+
 void uart_serial_pub()
 {
     if (pub_uart_enabled) {
-        ts.pub_msg_json((char *)buf_resp, sizeof(buf_resp), 4);
+        ts.pub_msg_json((char *)buf_resp, sizeof(buf_resp), PUB_CHANNEL_SERIAL);
         ser_uart->printf("%s\n", buf_resp);
     }
 }
