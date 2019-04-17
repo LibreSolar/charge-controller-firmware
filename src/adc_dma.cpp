@@ -96,21 +96,24 @@ void update_measurements(dcdc_t *dcdc, battery_state_t *bat, load_output_t *load
         (float)(((adc_filtered[ADC_POS_I_LOAD] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
         ADC_GAIN_I_LOAD / 1000.0 + load_current_offset;
 
+    /// \todo Multiply current with PWM duty cycle for PWM charger to get avg current.
 #ifdef CHARGER_TYPE_PWM
-    ls->current =
+    hs->current =
         (float)(((adc_filtered[ADC_POS_I_SOLAR] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
         ADC_GAIN_I_SOLAR / 1000.0 + dcdc_current_offset;
+    ls->current = hs->current - load->current;
 #else // MPPT
-    ls->current =
+    dcdc->ls_current =
         (float)(((adc_filtered[ADC_POS_I_DCDC] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
         ADC_GAIN_I_DCDC / 1000.0 + dcdc_current_offset;
-#endif
-    dcdc->ls_current = ls->current;
-
+    ls->current = dcdc->ls_current - load->current;
     hs->current = -ls->current * ls->voltage / hs->voltage;
+#endif
 
-    // ToDo: improved (faster) temperature calculation:
-    // https://www.embeddedrelated.com/showarticle/91.php
+
+    /** \todo Improved (faster) temperature calculation:
+       https://www.embeddedrelated.com/showarticle/91.php
+    */
 
     float v_temp, rts;
     float bat_temp = 25.0;
@@ -147,7 +150,7 @@ void update_measurements(dcdc_t *dcdc, battery_state_t *bat, load_output_t *load
         log_data.solar_voltage_max = hs->voltage;
     }
 
-    if (dcdc_current_offset > 0.1) {    // already calibrated
+    if (dcdc_current_offset < 0.1) {    // already calibrated
         if (ls->current > log_data.dcdc_current_max) {
             log_data.dcdc_current_max = ls->current;
         }
