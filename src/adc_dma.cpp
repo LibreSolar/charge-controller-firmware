@@ -107,7 +107,7 @@ void update_measurements(dcdc_t *dcdc, battery_state_t *bat, load_output_t *load
         (float)(((adc_filtered[ADC_POS_I_DCDC] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
         ADC_GAIN_I_DCDC / 1000.0 + dcdc_current_offset;
     ls->current = dcdc->ls_current - load->current;
-    hs->current = -ls->current * ls->voltage / hs->voltage;
+    hs->current = -dcdc->ls_current * ls->voltage / hs->voltage;
 #endif
 
 
@@ -184,9 +184,13 @@ void update_measurements(dcdc_t *dcdc, battery_state_t *bat, load_output_t *load
         log_data.mosfet_temp_max = dcdc->temp_mosfets;
     }
 
-    //if (meas->temp_int > log_data.temp_int_max) {
-    //    log_data.temp_int_max = meas->temp_int;
-    //}
+    if (bat->temperature > log_data.bat_temp_max) {
+        log_data.bat_temp_max = bat->temperature;
+    }
+
+    if (mcu_temp > log_data.int_temp_max) {
+        log_data.int_temp_max = mcu_temp;
+    }
 }
 
 void detect_battery_temperature(battery_state_t *bat, float bat_temp)
