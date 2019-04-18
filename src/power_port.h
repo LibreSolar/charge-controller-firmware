@@ -37,7 +37,7 @@ typedef struct {
     float current;                  ///< measured current (positive sign = out of the port to external device)
 
     float voltage_output_target;    ///< target voltage if port is configured as output
-    float droop_resistance;         ///< v_target = v_out_max - r_droop * current
+    float droop_res_output;         ///< v_target = v_out_max - r_droop_output * current
     float voltage_output_min;       ///< minimum voltage to allow current output (necessary
                                     ///< to prevent charging of deep-discharged Li-ion batteries)
 
@@ -45,6 +45,7 @@ typedef struct {
     float voltage_input_start;      ///< minimum voltage to allow current input (= discharging of batteries),
                                     ///< starting point for discharging of batteries (load reconnect)
     float voltage_input_stop;       ///< absolute minimum = load disconnect for batteries
+    float droop_res_input;          ///< v_stop = v_input_stop - r_droop_input * current
 
     float current_output_max;       ///< charging direction for battery port
     float current_input_max;        ///< discharging direction for battery port: must be negative value !!!

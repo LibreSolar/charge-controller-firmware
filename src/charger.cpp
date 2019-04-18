@@ -35,7 +35,7 @@ void charger_state_machine(power_port_t *port, battery_conf_t *bat_conf, battery
     // Load management
     // battery port input state (i.e. battery discharging direction) defines load state
     if (port->input_allowed == true &&
-        voltage < bat_conf->voltage_load_disconnect)
+        voltage < bat_conf->voltage_load_disconnect - current * port->droop_res_input)
     {
         port->input_allowed = false;
         bat_state->num_deep_discharges++;
@@ -50,7 +50,7 @@ void charger_state_machine(power_port_t *port, battery_conf_t *bat_conf, battery
         // simple SOH estimation
         bat_state->soh = bat_state->usable_capacity / bat_conf->nominal_capacity;
     }
-    if (voltage >= bat_conf->voltage_load_reconnect) {
+    if (voltage >= bat_conf->voltage_load_reconnect - current * port->droop_res_input) {
         port->input_allowed = true;
     }
 
@@ -69,14 +69,14 @@ void charger_state_machine(power_port_t *port, battery_conf_t *bat_conf, battery
         break;
     }
     case CHG_STATE_BULK: {
-        if (voltage > port->voltage_output_target) {
+        if (voltage > port->voltage_output_target - current * port->droop_res_output) {
             port->voltage_output_target = bat_conf->voltage_max;
             _enter_state(bat_state, CHG_STATE_TOPPING);
         }
         break;
     }
     case CHG_STATE_TOPPING: {
-        if (voltage >= port->voltage_output_target) {
+        if (voltage >= port->voltage_output_target - current * port->droop_res_output) {
             bat_state->time_voltage_limit_reached = time(NULL);
         }
 
@@ -108,7 +108,7 @@ void charger_state_machine(power_port_t *port, battery_conf_t *bat_conf, battery
         break;
     }
     case CHG_STATE_TRICKLE: {
-        if (voltage >= port->voltage_output_target) {
+        if (voltage >= port->voltage_output_target - current * port->droop_res_output) {
             bat_state->time_voltage_limit_reached = time(NULL);
         }
 

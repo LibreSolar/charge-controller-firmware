@@ -27,7 +27,7 @@
 //#define DCDC_MODE_INIT      MODE_NANOGRID
 
 // basic battery configuration
-#define BATTERY_TYPE        BAT_TYPE_FLOODED        // see enum battery_types in structs.h
+#define BATTERY_TYPE        BAT_TYPE_GEL        // GEL most suitable for general batteries (see battery.h for other types)
 #define BATTERY_NUM_CELLS   6
 #define BATTERY_CAPACITY    40
 

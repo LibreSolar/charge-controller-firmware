@@ -150,17 +150,43 @@ typedef struct
      */
     int equalization_trigger_deep_cycles;
 
-    /** Load disconnect voltage (V)
+    /** Load disconnect open circuit voltage (V)
      *
-     * When discharging, stop power to load if battery voltage drops below this value
+     * Load output is disabled if battery voltage is below this threshold.
+     *
+     * The voltage is current-compensated using the battery internal resistance:
+     * threshold = voltage_load_disconnect + battery_current * internal_resistance
+     *
+     * (Remark: battery_current negative during discharge, internal_resistance positive)
      */
     float voltage_load_disconnect;
 
-    /** Load reconnect voltage (V)
+    /** Load reconnect open circuit voltage (V)
      *
-     * Re-enable the load only after charged beyond this value
+     * Re-enable the load only after charged beyond this value.
+     *
+     * The voltage is current-compensated using the battery internal resistance:
+     * threshold = voltage_load_reconnect + battery_current * internal_resistance
+     *
+     * (Remark: battery_current positive during charge, internal_resistance positive)
      */
     float voltage_load_reconnect;
+
+    /** Battery internal resistance (Ohm)
+     *
+     * Resistance value for current-compensation of load switch voltage thresholds.
+     *
+     * The value must have a positive sign. Only resistance values leading to less than 10% voltage drop at max. current are allowed.
+     */
+    float internal_resistance;
+
+    /** Resistance of wire between charge controller and battery (Ohm)
+     *
+     * Resistance value for current-compensation of charging voltages.
+     *
+     * The value must have a positive sign. Only resistance values leading to less than 3% voltage loss at max. current are allowed.
+     */
+    float wire_resistance;
 
     // used to calculate state of charge information
     float ocv_full;

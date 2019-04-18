@@ -24,10 +24,12 @@ void power_port_init_bat(power_port_t *port, battery_conf_t *bat)
     port->voltage_input_start = bat->voltage_load_reconnect;
     port->voltage_input_stop = bat->voltage_load_disconnect;
     port->current_input_max = -bat->charge_current_max;          // TODO: discharge current
+    port->droop_res_input = -(bat->internal_resistance + -bat->wire_resistance);  // negative sign for compensation of actual resistance
 
     port->voltage_output_target = bat->voltage_max;
     port->voltage_output_min = bat->voltage_absolute_min;
     port->current_output_max = bat->charge_current_max;
+    port->droop_res_output = -bat->wire_resistance;             // negative sign for compensation of actual resistance
 }
 
 void power_port_init_solar(power_port_t *port)
@@ -48,9 +50,10 @@ void power_port_init_nanogrid(power_port_t *port)
     port->voltage_input_start = 30.0;       // starting buck mode above this point
     port->voltage_input_stop = 20.0;        // stopping buck mode below this point
     port->current_input_max = -5.0;
+    port->droop_res_input = 0.1;            // 1 Ohm means 1V change of target voltage per amp
 
     port->voltage_output_target = 28.0;     // starting idle mode above this point
     port->current_output_max = 5.0;
     port->voltage_output_min = 10.0;
-    port->droop_resistance = 1.0;           // 1 Ohm means 1V change of target voltage per amp
+    port->droop_res_output = 0.1;           // 1 Ohm means 1V change of target voltage per amp
 }

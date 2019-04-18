@@ -48,23 +48,29 @@ void battery_conf_init(battery_conf_t *bat, bat_type type, int num_cells, float 
         bat->voltage_max = num_cells * 2.4;
         bat->voltage_recharge = num_cells * 2.3;
 
+        // Cell-level thresholds based on EN 62509:2011 (both thresholds current-compensated)
         bat->voltage_load_disconnect = num_cells * 1.95;
-        bat->voltage_load_reconnect = num_cells * 2.1;
+        bat->voltage_load_reconnect = num_cells * 2.05;     // maybe increase to 2.10, if hysteresis observed?
+        bat->internal_resistance = num_cells * (1.95 - 1.80) / LOAD_CURRENT_MAX;    // assumption: Battery selection matching charge controller
+
         bat->voltage_absolute_min = num_cells * 1.8;
 
-        bat->ocv_full = num_cells * 2.2;
-        bat->ocv_empty = num_cells * 1.9;
+        bat->ocv_full = num_cells * 2.15;
+        bat->ocv_empty = num_cells * 1.95;
 
         // https://batteryuniversity.com/learn/article/charging_the_lead_acid_battery
         bat->current_cutoff_CV = bat->nominal_capacity * 0.04;  // 3-5 % of C/1
 
         bat->trickle_enabled = true;
         bat->time_trickle_recharge = 30*60;
-        // http://batteryuniversity.com/learn/article/charging_the_lead_acid_battery
-        bat->voltage_trickle = num_cells * ((type == BAT_TYPE_FLOODED) ? 2.25 : 2.3);
+        // Values as suggested in EN 62509:2011
+        bat->voltage_trickle = num_cells * ((type == BAT_TYPE_FLOODED) ? 2.35 : 2.3);
 
+        // Enable for flooded batteries only, according to
+        // https://discoverbattery.com/battery-101/equalizing-flooded-batteries-only
         bat->equalization_enabled = false;
-        bat->voltage_equalization = num_cells * 2.5;
+        // Values as suggested in EN 62509:2011
+        bat->voltage_equalization = num_cells * ((type == BAT_TYPE_FLOODED) ? 2.50 : 2.45);
         bat->time_limit_equalization = 60*60;
         bat->current_limit_equalization = (1.0 / 7.0) * bat->nominal_capacity;
         bat->equalization_trigger_time = 8;         // weeks
@@ -80,6 +86,7 @@ void battery_conf_init(battery_conf_t *bat, bat_type type, int num_cells, float 
 
         bat->voltage_load_disconnect = num_cells * 3.0;
         bat->voltage_load_reconnect  = num_cells * 3.15;
+        bat->internal_resistance = bat->voltage_load_disconnect * 0.05 / LOAD_CURRENT_MAX;  // 5% voltage drop at max current
         bat->voltage_absolute_min = num_cells * 2.0;
 
         bat->ocv_full = num_cells * 3.4;       // will give really bad SOC calculation
@@ -99,6 +106,8 @@ void battery_conf_init(battery_conf_t *bat, bat_type type, int num_cells, float 
 
         bat->voltage_load_disconnect = num_cells * 3.3;
         bat->voltage_load_reconnect  = num_cells * 3.6;
+        bat->internal_resistance = bat->voltage_load_disconnect * 0.05 / LOAD_CURRENT_MAX;  // 5% voltage drop at max current
+
         bat->voltage_absolute_min = num_cells * 2.5;
 
         bat->ocv_full = num_cells * 4.0;
@@ -143,6 +152,8 @@ bool battery_conf_check(battery_conf_t *bat_conf)
         bat_conf->voltage_recharge < (bat_conf->voltage_max - 0.4) &&
         bat_conf->voltage_recharge > (bat_conf->voltage_load_disconnect + 1) &&
         bat_conf->voltage_load_disconnect > (bat_conf->voltage_absolute_min + 0.4) &&
+        bat_conf->internal_resistance < bat_conf->voltage_load_disconnect * 0.1 / LOAD_CURRENT_MAX &&       // max. 10% drop
+        bat_conf->wire_resistance < bat_conf->voltage_max * 0.03 / LOAD_CURRENT_MAX &&                      // max. 3% loss
         bat_conf->current_cutoff_CV < (bat_conf->nominal_capacity / 10.0) &&    // C/10 or lower allowed
         bat_conf->current_cutoff_CV > 0.01 &&
         (bat_conf->trickle_enabled == false ||
@@ -150,6 +161,7 @@ bool battery_conf_check(battery_conf_t *bat_conf)
              bat_conf->voltage_trickle > bat_conf->voltage_load_disconnect))
        );
 }
+
 void battery_conf_overwrite(battery_conf_t *source, battery_conf_t *destination, battery_state_t *bat_state)
 {
     // TODO: stop DC/DC
@@ -166,6 +178,8 @@ void battery_conf_overwrite(battery_conf_t *source, battery_conf_t *destination,
     destination->voltage_trickle                = source->voltage_trickle;
     destination->time_trickle_recharge          = source->time_trickle_recharge;
     destination->temperature_compensation       = source->temperature_compensation;
+    destination->internal_resistance            = source->internal_resistance;
+    destination->wire_resistance                = source->wire_resistance;
 
     // reset Ah counter and SOH if battery nominal capacity was changed
     if (destination->nominal_capacity != source->nominal_capacity) {

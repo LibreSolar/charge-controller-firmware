@@ -144,7 +144,7 @@ void pwm_switch_control(pwm_switch_t *pwm_switch, power_port_t *solar_port, powe
             pwm_switch_stop();
             printf("PWM charger stop.\n");
         }
-        else if (bat_port->voltage > (bat_port->voltage_output_target - bat_port->droop_resistance * bat_port->current)    // output voltage above target
+        else if (bat_port->voltage > (bat_port->voltage_output_target - bat_port->droop_res_output * bat_port->current)    // output voltage above target
             || bat_port->current > bat_port->current_output_max         // output current limit exceeded
             //|| (solar_port->voltage < (solar_port->voltage_input_start - solar_port->droop_resistance * solar_port->current) && bat_port->current > 0.1)        // input voltage below limit
             || solar_port->current < solar_port->current_input_max      // input current (negative signs) above limit

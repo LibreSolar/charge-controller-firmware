@@ -54,8 +54,8 @@ int _dcdc_output_control(dcdc_t *dcdc, power_port_t *out, power_port_t *in)
     {
         return 0;
     }
-    else if (out->voltage > (out->voltage_output_target - out->droop_resistance * out->current)                     // output voltage above target
-        || (in->voltage < (in->voltage_input_start - in->droop_resistance * in->current) && out->current > 0.1))    // input voltage below limit
+    else if (out->voltage > (out->voltage_output_target - out->droop_res_output * out->current)                     // output voltage above target
+        || (in->voltage < (in->voltage_input_start - in->droop_res_input * in->current) && out->current > 0.1))     // input voltage below limit
     {
         dcdc->state = DCDC_STATE_CV;
         return -1;  // decrease output power

@@ -97,8 +97,8 @@ void oled_output(dcdc_t *dcdc, power_port_t *solar_port,  power_port_t *bat_port
         oled.printf("%4.1fV", solar_port->voltage);
     //}
 
-    // battey data
-    tmp = bat_port->voltage * (bat_port->current - load->current);
+    // battery data
+    tmp = bat_port->voltage * bat_port->current;
     oled.setTextCursor(42, 18);
     oled.printf("%5.1fW", (abs(tmp) < 0.1) ? 0 : tmp);    // remove negative zeros
     oled.setTextCursor(42, 26);
