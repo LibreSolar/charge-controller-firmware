@@ -27,9 +27,9 @@
 //#define DCDC_MODE_INIT      MODE_NANOGRID
 
 // basic battery configuration
-#define BATTERY_TYPE        BAT_TYPE_GEL        // GEL most suitable for general batteries (see battery.h for other types)
-#define BATTERY_NUM_CELLS   6
-#define BATTERY_CAPACITY    40
+#define BATTERY_TYPE        BAT_TYPE_GEL    // GEL most suitable for general batteries (see battery.h for other types)
+#define BATTERY_NUM_CELLS   6               // For lead-acid batteries: 6 for 12V system, 12 for 24V system
+#define BATTERY_CAPACITY    40              // Cell capacity or sum of parallel cells capacity (Ah)
 
 #define DEVICE_ID 12345678
 
