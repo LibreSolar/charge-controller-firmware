@@ -88,17 +88,21 @@ const data_object_t data_objects[] = {
     //{0x3B, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 2, (void*) &(bat_conf_user.voltage_equalization),       "Equal_V"},
     // 0x3A-0x3E reserved for equalization charging
     {0x3F, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 2, (void*) &(bat_conf_user.temperature_compensation),   "TempFactor"},
-
+    {0x50, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 3, (void*) &(bat_conf_user.internal_resistance),        "BatInt_Ohm"},
+    {0x51, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 3, (void*) &(bat_conf_user.wire_resistance),            "BatWire_Ohm"},
+    {0x52, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 1, (void*) &(bat_conf_user.charge_temp_max),            "BatChgMax_degC"},
+    {0x53, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 1, (void*) &(bat_conf_user.charge_temp_min),            "BatChgMin_degC"},
+    {0x54, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 1, (void*) &(bat_conf_user.discharge_temp_max),         "BatDisMax_degC"},
+    {0x55, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 1, (void*) &(bat_conf_user.discharge_temp_min),         "BatDisMin_degC"},
 
     // load settings
     {0x40, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_BOOL,    0, (void*) &(load.enabled_target),                      "LoadEnDefault"},
     {0x41, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_BOOL,    0, (void*) &(load.usb_enabled_target),                  "USBEnDefault"},
     {0x42, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 2, (void*) &(bat_conf_user.voltage_load_disconnect),    "LoadDisconnect_V"},
     {0x43, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 2, (void*) &(bat_conf_user.voltage_load_reconnect),     "LoadReconnect_V"},
-    {0x44, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 3, (void*) &(bat_conf_user.internal_resistance),        "BatInt_Ohm"},
-    {0x45, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 3, (void*) &(bat_conf_user.wire_resistance),            "BatWire_Ohm"},
     //{0x44, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 2, (void*) &(bat_conf_user.voltage_load_disconnect),    "USBDisconnect_V"},
     //{0x45, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 2, (void*) &(bat_conf_user.voltage_load_reconnect),     "USBReconnect_V"},
+
 
     // other configuration items
     //{0x33, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_BOOL,    2, (void*) &(??),   "WarningIndicator"},  // can be set externally
@@ -137,6 +141,8 @@ const data_object_t data_objects[] = {
     {0x78, TS_CAT_OUTPUT, TS_ACCESS_READ, TS_T_UINT16,  0, (void*) &(bat_state.chg_state),           "ChgState"},
     {0x79, TS_CAT_OUTPUT, TS_ACCESS_READ, TS_T_UINT16,  0, (void*) &(dcdc.state),                    "DCDCState"},
     {0x7A, TS_CAT_OUTPUT, TS_ACCESS_READ, TS_T_FLOAT32, 2, (void*) &(hs_port.current),               "Solar_A"},
+    {0x7B, TS_CAT_OUTPUT, TS_ACCESS_READ, TS_T_FLOAT32, 2, (void*) &(ls_port.voltage_output_target), "BatTarget_V"},
+    {0x7C, TS_CAT_OUTPUT, TS_ACCESS_READ, TS_T_FLOAT32, 2, (void*) &(ls_port.current_output_max),    "BatTarget_A"},
 
     // others
     {0x90, TS_CAT_OUTPUT, TS_ACCESS_READ, TS_T_FLOAT32, 0, (void*) &(latitude),                      "Latitude"},

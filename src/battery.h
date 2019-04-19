@@ -192,11 +192,25 @@ typedef struct
     float ocv_full;
     float ocv_empty;
 
-    /** Voltage compensation based on battery temperature
+    /** Maximum allowed charging temperature of the battery (°C)
+     */
+    float charge_temp_max;
+
+    /** Minimum allowed charging temperature of the battery (°C)
+     */
+    float charge_temp_min;
+
+    /** Maximum allowed discharging temperature of the battery (°C)
+     */
+    float discharge_temp_max;
+
+    /** Minimum allowed discharging temperature of the battery (°C)
+     */
+    float discharge_temp_min;
+
+    /** Voltage compensation based on battery temperature (mV/K/cell)
      *
-     * Suggested value: -3 mV/°C/cell
-     *
-     * TODO: Not yet implemented
+     * Suggested value: -3 mV/K/cell
      */
     float temperature_compensation;
 

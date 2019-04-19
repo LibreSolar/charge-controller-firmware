@@ -40,6 +40,11 @@ void battery_conf_init(battery_conf_t *bat, bat_type type, int num_cells, float 
     bat->time_limit_recharge = 60;              // sec
     bat->time_limit_CV = 120*60;                // sec
 
+    bat->charge_temp_max = 50;
+    bat->charge_temp_min = -10;
+    bat->discharge_temp_max = 50;
+    bat->discharge_temp_min = -10;
+
     switch (type)
     {
     case BAT_TYPE_FLOODED:
@@ -97,6 +102,7 @@ void battery_conf_init(battery_conf_t *bat, bat_type type, int num_cells, float 
         bat->trickle_enabled = false;
         bat->equalization_enabled = false;
         bat->temperature_compensation = 0.0;
+        bat->charge_temp_min = 0;
         break;
 
     case BAT_TYPE_NMC:
@@ -118,6 +124,7 @@ void battery_conf_init(battery_conf_t *bat, bat_type type, int num_cells, float 
         bat->trickle_enabled = false;
         bat->equalization_enabled = false;
         bat->temperature_compensation = 0.0;
+        bat->charge_temp_min = 0;
         break;
 
     case BAT_TYPE_NONE:
@@ -177,6 +184,10 @@ void battery_conf_overwrite(battery_conf_t *source, battery_conf_t *destination,
     destination->trickle_enabled                = source->trickle_enabled;
     destination->voltage_trickle                = source->voltage_trickle;
     destination->time_trickle_recharge          = source->time_trickle_recharge;
+    destination->charge_temp_max                = source->charge_temp_max;
+    destination->charge_temp_min                = source->charge_temp_min;
+    destination->discharge_temp_max             = source->discharge_temp_max;
+    destination->discharge_temp_min             = source->discharge_temp_min;
     destination->temperature_compensation       = source->temperature_compensation;
     destination->internal_resistance            = source->internal_resistance;
     destination->wire_resistance                = source->wire_resistance;
