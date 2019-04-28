@@ -101,4 +101,12 @@ void dcdc_init(dcdc_t *dcdc);
  */
 void dcdc_control(dcdc_t *dcdc, power_port_t *high_side, power_port_t *low_side);
 
+/** Prevent overcharging of battery in case of shorted HS MOSFET
+ *
+ * This function switches the LS MOSFET continuously on to blow the battery input fuse. The reason for self destruction should
+ * be logged and stored to EEPROM prior to calling this function, as the charge controller power supply will be cut after the
+ * fuse is destroyed.
+ */
+void dcdc_self_destruction();
+
 #endif /* DCDC_H */

@@ -17,11 +17,14 @@
 #include "dcdc.h"
 #include "config.h"
 #include "pcb.h"
+#include "log.h"
 
 #include "half_bridge.h"
 
 #include <time.h>       // for time(NULL) function
 #include <math.h>       // for fabs function
+
+extern log_data_t log_data;
 
 void dcdc_init(dcdc_t *dcdc)
 {
@@ -89,7 +92,8 @@ int _dcdc_output_control(dcdc_t *dcdc, power_port_t *out, power_port_t *in)
 
 bool _dcdc_check_start_conditions(dcdc_t *dcdc, power_port_t *out, power_port_t *in)
 {
-    return out->output_allowed == true
+    return dcdc->enabled == true
+        && out->output_allowed == true
         && out->voltage < out->voltage_output_target
         && out->voltage > out->voltage_output_min
         && in->input_allowed == true
@@ -132,20 +136,37 @@ void dcdc_control(dcdc_t *dcdc, power_port_t *hs, power_port_t *ls)
         }
     }
     else {
-        if (dcdc->enabled == false ||
-            ls->voltage > dcdc->ls_voltage_max ||
-            hs->voltage > dcdc->hs_voltage_max) {
+        static int debounce_counter = 0;
+        if (dcdc->ls_current > 0.5) {
+            // if there is current even though the DC/DC is switched off, the
+            // high-side MOSFET must be broken --> set flag and let main() decide
+            // what to do... (e.g. call dcdc_self_destruction)
+            debounce_counter++;
+            if (debounce_counter > CONTROL_FREQUENCY) {      // waited 1s before setting the flag
+                log_data.error_flags |= (1 << ERR_HS_MOSFET_SHORT);
+            }
             return;
         }
-        if (_dcdc_check_start_conditions(dcdc, ls, hs)) {
+        debounce_counter = 0;
+
+        if (_dcdc_check_start_conditions(dcdc, ls, hs) && ls->voltage < dcdc->ls_voltage_max) {
             // Vmpp at approx. 0.8 * Voc --> take 0.9 as starting point for MPP tracking
             half_bridge_start(ls->voltage / (hs->voltage * 0.9));
             printf("DC/DC buck mode start.\n");
         }
-        else if (_dcdc_check_start_conditions(dcdc, hs, ls)) {
+        else if (_dcdc_check_start_conditions(dcdc, hs, ls) && hs->voltage < dcdc->hs_voltage_max) {
             // will automatically start with max. duty (0.97) if connected to a nanogrid not yet started up (zero voltage)
             half_bridge_start((ls->voltage * 0.9) / hs->voltage);
             printf("DC/DC boost mode start.\n");
         }
     }
+}
+
+void dcdc_self_destruction()
+{
+    printf("Charge controller self-destruction called!\n");
+    //half_bridge_stop();
+    //half_bridge_init(50, 0, 0, 0.98);   // reset safety limits to allow 0% duty cycle
+    //half_bridge_start(0);
+    // now the fuse should be triggered and we disappear
 }

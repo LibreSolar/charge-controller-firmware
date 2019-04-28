@@ -38,7 +38,7 @@ void battery_conf_init(battery_conf_t *bat, bat_type type, int num_cells, float 
     bat->charge_current_max = bat->nominal_capacity;   // 1C should be safe for all batteries
 
     bat->time_limit_recharge = 60;              // sec
-    bat->time_limit_CV = 120*60;                // sec
+    bat->time_limit_topping = 120*60;                // sec
 
     bat->charge_temp_max = 50;
     bat->charge_temp_min = -10;
@@ -50,7 +50,8 @@ void battery_conf_init(battery_conf_t *bat, bat_type type, int num_cells, float 
     case BAT_TYPE_FLOODED:
     case BAT_TYPE_AGM:
     case BAT_TYPE_GEL:
-        bat->voltage_max = num_cells * 2.4;
+        bat->voltage_absolute_max = num_cells * 2.45;
+        bat->voltage_topping = num_cells * 2.4;
         bat->voltage_recharge = num_cells * 2.3;
 
         // Cell-level thresholds based on EN 62509:2011 (both thresholds current-compensated)
@@ -64,7 +65,7 @@ void battery_conf_init(battery_conf_t *bat, bat_type type, int num_cells, float 
         bat->ocv_empty = num_cells * 1.95;
 
         // https://batteryuniversity.com/learn/article/charging_the_lead_acid_battery
-        bat->current_cutoff_CV = bat->nominal_capacity * 0.04;  // 3-5 % of C/1
+        bat->current_cutoff_topping = bat->nominal_capacity * 0.04;  // 3-5 % of C/1
 
         bat->trickle_enabled = true;
         bat->time_trickle_recharge = 30*60;
@@ -86,7 +87,8 @@ void battery_conf_init(battery_conf_t *bat, bat_type type, int num_cells, float 
         break;
 
     case BAT_TYPE_LFP:
-        bat->voltage_max = num_cells * 3.55;               // CV voltage
+        bat->voltage_absolute_max = num_cells * 3.60;
+        bat->voltage_topping = num_cells * 3.55;               // CV voltage
         bat->voltage_recharge = num_cells * 3.35;
 
         bat->voltage_load_disconnect = num_cells * 3.0;
@@ -97,7 +99,7 @@ void battery_conf_init(battery_conf_t *bat, bat_type type, int num_cells, float 
         bat->ocv_full = num_cells * 3.4;       // will give really bad SOC calculation
         bat->ocv_empty = num_cells * 3.0;      // because of flat OCV of LFP cells...
 
-        bat->current_cutoff_CV = bat->nominal_capacity / 10;    // C/10 cut-off at end of CV phase by default
+        bat->current_cutoff_topping = bat->nominal_capacity / 10;    // C/10 cut-off at end of CV phase by default
 
         bat->trickle_enabled = false;
         bat->equalization_enabled = false;
@@ -107,7 +109,8 @@ void battery_conf_init(battery_conf_t *bat, bat_type type, int num_cells, float 
 
     case BAT_TYPE_NMC:
     case BAT_TYPE_NMC_HV:
-        bat->voltage_max = (type == BAT_TYPE_NMC_HV) ? 4.35 : 4.20;
+        bat->voltage_topping = (type == BAT_TYPE_NMC_HV) ? 4.35 : 4.20;
+        bat->voltage_absolute_max = bat->voltage_topping + 0.05;
         bat->voltage_recharge = num_cells * 3.9;
 
         bat->voltage_load_disconnect = num_cells * 3.3;
@@ -119,7 +122,7 @@ void battery_conf_init(battery_conf_t *bat, bat_type type, int num_cells, float 
         bat->ocv_full = num_cells * 4.0;
         bat->ocv_empty = num_cells * 3.0;
 
-        bat->current_cutoff_CV = bat->nominal_capacity / 10;    // C/10 cut-off at end of CV phase by default
+        bat->current_cutoff_topping = bat->nominal_capacity / 10;    // C/10 cut-off at end of CV phase by default
 
         bat->trickle_enabled = false;
         bat->equalization_enabled = false;
@@ -156,15 +159,15 @@ bool battery_conf_check(battery_conf_t *bat_conf)
 
     return
        (bat_conf->voltage_load_reconnect > (bat_conf->voltage_load_disconnect + 0.6) &&
-        bat_conf->voltage_recharge < (bat_conf->voltage_max - 0.4) &&
+        bat_conf->voltage_recharge < (bat_conf->voltage_topping - 0.4) &&
         bat_conf->voltage_recharge > (bat_conf->voltage_load_disconnect + 1) &&
         bat_conf->voltage_load_disconnect > (bat_conf->voltage_absolute_min + 0.4) &&
         bat_conf->internal_resistance < bat_conf->voltage_load_disconnect * 0.1 / LOAD_CURRENT_MAX &&       // max. 10% drop
-        bat_conf->wire_resistance < bat_conf->voltage_max * 0.03 / LOAD_CURRENT_MAX &&                      // max. 3% loss
-        bat_conf->current_cutoff_CV < (bat_conf->nominal_capacity / 10.0) &&    // C/10 or lower allowed
-        bat_conf->current_cutoff_CV > 0.01 &&
+        bat_conf->wire_resistance < bat_conf->voltage_topping * 0.03 / LOAD_CURRENT_MAX &&                      // max. 3% loss
+        bat_conf->current_cutoff_topping < (bat_conf->nominal_capacity / 10.0) &&    // C/10 or lower allowed
+        bat_conf->current_cutoff_topping > 0.01 &&
         (bat_conf->trickle_enabled == false ||
-            (bat_conf->voltage_trickle < bat_conf->voltage_max &&
+            (bat_conf->voltage_trickle < bat_conf->voltage_topping &&
              bat_conf->voltage_trickle > bat_conf->voltage_load_disconnect))
        );
 }
@@ -173,14 +176,15 @@ void battery_conf_overwrite(battery_conf_t *source, battery_conf_t *destination,
 {
     // TODO: stop DC/DC
 
-    destination->voltage_max                    = source->voltage_max;
+    destination->voltage_topping                = source->voltage_topping;
     destination->voltage_recharge               = source->voltage_recharge;
     destination->voltage_load_reconnect         = source->voltage_load_reconnect;
     destination->voltage_load_disconnect        = source->voltage_load_disconnect;
+    destination->voltage_absolute_max           = source->voltage_absolute_max;
     destination->voltage_absolute_min           = source->voltage_absolute_min;
     destination->charge_current_max             = source->charge_current_max;
-    destination->current_cutoff_CV              = source->current_cutoff_CV;
-    destination->time_limit_CV                  = source->time_limit_CV;
+    destination->current_cutoff_topping         = source->current_cutoff_topping;
+    destination->time_limit_topping             = source->time_limit_topping;
     destination->trickle_enabled                = source->trickle_enabled;
     destination->voltage_trickle                = source->voltage_trickle;
     destination->time_trickle_recharge          = source->time_trickle_recharge;

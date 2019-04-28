@@ -26,6 +26,14 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+/** Error Flags
+ */
+enum error_flag_t {
+    ERR_HS_MOSFET_SHORT = 0,        ///< Short-circuit in HS MOSFET
+    ERR_BAT_OVERVOLTAGE,
+    ERR_BAT_UNDERVOLTAGE,
+};
+
 /** Log Data
  *
  * Stores error counters and some maximum ever measured values to EEPROM
@@ -49,6 +57,7 @@ typedef struct {
     int int_temp_max;         // °C
     int mosfet_temp_max;
     int day_counter;
+    uint32_t error_flags;       ///< Instantaneous errors
 } log_data_t;
 
 #endif /* LOG_H */

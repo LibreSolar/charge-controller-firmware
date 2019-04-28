@@ -24,8 +24,44 @@
  */
 
 // generic settings (for all charge controller boards)
+///////////////////////////////////////////////////////////////////////////////
+
+/** Maximum voltage at battery port (V)
+ */
 #define LOW_SIDE_VOLTAGE_MAX    32
+
+/** Maximum voltage at PV input port (V)
+ */
 #define HIGH_SIDE_VOLTAGE_MAX   55
+
+/** Main control function frequency (Hz)
+ *
+ * Frequencies higher than 10 Hz caused issues with MPPT control during lab test with
+ * PV simulator. Might be different with actual solar panel.
+ */
+#define CONTROL_FREQUENCY 10
+
+/** Maximum Tj of MOSFETs (°C)
+ *
+ * This value is used for model-based control of overcurrent protection. It represents
+ * the steady-state junction temperature for max. continuous current at ambient
+ * temperature of 25°C.
+ */
+#define MOSFET_MAX_JUNCTION_TEMP    120
+
+/** Thermal time constant junction to ambient (s)
+ *
+ * This value is used for model-based control of overcurrent protection. It does not reflect
+ * the much lower MOSFET-internal time constant junction to case, but includes thermal inertia
+ * of the board.
+ *
+ * Around 5s seems to be a good conservative estimation for 5x6 type SMD MOSFETs
+ */
+#define MOSFET_THERMAL_TIME_CONSTANT  5
+
+
+// specific board settings
+///////////////////////////////////////////////////////////////////////////////
 
 #if defined(PCB_LS_005)
     #include "pcbs/pcb_ls_005.h"

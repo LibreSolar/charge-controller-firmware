@@ -131,7 +131,7 @@ void leds_init()
     }
 }
 
-void update_dcdc_led(bool enabled)
+void leds_set_charging(bool enabled)
 {
     charging = enabled;
 #ifdef LED_DCDC

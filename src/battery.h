@@ -64,6 +64,12 @@ typedef struct
      */
     int time_limit_recharge;
 
+    /** Absolute maximum voltage (V)
+     *
+     * Above this voltage the battery or loads might get damaged.
+     */
+    float voltage_absolute_max;
+
     /** Absolute minimum voltage (V)
      *
      * Below this voltage the battery is considered damaged.
@@ -80,19 +86,19 @@ typedef struct
      *
      * Charger target voltage, switching from CC to CV at this voltage threshold.
      */
-    float voltage_max;
+    float voltage_topping;
 
     /** CV phase cut-off current limit (A)
      *
      * Constant voltage charging phase stopped if current is below this value.
      */
-    float current_cutoff_CV;
+    float current_cutoff_topping;
 
     /** CV phase cut-off time limit (s)
      *
      * After this time, CV charging is stopped independent of current.
      */
-    int time_limit_CV;
+    int time_limit_topping;
 
     /** Enable float/trickle charging
      *

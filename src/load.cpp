@@ -17,6 +17,7 @@
 #include "load.h"
 #include "pcb.h"
 #include "hardware.h"
+#include "log.h"
 
 void load_init(load_output_t *load)
 {
@@ -28,6 +29,7 @@ void load_init(load_output_t *load)
     hw_usb_out(false);
     load->switch_state = LOAD_STATE_DISABLED;
     load->usb_state = LOAD_STATE_DISABLED;
+    load->junction_temperature = 25;
 }
 
 
@@ -115,20 +117,48 @@ void load_state_machine(load_output_t *load, bool source_enabled)
             load->switch_state = LOAD_STATE_DISABLED;   // switch to normal mode again
         }
         break;
+    case LOAD_STATE_OFF_OVERVOLTAGE:
+        if (load->voltage < LOW_SIDE_VOLTAGE_MAX) {     // TODO: add hysteresis?
+            load->switch_state = LOAD_STATE_DISABLED;   // switch to normal mode again
+        }
+        break;
     }
 
     usb_state_machine(load);
 }
 
+extern log_data_t log_data;
+extern float mcu_temp;
+
 // this function is called more often than the state machine
-void load_check_overcurrent(load_output_t *load)
+void load_control(load_output_t *load)
 {
-    if (load->current > load->current_max) {
+    // junction temperature calculation model for overcurrent detection
+    load->junction_temperature = load->junction_temperature + (
+            mcu_temp - load->junction_temperature +
+            load->current * load->current / (LOAD_CURRENT_MAX * LOAD_CURRENT_MAX) * (MOSFET_MAX_JUNCTION_TEMP - 25)
+        ) / (MOSFET_THERMAL_TIME_CONSTANT * CONTROL_FREQUENCY);
+
+    if (load->junction_temperature > MOSFET_MAX_JUNCTION_TEMP) {
         hw_load_switch(false);
         hw_usb_out(false);
         load->enabled = false;
         load->switch_state = LOAD_STATE_OFF_OVERCURRENT;
         load->overcurrent_timestamp = time(NULL);
     }
+
+    static int debounce_counter = 0;
+    if (load->voltage > LOW_SIDE_VOLTAGE_MAX) {
+        debounce_counter++;
+        if (debounce_counter > CONTROL_FREQUENCY) {      // waited 1s before setting the flag
+            hw_load_switch(false);
+            hw_usb_out(false);
+            load->enabled = false;
+            load->switch_state = LOAD_STATE_OFF_OVERVOLTAGE;
+            load->overcurrent_timestamp = time(NULL);
+            log_data.error_flags |= (1 << ERR_BAT_OVERVOLTAGE);
+        }
+    }
+    debounce_counter = 0;
 }
 

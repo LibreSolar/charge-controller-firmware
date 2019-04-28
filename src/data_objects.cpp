@@ -78,9 +78,9 @@ const data_object_t data_objects[] = {
     {0x31, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 2, (void*) &(bat_conf_user.voltage_recharge),           "BatRecharge_V"},
     {0x32, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 2, (void*) &(bat_conf_user.voltage_absolute_min),       "BatAbsMin_V"},
     {0x33, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 1, (void*) &(bat_conf_user.charge_current_max),         "BatChgMax_A"},
-    {0x34, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 2, (void*) &(bat_conf_user.voltage_max),                "BatTarget_V"},
-    {0x35, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 1, (void*) &(bat_conf_user.current_cutoff_CV),          "BatCutoff_A"},
-    {0x36, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_INT32,   0, (void*) &(bat_conf_user.time_limit_CV),              "BatCutoff_s"},
+    {0x34, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 2, (void*) &(bat_conf_user.voltage_topping),            "BatTarget_V"},
+    {0x35, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 1, (void*) &(bat_conf_user.current_cutoff_topping),     "BatCutoff_A"},
+    {0x36, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_INT32,   0, (void*) &(bat_conf_user.time_limit_topping),         "BatCutoff_s"},
     {0x37, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_BOOL,    0, (void*) &(bat_conf_user.trickle_enabled),            "TrickleEn"},
     {0x38, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 2, (void*) &(bat_conf_user.voltage_trickle),            "Trickle_V"},
     {0x39, TS_CAT_CONF, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_INT32,   0, (void*) &(bat_conf_user.time_trickle_recharge),      "TrickleRecharge_s"},
@@ -180,6 +180,7 @@ const data_object_t data_objects[] = {
     {0xB7, TS_CAT_REC, TS_ACCESS_READ, TS_T_INT32, 1, (void*) &(log_data.bat_temp_max),                  "BatMax_degC"},
     {0xB8, TS_CAT_REC, TS_ACCESS_READ, TS_T_INT32, 1, (void*) &(log_data.int_temp_max),                  "IntMax_degC"},
     {0xB9, TS_CAT_REC, TS_ACCESS_READ, TS_T_INT32, 1, (void*) &(log_data.mosfet_temp_max),               "MosfetMax_degC"},
+    {0xBA, TS_CAT_REC, TS_ACCESS_READ, TS_T_UINT32,  1, (void*) &(log_data.error_flags),                                     "ErrorFlags"},
 
     // CALIBRATION DATA ///////////////////////////////////////////////////////
     // using IDs >= 0xD0

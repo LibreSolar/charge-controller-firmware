@@ -27,7 +27,7 @@ void leds_init();
 void led_timer_start(int freq_Hz);
 void charlieplexing();
 
-void update_dcdc_led(bool enabled);
+void leds_set_charging(bool enabled);
 void update_rxtx_led();
 void trigger_tx_led();
 void trigger_rx_led();

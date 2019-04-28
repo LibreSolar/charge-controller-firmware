@@ -55,8 +55,6 @@ extern ThingSet ts;             // defined in data_objects.cpp
 
 time_t timestamp;    // current unix timestamp (independent of time(NULL), as it is user-configurable)
 
-#define CONTROL_FREQUENCY 10    // Hz (higher frequency caused issues with MPPT control)
-
 //----------------------------------------------------------------------------
 // function prototypes
 
@@ -76,14 +74,15 @@ void system_control()       // called by control timer (see hardware.cpp)
 
 #ifdef CHARGER_TYPE_PWM
     pwm_switch_control(&pwm_switch, &hs_port, bat_port);
+    leds_set_charging(pwm_switch_enabled());
 #else
     // control PWM of the DC/DC according to hs and ls port settings
     // (this function includes MPPT algorithm)
     dcdc_control(&dcdc, &hs_port, &ls_port);
+    leds_set_charging(half_bridge_enabled());
 #endif
 
-    load_check_overcurrent(&load);
-    update_dcdc_led(half_bridge_enabled());
+    load_control(&load);
 
     if (counter % CONTROL_FREQUENCY == 0) {
         // called once per second (this timer is much more accurate than time(NULL) based on LSI)

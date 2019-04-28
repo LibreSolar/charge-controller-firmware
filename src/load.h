@@ -34,7 +34,8 @@ enum load_state_t {
     LOAD_STATE_DISABLED = 0,        ///< Actively disabled
     LOAD_STATE_ON,                  ///< Normal state: On
     LOAD_STATE_OFF_LOW_SOC,         ///< Off to protect battery (overrules target setting)
-    LOAD_STATE_OFF_OVERCURRENT      ///< Off to protect charge controller (overrules target setting)
+    LOAD_STATE_OFF_OVERCURRENT,     ///< Off to protect charge controller (overrules target setting)
+    LOAD_STATE_OFF_OVERVOLTAGE      ///< Off to protect loads (overrules target setting)
 };
 
 /** Load output type
@@ -44,9 +45,15 @@ enum load_state_t {
 typedef struct {
     uint16_t switch_state;      ///< Current state of load output switch
     uint16_t usb_state;         ///< Current state of USB output
-    float current;              ///< actual measurement
+
+    float voltage;              ///< actual voltage measurement
+
+    float current;              ///< actual current measurement
     float current_max;          ///< maximum allowed current
     int overcurrent_timestamp;  ///< time at which an overcurrent event occured
+
+    float junction_temperature; ///< calculated using thermal model based on current and ambient temperature measurement (unit: °C)
+
     bool enabled;               ///< actual status
     bool enabled_target;        ///< target setting defined via communication port (overruled if battery is empty)
     bool usb_enabled_target;    ///< same for USB output
@@ -60,8 +67,10 @@ void load_init(load_output_t *load);
  */
 void load_state_machine(load_output_t *load, bool source_enabled);
 
-/** Overcurrent check function, should be called as often as possible
+/** Main load control function, should be called by control timer
+ *
+ * Performs time-critical checks like overcurrent and overvoltage
  */
-void load_check_overcurrent(load_output_t *load);
+void load_control(load_output_t *load);
 
 #endif /* LOAD_H */

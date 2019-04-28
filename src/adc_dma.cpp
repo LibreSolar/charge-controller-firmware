@@ -83,6 +83,7 @@ void update_measurements(dcdc_t *dcdc, battery_state_t *bat, load_output_t *load
     ls->voltage =
         (float)(((adc_filtered[ADC_POS_V_BAT] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
         ADC_GAIN_V_BAT / 1000.0;
+    load->voltage = ls->voltage;
 
     hs->voltage =
         (float)(((adc_filtered[ADC_POS_V_SOLAR] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *

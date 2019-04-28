@@ -24,7 +24,7 @@ const uint16_t eeprom_data_objects[] = {
     0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3F, // battery settings
     0x50, 0x51, 0x52, 0x53, 0x54, 0x55, // resistances and min/max temperatures
     0x40, 0x41, 0x42, 0x43,  // load settings
-    0xB1, 0xB2, 0xB3, 0xB4, 0xB5, 0xB6, 0xB7, 0xB8, 0xB9,     // V, I, T max
+    0xB1, 0xB2, 0xB3, 0xB4, 0xB5, 0xB6, 0xB7, 0xB8, 0xB9, 0xBA,    // V, I, T max
     0xA6 // day count
 };
 
@@ -220,7 +220,7 @@ void eeprom_restore_data()
 
 void eeprom_store_data()
 {
-    uint8_t buf[200] = {0};  // initialize with zeros
+    uint8_t buf[300] = {0};  // initialize with zeros
 
     int len = ts.pub_msg_cbor(buf + EEPROM_HEADER_SIZE, sizeof(buf) - EEPROM_HEADER_SIZE, eeprom_data_objects, sizeof(eeprom_data_objects)/sizeof(uint16_t));
     uint32_t crc = _calc_crc(buf + EEPROM_HEADER_SIZE, len);

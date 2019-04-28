@@ -80,7 +80,7 @@ void charger_state_machine(power_port_t *port, battery_conf_t *bat_conf, battery
             && bat_state->temperature < bat_conf->charge_temp_max - 1
             && bat_state->temperature > bat_conf->charge_temp_min + 1)
         {
-            port->voltage_output_target = bat_conf->voltage_max + bat_conf->temperature_compensation * (bat_state->temperature - 25);
+            port->voltage_output_target = bat_conf->voltage_topping + bat_conf->temperature_compensation * (bat_state->temperature - 25);
             port->current_output_max = bat_conf->charge_current_max;
             port->output_allowed = true;
             bat_state->full = false;
@@ -90,7 +90,7 @@ void charger_state_machine(power_port_t *port, battery_conf_t *bat_conf, battery
     }
     case CHG_STATE_BULK: {
         // continuously adjust voltage setting for temperature compensation
-        port->voltage_output_target = bat_conf->voltage_max + bat_conf->temperature_compensation * (bat_state->temperature - 25);
+        port->voltage_output_target = bat_conf->voltage_topping + bat_conf->temperature_compensation * (bat_state->temperature - 25);
 
         if (voltage > port->voltage_output_target - current * port->droop_res_output) {
             _enter_state(bat_state, CHG_STATE_TOPPING);
@@ -99,7 +99,7 @@ void charger_state_machine(power_port_t *port, battery_conf_t *bat_conf, battery
     }
     case CHG_STATE_TOPPING: {
         // continuously adjust voltage setting for temperature compensation
-        port->voltage_output_target = bat_conf->voltage_max + bat_conf->temperature_compensation * (bat_state->temperature - 25);
+        port->voltage_output_target = bat_conf->voltage_topping + bat_conf->temperature_compensation * (bat_state->temperature - 25);
 
         if (voltage >= port->voltage_output_target - current * port->droop_res_output) {
             bat_state->time_voltage_limit_reached = time(NULL);
@@ -107,8 +107,8 @@ void charger_state_machine(power_port_t *port, battery_conf_t *bat_conf, battery
 
         // cut-off limit reached because battery full (i.e. CV limit still
         // reached by available solar power within last 2s) or CV period long enough?
-        if ((current < bat_conf->current_cutoff_CV && (time(NULL) - bat_state->time_voltage_limit_reached) < 2)
-            || (time(NULL) - bat_state->time_state_changed) > bat_conf->time_limit_CV)
+        if ((current < bat_conf->current_cutoff_topping && (time(NULL) - bat_state->time_voltage_limit_reached) < 2)
+            || (time(NULL) - bat_state->time_state_changed) > bat_conf->time_limit_topping)
         {
             bat_state->full = true;
             bat_state->num_full_charges++;

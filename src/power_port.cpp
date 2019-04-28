@@ -26,7 +26,7 @@ void power_port_init_bat(power_port_t *port, battery_conf_t *bat)
     port->current_input_max = -bat->charge_current_max;          // TODO: discharge current
     port->droop_res_input = -(bat->internal_resistance + -bat->wire_resistance);  // negative sign for compensation of actual resistance
 
-    port->voltage_output_target = bat->voltage_max;
+    port->voltage_output_target = bat->voltage_topping;
     port->voltage_output_min = bat->voltage_absolute_min;
     port->current_output_max = bat->charge_current_max;
     port->droop_res_output = -bat->wire_resistance;             // negative sign for compensation of actual resistance
