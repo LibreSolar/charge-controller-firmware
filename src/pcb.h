@@ -71,8 +71,12 @@
     #include "pcbs/pcb_cs_02.h"
 #elif defined(PCB_CS_04)
     #include "pcbs/pcb_cs_04.h"
+#elif defined(PCB_CS_06)
+    #include "pcbs/pcb_cs_06.h"
 #elif defined(PCB_PWM_01)
     #include "pcbs/pcb_pwm_01.h"
+#elif defined(PCB_PWM_02)
+    #include "pcbs/pcb_pwm_02.h"
 #else
     #error "PCB has to be specified!"
 #endif
