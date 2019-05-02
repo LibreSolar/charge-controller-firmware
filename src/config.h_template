@@ -33,6 +33,9 @@
 
 #define DEVICE_ID 12345678
 
+// can be used to configure custom data objects in separate file instead (e.g. data_objects_custom.cpp)
+//#define CUSTOM_DATA_OBJECTS_FILE
+
 // OLED display at UEXT port
 //#define OLED_ENABLED
 
