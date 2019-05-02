@@ -15,6 +15,11 @@
  */
 
 #include "mbed.h"
+#include "config.h"
+
+// don't use this file during processor-in-the-loop tests
+#ifndef PIL_TESTING
+
 #include "adc_dma.h"
 #include "pcb.h"        // contains defines for pins
 #include <math.h>       // log for thermistor calculation
@@ -456,3 +461,5 @@ extern "C" void TIM6_IRQHandler(void)
 }
 
 #endif
+
+#endif /* TESTING_PIL */

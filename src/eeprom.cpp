@@ -185,7 +185,7 @@ int eeprom_read (unsigned int addr, uint8_t* ret, int len)
 
 void eeprom_restore_data()
 {
-    uint8_t buf_req[200] = {0};  // ThingSet request buffer, initialize with zeros
+    uint8_t buf_req[300];  // ThingSet request buffer
 
     // EEPROM header
     uint8_t buf_header[EEPROM_HEADER_SIZE];
@@ -216,11 +216,14 @@ void eeprom_restore_data()
             printf("EEPROM: CRC of data not correct, expected 0x%x (data_len = %d)\n", (unsigned int)crc, len);
         }
     }
+    else {
+        printf("EEPROM: Buffer too small or data layout version changed\n");
+    }
 }
 
 void eeprom_store_data()
 {
-    uint8_t buf[300] = {0};  // initialize with zeros
+    uint8_t buf[300];
 
     int len = ts.pub_msg_cbor(buf + EEPROM_HEADER_SIZE, sizeof(buf) - EEPROM_HEADER_SIZE, eeprom_data_objects, sizeof(eeprom_data_objects)/sizeof(uint16_t));
     uint32_t crc = _calc_crc(buf + EEPROM_HEADER_SIZE, len);

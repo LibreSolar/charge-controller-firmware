@@ -18,6 +18,9 @@
 #include "pcb.h"
 #include "config.h"
 
+// can be used to configure custom data objects in separate file instead (e.g. data_objects_custom.cpp)
+#ifndef CUSTOM_DATA_OBJECTS_FILE
+
 #include "thingset.h"
 #include "battery.h"
 #include "log.h"
@@ -26,6 +29,11 @@
 #include "hardware.h"
 #include "eeprom.h"
 #include "pwm_switch.h"
+
+#ifdef PIL_TESTING
+#include "pil_test.h"
+pil_test_data_t sim_data;
+#endif
 
 extern log_data_t log_data;
 extern battery_state_t bat_state;
@@ -117,6 +125,15 @@ const data_object_t data_objects[] = {
     {0x62, TS_CAT_INPUT, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_BOOL,   0, (void*) &(pwm_switch.enabled),                "PWMEn"},
 #else
     {0x62, TS_CAT_INPUT, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_BOOL,   0, (void*) &(dcdc.enabled),                      "DCDCEn"},
+#endif
+
+#ifdef PIL_TESTING  // only used during processor-in-the-loop test
+    {0x63, TS_CAT_INPUT, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 2, (void*) &(sim_data.solar_voltage),              "SimSolar_V"},
+    {0x64, TS_CAT_INPUT, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 2, (void*) &(sim_data.battery_voltage),            "SimBat_V"},
+    {0x65, TS_CAT_INPUT, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 2, (void*) &(sim_data.dcdc_current),               "SimDCDC_A"},
+    {0x66, TS_CAT_INPUT, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 2, (void*) &(sim_data.load_current),               "SimLoad_A"},
+    {0x67, TS_CAT_INPUT, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 1, (void*) &(sim_data.bat_temperature),            "SimBat_degC"},
+    {0x68, TS_CAT_INPUT, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 1, (void*) &(sim_data.mcu_temperature),            "SimMCU_degC"},
 #endif
 
     // OUTPUT DATA ////////////////////////////////////////////////////////////
@@ -268,3 +285,5 @@ void data_objects_read_eeprom()
         battery_conf_overwrite(&bat_conf, &bat_conf_user);
     }
 }
+
+#endif /* CUSTOM_DATA_OBJECTS_FILE */

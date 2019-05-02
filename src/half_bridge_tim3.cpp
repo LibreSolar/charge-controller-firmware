@@ -18,10 +18,9 @@
 /* Generates PWM signal on PB0 (high-side) and PB1 (low-side) using timer TIM3
  */
 
-#ifndef UNIT_TEST
-
 #include "half_bridge.h"
 #include "pcb.h"
+#include "config.h"
 
 // timer used for PWM generation has to be globally selected for the used PCB
 #if (PWM_TIM == 3)
@@ -111,7 +110,7 @@ void half_bridge_init(int freq_kHz, int deadtime_ns, float min_duty, float max_d
     _enabled = false;
 }
 
-void half_bridge_set_duty_cycle(float duty) 
+void half_bridge_set_duty_cycle(float duty)
 {
     float duty_target;
 
@@ -146,6 +145,7 @@ void half_bridge_start(float pwm_duty)
 {
     half_bridge_set_duty_cycle(pwm_duty);
 
+#ifndef PIL_TESTING
     // Capture/Compare Enable Register
     // CCxE = 1: Enable the output on OCx
     // CCxP = 0: Active high polarity on OCx (default)
@@ -153,6 +153,7 @@ void half_bridge_start(float pwm_duty)
     // CCxNP = 0: Active high polarity on OC1N (default)
     TIM3->CCER |= TIM_CCER_CC3E;
     TIM3->CCER |= TIM_CCER_CC4E;
+#endif
 
     _enabled = true;
 }
@@ -171,5 +172,3 @@ bool half_bridge_enabled()
 }
 
 #endif /* PWM_TIM */
-
-#endif /* UNIT_TEST */

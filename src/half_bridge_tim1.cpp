@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-#ifndef UNIT_TEST
-
 #include "half_bridge.h"
 #include "pcb.h"
+#include "config.h"
 
 #if defined(STM32F0) && (PWM_TIM == 1)
 
@@ -146,9 +145,11 @@ void half_bridge_start(float pwm_duty)
 {
     half_bridge_set_duty_cycle(pwm_duty);
 
+#ifndef PIL_TESTING
     // Break and Dead-Time Register
     // MOE  = 1: Main output enable
     TIM1->BDTR |= TIM_BDTR_MOE;
+#endif
 
     _enabled = true;
 }
@@ -168,5 +169,3 @@ bool half_bridge_enabled()
 }
 
 #endif /* PWM_TIM */
-
-#endif /* UNIT_TEST */
