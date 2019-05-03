@@ -1,3 +1,18 @@
+/* LibreSolar charge controller firmware
+ * Copyright (c) 2016-2019 Martin Jäger (www.libre.solar)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #include "hardware.h"
 #include "pcb.h"
@@ -5,8 +20,7 @@
 #include "mbed.h"
 #include "half_bridge.h"
 #include "us_ticker_data.h"
-
-extern bool led_states[];
+#include "leds.h"
 
 #ifdef PIN_LOAD_EN
 DigitalOut load_enable(PIN_LOAD_EN);
@@ -27,19 +41,6 @@ DigitalOut uext_dis(PIN_UEXT_DIS);
 #endif
 
 //----------------------------------------------------------------------------
-void init_load()
-{
-#ifdef PIN_UEXT_DIS
-    uext_dis = 0;
-#endif
-
-#ifdef PIN_USB_PWR_EN
-    usb_pwr_en = 1;
-#endif
-}
-
-
-//----------------------------------------------------------------------------
 void hw_load_switch(bool enabled)
 {
 #ifdef PIN_LOAD_EN
@@ -52,10 +53,7 @@ void hw_load_switch(bool enabled)
     else load_disable = 1;
 #endif
 
-#ifdef LED_LOAD
-    if (enabled) led_states[LED_LOAD] = 1;
-    else led_states[LED_LOAD] = 0;
-#endif
+    leds_set_load(enabled);
 }
 
 //----------------------------------------------------------------------------
@@ -201,19 +199,11 @@ void mbed_die(void)
     hw_load_switch(false);
     hw_usb_out(false);
 
-    for (int i = 0; i < NUM_LEDS; i++) {
-        led_states[i] = 0;
-    }
-
-    int led_blink = 1;
+    leds_init(false);
 
     while (1) {
 
-        for (int led = 0; led < NUM_LEDS; led++) {
-            led_states[led] = (led % 2) ^ led_blink;
-        }
-
-        led_blink = !led_blink;
+        leds_toggle_error();
         wait_ms(100);
 
         // stay here to indicate something was wrong

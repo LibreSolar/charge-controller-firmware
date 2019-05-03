@@ -18,13 +18,22 @@
 
 #ifdef OLED_ENABLED     // otherwise don't compile code to reduce firmware size
 
-#include "interface.h"
+#include "uext.h"
 #include "pcb.h"
 
 #include "half_bridge.h"
-
+#include "dcdc.h"
+#include "power_port.h"
+#include "battery.h"
+#include "load.h"
 #include "log.h"
+
 extern log_data_t log_data;
+extern dcdc_t dcdc;
+extern power_port_t hs_port;
+extern power_port_t ls_port;
+extern battery_state_t bat_state;
+extern load_output_t load;
 
 #include "Adafruit_SSD1306.h"
 
@@ -47,11 +56,13 @@ const unsigned char bmp_disconnected [] = {
     0x08, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
-
 I2C i2c(PIN_UEXT_SDA, PIN_UEXT_SCL);
 Adafruit_SSD1306_I2c oled(i2c, PIN_UEXT_SSEL, 0x78, 64, 128);
 
-void oled_output(dcdc_t *dcdc, power_port_t *solar_port,  power_port_t *bat_port, battery_state_t *bat, load_output_t *load)
+void uext_init() {;}    // no need for initialization
+void uext_process_asap() {;}
+
+void uext_process_1s()
 {
     float tmp;
 
@@ -67,7 +78,7 @@ void oled_output(dcdc_t *dcdc, power_port_t *solar_port,  power_port_t *bat_port
         oled.drawBitmap(34, 3, bmp_arrow_right, 5, 7, 1);
     }
 
-    if (load->enabled) {
+    if (load.enabled) {
         oled.drawBitmap(84, 3, bmp_arrow_right, 5, 7, 1);
     }
     else {
@@ -84,7 +95,7 @@ void oled_output(dcdc_t *dcdc, power_port_t *solar_port,  power_port_t *bat_port
 
     // solar panel data
     if (half_bridge_enabled()) {
-        tmp = -solar_port->voltage * solar_port->current;
+        tmp = -hs_port.voltage * hs_port.current;
         oled.setTextCursor(0, 18);
         oled.printf("%4.0fW", (abs(tmp) < 1) ? 0 : tmp);     // remove negative zeros
     }
@@ -94,29 +105,29 @@ void oled_output(dcdc_t *dcdc, power_port_t *solar_port,  power_port_t *bat_port
     }
     //if (solar_port->voltage > bat_port->voltage) {
         oled.setTextCursor(0, 26);
-        oled.printf("%4.1fV", solar_port->voltage);
+        oled.printf("%4.1fV", hs_port.voltage);
     //}
 
     // battery data
-    tmp = bat_port->voltage * bat_port->current;
+    tmp = ls_port.voltage * ls_port.current;
     oled.setTextCursor(42, 18);
     oled.printf("%5.1fW", (abs(tmp) < 0.1) ? 0 : tmp);    // remove negative zeros
     oled.setTextCursor(42, 26);
-    oled.printf("%5.1fV", bat_port->voltage);
+    oled.printf("%5.1fV", ls_port.voltage);
 
     // load data
-    tmp = bat_port->voltage * load->current;
+    tmp = ls_port.voltage * load.current;
     oled.setTextCursor(90, 18);
     oled.printf("%5.1fW", (abs(tmp) < 0.1) ? 0 : tmp);    // remove negative zeros
     oled.setTextCursor(90, 26);
-    oled.printf("%5.1fA\n", (abs(load->current) < 0.1) ? 0 : load->current);
+    oled.printf("%5.1fA\n", (abs(load.current) < 0.1) ? 0 : load.current);
 
     oled.setTextCursor(0, 36);
     oled.printf("Day +%5.0fWh -%5.0fWh", log_data.solar_in_day_Wh, fabs(log_data.load_out_day_Wh));
     oled.printf("Tot +%4.1fkWh -%4.1fkWh", log_data.solar_in_total_Wh / 1000.0, fabs(log_data.load_out_total_Wh) / 1000.0);
 
     oled.setTextCursor(0, 56);
-    oled.printf("T %.0fC PWM %.0f%% SOC %d%%", dcdc->temp_mosfets, half_bridge_get_duty_cycle() * 100.0, bat->soc);
+    oled.printf("T %.0fC PWM %.0f%% SOC %d%%", dcdc.temp_mosfets, half_bridge_get_duty_cycle() * 100.0, bat_state.soc);
 
     oled.display();
 }

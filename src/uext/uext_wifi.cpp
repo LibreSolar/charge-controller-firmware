@@ -1,4 +1,4 @@
-#include "interface.h"
+#include "uext.h"
 #include "config.h"
 
 #ifdef WIFI_ENABLED
@@ -128,8 +128,6 @@ int wifi_send_emoncms_data()
     return 0;
 }
 
-void wifi_init(void) {;}    // everything is handled in state machine in wifi_process()
-
 int wifi_reset(void)
 {
     int res = 0;
@@ -157,7 +155,10 @@ int wifi_reset(void)
     return res;
 }
 
-void wifi_process()
+void uext_init(void) {;}    // everything is handled in state machine in wifi_process()
+void uext_process_asap(void) {;}
+
+void uext_process_1s()
 {
     static wifi_states state = STATE_WIFI_RESET;
     static int error_counter = 0;

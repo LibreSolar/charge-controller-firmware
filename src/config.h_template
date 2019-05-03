@@ -36,6 +36,9 @@
 // can be used to configure custom data objects in separate file instead (e.g. data_objects_custom.cpp)
 //#define CUSTOM_DATA_OBJECTS_FILE
 
+// Empty UEXT port
+#define UEXT_DUMMY_ENABLED
+
 // OLED display at UEXT port
 //#define OLED_ENABLED
 

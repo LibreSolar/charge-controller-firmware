@@ -23,10 +23,6 @@
  * Hardware-specific functions like timers, output switches, bootloader
  */
 
-/** Initialize load and USB output control pins
- */
-void init_load();
-
 /** Enable/disable load switch
  */
 void hw_load_switch(bool enabled);

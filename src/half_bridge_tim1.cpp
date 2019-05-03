@@ -1,5 +1,5 @@
-/* mbed library for half bridge driver PWM generation
- * Copyright (c) 2016-2017 Martin Jäger (www.libre.solar)
+/* LibreSolar charge controller firmware
+ * Copyright (c) 2016-2019 Martin Jäger (www.libre.solar)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.

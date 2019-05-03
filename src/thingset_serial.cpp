@@ -3,7 +3,7 @@
 #include "thingset.h"
 #include "config.h"
 
-#include "interface.h"
+#include "thingset_serial.h"
 
 #ifdef USB_SERIAL_ENABLED
 #include "USBSerial.h"
@@ -26,6 +26,39 @@ bool pub_uart_enabled = false;       // start with sending data disabled
 
 bool usb_serial_command_flag = false;
 bool pub_usb_enabled = true;
+
+
+void thingset_serial_init(Serial* s)
+{
+#ifdef UART_SERIAL_ENABLED
+    uart_serial_init(s);
+#endif
+#ifdef USB_SERIAL_ENABLED
+    usb_serial_init();
+#endif
+}
+
+void thingset_serial_process_asap()
+{
+#ifdef UART_SERIAL_ENABLED
+    uart_serial_process();
+#endif
+#ifdef USB_SERIAL_ENABLED
+    usb_serial_process();
+#endif
+}
+
+void thingset_serial_process_1s()
+{
+#ifdef UART_SERIAL_ENABLED
+    uart_serial_pub();
+#endif
+#ifdef USB_SERIAL_ENABLED
+    usb_serial_pub();
+#endif
+
+    fflush(stdout);
+}
 
 #ifdef UART_SERIAL_ENABLED
 
@@ -85,11 +118,6 @@ void uart_serial_process()
     }
 }
 
-#else
-// dummy functions
-void uart_serial_init(Serial* s) {;}
-void uart_serial_pub() {;}
-void uart_serial_process() {;}
 #endif /* UART_SERIAL_ENABLED */
 
 
@@ -147,9 +175,4 @@ void usb_serial_pub() {
     }
 }
 
-#else
-// dummy functions
-void usb_serial_init() {;}
-void usb_serial_pub() {;}
-void usb_serial_process() {;}
 #endif /* USB_SERIAL_ENABLED */
