@@ -1,5 +1,5 @@
-/* LibreSolar MPPT charge controller firmware
- * Copyright (c) 2016-2018 Martin Jäger (www.libre.solar)
+/* LibreSolar charge controller firmware
+ * Copyright (c) 2016-2019 Martin Jäger (www.libre.solar)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+#ifndef UNIT_TEST
 
 #include "pwm_switch.h"
 #include "config.h"
@@ -180,3 +182,5 @@ void pwm_switch_control(pwm_switch_t *pwm_switch, power_port_t *solar_port, powe
 void pwm_switch_duty_cycle_step(int delta) {}
 
 #endif
+
+#endif /* UNIT_TEST */

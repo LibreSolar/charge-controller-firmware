@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#ifndef UNIT_TEST
 
 /* Generates PWM signal on PB0 (high-side) and PB1 (low-side) using timer TIM3
  */
@@ -172,3 +173,5 @@ bool half_bridge_enabled()
 }
 
 #endif /* PWM_TIM */
+
+#endif /* UNIT_TEST */

@@ -1,3 +1,6 @@
+
+#ifndef UNIT_TEST
+
 #include "uext.h"
 #include "config.h"
 
@@ -251,3 +254,5 @@ void uext_process_1s()
 }
 
 #endif /* WIFI_ENABLED */
+
+#endif /* UNIT_TEST */

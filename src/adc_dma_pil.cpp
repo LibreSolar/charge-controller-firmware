@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#ifndef UNIT_TEST
+
 #include "mbed.h"
 #include "config.h"
 
@@ -124,3 +126,5 @@ void adc_setup() {;}
 void adc_timer_start(int freq_Hz) {;}
 
 #endif /* TESTING_PIL */
+
+#endif /* UNIT_TEST */

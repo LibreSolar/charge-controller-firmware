@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#ifndef UNIT_TEST
+
 #include "config.h"
 
 #ifdef OLED_ENABLED     // otherwise don't compile code to reduce firmware size
@@ -133,3 +135,5 @@ void uext_process_1s()
 }
 
 #endif /* OLED_ENABLED */
+
+#endif /* UNIT_TEST */

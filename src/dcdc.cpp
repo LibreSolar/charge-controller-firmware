@@ -23,6 +23,7 @@
 
 #include <time.h>       // for time(NULL) function
 #include <math.h>       // for fabs function
+#include <stdio.h>
 
 extern log_data_t log_data;
 

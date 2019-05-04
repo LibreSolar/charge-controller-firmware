@@ -30,7 +30,8 @@ addons:
 script:
     - cp src/config.h_template src/config.h
     # - platformio ci --lib="lib/Adafruit_GFX" --lib="lib/ThingSet" --project-conf=platformio.ini -e libresolar_0_10,libresolar_0_05
-    - platformio run -e libresolar_0_10 -e libresolar_0_05 -e cloudsolar_0_2 -e cloudsolar_0_4
+    - platformio run -e libresolar_0_10 -e libresolar_0_05 -e cloudsolar_0_2 -e cloudsolar_0_4 -e pwm_0_2
+    - platformio test -e unit_test_native
     - doxygen Doxyfile
 
 deploy:

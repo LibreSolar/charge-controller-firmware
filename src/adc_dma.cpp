@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#ifndef UNIT_TEST
+
 #include "mbed.h"
 #include "config.h"
 
@@ -463,3 +465,5 @@ extern "C" void TIM6_IRQHandler(void)
 #endif
 
 #endif /* TESTING_PIL */
+
+#endif /* UNIT_TEST */

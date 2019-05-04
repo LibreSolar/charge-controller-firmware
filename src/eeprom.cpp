@@ -16,9 +16,9 @@
 
 #include "pcb.h"
 #include "thingset.h"
-#include "mbed.h"
 #include "eeprom.h"
 #include <inttypes.h>
+#include <time.h>
 
 // versioning of EEPROM layout (2 bytes)
 // change the version number each time the data object array below is changed!
@@ -43,6 +43,8 @@ const uint16_t eeprom_data_objects[] = {
     0xA6 // day count
 };
 
+#ifndef UNIT_TEST
+
 uint32_t _calc_crc(uint8_t *buf, size_t len)
 {
     RCC->AHBENR |= RCC_AHBENR_CRCEN;
@@ -65,6 +67,8 @@ uint32_t _calc_crc(uint8_t *buf, size_t len)
     RCC->AHBENR &= ~(RCC_AHBENR_CRCEN);
     return CRC->DR;
 }
+
+#endif // UNIT_TEST
 
 #if defined(PIN_EEPROM_SDA) && defined(PIN_EEPROM_SCL)
 

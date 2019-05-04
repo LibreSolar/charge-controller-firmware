@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#ifndef UNIT_TEST
+
 #include "hardware.h"
 #include "pcb.h"
 
@@ -280,3 +282,16 @@ extern "C" void system_init_hook()
         while (42);
     }
 }
+
+#else
+
+// dummy functions for unit tests
+void hw_load_switch(bool enabled) {;}
+void hw_usb_out(bool enabled) {;}
+void init_watchdog(float timeout) {;}
+void feed_the_dog() {;}
+void control_timer_start(int freq_Hz) {;}
+void system_control() {;}
+void start_dfu_bootloader() {;}
+
+#endif /* UNIT_TEST */

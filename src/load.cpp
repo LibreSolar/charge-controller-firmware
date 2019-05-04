@@ -1,5 +1,5 @@
-/* LibreSolar MPPT charge controller firmware
- * Copyright (c) 2016-2018 Martin Jäger (www.libre.solar)
+/* LibreSolar charge controller firmware
+ * Copyright (c) 2016-2019 Martin Jäger (www.libre.solar)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 #include "pcb.h"
 #include "hardware.h"
 #include "log.h"
+#include <time.h>
 
 void load_init(load_output_t *load)
 {
@@ -161,4 +162,3 @@ void load_control(load_output_t *load)
     }
     debounce_counter = 0;
 }
-

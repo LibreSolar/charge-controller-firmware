@@ -19,6 +19,7 @@
 #include "pcb.h"
 #include "half_bridge.h"
 #include "log.h"
+#include <time.h>
 
 // private function
 void _enter_state(battery_state_t* bat_state, int next_state)

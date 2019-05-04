@@ -22,8 +22,6 @@
  * @brief Handling of internal or external EEPROM to store device configuration
  */
 
-#include "mbed.h"
-
 /** Write data to EEPROM address
  *
  * @returns 0 for success

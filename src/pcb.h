@@ -77,6 +77,8 @@
     #include "pcbs/pcb_pwm_01.h"
 #elif defined(PCB_PWM_02)
     #include "pcbs/pcb_pwm_02.h"
+#elif defined(UNIT_TEST)
+    #include "pcbs/pcb_stub.h"
 #else
     #error "PCB has to be specified!"
 #endif

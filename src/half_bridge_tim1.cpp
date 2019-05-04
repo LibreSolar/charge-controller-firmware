@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#ifndef UNIT_TEST
+
 #include "half_bridge.h"
 #include "pcb.h"
 #include "config.h"
@@ -169,3 +171,5 @@ bool half_bridge_enabled()
 }
 
 #endif /* PWM_TIM */
+
+#endif /* UNIT_TEST */

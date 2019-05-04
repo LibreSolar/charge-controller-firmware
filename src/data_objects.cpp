@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-#include "mbed.h"
 #include "pcb.h"
 #include "config.h"
 
@@ -29,6 +28,7 @@
 #include "hardware.h"
 #include "eeprom.h"
 #include "pwm_switch.h"
+#include <stdio.h>
 
 #ifdef PIL_TESTING
 #include "pil_test.h"
@@ -209,7 +209,9 @@ const data_object_t data_objects[] = {
     //{0xD4, TS_CAL, TS_ACCESS_READ | TS_ACCESS_WRITE_AUTH, TS_T_FLOAT32, 1, (void*) &(dcdc.offset_voltage_stop), "SolarOffsetStop_V"}
 
     // FUNCTION CALLS (EXEC) //////////////////////////////////////////////////
+#ifndef UNIT_TEST
     {0xE0, TS_EXEC, TS_ACCESS_EXEC, TS_T_BOOL, 0, (void*) &NVIC_SystemReset,     "Reset"},
+#endif
     {0xE1, TS_EXEC, TS_ACCESS_EXEC, TS_T_BOOL, 0, (void*) &start_dfu_bootloader, "Bootloader"},
     {0xE2, TS_EXEC, TS_ACCESS_EXEC, TS_T_BOOL, 0, (void*) &eeprom_store_data,    "SaveSettings"},
 };

@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#ifndef UNIT_TEST
+
 #include "config.h"
 
 #ifdef CAN_ENABLED
@@ -277,3 +279,5 @@ void can_receive() {
 }
 
 #endif /* CAN_ENABLED */
+
+#endif /* UNIT_TEST */
