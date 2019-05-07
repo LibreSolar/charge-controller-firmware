@@ -24,7 +24,7 @@
 
 #include <stdbool.h>
 #include "battery.h"
-#include "power_port.h"
+#include "dc_bus.h"
 
 /** DC/DC basic operation mode
  *
@@ -99,7 +99,7 @@ void dcdc_init(dcdc_t *dcdc);
  * @param high_side High-side power port (e.g. solar input for typical MPPT charge controller application)
  * @param low_side  Low-side power port (e.g. battery output for typical MPPT charge controller application)
  */
-void dcdc_control(dcdc_t *dcdc, power_port_t *high_side, power_port_t *low_side);
+void dcdc_control(dcdc_t *dcdc, dc_bus_t *high_side, dc_bus_t *low_side);
 
 /** Prevent overcharging of battery in case of shorted HS MOSFET
  *

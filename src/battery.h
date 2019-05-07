@@ -229,11 +229,6 @@ typedef struct
     float temperature;      ///< Battery temperature in °C from ext. temperature sensor (if existing)
     bool ext_temp_sensor;   ///< True if external temperature sensor was detected
 
-    float chg_day_Wh;           ///< Cumulated energy in charge direction of today (Wh)
-    float dis_day_Wh;           ///< Cumulated energy in discharge direction of today (Wh)
-    uint32_t chg_total_Wh;      ///< Cumulated total energy in charge direction (Wh)
-    uint32_t dis_total_Wh;      ///< Cumulated total energy in discharge direction (Wh)
-
     float usable_capacity;      ///< Estimated usable capacity (Ah) based on coulomb counting
 
     float discharged_Ah;        ///< Coulomb counter for SOH calculation
@@ -276,17 +271,10 @@ void battery_conf_overwrite(battery_conf_t *source, battery_conf_t *destination,
  */
 void battery_state_init(battery_state_t *bat_state);
 
-/** Energy calculation for battery, solar port and load output
- *
- * Must be called exactly once per second, otherwise energy calculation gets wrong.
- */
-void battery_update_energy(battery_state_t *bat, float bat_voltage, float bat_current, float dcdc_current, float load_current);
-
 /** SOC estimation
  *
  * Must be called exactly once per second, otherwise SOC calculation gets wrong.
  */
 void battery_update_soc(battery_conf_t *bat_conf, battery_state_t *bat_state, float voltage, float current);
-
 
 #endif /* BATTERY_H */

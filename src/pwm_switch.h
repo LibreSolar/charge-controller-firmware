@@ -23,7 +23,7 @@
  */
 
 #include <stdbool.h>
-#include "power_port.h"
+#include "dc_bus.h"
 
 /** PWM charger type
  *
@@ -53,7 +53,7 @@ typedef struct {
 
 void pwm_switch_init(pwm_switch_t *pwm_switch);
 
-void pwm_switch_control(pwm_switch_t *pwm_switch, power_port_t *solar_port, power_port_t *bat_port);
+void pwm_switch_control(pwm_switch_t *pwm_switch, dc_bus_t *solar_port, dc_bus_t *bat_port);
 
 void pwm_switch_duty_cycle_step(int delta);
 

@@ -15,16 +15,15 @@
  */
 
 #ifndef UNIT_TEST
-
 #include "mbed.h"
-#include "config.h"
+#endif
 
-// don't use this file during processor-in-the-loop tests
-#ifndef PIL_TESTING
+#include "config.h"
 
 #include "adc_dma.h"
 #include "pcb.h"        // contains defines for pins
 #include <math.h>       // log for thermistor calculation
+#include <stdio.h>
 #include "log.h"
 #include "pwm_switch.h"
 
@@ -43,6 +42,13 @@
     const uint16_t TSENSE_CAL2 = *((uint16_t *)0x1FF8007E);
     #define TSENSE_CAL1_VALUE 30.0   // temperature of first calibration point
     #define TSENSE_CAL2_VALUE 130.0  // temperature of second calibration point
+#elif defined(UNIT_TEST)
+    #define VREFINT_CAL (4096 * 1.224 / 3.0)   // VREFINT @3.0V/25°C
+    #define VREFINT_VALUE 3000 // mV
+    #define TSENSE_CAL1 (4096.0 * (670 - 161) / 3300)     // datasheet: slope 1.61 mV/°C
+    #define TSENSE_CAL2 (4096.0 * 670 / 3300)     // datasheet: 670 mV
+    #define TSENSE_CAL1_VALUE 30.0   // temperature of first calibration point
+    #define TSENSE_CAL2_VALUE 130.0  // temperature of second calibration point
 #endif
 
 #ifdef PIN_REF_I_DCDC
@@ -53,7 +59,7 @@ AnalogOut ref_i_dcdc(PIN_REF_I_DCDC);
 DigitalInOut temp_pd(PIN_TEMP_INT_PD);
 #endif
 
-float dcdc_current_offset;
+float solar_current_offset;
 float load_current_offset;
 
 // for ADC and DMA
@@ -61,20 +67,22 @@ volatile uint16_t adc_readings[NUM_ADC_CH] = {0};
 volatile uint32_t adc_filtered[NUM_ADC_CH] = {0};
 //volatile int num_adc_conversions;
 
-#define ADC_FILTER_CONST 5          // filter multiplier = 1/(2^ADC_FILTER_CONST)
-
-extern Serial serial;
 extern log_data_t log_data;
 extern float mcu_temp;
 
-void calibrate_current_sensors(dcdc_t *dcdc, load_output_t *load)
+void calibrate_current_sensors()
 {
-    dcdc_current_offset = -dcdc->ls_current;
-    load_current_offset = -load->current;
+    int vcc = VREFINT_VALUE * VREFINT_CAL / (adc_filtered[ADC_POS_VREF_MCU] >> (4 + ADC_FILTER_CONST));
+#ifdef CHARGER_TYPE_PWM
+    solar_current_offset = -(float)(((adc_filtered[ADC_POS_I_SOLAR] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) * ADC_GAIN_I_SOLAR / 1000.0;
+#else
+    solar_current_offset = -(float)(((adc_filtered[ADC_POS_I_DCDC] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) * ADC_GAIN_I_DCDC / 1000.0;
+#endif
+    load_current_offset = -(float)(((adc_filtered[ADC_POS_I_LOAD] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) * ADC_GAIN_I_LOAD / 1000.0;
 }
 
 //----------------------------------------------------------------------------
-void update_measurements(dcdc_t *dcdc, battery_state_t *bat, load_output_t *load, power_port_t *hs, power_port_t *ls)
+void update_measurements(dcdc_t *dcdc, battery_state_t *bat, load_output_t *load, dc_bus_t *hs, dc_bus_t *ls, dc_bus_t *load_bus)
 {
     //int v_temp, rts;
 
@@ -104,16 +112,19 @@ void update_measurements(dcdc_t *dcdc, battery_state_t *bat, load_output_t *load
         (float)(((adc_filtered[ADC_POS_I_LOAD] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
         ADC_GAIN_I_LOAD / 1000.0 + load_current_offset;
 
+    load_bus->current = load->current;
+    load_bus->voltage = ls->voltage;
+
     /// \todo Multiply current with PWM duty cycle for PWM charger to get avg current.
 #ifdef CHARGER_TYPE_PWM
     hs->current =
         (float)(((adc_filtered[ADC_POS_I_SOLAR] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
-        ADC_GAIN_I_SOLAR / 1000.0 + dcdc_current_offset;
+        ADC_GAIN_I_SOLAR / 1000.0 + solar_current_offset;
     ls->current = hs->current - load->current;
 #else // MPPT
     dcdc->ls_current =
         (float)(((adc_filtered[ADC_POS_I_DCDC] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
-        ADC_GAIN_I_DCDC / 1000.0 + dcdc_current_offset;
+        ADC_GAIN_I_DCDC / 1000.0 + solar_current_offset;
     ls->current = dcdc->ls_current - load->current;
     hs->current = -dcdc->ls_current * ls->voltage / hs->voltage;
 #endif
@@ -158,7 +169,7 @@ void update_measurements(dcdc_t *dcdc, battery_state_t *bat, load_output_t *load
         log_data.solar_voltage_max = hs->voltage;
     }
 
-    if (dcdc_current_offset < 0.1) {    // already calibrated
+    if (solar_current_offset < 0.1) {    // already calibrated
         if (ls->current > log_data.dcdc_current_max) {
             log_data.dcdc_current_max = ls->current;
         }
@@ -255,6 +266,7 @@ void detect_battery_temperature(battery_state_t *bat, float bat_temp)
 #endif
 }
 
+#ifndef UNIT_TEST
 
 void dma_setup()
 {
@@ -400,6 +412,8 @@ void adc_setup()
     ADC->CCR |= ADC_CCR_TSEN | ADC_CCR_VREFEN;
 }
 
+#endif // UNIT_TEST
+
 #if defined(STM32F0)
 
 void adc_timer_start(int freq_Hz)   // max. 10 kHz
@@ -463,7 +477,3 @@ extern "C" void TIM6_IRQHandler(void)
 }
 
 #endif
-
-#endif /* TESTING_PIL */
-
-#endif /* UNIT_TEST */

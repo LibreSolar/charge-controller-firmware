@@ -30,19 +30,15 @@
 #include "pwm_switch.h"
 #include <stdio.h>
 
-#ifdef PIL_TESTING
-#include "pil_test.h"
-pil_test_data_t sim_data;
-#endif
-
 extern log_data_t log_data;
 extern battery_state_t bat_state;
 extern battery_conf_t bat_conf;
 extern battery_conf_t bat_conf_user;
 extern dcdc_t dcdc;
 extern load_output_t load;
-extern power_port_t hs_port;
-extern power_port_t ls_port;
+extern dc_bus_t hs_bus;
+extern dc_bus_t ls_bus;
+extern dc_bus_t load_bus;
 extern pwm_switch_t pwm_switch;
 
 const char* manufacturer = "Libre Solar";
@@ -127,15 +123,6 @@ const data_object_t data_objects[] = {
     {0x62, TS_INPUT, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_BOOL,   0, (void*) &(dcdc.enabled),                      "DCDCEn"},
 #endif
 
-#ifdef PIL_TESTING  // only used during processor-in-the-loop test
-    {0x63, TS_INPUT, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 2, (void*) &(sim_data.solar_voltage),              "SimSolar_V"},
-    {0x64, TS_INPUT, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 2, (void*) &(sim_data.battery_voltage),            "SimBat_V"},
-    {0x65, TS_INPUT, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 2, (void*) &(sim_data.dcdc_current),               "SimDCDC_A"},
-    {0x66, TS_INPUT, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 2, (void*) &(sim_data.load_current),               "SimLoad_A"},
-    {0x67, TS_INPUT, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 1, (void*) &(sim_data.bat_temperature),            "SimBat_degC"},
-    {0x68, TS_INPUT, TS_ACCESS_READ | TS_ACCESS_WRITE, TS_T_FLOAT32, 1, (void*) &(sim_data.mcu_temperature),            "SimMCU_degC"},
-#endif
-
     // OUTPUT DATA ////////////////////////////////////////////////////////////
     // using IDs >= 0x70 except for high priority data objects
 
@@ -145,9 +132,9 @@ const data_object_t data_objects[] = {
     {0x06, TS_OUTPUT, TS_ACCESS_READ, TS_T_UINT16,  0, (void*) &(bat_state.soc),                 "SOC_%"},     // output will be uint8_t
 
     // battery related data objects
-    {0x70, TS_OUTPUT, TS_ACCESS_READ, TS_T_FLOAT32, 2, (void*) &(ls_port.voltage),               "Bat_V"},
-    {0x71, TS_OUTPUT, TS_ACCESS_READ, TS_T_FLOAT32, 2, (void*) &(hs_port.voltage),               "Solar_V"},
-    {0x72, TS_OUTPUT, TS_ACCESS_READ, TS_T_FLOAT32, 2, (void*) &(ls_port.current),               "Bat_A"},
+    {0x70, TS_OUTPUT, TS_ACCESS_READ, TS_T_FLOAT32, 2, (void*) &(ls_bus.voltage),               "Bat_V"},
+    {0x71, TS_OUTPUT, TS_ACCESS_READ, TS_T_FLOAT32, 2, (void*) &(hs_bus.voltage),               "Solar_V"},
+    {0x72, TS_OUTPUT, TS_ACCESS_READ, TS_T_FLOAT32, 2, (void*) &(ls_bus.current),               "Bat_A"},
     {0x73, TS_OUTPUT, TS_ACCESS_READ, TS_T_FLOAT32, 2, (void*) &(load.current),                  "Load_A"},
     {0x74, TS_OUTPUT, TS_ACCESS_READ, TS_T_FLOAT32, 1, (void*) &(bat_state.temperature),         "Bat_degC"},
     {0x75, TS_OUTPUT, TS_ACCESS_READ, TS_T_BOOL,    1, (void*) &(bat_state.ext_temp_sensor),     "BatTempExt"},
@@ -157,9 +144,9 @@ const data_object_t data_objects[] = {
 #endif
     {0x78, TS_OUTPUT, TS_ACCESS_READ, TS_T_UINT16,  0, (void*) &(bat_state.chg_state),           "ChgState"},
     {0x79, TS_OUTPUT, TS_ACCESS_READ, TS_T_UINT16,  0, (void*) &(dcdc.state),                    "DCDCState"},
-    {0x7A, TS_OUTPUT, TS_ACCESS_READ, TS_T_FLOAT32, 2, (void*) &(hs_port.current),               "Solar_A"},
-    {0x7B, TS_OUTPUT, TS_ACCESS_READ, TS_T_FLOAT32, 2, (void*) &(ls_port.voltage_output_target), "BatTarget_V"},
-    {0x7C, TS_OUTPUT, TS_ACCESS_READ, TS_T_FLOAT32, 2, (void*) &(ls_port.current_output_max),    "BatTarget_A"},
+    {0x7A, TS_OUTPUT, TS_ACCESS_READ, TS_T_FLOAT32, 2, (void*) &(hs_bus.current),                "Solar_A"},
+    {0x7B, TS_OUTPUT, TS_ACCESS_READ, TS_T_FLOAT32, 2, (void*) &(ls_bus.chg_voltage_target),     "BatTarget_V"},
+    {0x7C, TS_OUTPUT, TS_ACCESS_READ, TS_T_FLOAT32, 2, (void*) &(ls_bus.chg_current_max),        "BatTarget_A"},
 
     // others
     {0x90, TS_OUTPUT, TS_ACCESS_READ, TS_T_FLOAT32, 0, (void*) &(latitude),                      "Latitude"},
@@ -170,8 +157,8 @@ const data_object_t data_objects[] = {
 
     {0x08, TS_REC, TS_ACCESS_READ, TS_T_UINT32,  0, (void*) &(log_data.solar_in_total_Wh),           "SolarInTotal_Wh"},
     {0x09, TS_REC, TS_ACCESS_READ, TS_T_UINT32,  0, (void*) &(log_data.load_out_total_Wh),           "LoadOutTotal_Wh"},
-    {0x0A, TS_REC, TS_ACCESS_READ, TS_T_UINT32,  0, (void*) &(bat_state.chg_total_Wh),               "BatChgTotal_Wh"},
-    {0x0B, TS_REC, TS_ACCESS_READ, TS_T_UINT32,  0, (void*) &(bat_state.dis_total_Wh),               "BatDisTotal_Wh"},
+    {0x0A, TS_REC, TS_ACCESS_READ, TS_T_UINT32,  0, (void*) &(log_data.bat_chg_total_Wh),            "BatChgTotal_Wh"},
+    {0x0B, TS_REC, TS_ACCESS_READ, TS_T_UINT32,  0, (void*) &(log_data.bat_dis_total_Wh),            "BatDisTotal_Wh"},
     {0x0C, TS_REC, TS_ACCESS_READ, TS_T_UINT16,  0, (void*) &(bat_state.num_full_charges),           "FullChgCount"},
     {0x0D, TS_REC, TS_ACCESS_READ, TS_T_UINT16,  0, (void*) &(bat_state.num_deep_discharges),        "DeepDisCount"},
     {0x0E, TS_REC, TS_ACCESS_READ, TS_T_FLOAT32, 0, (void*) &(bat_state.usable_capacity),            "BatUsable_Ah"}, // usable battery capacity
@@ -179,10 +166,10 @@ const data_object_t data_objects[] = {
     {0x10, TS_REC, TS_ACCESS_READ, TS_T_UINT16,  2, (void*) &(log_data.load_power_max_day),          "LoadMaxDay_W"},
 
     // accumulated data
-    {0xA0, TS_REC, TS_ACCESS_READ, TS_T_FLOAT32, 2, (void*) &(log_data.solar_in_day_Wh),             "SolarInDay_Wh"},
-    {0xA1, TS_REC, TS_ACCESS_READ, TS_T_FLOAT32, 2, (void*) &(log_data.load_out_day_Wh),             "LoadOutDay_Wh"},
-    {0xA2, TS_REC, TS_ACCESS_READ, TS_T_FLOAT32, 2, (void*) &(bat_state.chg_day_Wh),                 "BatChgDay_Wh"},
-    {0xA3, TS_REC, TS_ACCESS_READ, TS_T_FLOAT32, 2, (void*) &(bat_state.dis_day_Wh),                 "BatDisDay_Wh"},
+    {0xA0, TS_REC, TS_ACCESS_READ, TS_T_FLOAT32, 2, (void*) &(hs_bus.dis_energy_Wh),                 "SolarInDay_Wh"},
+    {0xA1, TS_REC, TS_ACCESS_READ, TS_T_FLOAT32, 2, (void*) &(load_bus.chg_energy_Wh),               "LoadOutDay_Wh"},
+    {0xA2, TS_REC, TS_ACCESS_READ, TS_T_FLOAT32, 2, (void*) &(ls_bus.chg_energy_Wh),                 "BatChgDay_Wh"},
+    {0xA3, TS_REC, TS_ACCESS_READ, TS_T_FLOAT32, 2, (void*) &(ls_bus.dis_energy_Wh),                 "BatDisDay_Wh"},
     {0xA4, TS_REC, TS_ACCESS_READ, TS_T_FLOAT32, 0, (void*) &(bat_state.discharged_Ah),              "Dis_Ah"},    // coulomb counter
     {0xA5, TS_REC, TS_ACCESS_READ, TS_T_UINT16,  0, (void*) &(bat_state.soh),                        "SOH_%"},     // output will be uint8_t
     {0xA6, TS_REC, TS_ACCESS_READ, TS_T_INT32,   0, (void*) &(log_data.day_counter),                 "DayCount"},
@@ -194,10 +181,10 @@ const data_object_t data_objects[] = {
     {0xB4, TS_REC, TS_ACCESS_READ, TS_T_FLOAT32, 2, (void*) &(log_data.solar_voltage_max),           "SolarMaxTotal_V"},
     {0xB5, TS_REC, TS_ACCESS_READ, TS_T_FLOAT32, 2, (void*) &(log_data.dcdc_current_max),            "DCDCMaxTotal_A"},
     {0xB6, TS_REC, TS_ACCESS_READ, TS_T_FLOAT32, 2, (void*) &(log_data.load_current_max),            "LoadMaxTotal_A"},
-    {0xB7, TS_REC, TS_ACCESS_READ, TS_T_INT32, 1, (void*) &(log_data.bat_temp_max),                  "BatMax_degC"},
-    {0xB8, TS_REC, TS_ACCESS_READ, TS_T_INT32, 1, (void*) &(log_data.int_temp_max),                  "IntMax_degC"},
-    {0xB9, TS_REC, TS_ACCESS_READ, TS_T_INT32, 1, (void*) &(log_data.mosfet_temp_max),               "MosfetMax_degC"},
-    {0xBA, TS_REC, TS_ACCESS_READ, TS_T_UINT32,  1, (void*) &(log_data.error_flags),                                     "ErrorFlags"},
+    {0xB7, TS_REC, TS_ACCESS_READ, TS_T_INT32,   1, (void*) &(log_data.bat_temp_max),                "BatMax_degC"},
+    {0xB8, TS_REC, TS_ACCESS_READ, TS_T_INT32,   1, (void*) &(log_data.int_temp_max),                "IntMax_degC"},
+    {0xB9, TS_REC, TS_ACCESS_READ, TS_T_INT32,   1, (void*) &(log_data.mosfet_temp_max),             "MosfetMax_degC"},
+    {0xBA, TS_REC, TS_ACCESS_READ, TS_T_UINT32,  1, (void*) &(log_data.error_flags),                 "ErrorFlags"},
 
     // CALIBRATION DATA ///////////////////////////////////////////////////////
     // using IDs >= 0xD0

@@ -54,7 +54,7 @@ typedef struct {
 
     float junction_temperature; ///< calculated using thermal model based on current and ambient temperature measurement (unit: °C)
 
-    bool enabled;               ///< actual status
+    //bool enabled;               ///< actual status
     bool enabled_target;        ///< target setting defined via communication port (overruled if battery is empty)
     bool usb_enabled_target;    ///< same for USB output
 } load_output_t;

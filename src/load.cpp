@@ -23,7 +23,7 @@
 void load_init(load_output_t *load)
 {
     load->current_max = LOAD_CURRENT_MAX;
-    load->enabled = false;
+    //load->enabled = false;
     load->enabled_target = true;
     load->usb_enabled_target = true;
     hw_load_switch(false);
@@ -38,7 +38,7 @@ void usb_state_machine(load_output_t *load)
 {
     switch (load->usb_state) {
     case LOAD_STATE_DISABLED:
-        if (load->enabled && load->usb_enabled_target == true) {
+        if (load->usb_enabled_target == true) {
             hw_usb_out(true);
             load->usb_state = LOAD_STATE_ON;
         }
@@ -85,19 +85,19 @@ void load_state_machine(load_output_t *load, bool source_enabled)
     case LOAD_STATE_DISABLED:
         if (source_enabled == true && load->enabled_target == true) {
             hw_load_switch(true);
-            load->enabled = true;
+            //load->enabled = true;
             load->switch_state = LOAD_STATE_ON;
         }
         break;
     case LOAD_STATE_ON:
         if (load->enabled_target == false) {
             hw_load_switch(false);
-            load->enabled = false;
+            //load->enabled = false;
             load->switch_state = LOAD_STATE_DISABLED;
         }
         else if (source_enabled == false) {
             hw_load_switch(false);
-            load->enabled = false;
+            //load->enabled = false;
             load->switch_state = LOAD_STATE_OFF_LOW_SOC;
         }
         break;
@@ -105,7 +105,7 @@ void load_state_machine(load_output_t *load, bool source_enabled)
         if (source_enabled == true) {
             if (load->enabled_target == true) {
                 hw_load_switch(true);
-                load->enabled = true;
+                //load->enabled = true;
                 load->switch_state = LOAD_STATE_ON;
             }
             else {
@@ -143,7 +143,7 @@ void load_control(load_output_t *load)
     if (load->junction_temperature > MOSFET_MAX_JUNCTION_TEMP) {
         hw_load_switch(false);
         hw_usb_out(false);
-        load->enabled = false;
+        //load->enabled = false;
         load->switch_state = LOAD_STATE_OFF_OVERCURRENT;
         load->overcurrent_timestamp = time(NULL);
     }
@@ -154,7 +154,7 @@ void load_control(load_output_t *load)
         if (debounce_counter > CONTROL_FREQUENCY) {      // waited 1s before setting the flag
             hw_load_switch(false);
             hw_usb_out(false);
-            load->enabled = false;
+            //load->enabled = false;
             load->switch_state = LOAD_STATE_OFF_OVERVOLTAGE;
             load->overcurrent_timestamp = time(NULL);
             log_data.error_flags |= (1 << ERR_BAT_OVERVOLTAGE);

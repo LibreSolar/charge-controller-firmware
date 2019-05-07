@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-#include "mbed.h"
 #include "config.h"
 
-/** Data for Processor-In-the-Loop test
+/** Data to fill adc_filtered array during unit-tests
  */
 typedef struct {
     float solar_voltage;
@@ -27,4 +26,6 @@ typedef struct {
     float bat_temperature;
     float mcu_temperature;
     float internal_temperature;
-} pil_test_data_t;
+} adc_values_t;
+
+void prepare_adc_readings(adc_values_t values);

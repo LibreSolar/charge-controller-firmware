@@ -26,11 +26,13 @@
 #include "load.h"
 #include "battery.h"
 
+#define ADC_FILTER_CONST 5          // filter multiplier = 1/(2^ADC_FILTER_CONST)
+
 /** Sets offset to actual measured value, i.e. sets zero current point.
  *
  * All input/output switches and consumers should be switched off before calling this function
  */
-void calibrate_current_sensors(dcdc_t *dcdc, load_output_t *load);
+void calibrate_current_sensors();
 
 /** Detects if external temperature sensor is attached, otherwise takes internal sensor
  */
@@ -38,7 +40,7 @@ void detect_battery_temperature(battery_state_t *bat, float bat_temp);
 
 /** Updates structures with data read from ADC
  */
-void update_measurements(dcdc_t *dcdc, battery_state_t *bat, load_output_t *load, power_port_t *hs, power_port_t *ls);
+void update_measurements(dcdc_t *dcdc, battery_state_t *bat, load_output_t *load, dc_bus_t *hs, dc_bus_t *ls, dc_bus_t *load_bus);
 
 /** Initializes registers and starts ADC timer
  */

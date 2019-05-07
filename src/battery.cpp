@@ -1,5 +1,5 @@
-/* LibreSolar MPPT charge controller firmware
- * Copyright (c) 2016-2018 Martin Jäger (www.libre.solar)
+/* LibreSolar charge controller firmware
+ * Copyright (c) 2016-2019 Martin Jäger (www.libre.solar)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,15 +18,15 @@
 #include "config.h"
 #include "pcb.h"
 
-#include "power_port.h"
+#include "dc_bus.h"
 #include "load.h"
 #include "log.h"
 
 #include <math.h>       // for fabs function
 
 // ToDo: Remove global definitions!
-extern power_port_t ls_port;
-extern power_port_t hs_port;
+extern dc_bus_t ls_bus;
+extern dc_bus_t hs_bus;
 extern load_output_t load;
 extern log_data_t log_data;
 
@@ -219,58 +219,6 @@ void battery_state_init(battery_state_t *bat_state)
     bat_state->temperature = 25.0;
 }
 
-//----------------------------------------------------------------------------
-// must be called exactly once per second, otherwise energy calculation gets wrong
-void battery_update_energy(battery_state_t *bat, float bat_voltage, float bat_current, float dcdc_current, float load_current)
-{
-    // static variables so that it is not reset for each function call
-    static int seconds_zero_solar = 0;
-
-    // stores the input/output energy status of previous day and to add
-    // xxx_day_Wh only once per day and increase accuracy
-    static uint32_t solar_in_total_Wh_prev = log_data.solar_in_total_Wh;
-    static uint32_t load_out_total_Wh_prev = log_data.load_out_total_Wh;
-    static uint32_t bat_chg_total_Wh_prev = bat->chg_total_Wh;
-    static uint32_t bat_dis_total_Wh_prev = bat->dis_total_Wh;
-
-    if (hs_port.voltage < ls_port.voltage) {
-        seconds_zero_solar += 1;
-    }
-    else {
-        // solar voltage > battery voltage after 5 hours of night time means sunrise in the morning
-        // --> reset daily energy counters
-        if (seconds_zero_solar > 60*60*5) {
-            //printf("Night!\n");
-            log_data.day_counter++;
-            solar_in_total_Wh_prev = log_data.solar_in_total_Wh;
-            load_out_total_Wh_prev = log_data.load_out_total_Wh;
-            bat_chg_total_Wh_prev = bat->chg_total_Wh;
-            bat_dis_total_Wh_prev = bat->dis_total_Wh;
-            log_data.solar_in_day_Wh = 0.0;
-            log_data.load_out_day_Wh = 0.0;
-            bat->chg_total_Wh = 0.0;
-            bat->dis_total_Wh = 0.0;
-        }
-        seconds_zero_solar = 0;
-    }
-
-    float bat_energy = bat_voltage * bat_current / 3600.0;  // timespan = 1s, so no multiplication with time
-    if (bat_energy > 0) {
-        bat->chg_day_Wh += bat_energy;
-    }
-    else {
-        bat->dis_day_Wh += -(bat_energy);
-    }
-    bat->chg_total_Wh = bat_chg_total_Wh_prev + (bat->chg_day_Wh > 0 ? bat->chg_day_Wh : 0);
-    bat->dis_total_Wh = bat_dis_total_Wh_prev + (bat->dis_day_Wh > 0 ? bat->dis_day_Wh : 0);
-    bat->discharged_Ah += (load_current - bat_current) / 3600.0;
-
-    log_data.solar_in_day_Wh += bat_voltage * dcdc_current / 3600.0;    // timespan = 1s, so no multiplication with time
-    log_data.load_out_day_Wh += load.current * ls_port.voltage / 3600.0;
-    log_data.solar_in_total_Wh = solar_in_total_Wh_prev + (log_data.solar_in_day_Wh > 0 ? log_data.solar_in_day_Wh : 0);
-    log_data.load_out_total_Wh = load_out_total_Wh_prev + (log_data.load_out_day_Wh > 0 ? log_data.load_out_day_Wh : 0);
-}
-
 void battery_update_soc(battery_conf_t *bat_conf, battery_state_t *bat_state, float voltage, float current)
 {
     static int soc_filtered = 0;       // SOC / 100 for better filtering
@@ -296,4 +244,6 @@ void battery_update_soc(battery_conf_t *bat_conf, battery_state_t *bat_state, fl
         }
         bat_state->soc = soc_filtered / 100;
     }
+
+    bat_state->discharged_Ah += current / 3600.0;
 }

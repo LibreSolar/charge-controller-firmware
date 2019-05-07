@@ -44,28 +44,28 @@ void dcdc_init(dcdc_t *dcdc)
 }
 
 // returns if output power should be increased (1), decreased (-1) or switched off (0)
-int _dcdc_output_control(dcdc_t *dcdc, power_port_t *out, power_port_t *in)
+int _dcdc_output_control(dcdc_t *dcdc, dc_bus_t *out, dc_bus_t *in)
 {
     float dcdc_power_new = out->voltage * out->current;
     static int pwm_delta = 1;
 
     //printf("P: %.2f, P_prev: %.2f, v_in: %.2f, v_out: %.2f, i_in: %.2f, i_out: %.2f, i_max: %.2f, PWM: %.1f, chg_en: %d\n",
     //     dcdc_power_new, dcdc->power, in->voltage, out->voltage, in->current, out->current,
-    //     out->current_output_max, half_bridge_get_duty_cycle() * 100.0, out->output_allowed);
+    //     out->chg_current_max, half_bridge_get_duty_cycle() * 100.0, out->chg_allowed);
 
-    if (out->output_allowed == false || in->input_allowed == false
-        || (in->voltage < in->voltage_input_stop && out->current < 0.1))
+    if (out->chg_allowed == false || in->dis_allowed == false
+        || (in->voltage < in->dis_voltage_stop && out->current < 0.1))
     {
         return 0;
     }
-    else if (out->voltage > (out->voltage_output_target - out->droop_res_output * out->current)                     // output voltage above target
-        || (in->voltage < (in->voltage_input_start - in->droop_res_input * in->current) && out->current > 0.1))     // input voltage below limit
+    else if (out->voltage > (out->chg_voltage_target - out->chg_droop_res * out->current)                     // output voltage above target
+        || (in->voltage < (in->dis_voltage_start - in->dis_droop_res * in->current) && out->current > 0.1))     // input voltage below limit
     {
         dcdc->state = DCDC_STATE_CV;
         return -1;  // decrease output power
     }
-    else if (out->current > out->current_output_max         // output current limit exceeded
-        || in->current < in->current_input_max)             // input current (negative signs) limit exceeded
+    else if (out->current > out->chg_current_max         // output current limit exceeded
+        || in->current < in->dis_current_max)             // input current (negative signs) limit exceeded
     {
         dcdc->state = DCDC_STATE_CC;
         return -1;  // decrease output power
@@ -76,7 +76,7 @@ int _dcdc_output_control(dcdc_t *dcdc, power_port_t *out, power_port_t *in)
         dcdc->state = DCDC_STATE_DERATING;
         return -1;  // decrease output power
     }
-    else if (out->current < 0.1 && out->voltage < out->voltage_input_start)  // no load condition (e.g. start-up of nanogrid) --> raise voltage
+    else if (out->current < 0.1 && out->voltage < out->dis_voltage_start)  // no load condition (e.g. start-up of nanogrid) --> raise voltage
     {
         return 1;   // increase output power
     }
@@ -91,23 +91,23 @@ int _dcdc_output_control(dcdc_t *dcdc, power_port_t *out, power_port_t *in)
     }
 }
 
-bool _dcdc_check_start_conditions(dcdc_t *dcdc, power_port_t *out, power_port_t *in)
+bool _dcdc_check_start_conditions(dcdc_t *dcdc, dc_bus_t *out, dc_bus_t *in)
 {
     return dcdc->enabled == true
-        && out->output_allowed == true
-        && out->voltage < out->voltage_output_target
-        && out->voltage > out->voltage_output_min
-        && in->input_allowed == true
-        && in->voltage > in->voltage_input_start
+        && out->chg_allowed == true
+        && out->voltage < out->chg_voltage_target
+        && out->voltage > out->chg_voltage_min
+        && in->dis_allowed == true
+        && in->voltage > in->dis_voltage_start
         //&& dcdc->hs_voltage - dcdc->ls_voltage > dcdc->offset_voltage_start
         && time(NULL) > (dcdc->off_timestamp + dcdc->restart_interval);
 }
 
-void dcdc_control(dcdc_t *dcdc, power_port_t *hs, power_port_t *ls)
+void dcdc_control(dcdc_t *dcdc, dc_bus_t *hs, dc_bus_t *ls)
 {
     if (half_bridge_enabled()) {
         int step;
-        if (ls->current > 0.1) {    // buck mode
+        if (dcdc->ls_current > 0.1) {    // buck mode
             //printf("-");
             step = _dcdc_output_control(dcdc, ls, hs);
             half_bridge_duty_cycle_step(step);

@@ -23,6 +23,7 @@
  * Structs needed for data logging (like max/min values, etc.)
  */
 
+#include "dc_bus.h"
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -39,8 +40,8 @@ enum error_flag_t {
  * Stores error counters and some maximum ever measured values to EEPROM
  */
 typedef struct {
-    float solar_in_day_Wh;
-    float load_out_day_Wh;
+    uint32_t bat_chg_total_Wh;
+    uint32_t bat_dis_total_Wh;
     uint32_t solar_in_total_Wh;
     uint32_t load_out_total_Wh;
 
@@ -59,5 +60,8 @@ typedef struct {
     int day_counter;
     uint32_t error_flags;       ///< Instantaneous errors
 } log_data_t;
+
+
+void log_update_energy(log_data_t *log_data, dc_bus_t *bat, dc_bus_t *solar, dc_bus_t *load);
 
 #endif /* LOG_H */

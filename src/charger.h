@@ -26,7 +26,7 @@
 #include <stdint.h>
 
 #include "dcdc.h"
-#include "power_port.h"
+#include "dc_bus.h"
 
 /** Possible charger states
 
@@ -71,6 +71,6 @@ enum charger_state {
 
 /** Charger state machine update, should be called once per second
  */
-void charger_state_machine(power_port_t *port, battery_conf_t *bat_conf, battery_state_t *bat_state, float voltage, float current);
+void charger_state_machine(dc_bus_t *port, battery_conf_t *bat_conf, battery_state_t *bat_state, float voltage, float current);
 
 #endif /* CHARGER_H */

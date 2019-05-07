@@ -39,7 +39,7 @@ uint8_t buf_resp[1000];           // only one response buffer needed for USB and
 extern ThingSet ts;
 
 bool uart_serial_command_flag = false;
-bool pub_uart_enabled = false;       // start with sending data disabled
+bool pub_uart_enabled = true;       // start with sending data disabled
 
 bool usb_serial_command_flag = false;
 bool pub_usb_enabled = true;
