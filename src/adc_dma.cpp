@@ -1,5 +1,5 @@
-/* LibreSolar MPPT charge controller firmware
- * Copyright (c) 2016-2018 Martin Jäger (www.libre.solar)
+/* LibreSolar charge controller firmware
+ * Copyright (c) 2016-2019 Martin Jäger (www.libre.solar)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -95,15 +95,17 @@ void update_measurements(dcdc_t *dcdc, battery_state_t *bat, load_output_t *load
     // rely on LDO accuracy
     //int vcc = 3300;
 
+    // calculate LS voltage first, as it is needed for HS voltage calculation for PWM charge controller
     ls->voltage =
         (float)(((adc_filtered[ADC_POS_V_BAT] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
         ADC_GAIN_V_BAT / 1000.0;
+
     load->voltage = ls->voltage;
+    load_bus->voltage = ls->voltage;
 
     hs->voltage =
         (float)(((adc_filtered[ADC_POS_V_SOLAR] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
         ADC_GAIN_V_SOLAR / 1000.0;
-
 #ifdef ADC_OFFSET_V_SOLAR
     hs->voltage = ls->voltage + -(vcc * ADC_OFFSET_V_SOLAR / 1000.0 + hs->voltage);
 #endif
@@ -113,14 +115,13 @@ void update_measurements(dcdc_t *dcdc, battery_state_t *bat, load_output_t *load
         ADC_GAIN_I_LOAD / 1000.0 + load_current_offset;
 
     load_bus->current = load->current;
-    load_bus->voltage = ls->voltage;
 
-    /// \todo Multiply current with PWM duty cycle for PWM charger to get avg current.
 #ifdef CHARGER_TYPE_PWM
-    hs->current =
+    // current multiplied with PWM duty cycle for PWM charger to get avg current for correct power calculation
+    hs->current = - pwm_switch_get_duty_cycle() * (
         (float)(((adc_filtered[ADC_POS_I_SOLAR] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
-        ADC_GAIN_I_SOLAR / 1000.0 + solar_current_offset;
-    ls->current = hs->current - load->current;
+        ADC_GAIN_I_SOLAR / 1000.0 + solar_current_offset);
+    ls->current = -hs->current - load->current;
 #else // MPPT
     dcdc->ls_current =
         (float)(((adc_filtered[ADC_POS_I_DCDC] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
@@ -128,7 +129,6 @@ void update_measurements(dcdc_t *dcdc, battery_state_t *bat, load_output_t *load
     ls->current = dcdc->ls_current - load->current;
     hs->current = -dcdc->ls_current * ls->voltage / hs->voltage;
 #endif
-
 
     /** \todo Improved (faster) temperature calculation:
        https://www.embeddedrelated.com/showarticle/91.php
@@ -160,56 +160,6 @@ void update_measurements(dcdc_t *dcdc, battery_state_t *bat, load_output_t *load
     uint16_t adcval = (adc_filtered[ADC_POS_TEMP_MCU] >> (4 + ADC_FILTER_CONST)) * vcc / VREFINT_VALUE;
     mcu_temp = (TSENSE_CAL2_VALUE - TSENSE_CAL1_VALUE) / (TSENSE_CAL2 - TSENSE_CAL1) * (adcval - TSENSE_CAL1) + TSENSE_CAL1_VALUE;
     //printf("TS_CAL1:%d TS_CAL2:%d ADC:%d, temp_int:%f\n", TS_CAL1, TS_CAL2, adcval, meas->temp_int);
-
-    if (ls->voltage > log_data.battery_voltage_max) {
-        log_data.battery_voltage_max = ls->voltage;
-    }
-
-    if (hs->voltage > log_data.solar_voltage_max) {
-        log_data.solar_voltage_max = hs->voltage;
-    }
-
-    if (solar_current_offset < 0.1) {    // already calibrated
-        if (ls->current > log_data.dcdc_current_max) {
-            log_data.dcdc_current_max = ls->current;
-        }
-
-        if (load->current > log_data.load_current_max) {
-            log_data.load_current_max = load->current;
-        }
-
-        if (ls->current > 0) {
-            uint16_t solar_power = ls->voltage * ls->current;
-            if (solar_power > log_data.solar_power_max_day) {
-                log_data.solar_power_max_day = solar_power;
-                if (log_data.solar_power_max_day > log_data.solar_power_max_total) {
-                    log_data.solar_power_max_total = log_data.solar_power_max_day;
-                }
-            }
-        }
-
-        if (load->current > 0) {
-            uint16_t load_power = ls->voltage * load->current;
-            if (load_power > log_data.load_power_max_day) {
-                log_data.load_power_max_day = load_power;
-                if (log_data.load_power_max_day > log_data.load_power_max_total) {
-                    log_data.load_power_max_total = log_data.load_power_max_day;
-                }
-            }
-        }
-    }
-
-    if (dcdc->temp_mosfets > log_data.mosfet_temp_max) {
-        log_data.mosfet_temp_max = dcdc->temp_mosfets;
-    }
-
-    if (bat->temperature > log_data.bat_temp_max) {
-        log_data.bat_temp_max = bat->temperature;
-    }
-
-    if (mcu_temp > log_data.int_temp_max) {
-        log_data.int_temp_max = mcu_temp;
-    }
 }
 
 void detect_battery_temperature(battery_state_t *bat, float bat_temp)

@@ -25,6 +25,7 @@
 
 #include "half_bridge.h"
 #include "dcdc.h"
+#include "pwm_switch.h"
 #include "dc_bus.h"
 #include "battery.h"
 #include "load.h"
@@ -97,8 +98,8 @@ void uext_process_1s()
     oled.drawRect(66, 4, 2, 5, 1);      // bar 5
 
     // solar panel data
-    if (half_bridge_enabled()) {
-        tmp = -hs_bus.voltage * hs_bus.current;
+    if (half_bridge_enabled() || pwm_switch_enabled()) {
+        tmp = - hs_bus.voltage * hs_bus.current;
         oled.setTextCursor(0, 18);
         oled.printf("%4.0fW", (abs(tmp) < 1) ? 0 : tmp);     // remove negative zeros
     }
@@ -106,10 +107,13 @@ void uext_process_1s()
         oled.setTextCursor(8, 18);
         oled.printf("n/a");
     }
-    //if (solar_port->voltage > bat_port->voltage) {
+#ifndef CHARGER_TYPE_PWM
+    if (hs_bus.voltage > ls_bus.voltage)
+#endif
+    {
         oled.setTextCursor(0, 26);
         oled.printf("%4.1fV", hs_bus.voltage);
-    //}
+    }
 
     // battery data
     tmp = ls_bus.voltage * ls_bus.current;
@@ -130,7 +134,11 @@ void uext_process_1s()
     oled.printf("Tot +%4.1fkWh -%4.1fkWh", log_data.solar_in_total_Wh / 1000.0, fabs(log_data.load_out_total_Wh) / 1000.0);
 
     oled.setTextCursor(0, 56);
+#ifdef CHARGER_TYPE_PWM
+    oled.printf("T %.0fC PWM %.0f%% SOC %d%%", dcdc.temp_mosfets, pwm_switch_get_duty_cycle() * 100.0, bat_state.soc);
+#else
     oled.printf("T %.0fC PWM %.0f%% SOC %d%%", dcdc.temp_mosfets, half_bridge_get_duty_cycle() * 100.0, bat_state.soc);
+#endif
 
     oled.display();
 }

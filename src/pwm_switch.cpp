@@ -135,25 +135,21 @@ void pwm_switch_init(pwm_switch_t *pwm_switch)
 
 void pwm_switch_control(pwm_switch_t *pwm_switch, dc_bus_t *solar_port, dc_bus_t *bat_port)
 {
-    // for testing
-    //solar_port->voltage_input_start = 14.0;
-    //solar_port->voltage_input_stop = 13.0;
     if (_enabled) {
         if (bat_port->chg_allowed == false || solar_port->dis_allowed == false
-            || (solar_port->voltage < solar_port->dis_voltage_stop && bat_port->current < 0.1)
+            || (solar_port->voltage < solar_port->dis_voltage_stop && solar_port->current > 0)
             || pwm_switch->enabled == false)
         {
             pwm_switch_stop();
+            pwm_switch->off_timestamp = time(NULL);
             printf("PWM charger stop.\n");
         }
         else if (bat_port->voltage > (bat_port->chg_voltage_target - bat_port->chg_droop_res * bat_port->current)    // output voltage above target
             || bat_port->current > bat_port->chg_current_max         // output current limit exceeded
-            //|| (solar_port->voltage < (solar_port->voltage_input_start - solar_port->droop_resistance * solar_port->current) && bat_port->current > 0.1)        // input voltage below limit
-            || solar_port->current < solar_port->dis_current_max      // input current (negative signs) above limit
-            /*|| fabs(dcdc->ls_current) > dcdc->ls_current_max            // current above hardware maximum
-            || dcdc->temp_mosfets > 80*/)                               // temperature limits exceeded
+            || solar_port->current < solar_port->dis_current_max)    // input current (negative signs) above limit
         {
-            pwm_switch_duty_cycle_step(-1);
+            if (pwm_switch_get_duty_cycle() > 0.9)
+                pwm_switch_duty_cycle_step(-1);
         }
         else {
             pwm_switch_duty_cycle_step(1);

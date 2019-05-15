@@ -24,6 +24,8 @@
  */
 
 #include "dc_bus.h"
+#include "load.h"
+#include "dcdc.h"
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -61,7 +63,12 @@ typedef struct {
     uint32_t error_flags;       ///< Instantaneous errors
 } log_data_t;
 
+/** Updates the total energy counters for solar, battery and load bus
+ */
+void log_update_energy(log_data_t *log_data, dc_bus_t *solar, dc_bus_t *bat, dc_bus_t *load);
 
-void log_update_energy(log_data_t *log_data, dc_bus_t *bat, dc_bus_t *solar, dc_bus_t *load);
+/** Updates the logged min/max values for voltages, power, temperatures etc.
+ */
+void log_update_min_max_values(log_data_t *log_data, dcdc_t *dcdc, battery_state_t *bat, load_output_t *load, dc_bus_t *bat_bus, dc_bus_t *solar, dc_bus_t *load_bus);
 
 #endif /* LOG_H */

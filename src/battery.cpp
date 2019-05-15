@@ -158,7 +158,7 @@ bool battery_conf_check(battery_conf_t *bat_conf)
     */
 
     return
-       (bat_conf->voltage_load_reconnect > (bat_conf->voltage_load_disconnect + 0.6) &&
+       (bat_conf->voltage_load_reconnect > (bat_conf->voltage_load_disconnect + 0.4) &&
         bat_conf->voltage_recharge < (bat_conf->voltage_topping - 0.4) &&
         bat_conf->voltage_recharge > (bat_conf->voltage_load_disconnect + 1) &&
         bat_conf->voltage_load_disconnect > (bat_conf->voltage_absolute_min + 0.4) &&

@@ -24,9 +24,11 @@
 #include <math.h>       // for fabs function
 #include <stdio.h>
 
+extern float mcu_temp;
+
 //----------------------------------------------------------------------------
 // must be called exactly once per second, otherwise energy calculation gets wrong
-void log_update_energy(log_data_t *log_data, dc_bus_t *bat, dc_bus_t *solar, dc_bus_t *load)
+void log_update_energy(log_data_t *log_data, dc_bus_t *solar, dc_bus_t *bat, dc_bus_t *load)
 {
     // static variables so that it is not reset for each function call
     static int seconds_zero_solar = 0;
@@ -62,5 +64,56 @@ void log_update_energy(log_data_t *log_data, dc_bus_t *bat, dc_bus_t *solar, dc_
     log_data->bat_chg_total_Wh = bat_chg_total_Wh_prev + (bat->chg_energy_Wh > 0 ? bat->chg_energy_Wh : 0);
     log_data->bat_dis_total_Wh = bat_dis_total_Wh_prev + (bat->dis_energy_Wh > 0 ? bat->dis_energy_Wh : 0);
     log_data->solar_in_total_Wh = solar_in_total_Wh_prev + (solar->dis_energy_Wh > 0 ? solar->dis_energy_Wh : 0);
-    log_data->load_out_total_Wh = load_out_total_Wh_prev + (load->chg_energy_Wh > 0 ? load->dis_energy_Wh : 0);
+    log_data->load_out_total_Wh = load_out_total_Wh_prev + (load->chg_energy_Wh > 0 ? load->chg_energy_Wh : 0);
+}
+
+void log_update_min_max_values(log_data_t *log_data, dcdc_t *dcdc, battery_state_t *bat, load_output_t *load, dc_bus_t *solar_bus, dc_bus_t *bat_bus, dc_bus_t *load_bus)
+{
+    if (bat_bus->voltage > log_data->battery_voltage_max) {
+        log_data->battery_voltage_max = bat_bus->voltage;
+    }
+
+    if (solar_bus->voltage > log_data->solar_voltage_max) {
+        log_data->solar_voltage_max = solar_bus->voltage;
+    }
+
+    if (dcdc->ls_current > log_data->dcdc_current_max) {
+        log_data->dcdc_current_max = dcdc->ls_current;
+    }
+
+    if (load->current > log_data->load_current_max) {
+        log_data->load_current_max = load->current;
+    }
+
+    if (solar_bus->current < 0) {
+        uint16_t solar_power = -solar_bus->voltage * solar_bus->current;
+        if (solar_power > log_data->solar_power_max_day) {
+            log_data->solar_power_max_day = solar_power;
+            if (log_data->solar_power_max_day > log_data->solar_power_max_total) {
+                log_data->solar_power_max_total = log_data->solar_power_max_day;
+            }
+        }
+    }
+
+    if (load->current > 0) {
+        uint16_t load_power = load->voltage * load->current;
+        if (load_power > log_data->load_power_max_day) {
+            log_data->load_power_max_day = load_power;
+            if (log_data->load_power_max_day > log_data->load_power_max_total) {
+                log_data->load_power_max_total = log_data->load_power_max_day;
+            }
+        }
+    }
+
+    if (dcdc->temp_mosfets > log_data->mosfet_temp_max) {
+        log_data->mosfet_temp_max = dcdc->temp_mosfets;
+    }
+
+    if (bat->temperature > log_data->bat_temp_max) {
+        log_data->bat_temp_max = bat->temperature;
+    }
+
+    if (mcu_temp > log_data->int_temp_max) {
+        log_data->int_temp_max = mcu_temp;
+    }
 }

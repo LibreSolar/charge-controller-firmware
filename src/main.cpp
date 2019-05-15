@@ -1,5 +1,5 @@
-/* LibreSolar MPPT charge controller firmware
- * Copyright (c) 2016-2018 Martin Jäger (www.libre.solar)
+/* LibreSolar charge controller firmware
+ * Copyright (c) 2016-2019 Martin Jäger (www.libre.solar)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,11 @@
  */
 
 #ifndef UNIT_TEST
+
+/** @file
+ *
+ * @brief Entry point of charge controller firmware
+ */
 
 #include "mbed.h"
 
@@ -86,7 +91,8 @@ void system_control()
         dc_bus_energy_balance(&hs_bus);
         dc_bus_energy_balance(&ls_bus);
         dc_bus_energy_balance(&load_bus);
-        log_update_energy(&log_data, &ls_bus, &hs_bus, &load_bus);
+        log_update_energy(&log_data, &hs_bus, &ls_bus, &load_bus);
+        log_update_min_max_values(&log_data, &dcdc, &bat_state, &load, &hs_bus, &ls_bus, &load_bus);
         battery_update_soc(&bat_conf, &bat_state, bat_bus->voltage, bat_bus->current);
     }
     counter++;
