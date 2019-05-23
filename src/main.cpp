@@ -31,8 +31,7 @@
 #include "hardware.h"           // hardware-related functions like load switch, LED control, watchdog, etc.
 #include "dcdc.h"               // DC/DC converter control (hardware independent)
 #include "pwm_switch.h"         // PWM charge controller
-#include "battery.h"            // battery settings
-#include "charger.h"            // charger state machine
+#include "bat_charger.h"        // battery settings and charger state machine
 #include "adc_dma.h"            // ADC using DMA and conversion to measurement values
 #include "uext.h"               // communication interfaces, displays, etc. in UEXT connector
 #include "eeprom.h"             // external I2C EEPROM
@@ -52,7 +51,7 @@ dc_bus_t load_bus = {};         // load terminal
 pwm_switch_t pwm_switch = {};   // only necessary for PWM charger
 battery_conf_t bat_conf;        // actual (used) battery configuration
 battery_conf_t bat_conf_user;   // temporary storage where the user can write to
-battery_state_t bat_state;      // battery state information
+charger_t charger;              // battery state information
 load_output_t load;
 log_data_t log_data;
 extern ThingSet ts;             // defined in data_objects.cpp
@@ -68,7 +67,7 @@ void system_control()
     static int counter = 0;
 
     // convert ADC readings to meaningful measurement values
-    update_measurements(&dcdc, &bat_state, &load, &hs_bus, &ls_bus, &load_bus);
+    update_measurements(&dcdc, &charger, &load, &hs_bus, &ls_bus, &load_bus);
 
 #ifdef CHARGER_TYPE_PWM
     pwm_switch_control(&pwm_switch, &hs_bus, bat_bus);
@@ -92,8 +91,8 @@ void system_control()
         dc_bus_energy_balance(&ls_bus);
         dc_bus_energy_balance(&load_bus);
         log_update_energy(&log_data, &hs_bus, &ls_bus, &load_bus);
-        log_update_min_max_values(&log_data, &dcdc, &bat_state, &load, &hs_bus, &ls_bus, &load_bus);
-        battery_update_soc(&bat_conf, &bat_state, bat_bus->voltage, bat_bus->current);
+        log_update_min_max_values(&log_data, &dcdc, &charger, &load, &hs_bus, &ls_bus, &load_bus);
+        battery_update_soc(&bat_conf, &charger, bat_bus);
     }
     counter++;
 }
@@ -108,7 +107,7 @@ int main()
 
     battery_conf_init(&bat_conf, BATTERY_TYPE, BATTERY_NUM_CELLS, BATTERY_CAPACITY);
     battery_conf_overwrite(&bat_conf, &bat_conf_user);  // initialize conf_user with same values
-    battery_state_init(&bat_state);
+    charger_init(&charger);
 
     load_init(&load);
 
@@ -128,7 +127,7 @@ int main()
     dma_setup();
     adc_timer_start(1000);  // 1 kHz
     wait(0.5);      // wait for ADC to collect some measurement values
-    update_measurements(&dcdc, &bat_state, &load, &hs_bus, &ls_bus, &load_bus);
+    update_measurements(&dcdc, &charger, &load, &hs_bus, &ls_bus, &load_bus);
     calibrate_current_sensors();
 
     // Communication interfaces
@@ -141,20 +140,19 @@ int main()
     switch(dcdc.mode) {
         case MODE_NANOGRID:
             dc_bus_init_nanogrid(&hs_bus);
-            dc_bus_init_bat(&ls_bus, &bat_conf);
             bat_bus = &ls_bus;
             break;
         case MODE_MPPT_BUCK:     // typical MPPT charge controller operation
             dc_bus_init_solar(&hs_bus);
-            dc_bus_init_bat(&ls_bus, &bat_conf);
             bat_bus = &ls_bus;
             break;
         case MODE_MPPT_BOOST:    // for charging of e-bike battery via solar panel
             dc_bus_init_solar(&ls_bus);
-            dc_bus_init_bat(&hs_bus, &bat_conf);
             bat_bus = &hs_bus;
             break;
     }
+    charger_detect_num_batteries(&charger, &bat_conf, bat_bus);     // check if we have 24V instead of 12V system
+    battery_init_dc_bus(bat_bus, &bat_conf, charger.num_batteries);
 
     wait(2);    // safety feature: be able to re-flash before starting
     control_timer_start(CONTROL_FREQUENCY);
@@ -173,13 +171,13 @@ int main()
 
             //printf("Still alive... time: %d, mode: %d\n", (int)time(NULL), dcdc.mode);
 
-            charger_state_machine(bat_bus, &bat_conf, &bat_state, bat_bus->voltage, bat_bus->current);
+            charger_state_machine(bat_bus, &bat_conf, &charger);
 
             load_state_machine(&load, ls_bus.dis_allowed);
 
             eeprom_update();
 
-            leds_update_soc(bat_state.soc);
+            leds_update_soc(charger.soc);
             leds_toggle_blink();
 
             uext_process_1s();

@@ -23,7 +23,7 @@
  */
 
 #include <stdbool.h>
-#include "battery.h"
+#include "bat_charger.h"
 #include "dc_bus.h"
 
 /** DC/DC basic operation mode

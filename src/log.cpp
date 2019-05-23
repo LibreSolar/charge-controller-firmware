@@ -67,7 +67,7 @@ void log_update_energy(log_data_t *log_data, dc_bus_t *solar, dc_bus_t *bat, dc_
     log_data->load_out_total_Wh = load_out_total_Wh_prev + (load->chg_energy_Wh > 0 ? load->chg_energy_Wh : 0);
 }
 
-void log_update_min_max_values(log_data_t *log_data, dcdc_t *dcdc, battery_state_t *bat, load_output_t *load, dc_bus_t *solar_bus, dc_bus_t *bat_bus, dc_bus_t *load_bus)
+void log_update_min_max_values(log_data_t *log_data, dcdc_t *dcdc, charger_t *charger, load_output_t *load, dc_bus_t *solar_bus, dc_bus_t *bat_bus, dc_bus_t *load_bus)
 {
     if (bat_bus->voltage > log_data->battery_voltage_max) {
         log_data->battery_voltage_max = bat_bus->voltage;
@@ -109,8 +109,8 @@ void log_update_min_max_values(log_data_t *log_data, dcdc_t *dcdc, battery_state
         log_data->mosfet_temp_max = dcdc->temp_mosfets;
     }
 
-    if (bat->temperature > log_data->bat_temp_max) {
-        log_data->bat_temp_max = bat->temperature;
+    if (charger->bat_temperature > log_data->bat_temp_max) {
+        log_data->bat_temp_max = charger->bat_temperature;
     }
 
     if (mcu_temp > log_data->int_temp_max) {

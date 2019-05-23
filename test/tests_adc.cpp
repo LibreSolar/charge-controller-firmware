@@ -8,7 +8,7 @@ extern dc_bus_t hs_bus;
 extern dc_bus_t ls_bus;
 extern dc_bus_t *bat_port;
 extern dc_bus_t load_bus;
-extern battery_state_t bat_state;
+extern charger_t charger;
 extern load_output_t load;
 
 static adc_values_t adcval;
@@ -33,7 +33,7 @@ void check_load_bus_readings()
 
 void check_temperature_readings()
 {
-    TEST_ASSERT_EQUAL_FLOAT(adcval.bat_temperature, round(bat_state.temperature * 10) / 10);
+    TEST_ASSERT_EQUAL_FLOAT(adcval.bat_temperature, round(charger.bat_temperature * 10) / 10);
 }
 
 /** ADC conversion test
@@ -53,7 +53,7 @@ void adc_tests()
     prepare_adc_readings(adcval);
 
     // call original update_measurements function
-    update_measurements(&dcdc, &bat_state, &load, &hs_bus, &ls_bus, &load_bus);
+    update_measurements(&dcdc, &charger, &load, &hs_bus, &ls_bus, &load_bus);
 
     UNITY_BEGIN();
 

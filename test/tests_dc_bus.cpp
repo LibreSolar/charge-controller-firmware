@@ -3,9 +3,8 @@
 #include "adc_dma_stub.h"
 #include "adc_dma.h"
 
-#include "battery.h"
+#include "bat_charger.h"
 #include "dc_bus.h"
-#include "charger.h"
 #include "log.h"
 
 #include <time.h>
@@ -17,7 +16,7 @@ extern dc_bus_t hs_bus;
 extern dc_bus_t ls_bus;
 extern dc_bus_t *bat_port;
 extern dc_bus_t load_bus;
-extern battery_state_t bat_state;
+extern charger_t charger;
 extern battery_conf_t bat_conf;
 extern load_output_t load;
 extern log_data_t log_data;
@@ -25,9 +24,9 @@ extern log_data_t log_data;
 static void init_structs()
 {
     battery_conf_init(&bat_conf, BAT_TYPE_FLOODED, 6, 100);
-    battery_state_init(&bat_state);
-    dc_bus_init_bat(&ls_bus, &bat_conf);
-    bat_state.chg_state = CHG_STATE_IDLE;
+    charger_init(&charger);
+    battery_init_dc_bus(&ls_bus, &bat_conf, 1);
+    charger.state = CHG_STATE_IDLE;
 }
 
 static adc_values_t adcval;
@@ -59,7 +58,7 @@ void energy_calculation_init()
 
     // insert values into ADC functions
     prepare_adc_readings(adcval);
-    update_measurements(&dcdc, &bat_state, &load, &hs_bus, &ls_bus, &load_bus);
+    update_measurements(&dcdc, &charger, &load, &hs_bus, &ls_bus, &load_bus);
 
     for (int i = 0; i < 60*60*sun_hours; i++) {
         dc_bus_energy_balance(&hs_bus);
@@ -70,7 +69,7 @@ void energy_calculation_init()
     // disable DC/DC = solar charging
     adcval.dcdc_current = 0;
     prepare_adc_readings(adcval);
-    update_measurements(&dcdc, &bat_state, &load, &hs_bus, &ls_bus, &load_bus);
+    update_measurements(&dcdc, &charger, &load, &hs_bus, &ls_bus, &load_bus);
 
     for (int i = 0; i < 60*60*night_hours; i++) {
         dc_bus_energy_balance(&hs_bus);

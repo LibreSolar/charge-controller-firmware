@@ -23,7 +23,6 @@
  */
 
 #include <stdbool.h>
-#include "battery.h"
 
 /** DC bus type
  *
@@ -54,10 +53,6 @@ typedef struct {
     float dis_energy_Wh;            ///< cumulated energy in discharge direction since last counter reset (Wh)
 
 } dc_bus_t;
-
-/** Initialize dc bus for battery connection
- */
-void dc_bus_init_bat(dc_bus_t *bus, battery_conf_t *bat);
 
 /** Initialize dc bus for solar panel connection
  */

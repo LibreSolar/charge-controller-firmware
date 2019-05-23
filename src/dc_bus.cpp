@@ -16,21 +16,6 @@
 
 #include "dc_bus.h"
 
-void dc_bus_init_bat(dc_bus_t *bus, battery_conf_t *bat)
-{
-    bus->dis_allowed = true;
-    bus->dis_voltage_start = bat->voltage_load_reconnect;
-    bus->dis_voltage_stop = bat->voltage_load_disconnect;
-    bus->dis_current_max = -bat->charge_current_max;          // TODO: discharge current
-    bus->dis_droop_res = -(bat->internal_resistance + -bat->wire_resistance);  // negative sign for compensation of actual resistance
-
-    bus->chg_allowed = true;
-    bus->chg_voltage_target = bat->voltage_topping;
-    bus->chg_voltage_min = bat->voltage_absolute_min;
-    bus->chg_current_max = bat->charge_current_max;
-    bus->chg_droop_res = -bat->wire_resistance;             // negative sign for compensation of actual resistance
-}
-
 void dc_bus_init_solar(dc_bus_t *bus)
 {
     bus->dis_allowed = true;         // PV panel may provide power to solar input of DC/DC

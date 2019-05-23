@@ -27,7 +27,7 @@
 #include "dcdc.h"
 #include "pwm_switch.h"
 #include "dc_bus.h"
-#include "battery.h"
+#include "bat_charger.h"
 #include "load.h"
 #include "log.h"
 
@@ -36,7 +36,7 @@ extern dcdc_t dcdc;
 extern dc_bus_t hs_bus;
 extern dc_bus_t ls_bus;
 extern dc_bus_t load_bus;
-extern battery_state_t bat_state;
+extern charger_t charger;
 extern load_output_t load;
 
 #include "Adafruit_SSD1306.h"
@@ -135,9 +135,9 @@ void uext_process_1s()
 
     oled.setTextCursor(0, 56);
 #ifdef CHARGER_TYPE_PWM
-    oled.printf("T %.0fC PWM %.0f%% SOC %d%%", dcdc.temp_mosfets, pwm_switch_get_duty_cycle() * 100.0, bat_state.soc);
+    oled.printf("T %.0fC PWM %.0f%% SOC %d%%", dcdc.temp_mosfets, pwm_switch_get_duty_cycle() * 100.0, charger.soc);
 #else
-    oled.printf("T %.0fC PWM %.0f%% SOC %d%%", dcdc.temp_mosfets, half_bridge_get_duty_cycle() * 100.0, bat_state.soc);
+    oled.printf("T %.0fC PWM %.0f%% SOC %d%%", dcdc.temp_mosfets, half_bridge_get_duty_cycle() * 100.0, charger.soc);
 #endif
 
     oled.display();

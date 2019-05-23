@@ -82,7 +82,7 @@ void calibrate_current_sensors()
 }
 
 //----------------------------------------------------------------------------
-void update_measurements(dcdc_t *dcdc, battery_state_t *bat, load_output_t *load, dc_bus_t *hs, dc_bus_t *ls, dc_bus_t *load_bus)
+void update_measurements(dcdc_t *dcdc, charger_t *charger, load_output_t *load, dc_bus_t *hs, dc_bus_t *ls, dc_bus_t *load_bus)
 {
     //int v_temp, rts;
 
@@ -147,7 +147,7 @@ void update_measurements(dcdc_t *dcdc, battery_state_t *bat, load_output_t *load
     bat_temp = 1.0/(1.0/(273.15+25) + 1.0/NTC_BETA_VALUE*log(rts/10000.0)) - 273.15; // °C
 #endif
 
-    detect_battery_temperature(bat, bat_temp);
+    detect_battery_temperature(charger, bat_temp);
 
 #ifdef PIN_ADC_TEMP_FETS
     // MOSFET temperature calculation
@@ -162,7 +162,7 @@ void update_measurements(dcdc_t *dcdc, battery_state_t *bat, load_output_t *load
     //printf("TS_CAL1:%d TS_CAL2:%d ADC:%d, temp_int:%f\n", TS_CAL1, TS_CAL2, adcval, meas->temp_int);
 }
 
-void detect_battery_temperature(battery_state_t *bat, float bat_temp)
+void detect_battery_temperature(charger_t *charger, float bat_temp)
 {
 #ifdef PIN_TEMP_INT_PD
 
@@ -180,13 +180,13 @@ void detect_battery_temperature(battery_state_t *bat, float bat_temp)
     switch (ts_state) {
         case TSENSE_STATE_CHECK:
             if (bat_temp < -50) {
-                bat->ext_temp_sensor = false;
+                charger->ext_temp_sensor = false;
                 temp_pd.output();
                 temp_pd = 0;
                 ts_state = TSENSE_STATE_CHECK_WAIT;
             }
             else {
-                bat->ext_temp_sensor = true;
+                charger->ext_temp_sensor = true;
                 ts_state = TSENSE_STATE_MEASURE;
             }
             break;
@@ -198,8 +198,8 @@ void detect_battery_temperature(battery_state_t *bat, float bat_temp)
             }
             break;
         case TSENSE_STATE_MEASURE:
-            bat->temperature = bat->temperature * 0.8 + bat_temp * 0.2;
-            //printf("Battery temperature: %.2f (%s sensor)\n", bat_temp, (bat->ext_temp_sensor ? "external" : "internal"));
+            charger->bat_temperature = charger->bat_temperature * 0.8 + bat_temp * 0.2;
+            //printf("Battery temperature: %.2f (%s sensor)\n", bat_temp, (charger->ext_temp_sensor ? "external" : "internal"));
             temp_pd.input();
             ts_state = TSENSE_STATE_MEASURE_WAIT;
             break;
@@ -212,7 +212,7 @@ void detect_battery_temperature(battery_state_t *bat, float bat_temp)
             break;
     }
 #else
-    bat->temperature = bat_temp;
+    charger->bat_temperature = bat_temp;
 #endif
 }
 

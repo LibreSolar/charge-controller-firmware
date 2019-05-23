@@ -14,17 +14,20 @@
  * limitations under the License.
  */
 
-#ifndef BATTERY_H
-#define BATTERY_H
+#ifndef BAT_CHARGER_H
+#define BAT_CHARGER_H
 
 /** @file
  *
- * @brief Battery configuration and functions
+ * @brief Battery and charger configuration and functions
  */
 
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
+
+#include "dcdc.h"
+#include "dc_bus.h"
 
 /** Battery cell types
  */
@@ -222,30 +225,84 @@ typedef struct
 
 } battery_conf_t;
 
+/** Charger configuration and battery state
+ */
 typedef struct
 {
-    int num_batteries;      ///< Used for automatic 12V/24V battery detection at start-up (can be 1 or 2 only)
+    unsigned int state;             ///< Current charger state (see enum charger_states)
 
-    float temperature;      ///< Battery temperature in °C from ext. temperature sensor (if existing)
-    bool ext_temp_sensor;   ///< True if external temperature sensor was detected
+    int num_batteries;              ///< Used for automatic 12V/24V battery detection at start-up (can be 1 or 2 only)
 
-    float usable_capacity;      ///< Estimated usable capacity (Ah) based on coulomb counting
+    float bat_temperature;          ///< Battery temperature in °C from ext. temperature sensor (if existing)
+    bool ext_temp_sensor;           ///< True if external temperature sensor was detected
 
-    float discharged_Ah;        ///< Coulomb counter for SOH calculation
+    float usable_capacity;          ///< Estimated usable capacity (Ah) based on coulomb counting
+
+    float discharged_Ah;            ///< Coulomb counter for SOH calculation
 
     uint16_t num_full_charges;      ///< Number of full charge cycles
     uint16_t num_deep_discharges;   ///< Number of deep-discharge cycles
 
     uint16_t soc;                   ///< State of Charge (%)
     uint16_t soh;                   ///< State of Health (%)
-    unsigned int chg_state;            ///< Current charger state (see enum charger_states)
-    int time_state_changed;            ///< Timestamp of last state change
-    int time_voltage_limit_reached;    ///< Last time the CV limit was reached
 
-    bool full;              ///< Flag to indicate if battery was fully charged
+    int time_state_changed;         ///< Timestamp of last state change
+    int time_voltage_limit_reached; ///< Last time the CV limit was reached
 
-} battery_state_t;
+    bool full;                      ///< Flag to indicate if battery was fully charged
 
+} charger_t;
+
+
+/** Possible charger states
+ *
+ * Further information:
+ * - https://en.wikipedia.org/wiki/IUoU_battery_charging
+ * - https://batteryuniversity.com/learn/article/charging_the_lead_acid_battery
+ */
+enum charger_state {
+
+    /** Idle
+     *
+     * Initial state of the charge controller. If the solar voltage is high enough
+     * and the battery is not full, bulk charging mode is started.
+     */
+    CHG_STATE_IDLE,
+
+    /** Bulk / CC / MPPT charging
+     *
+     * The battery is charged with maximum possible current (MPPT algorithm is
+     * active) until the CV voltage limit is reached.
+     */
+    CHG_STATE_BULK,
+
+    /** Topping / CV / absorption charging
+     *
+     * Lead-acid batteries are charged for some time using a slightly higher charge
+     * voltage. After a current cutoff limit or a time limit is reached, the charger
+     * goes into trickle or equalization mode for lead-acid batteries or back into
+     * Standby for Li-ion batteries.
+     */
+    CHG_STATE_TOPPING,
+
+    /** Trickle charging
+     *
+     * This mode is kept forever for a lead-acid battery and keeps the battery at
+     * full state of charge. If too much power is drawn from the battery, the
+     * charger switches back into CC / bulk charging mode.
+     */
+    CHG_STATE_TRICKLE,
+
+    /** Equalization charging
+     *
+     * This mode is only used for lead-acid batteries after several deep-discharge
+     * cycles or a very long period of time with no equalization. Voltage is
+     * increased to 15V or above, so care must be taken for the other system
+     * components attached to the battery. (currently, no equalization charging is
+     * enabled in the software)
+     */
+    CHG_STATE_EQUALIZATION
+};
 
 /** Basic initialization of battery configuration
  *
@@ -254,9 +311,7 @@ typedef struct
  */
 void battery_conf_init(battery_conf_t *bat, bat_type type, int num_cells, float nominal_capacity);
 
-/** Checks battery user settings
- *
- * This function should be implemented in config.cpp
+/** Checks battery user settings for plausibility
  */
 bool battery_conf_check(battery_conf_t *bat);
 
@@ -265,16 +320,30 @@ bool battery_conf_check(battery_conf_t *bat);
  * Settings specified in bat_user will be copied to actual battery_t,
  * if suggested updates are valid (includes plausibility check!)
  */
-void battery_conf_overwrite(battery_conf_t *source, battery_conf_t *destination, battery_state_t *state = NULL);
-
-/** Basic initialization of battery state (e.g. SOC)
- */
-void battery_state_init(battery_state_t *bat_state);
+void battery_conf_overwrite(battery_conf_t *source, battery_conf_t *destination, charger_t *state = NULL);
 
 /** SOC estimation
  *
  * Must be called exactly once per second, otherwise SOC calculation gets wrong.
  */
-void battery_update_soc(battery_conf_t *bat_conf, battery_state_t *bat_state, float voltage, float current);
+void battery_update_soc(battery_conf_t *bat_conf, charger_t *charger, dc_bus_t *bus);
 
-#endif /* BATTERY_H */
+/** Initialize dc bus for battery connection
+ *
+ * @param num_batteries definies the number of series connected batteries, e.g. 2 for 24V system
+ */
+void battery_init_dc_bus(dc_bus_t *bus, battery_conf_t *bat, unsigned int num_batteries);
+
+/** Basic initialization of charger struct
+ */
+void charger_init(charger_t *charger);
+
+/** Detect if two batteries are connected in series (12V/24V auto-detection)
+ */
+void charger_detect_num_batteries(charger_t *charger, battery_conf_t *bat, dc_bus_t *bus);
+
+/** Charger state machine update, should be called once per second
+ */
+void charger_state_machine(dc_bus_t *port, battery_conf_t *bat_conf, charger_t *charger);
+
+#endif /* BAT_CHARGER_H */

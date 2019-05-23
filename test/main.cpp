@@ -6,8 +6,7 @@
 #include "hardware.h"           // hardware-related functions like load switch, LED control, watchdog, etc.
 #include "dcdc.h"               // DC/DC converter control (hardware independent)
 #include "pwm_switch.h"         // PWM charge controller
-#include "battery.h"            // battery settings
-#include "charger.h"            // charger state machine
+#include "bat_charger.h"        // battery settings and charger state machine
 #include "adc_dma.h"            // ADC using DMA and conversion to measurement values
 #include "uext.h"               // communication interfaces, displays, etc. in UEXT connector
 #include "eeprom.h"             // external I2C EEPROM
@@ -26,7 +25,7 @@ dc_bus_t load_bus = {};         // load terminal
 pwm_switch_t pwm_switch = {};   // only necessary for PWM charger
 battery_conf_t bat_conf;        // actual (used) battery configuration
 battery_conf_t bat_conf_user;   // temporary storage where the user can write to
-battery_state_t bat_state;      // battery state information
+charger_t charger;              // battery state information
 load_output_t load;
 log_data_t log_data;
 extern ThingSet ts;             // defined in data_objects.cpp
@@ -36,7 +35,7 @@ time_t timestamp;    // current unix timestamp (independent of time(NULL), as it
 int main()
 {
     adc_tests();
-    charger_tests();
+    bat_charger_tests();
     dc_bus_tests();
 
     // TODO
