@@ -253,7 +253,7 @@ void battery_update_soc(battery_conf_t *bat_conf, charger_t *charger, dc_bus_t *
         charger->soc = soc_filtered / 100;
     }
 
-    charger->discharged_Ah += bus->current / 3600.0;
+    charger->discharged_Ah += -bus->current / 3600.0;       // charged current is positive --> change sign
 }
 
 static void _enter_state(charger_t* charger, int next_state)
