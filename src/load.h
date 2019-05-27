@@ -35,7 +35,8 @@ enum load_state_t {
     LOAD_STATE_ON,                  ///< Normal state: On
     LOAD_STATE_OFF_LOW_SOC,         ///< Off to protect battery (overrules target setting)
     LOAD_STATE_OFF_OVERCURRENT,     ///< Off to protect charge controller (overrules target setting)
-    LOAD_STATE_OFF_OVERVOLTAGE      ///< Off to protect loads (overrules target setting)
+    LOAD_STATE_OFF_OVERVOLTAGE,     ///< Off to protect loads (overrules target setting)
+    LOAD_STATE_OFF_SHORT_CIRCUIT    ///< Off to protect charge controller (overrules target setting)
 };
 
 /** Load output type
@@ -54,12 +55,11 @@ typedef struct {
 
     float junction_temperature; ///< calculated using thermal model based on current and ambient temperature measurement (unit: °C)
 
-    //bool enabled;               ///< actual status
     bool enabled_target;        ///< target setting defined via communication port (overruled if battery is empty)
     bool usb_enabled_target;    ///< same for USB output
 } load_output_t;
 
-/** Initialize load_output_t struct
+/** Initialize load_output_t struct and overcurrent / short circuit protection comparator (if existing)
  */
 void load_init(load_output_t *load);
 

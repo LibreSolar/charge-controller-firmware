@@ -40,6 +40,7 @@
 
 #define PIN_LOAD_DIS    PB_2
 #define PIN_USB_PWR_DIS PB_5
+#define PIN_I_LOAD_COMP PB_4
 
 #define PIN_REF_I_DCDC  PA_4
 
