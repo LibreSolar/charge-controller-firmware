@@ -63,20 +63,18 @@
 // specific board settings
 ///////////////////////////////////////////////////////////////////////////////
 
-#if defined(PCB_LS_005)
-    #include "pcbs/pcb_ls_005.h"
-#elif defined(PCB_LS_010)
-    #include "pcbs/pcb_ls_010.h"
-#elif defined(PCB_CS_02)
-    #include "pcbs/pcb_cs_02.h"
-#elif defined(PCB_CS_04)
-    #include "pcbs/pcb_cs_04.h"
-#elif defined(PCB_CS_06)
-    #include "pcbs/pcb_cs_06.h"
-#elif defined(PCB_PWM_01)
-    #include "pcbs/pcb_pwm_01.h"
-#elif defined(PCB_PWM_02)
-    #include "pcbs/pcb_pwm_02.h"
+#if defined(MPPT_2420_LC_0V10)
+    #include "pcbs/mppt_2420_lc_0v10.h"
+#elif defined(MPPT_1210_HUS_0V2)
+    #include "pcbs/mppt_1210_hus_0v2.h"
+#elif defined(MPPT_1210_HUS_0V4)
+    #include "pcbs/mppt_1210_hus_0v4.h"
+#elif defined(MPPT_1210_HUS_0V6)
+    #include "pcbs/mppt_1210_hus_0v6.h"
+#elif defined(PWM_2420_LUS_0V1)
+    #include "pcbs/pwm_2420_lus_0v1.h"
+#elif defined(PWM_2420_LUS_0V2)
+    #include "pcbs/pwm_2420_lus_0v2.h"
 #elif defined(UNIT_TEST)
     #include "pcbs/pcb_stub.h"
 #else
