@@ -292,6 +292,11 @@ void adc_setup()
     ref_i_dcdc = 0.1;    // reference voltage for zero current (0.1 for buck, 0.9 for boost, 0.5 for bi-directional)
 #endif
 
+#ifdef PIN_V_SOLAR_EN
+    DigitalOut solar_en(PIN_V_SOLAR_EN);
+    solar_en = 1;
+#endif
+
     ADC_HandleTypeDef hadc;
     ADC_ChannelConfTypeDef sConfig = {0};
 

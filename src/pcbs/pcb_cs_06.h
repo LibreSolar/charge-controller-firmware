@@ -47,6 +47,8 @@
 
 #define PIN_REF_I_DCDC  PA_4
 
+#define PIN_TEMP_INT_PD PA_8
+
 enum pin_state_t { PIN_HIGH, PIN_LOW, PIN_FLOAT };
 
 // assignment LED numbers on PCB to their meaning
@@ -73,15 +75,16 @@ static const pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
 };
 
 // pin definition only needed in adc_dma.cpp to detect if they are present on the PCB
-//#define PIN_ADC_TEMP_FETS   PA_5
+#define PIN_ADC_TEMP_BAT
 
 // typical value for Semitec 103AT-5 thermistor: 3435
 #define NTC_BETA_VALUE 3435
+#define NTC_SERIES_RESISTOR 10000.0
 
 #define ADC_GAIN_V_BAT (105.6 / 5.6)    // both voltage dividers: 100k + 5.6k
 #define ADC_GAIN_V_SOLAR (105.6 / 5.6)
-#define ADC_GAIN_I_LOAD (1000 / 4 / 50) // amp gain: 50, resistor: 4 mOhm
-#define ADC_GAIN_I_DCDC (1000 / 4 / 50)
+#define ADC_GAIN_I_LOAD (1000.0 / 3.0 / 50.0) // amp gain: 50, resistor: 3 mOhm
+#define ADC_GAIN_I_DCDC (1000.0 / 3.0 / 50.0)
 
 // position in the array written by the DMA controller
 enum {
