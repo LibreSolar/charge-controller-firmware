@@ -18,58 +18,12 @@
 
 #include "hardware.h"
 #include "pcb.h"
+#include "load.h"
 
 #include "mbed.h"
 #include "half_bridge.h"
 #include "us_ticker_data.h"
 #include "leds.h"
-
-#ifdef PIN_LOAD_EN
-DigitalOut load_enable(PIN_LOAD_EN);
-#else
-DigitalOut load_disable(PIN_LOAD_DIS);
-#endif
-
-#ifdef PIN_USB_PWR_EN
-DigitalOut usb_pwr_en(PIN_USB_PWR_EN);
-#endif
-
-#ifdef PIN_USB_PWR_DIS
-DigitalOut usb_pwr_dis(PIN_USB_PWR_DIS);
-#endif
-
-#ifdef PIN_UEXT_DIS
-DigitalOut uext_dis(PIN_UEXT_DIS);
-#endif
-
-//----------------------------------------------------------------------------
-void hw_load_switch(bool enabled)
-{
-#ifdef PIN_LOAD_EN
-    if (enabled) load_enable = 1;
-    else load_enable = 0;
-#endif
-#ifdef PIN_LOAD_DIS
-    printf("Load enabled = %d\n", enabled);
-    if (enabled) load_disable = 0;
-    else load_disable = 1;
-#endif
-
-    leds_set_load(enabled);
-}
-
-//----------------------------------------------------------------------------
-void hw_usb_out(bool enabled)
-{
-#ifdef PIN_USB_PWR_EN
-    if (enabled) usb_pwr_en = 1;
-    else usb_pwr_en = 0;
-#endif
-#ifdef PIN_USB_PWR_DIS
-    if (enabled) usb_pwr_dis = 0;
-    else usb_pwr_dis = 1;
-#endif
-}
 
 #if defined(STM32F0)
 
@@ -198,8 +152,8 @@ void init_watchdog(float timeout) {
 void mbed_die(void)
 {
     half_bridge_stop();
-    hw_load_switch(false);
-    hw_usb_out(false);
+    load_switch_set(false);
+    load_usb_set(false);
 
     leds_init(false);
 
@@ -219,69 +173,89 @@ void mbed_die(void)
 #elif defined(STM32L0)
 #define SYS_MEM_START       0x1FF00000
 #define SRAM_END            0X20004FFF  // 20k
+#define FLASH_LAST_PAGE     0x0802FF80  // start address of last page (192 kbyte cat 5 devices)
 #endif
 
-#define MAGIC_CODE          0xDEADBEEF
+#define MAGIC_CODE_ADDR     (SRAM_END - 0xF)    // where the magic code is stored
 
 void start_dfu_bootloader()
 {
     // place magic code at end of RAM and initiate reset
-    *((unsigned long *)(SRAM_END - 0xF)) = MAGIC_CODE;
+    *((uint32_t *)(MAGIC_CODE_ADDR)) = 0xDEADBEEF;
     NVIC_SystemReset();
 }
-
-// https://stackoverflow.com/questions/42020893/stm32l073rz-rev-z-iap-jump-to-bootloader-system-memory
 
 // This function should be called at the beginning of SystemInit in system_clock.c (mbed target directory)
 // As mbed does not provide this functionality, you have to patch the file manually
 extern "C" void system_init_hook()
 {
-    if (*((unsigned long *)(SRAM_END - 0xF)) == MAGIC_CODE) {
+    if (*((uint32_t *)(MAGIC_CODE_ADDR)) == 0xDEADBEEF) {
 
-        *((unsigned long *)(SRAM_END - 0xF)) =  0xCAFEFEED;  // reset the trigger
+        uint32_t jump_address;
 
-        // jump function pointer to be initialized and called later
-        void (*SysMemJump)(void);
+#ifdef STM32L0
+        // Trying to implement this solution, but doesn't work properly...
+        // https://stackoverflow.com/questions/42020893/stm32l073rz-rev-z-iap-jump-to-bootloader-system-memory
+        if (*((uint32_t *)(MAGIC_CODE_ADDR + 4)) == 0) {      // first jump
 
-        // TODO for STM32L0
-/*
-        FLASH_EraseInitTypeDef EraseInitStruct;
-        EraseInitStruct.TypeErase   = FLASH_TYPEERASE_PAGES;
-        EraseInitStruct.PageAddress = Data_Address;
-        EraseInitStruct.NbPages     = 1;
-
-        First_jump = *(__IO uint32_t *)(Data_Address);
-
-        if (First_jump == 0) {
-            HAL_FLASH_Unlock();
-            HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, Data_Address, 0xAAAAAAAA);
-            HAL_FLASH_Lock();
+            *((uint32_t *)(MAGIC_CODE_ADDR + 4)) = 0xAAAAAAAA;
 
             // Reinitialize the Stack pointer and jump to application address
-            //JumpAddress = *(__IO uint32_t *)(0x1FF00004);
-            SysMemJump = (void (*)(void)) (*((uint32_t *) (SYS_MEM_START + 4)));
+            jump_address = *((uint32_t *) (SYS_MEM_START + 4));
         }
         else {
-            HAL_FLASH_Unlock();
-            HAL_FLASHEx_Erase(&EraseInitStruct, &PAGEError);
-            HAL_FLASH_Lock();
+            *((uint32_t *)(MAGIC_CODE_ADDR)) =  0x00000000;  // reset the first trigger
+            *((uint32_t *)(MAGIC_CODE_ADDR + 4)) =  0x00000000;  // reset the second trigger
 
             // Reinitialize the Stack pointer and jump to application address
-            //JumpAddress =  (0x1FF00369);
-            SysMemJump = (void (*)(void)) (*((uint32_t *) (0x1FF00369)));
+            jump_address = (*((uint32_t *) (0x1FF00369)));
         }
-*/
-        //__set_MSP(0x20002250);  // set stack pointer for STM32F0
+#else // STM32F0 and possibly others
+        *((uint32_t *)(MAGIC_CODE_ADDR)) =  0x00000000;  // reset the trigger
+
+        jump_address = (*((uint32_t *) (SYS_MEM_START + 4)));
+#endif
+
+        // reinitialize stack pointer
         __set_MSP(SYS_MEM_START);
-        //__set_MSP(*(__IO uint32_t *)(0x1FF00000));
 
-        // point the PC to the System Memory reset vector (+4)
-        SysMemJump = (void (*)(void)) (*((uint32_t *) (SYS_MEM_START + 4))); // for STM32F0
-        SysMemJump();
+        // jump to specified address
+        void (*jump)(void);
+        jump = (void (*)(void)) jump_address;
+        jump();
 
-        while (42);
+        while (42); // should never be reached
     }
 }
+
+/*
+// alternative approach suggested by STM (without reset and magic bytes)
+
+void BootLoaderInit(uint32_t BootLoaderStatus)
+{
+    void (*SysMemJump)(void);
+    SysMemJump = (void (*)(void)) (*((uint32_t *) (SYS_MEM_START + 4))); // for STM32F0
+
+    if (BootLoaderStatus == 1) {
+
+        printf("Trying to jump to bootloader!\n");
+
+        // shut down any tasks running
+        HAL_RCC_DeInit();
+        SysTick->CTRL = 0;  // reset Systick Timer
+        SysTick->LOAD = 0;
+        SysTick->VAL = 0;
+
+        //__set_PRIMASK(1);   // disable interrupts
+
+        __set_MSP(SYS_MEM_START);
+
+        SysMemJump();
+
+        while(42);
+    }
+}
+*/
 
 #else
 

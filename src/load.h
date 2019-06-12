@@ -63,6 +63,14 @@ typedef struct {
  */
 void load_init(load_output_t *load);
 
+/** Enable/disable load switch
+ */
+void load_switch_set(bool enabled);
+
+/** Enable/disable USB output
+ */
+void load_usb_set(bool enabled);
+
 /** State machine, called every second.
  */
 void load_state_machine(load_output_t *load, bool source_enabled);

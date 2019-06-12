@@ -20,16 +20,8 @@
 /** @file
  *
  * @brief
- * Hardware-specific functions like timers, output switches, bootloader
+ * Hardware-specific functions like timers, watchdog, bootloader
  */
-
-/** Enable/disable load switch
- */
-void hw_load_switch(bool enabled);
-
-/** Enable/disable USB output
- */
-void hw_usb_out(bool enabled);
 
 /** Initialization of IWDG
  *

@@ -14,11 +14,66 @@
  * limitations under the License.
  */
 
+#ifndef UNIT_TEST
+
 #include "load.h"
 #include "pcb.h"
+#include "config.h"
 #include "hardware.h"
+#include "leds.h"
 #include "log.h"
 #include <time.h>
+
+
+#if defined(PIN_I_LOAD_COMP) && PIN_LOAD_DIS == PB_2
+static void lptim_init()
+{
+    // Enable peripheral clock of GPIOB
+    RCC->IOPENR |= RCC_IOPENR_IOPBEN;
+
+    // Enable LPTIM clock
+    RCC->APB1ENR |= RCC_APB1ENR_LPTIM1EN;
+
+    // Select alternate function mode on PB2 (first bit _1 = 1, second bit _0 = 0)
+    GPIOB->MODER = (GPIOB->MODER & ~(GPIO_MODER_MODE2)) | GPIO_MODER_MODE2_1;
+
+    // Select AF2 (LPTIM_OUT) on PB2
+    GPIOB->AFR[0] |= 0x2U << GPIO_AFRL_AFRL2_Pos;
+
+    // Set prescaler to 32 (resulting in 1 MHz timer frequency)
+    LPTIM1->CFGR |= 0x5U << LPTIM_CFGR_PRESC_Pos;
+
+    // Enable trigger (rising edge)
+    LPTIM1->CFGR |= LPTIM_CFGR_TRIGEN_0;
+
+    // Select trigger 7 (COMP2_OUT)
+    LPTIM1->CFGR |= 0x7U << LPTIM_CFGR_TRIGSEL_Pos;
+
+    //LPTIM1->CFGR |= LPTIM_CFGR_WAVPOL;
+    LPTIM1->CFGR |= LPTIM_CFGR_PRELOAD;
+
+    // Glitch filter of 8 cycles
+    LPTIM1->CFGR |= LPTIM_CFGR_TRGFLT_0 | LPTIM_CFGR_TRGFLT_1;
+
+    // Enable set-once mode
+    LPTIM1->CFGR |= LPTIM_CFGR_WAVE;
+
+    // Enable timer (must be done *before* changing ARR or CMP, but *after*
+    // changing CFGR)
+    LPTIM1->CR |= LPTIM_CR_ENABLE;
+
+    // Auto Reload Register
+    LPTIM1->ARR = 1000;
+
+    // Set load switch-off delay in microseconds
+    // (actually takes approx. 4 us longer than this setting)
+    LPTIM1->CMP = 10;
+
+    // Continuous mode
+    //LPTIM1->CR |= LPTIM_CR_CNTSTRT;
+    //LPTIM1->CR |= LPTIM_CR_SNGSTRT;
+}
+#endif
 
 static void short_circuit_comp_init()
 {
@@ -39,10 +94,16 @@ static void short_circuit_comp_init()
     COMP2->CSR |= COMP_INPUT_PLUS_IO2;
 
     // select VREFINT divider as negative input
-    COMP2->CSR |= COMP_INPUT_MINUS_1_2VREFINT;
+    COMP2->CSR |= COMP_INPUT_MINUS_VREFINT;
+
+    // propagate comparator value to LPTIM input
+    COMP2->CSR |= COMP_CSR_COMP2LPTIM1IN1;
 
     // normal polarity
     //COMP2->CSR |= COMP_CSR_COMP2POLARITY;
+
+    // set high-speed mode (1.2us instead of 2.5us propagation delay, but 3.5uA instead of 0.5uA current consumption)
+    //COMP2->CSR |= COMP_CSR_COMP2SPEED;
 
     // enable COMP2
     COMP2->CSR |= COMP_CSR_COMP2EN;
@@ -68,8 +129,9 @@ extern "C" void ADC1_COMP_IRQHandler(void)
 {
     // interrupt called because of COMP2?
     if (COMP2->CSR & COMP_CSR_COMP2VALUE) {
-        hw_load_switch(false);
-        hw_usb_out(false);
+        // Load should be switched off by LPTIM trigger already. This interrupt
+        // is mainly used to indicate the failure.
+        load_switch_set(false);     // to update also LEDs
         short_circuit = true;
     }
 
@@ -79,13 +141,50 @@ extern "C" void ADC1_COMP_IRQHandler(void)
 
 #endif // PIN_I_LOAD_COMP
 
+
+void load_switch_set(bool enabled)
+{
+#ifdef PIN_LOAD_EN
+    DigitalOut load_enable(PIN_LOAD_EN);
+    if (enabled) load_enable = 1;
+    else load_enable = 0;
+#endif
+
+#ifdef PIN_LOAD_DIS
+    DigitalOut load_disable(PIN_LOAD_DIS);
+#ifdef PIN_I_LOAD_COMP
+    if (enabled) lptim_init();
+#else
+    if (enabled) load_disable = 0;
+#endif
+    else load_disable = 1;
+    printf("Load enabled = %d\n", enabled);
+#endif
+
+    leds_set_load(enabled);
+}
+
+void load_usb_set(bool enabled)
+{
+#ifdef PIN_USB_PWR_EN
+    DigitalOut usb_pwr_en(PIN_USB_PWR_EN);
+    if (enabled) usb_pwr_en = 1;
+    else usb_pwr_en = 0;
+#endif
+#ifdef PIN_USB_PWR_DIS
+    DigitalOut usb_pwr_dis(PIN_USB_PWR_DIS);
+    if (enabled) usb_pwr_dis = 0;
+    else usb_pwr_dis = 1;
+#endif
+}
+
 void load_init(load_output_t *load)
 {
     load->current_max = LOAD_CURRENT_MAX;
     load->enabled_target = true;
     load->usb_enabled_target = true;
-    hw_load_switch(false);
-    hw_usb_out(false);
+    load_switch_set(false);
+    load_usb_set(false);
     load->switch_state = LOAD_STATE_DISABLED;
     load->usb_state = LOAD_STATE_DISABLED;
     load->junction_temperature = 25;
@@ -100,22 +199,22 @@ void usb_state_machine(load_output_t *load)
     switch (load->usb_state) {
     case LOAD_STATE_DISABLED:
         if (load->usb_enabled_target == true) {
-            hw_usb_out(true);
+            load_usb_set(true);
             load->usb_state = LOAD_STATE_ON;
         }
         break;
     case LOAD_STATE_ON:
         // currently still same cut-off SOC limit as the load
         if (load->switch_state == LOAD_STATE_OFF_LOW_SOC) {
-            hw_usb_out(false);
+            load_usb_set(false);
             load->usb_state = LOAD_STATE_OFF_LOW_SOC;
         }
         else if (load->switch_state == LOAD_STATE_OFF_OVERCURRENT) {
-            hw_usb_out(false);
+            load_usb_set(false);
             load->usb_state = LOAD_STATE_OFF_OVERCURRENT;
         }
         else if (load->usb_enabled_target == false) {
-            hw_usb_out(false);
+            load_usb_set(false);
             load->usb_state = LOAD_STATE_DISABLED;
         }
         break;
@@ -123,7 +222,7 @@ void usb_state_machine(load_output_t *load)
         // currently still same cut-off SOC limit as the load
         if (load->switch_state == LOAD_STATE_ON) {
             if (load->usb_enabled_target == true) {
-                hw_usb_out(true);
+                load_usb_set(true);
                 load->usb_state = LOAD_STATE_ON;
             }
             else {
@@ -145,24 +244,24 @@ void load_state_machine(load_output_t *load, bool source_enabled)
     switch (load->switch_state) {
     case LOAD_STATE_DISABLED:
         if (source_enabled == true && load->enabled_target == true) {
-            hw_load_switch(true);
+            load_switch_set(true);
             load->switch_state = LOAD_STATE_ON;
         }
         break;
     case LOAD_STATE_ON:
         if (load->enabled_target == false) {
-            hw_load_switch(false);
+            load_switch_set(false);
             load->switch_state = LOAD_STATE_DISABLED;
         }
         else if (source_enabled == false) {
-            hw_load_switch(false);
+            load_switch_set(false);
             load->switch_state = LOAD_STATE_OFF_LOW_SOC;
         }
         break;
     case LOAD_STATE_OFF_LOW_SOC:
         if (source_enabled == true) {
             if (load->enabled_target == true) {
-                hw_load_switch(true);
+                load_switch_set(true);
                 load->switch_state = LOAD_STATE_ON;
             }
             else {
@@ -171,7 +270,7 @@ void load_state_machine(load_output_t *load, bool source_enabled)
         }
         break;
     case LOAD_STATE_OFF_OVERCURRENT:
-        if (time(NULL) > load->overcurrent_timestamp + 30*60) {         // wait 5 min (TODO: make configurable)
+        if (time(NULL) > load->overcurrent_timestamp + LOAD_OVERCURRENT_RECOVERY_TIMEOUT) {         // wait some time
             load->switch_state = LOAD_STATE_DISABLED;   // switch to normal mode again
         }
         break;
@@ -183,6 +282,7 @@ void load_state_machine(load_output_t *load, bool source_enabled)
     case LOAD_STATE_OFF_SHORT_CIRCUIT:
         // stay here until the charge controller is reset or load is switched off remotely
         if (load->enabled_target == false) {
+            short_circuit = false;
             load->switch_state = LOAD_STATE_DISABLED;   // switch to normal mode again
         }
         break;
@@ -199,6 +299,7 @@ void load_control(load_output_t *load)
 {
     if (short_circuit) {
         load->switch_state = LOAD_STATE_OFF_SHORT_CIRCUIT;
+        return;
     }
 
     // junction temperature calculation model for overcurrent detection
@@ -208,8 +309,8 @@ void load_control(load_output_t *load)
         ) / (MOSFET_THERMAL_TIME_CONSTANT * CONTROL_FREQUENCY);
 
     if (load->junction_temperature > MOSFET_MAX_JUNCTION_TEMP) {
-        hw_load_switch(false);
-        hw_usb_out(false);
+        load_switch_set(false);
+        load_usb_set(false);
         load->switch_state = LOAD_STATE_OFF_OVERCURRENT;
         load->overcurrent_timestamp = time(NULL);
     }
@@ -218,8 +319,8 @@ void load_control(load_output_t *load)
     if (load->voltage > LOW_SIDE_VOLTAGE_MAX) {
         debounce_counter++;
         if (debounce_counter > CONTROL_FREQUENCY) {      // waited 1s before setting the flag
-            hw_load_switch(false);
-            hw_usb_out(false);
+            load_switch_set(false);
+            load_usb_set(false);
             load->switch_state = LOAD_STATE_OFF_OVERVOLTAGE;
             load->overcurrent_timestamp = time(NULL);
             log_data.error_flags |= (1 << ERR_BAT_OVERVOLTAGE);
@@ -227,3 +328,5 @@ void load_control(load_output_t *load)
     }
     debounce_counter = 0;
 }
+
+#endif /* UNIT_TEST */
