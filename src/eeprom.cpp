@@ -72,7 +72,7 @@ uint32_t _calc_crc(uint8_t *buf, size_t len)
 
 #if defined(PIN_EEPROM_SDA) && defined(PIN_EEPROM_SCL)
 
-#ifdef PCB_LS_010
+#ifdef MPPT_2420_LC_0V10
 #define EEPROM_PAGE_SIZE 8      // see datasheet of 24AA01
 #define EEPROM_ADDRESS_SIZE 1   // bytes
 #else

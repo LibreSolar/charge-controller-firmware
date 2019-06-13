@@ -137,30 +137,46 @@ void dcdc_control(dcdc_t *dcdc, dc_bus_t *hs, dc_bus_t *ls)
         }
     }
     else {
-        static int debounce_counter = 0;
+        static int current_debounce_counter = 0;
         if (dcdc->ls_current > 0.5) {
             // if there is current even though the DC/DC is switched off, the
             // high-side MOSFET must be broken --> set flag and let main() decide
             // what to do... (e.g. call dcdc_self_destruction)
-            debounce_counter++;
-            if (debounce_counter > CONTROL_FREQUENCY) {      // waited 1s before setting the flag
+            current_debounce_counter++;
+            if (current_debounce_counter > CONTROL_FREQUENCY) {      // waited 1s before setting the flag
                 log_data.error_flags |= (1 << ERR_HS_MOSFET_SHORT);
             }
             return;
         }
         else {
-            debounce_counter = 0;
+            current_debounce_counter = 0;
         }
 
+        static int startup_delay_counter = 0;
         if (_dcdc_check_start_conditions(dcdc, ls, hs) && ls->voltage < dcdc->ls_voltage_max) {
-            // Don't start directly at Vmpp (approx. 0.8 * Voc) to prevent high inrush currents and stress on MOSFETs
-            half_bridge_start(ls->voltage / (hs->voltage - 1.0));
-            printf("DC/DC buck mode start.\n");
+            // wait at least 100 ms for voltages to settle
+            if (startup_delay_counter >= max(CONTROL_FREQUENCY / 10, 1)) {
+                // Don't start directly at Vmpp (approx. 0.8 * Voc) to prevent high inrush currents and stress on MOSFETs
+                half_bridge_start(ls->voltage / (hs->voltage - 1));
+                printf("DC/DC buck mode start (HS: %.2fV, LS: %.2fV, PWM: %.1f).\n", hs->voltage, ls->voltage, half_bridge_get_duty_cycle() * 100);
+            }
+            else {
+                startup_delay_counter++;
+            }
         }
         else if (_dcdc_check_start_conditions(dcdc, hs, ls) && hs->voltage < dcdc->hs_voltage_max) {
-            // will automatically start with max. duty (0.97) if connected to a nanogrid not yet started up (zero voltage)
-            half_bridge_start(ls->voltage / (hs->voltage + 1.0));
-            printf("DC/DC boost mode start.\n");
+            // wait at least 100 ms for voltages to settle
+            if (startup_delay_counter >= max(CONTROL_FREQUENCY / 10, 1)) {
+                // will automatically start with max. duty (0.97) if connected to a nanogrid not yet started up (zero voltage)
+                half_bridge_start(ls->voltage / (hs->voltage + 1));
+                printf("DC/DC boost mode start (HS: %.2fV, LS: %.2fV, PWM: %.1f).\n", hs->voltage, ls->voltage, half_bridge_get_duty_cycle() * 100);
+            }
+            else {
+                startup_delay_counter++;
+            }
+        }
+        else {
+            startup_delay_counter = 0;    // reset counter
         }
     }
 }
