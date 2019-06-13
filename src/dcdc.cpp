@@ -148,16 +148,18 @@ void dcdc_control(dcdc_t *dcdc, dc_bus_t *hs, dc_bus_t *ls)
             }
             return;
         }
-        debounce_counter = 0;
+        else {
+            debounce_counter = 0;
+        }
 
         if (_dcdc_check_start_conditions(dcdc, ls, hs) && ls->voltage < dcdc->ls_voltage_max) {
-            // Vmpp at approx. 0.8 * Voc --> take 0.9 as starting point for MPP tracking
-            half_bridge_start(ls->voltage / (hs->voltage * 0.9));
+            // Don't start directly at Vmpp (approx. 0.8 * Voc) to prevent high inrush currents and stress on MOSFETs
+            half_bridge_start(ls->voltage / (hs->voltage - 1.0));
             printf("DC/DC buck mode start.\n");
         }
         else if (_dcdc_check_start_conditions(dcdc, hs, ls) && hs->voltage < dcdc->hs_voltage_max) {
             // will automatically start with max. duty (0.97) if connected to a nanogrid not yet started up (zero voltage)
-            half_bridge_start((ls->voltage * 0.9) / hs->voltage);
+            half_bridge_start(ls->voltage / (hs->voltage + 1.0));
             printf("DC/DC boost mode start.\n");
         }
     }
