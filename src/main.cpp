@@ -116,7 +116,7 @@ int main()
 #else // MPPT
     dcdc_init(&dcdc);
     half_bridge_init(PWM_FREQUENCY, 300, 12 / dcdc.hs_voltage_max, 0.97);       // lower duty limit might have to be adjusted dynamically depending on LS voltage
-#endif
+ #endif
 
     // Configuration from EEPROM
     data_objects_read_eeprom();
@@ -133,9 +133,10 @@ int main()
     calibrate_current_sensors();
 
     // Communication interfaces
+    #ifdef UART_SERIAL_ENABLED
     uart_serial_init(&serial);
+    #endif
     uext_init();
-
     init_watchdog(10);      // 10s should be enough for communication ports
 
     // Setup of DC/DC power stage
