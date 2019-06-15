@@ -225,14 +225,29 @@ const uint16_t pub_emoncms_ids[] = {
     0x06, 0xA5, 0xA6      // SOC, SOH, DayCount
 };
 
-ts_pub_channel_t pub_channels[] = {
-    { "Serial_1s", pub_serial_ids, sizeof(pub_serial_ids)/sizeof(uint16_t), false },
-    { "EmonCMS_10s", pub_emoncms_ids, sizeof(pub_emoncms_ids)/sizeof(uint16_t), false }
+// stores object-ids of values to be published via CAN
+const uint16_t pub_can[] = {
+    0x01, // internal time stamp
+    0x70, 0x71, 0x72, 0x73, 0x7A,  // voltage + current
+    0x74, 0x76, 0x77,           // temperatures
+    0x04, 0x78, 0x79,           // LoadState, ChgState, DCDCState
+    0xA0, 0xA1, 0xA2, 0xA3,     // daily energy throughput
+    0x0F, 0x10,     // SolarMaxDay_W, LoadMaxDay_W
+    0xB1, 0xB2, 0xB3, 0xB4, 0xB5, 0xB6, 0xB7, 0xB8, 0xB9,     // V, I, T max
+    0x06, 0xA4  // SOC, coulomb counter
+};
+
+
+const ts_pub_channel_t pub_channels[] = {
+    { "Serial_1s",      pub_serial,     sizeof(pub_serial)/sizeof(uint16_t) },
+    { "EmonCMS_10s",    pub_emoncms,    sizeof(pub_emoncms)/sizeof(uint16_t) },
+    { "CAN_1s",         pub_can,        sizeof(pub_can)/sizeof(uint16_t) },
 };
 
 // TODO: find better solution than manual configuration of channel number
 volatile const int pub_channel_serial = 0;
 volatile const int pub_channel_emoncms = 1;
+volatile const int PUB_CHANNEL_CAN = 2;
 
 ThingSet ts(
     data_objects, sizeof(data_objects)/sizeof(data_object_t),

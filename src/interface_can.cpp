@@ -22,14 +22,12 @@
 
 #include "mbed.h"
 #include "config.h"
-#include "output.h"
-#include "output_can.h"
 #include "can_msg_queue.h"
 //#include "can_iso_tp.h"
 
 #include "data_objects.h"
 #include "half_bridge.h"
-#include "charger.h"
+#include "thingset.h"
 
 extern Serial serial;
 extern CAN can;
@@ -37,6 +35,12 @@ extern CAN can;
 CANMsgQueue can_tx_queue;
 CANMsgQueue can_rx_queue;
 
+#define CAN_TS_T_TRUE 61
+#define CAN_TS_T_FALSE 60
+#define CAN_TS_T_POS_INT32  6
+#define CAN_TS_T_NEG_INT32  7
+#define CAN_TS_T_FLOAT32 30
+#define CAN_TS_T_DECFRAC 36
 //----------------------------------------------------------------------------
 // preliminary simple CAN functions to send data to the bus for logging
 // Data format based on CBOR specification (except for first byte, which uses
@@ -45,7 +49,9 @@ CANMsgQueue can_rx_queue;
 // Protocol details:
 // https://github.com/LibreSolar/ThingSet/blob/master/can.md
 
-void can_pub_msg(data_object_t data_obj)
+static uint8_t can_node_id = 42;
+
+void can_pub_msg(const data_object_t& data_obj)
 {
     union float2bytes { float f; char b[4]; } f2b;     // for conversion of float to single bytes
 
@@ -69,25 +75,25 @@ void can_pub_msg(data_object_t data_obj)
 
     // CBOR byte order: most significant byte first
     switch (data_obj.type) {
-        case T_FLOAT32:
+        case TS_T_FLOAT32:
             msg.len = 5;
-            msg.data[0] |= TS_T_FLOAT32;
+            msg.data[0] |= CAN_TS_T_FLOAT32;
             f2b.f = *((float*)data_obj.data);
             msg.data[1] = f2b.b[3];
             msg.data[2] = f2b.b[2];
             msg.data[3] = f2b.b[1];
             msg.data[4] = f2b.b[0];
             break;
-        case T_INT32:
-            if (data_obj.exponent == 0) {
+        case TS_T_INT32:
+            if (data_obj.detail == 0) {
                     msg.len = 5;
                     value = *((int*)data_obj.data);
                     if (value >= 0) {
-                        msg.data[0] |= TS_T_POS_INT32;
+                        msg.data[0] |= CAN_TS_T_POS_INT32;
                         value_abs = abs(value);
                     }
                     else {
-                        msg.data[0] |= TS_T_NEG_INT32;
+                        msg.data[0] |= CAN_TS_T_NEG_INT32;
                         value_abs = abs(value - 1);         // 0 is always pos integer
                     }
                     msg.data[1] = value_abs >> 24;
@@ -97,15 +103,15 @@ void can_pub_msg(data_object_t data_obj)
             }
             else {
                 msg.len = 8;
-                msg.data[0] |= TS_T_DECIMAL_FRAC;
+                msg.data[0] |= CAN_TS_T_DECFRAC;
                 msg.data[1] = 0x82;     // array of length 2
 
-                // exponent in single byte value, valid: -24 ... 23
-                uint8_t exponent_abs = abs(data_obj.exponent);
-                if (data_obj.exponent >= 0 && data_obj.exponent <= 23) {
+                // detail in single byte value, valid: -24 ... 23
+                uint8_t exponent_abs = abs(data_obj.detail);
+                if (data_obj.detail >= 0 && data_obj.detail <= 23) {
                     msg.data[2] = exponent_abs;
                 }
-                else if (data_obj.exponent < 0 && data_obj.exponent > -24) {
+                else if (data_obj.detail < 0 && data_obj.detail > -24) {
                     msg.data[2] = (exponent_abs - 1) | 0x20;      // negative uint8
                 }
 
@@ -125,28 +131,44 @@ void can_pub_msg(data_object_t data_obj)
                 msg.data[7] = value_abs;
             }
             break;
-        case T_BOOL:
+        case TS_T_BOOL:
             msg.len = 1;
             if (*((bool*)data_obj.data) == true) {
-                msg.data[0] = TS_T_TRUE;     // simple type: true
+                msg.data[0] = CAN_TS_T_TRUE;     // simple type: true
             }
             else {
-                msg.data[0] = TS_T_FALSE;     // simple type: false
+                msg.data[0] = CAN_TS_T_FALSE;     // simple type: false
             }
             break;
-        case T_STRING:
+        case TS_T_STRING:
             break;
     }
     can_tx_queue.enqueue(msg);
 }
 
-void can_send_data()
+/**
+ * returns number of can objects added to queue
+ */
+int ThingSet::pub_msg_can(unsigned int channel)
 {
-    for (unsigned int i = 0; i < dataObjectsCount; ++i) {
-        if (dataObjects[i].category == TS_C_OUTPUT) {
-            can_pub_msg(dataObjects[i]);
+    int retval = 0;
+
+    if (channel < num_channels)
+    {
+        unsigned int num_elements = pub_channels[channel].num;
+
+        for (unsigned int element = 0; element < num_elements; element++)
+        {
+            const data_object_t *data_obj = get_data_object(pub_channels[channel].object_ids[element]);
+            if (data_obj == NULL || !(data_obj->access & TS_ACCESS_READ))
+            {
+                continue;
+            }
+            can_pub_msg(*data_obj);
+            retval++;  
         }
     }
+    return retval;
 }
 
 void can_process_outbox()
@@ -164,6 +186,8 @@ void can_process_outbox()
         max_attempts--;
     }
 }
+
+#if 0
 
 void can_list_object_ids(int category) {
 
@@ -188,7 +212,7 @@ void can_send_object_name(int data_obj_id, uint8_t can_dest_id)
 
     if (arr_id >= 0) {
         if (dataObjects[arr_id].access & ACCESS_READ) {
-            msg.data[2] = T_STRING;
+            msg.data[2] = TS_T_STRING;
             int len = strlen(dataObjects[arr_id].name);
             for (int i = 0; i < len && i < (8-3); i++) {
                 msg.data[i+3] = *(dataObjects[arr_id].name + i);
@@ -231,12 +255,12 @@ void can_process_inbox()
             int value;
 
             switch (function_id) {
-                case TS_WRITE:
+                case TS_INPUT:
                     data_obj_id = msg.data[1] + (msg.data[2] << 8);
                     value = msg.data[6] + (msg.data[7] << 8);
                     for (unsigned int i = 0; i < dataObjectsCount; ++i) {
                         if (dataObjects[i].id == data_obj_id) {
-                            if (dataObjects[i].access & ACCESS_WRITE) {
+                            if (dataObjects[i].access & TS_ACCESS_WRITE) {
                                 // TODO: write data
                                 serial.printf("ThingSet Write: %d to %s (id = %d)\n", value, dataObjects[i].name, data_obj_id);
                             } else {
@@ -246,7 +270,7 @@ void can_process_inbox()
                         }
                     }
                     break;
-                case TS_OBJ_NAME:
+                case TS_NAME:
                     data_obj_id = msg.data[1] + (msg.data[2] << 8);
                     can_send_object_name(data_obj_id, can_dest_id);
                     serial.printf("Get Data Object Name: %d\n", data_obj_id);
@@ -274,7 +298,7 @@ void can_receive() {
         }
     }
 }
-
+#endif 
 #endif /* CAN_ENABLED */
 
 #endif /* UNIT_TEST */
