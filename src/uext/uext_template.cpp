@@ -31,6 +31,11 @@
 
 void uext_init(void)
 {
+ #ifdef PIN_UEXT_DIS
+    DigitalOut uext_dis(PIN_UEXT_DIS);
+    uext_dis = 0;
+ #endif
+
     // add you init functions here
 }
 

@@ -52,6 +52,8 @@
 #define PIN_EEPROM_SCL PB_10
 #define PIN_EEPROM_SDA PB_11
 
+#define EEPROM_24AA32
+
 enum pin_state_t { PIN_HIGH, PIN_LOW, PIN_FLOAT };
 
 // assignment LED numbers on PCB to their meaning

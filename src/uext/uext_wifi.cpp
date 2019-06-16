@@ -158,7 +158,14 @@ int wifi_reset(void)
     return res;
 }
 
-void uext_init(void) {;}    // everything is handled in state machine in wifi_process()
+void uext_init()
+{
+#ifdef PIN_UEXT_DIS
+    DigitalOut uext_dis(PIN_UEXT_DIS);
+    uext_dis = 0;
+#endif
+}
+
 void uext_process_asap(void) {;}
 
 void uext_process_1s()

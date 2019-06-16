@@ -212,7 +212,9 @@ void detect_battery_temperature(charger_t *charger, float bat_temp)
             break;
     }
 #else
-    charger->bat_temperature = bat_temp;
+    if (bat_temp > -50) {
+        charger->bat_temperature = bat_temp;
+    }
 #endif
 }
 

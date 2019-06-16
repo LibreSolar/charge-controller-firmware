@@ -70,12 +70,12 @@ uint32_t _calc_crc(uint8_t *buf, size_t len)
 
 #endif // UNIT_TEST
 
-#if defined(PIN_EEPROM_SDA) && defined(PIN_EEPROM_SCL)
+#if defined(EEPROM_24AA01) || defined(EEPROM_24AA32)
 
-#ifdef MPPT_2420_LC_0V10
+#ifdef EEPROM_24AA01
 #define EEPROM_PAGE_SIZE 8      // see datasheet of 24AA01
 #define EEPROM_ADDRESS_SIZE 1   // bytes
-#else
+#elif defined(EEPROM_24AA32)
 #define EEPROM_PAGE_SIZE 32     // see datasheet of 24AA32
 #define EEPROM_ADDRESS_SIZE 2   // bytes
 #endif
@@ -243,7 +243,7 @@ void eeprom_restore_data()
         }
     }
     else {
-        printf("EEPROM: Buffer too small or data layout version changed\n");
+        printf("EEPROM: Empty or data layout version changed\n");
     }
 }
 

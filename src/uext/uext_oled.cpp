@@ -63,7 +63,14 @@ const unsigned char bmp_disconnected [] = {
 I2C i2c(PIN_UEXT_SDA, PIN_UEXT_SCL);
 Adafruit_SSD1306_I2c oled(i2c, PIN_UEXT_SSEL, 0x78, 64, 128);
 
-void uext_init() {;}    // no need for initialization
+void uext_init()
+{
+#ifdef PIN_UEXT_DIS
+    DigitalOut uext_dis(PIN_UEXT_DIS);
+    uext_dis = 0;
+#endif
+}
+
 void uext_process_asap() {;}
 
 void uext_process_1s()
@@ -135,9 +142,9 @@ void uext_process_1s()
 
     oled.setTextCursor(0, 56);
 #ifdef CHARGER_TYPE_PWM
-    oled.printf("T %.0fC PWM %.0f%% SOC %d%%", dcdc.temp_mosfets, pwm_switch_get_duty_cycle() * 100.0, charger.soc);
+    oled.printf("T %.0fC PWM %.0f%% SOC %d%%", charger.bat_temperature, pwm_switch_get_duty_cycle() * 100.0, charger.soc);
 #else
-    oled.printf("T %.0fC PWM %.0f%% SOC %d%%", dcdc.temp_mosfets, half_bridge_get_duty_cycle() * 100.0, charger.soc);
+    oled.printf("T %.0fC PWM %.0f%% SOC %d%%", charger.bat_temperature, half_bridge_get_duty_cycle() * 100.0, charger.soc);
 #endif
 
     oled.display();
