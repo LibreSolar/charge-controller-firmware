@@ -156,6 +156,7 @@ int main()
 
     wait(2);    // safety feature: be able to re-flash before starting
     control_timer_start(CONTROL_FREQUENCY);
+    wait(0.1);  // necessary to prevent MCU from randomly getting stuck here if PV panel is connected before battery
 
     // the main loop is suitable for slow tasks like communication (even blocking wait allowed)
     time_t last_call = timestamp;

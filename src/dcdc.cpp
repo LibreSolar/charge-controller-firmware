@@ -23,6 +23,7 @@
 
 #include <time.h>       // for time(NULL) function
 #include <math.h>       // for fabs function
+#include <stdlib.h>     // for min/max function
 #include <stdio.h>
 
 extern log_data_t log_data;
@@ -153,9 +154,9 @@ void dcdc_control(dcdc_t *dcdc, dc_bus_t *hs, dc_bus_t *ls)
         }
 
         static int startup_delay_counter = 0;
+        static const int num_wait_calls = (CONTROL_FREQUENCY / 10 >= 1) ? (CONTROL_FREQUENCY / 10) : 1; // wait at least 100 ms for voltages to settle
         if (_dcdc_check_start_conditions(dcdc, ls, hs) && ls->voltage < dcdc->ls_voltage_max) {
-            // wait at least 100 ms for voltages to settle
-            if (startup_delay_counter >= max(CONTROL_FREQUENCY / 10, 1)) {
+            if (startup_delay_counter >= num_wait_calls) {
                 // Don't start directly at Vmpp (approx. 0.8 * Voc) to prevent high inrush currents and stress on MOSFETs
                 half_bridge_start(ls->voltage / (hs->voltage - 1));
                 printf("DC/DC buck mode start (HS: %.2fV, LS: %.2fV, PWM: %.1f).\n", hs->voltage, ls->voltage, half_bridge_get_duty_cycle() * 100);
@@ -165,8 +166,7 @@ void dcdc_control(dcdc_t *dcdc, dc_bus_t *hs, dc_bus_t *ls)
             }
         }
         else if (_dcdc_check_start_conditions(dcdc, hs, ls) && hs->voltage < dcdc->hs_voltage_max) {
-            // wait at least 100 ms for voltages to settle
-            if (startup_delay_counter >= max(CONTROL_FREQUENCY / 10, 1)) {
+            if (startup_delay_counter >= num_wait_calls) {
                 // will automatically start with max. duty (0.97) if connected to a nanogrid not yet started up (zero voltage)
                 half_bridge_start(ls->voltage / (hs->voltage + 1));
                 printf("DC/DC boost mode start (HS: %.2fV, LS: %.2fV, PWM: %.1f).\n", hs->voltage, ls->voltage, half_bridge_get_duty_cycle() * 100);
