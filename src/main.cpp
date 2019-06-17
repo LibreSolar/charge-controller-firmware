@@ -40,6 +40,7 @@
 #include "log.h"                // log data (error memory, min/max measurements, etc.)
 #include "data_objects.h"       // for access to internal data via ThingSet
 #include "thingset_serial.h"    // UART or USB serial communication
+#include "thingset_can.h"       // CAN bus communication
 
 Serial serial(PIN_SWD_TX, PIN_SWD_RX, "serial");
 
@@ -134,8 +135,12 @@ int main()
 
     // Communication interfaces
     #ifdef UART_SERIAL_ENABLED
-    uart_serial_init(&serial);
+    thingset_serial_init(&serial);
     #endif
+    #ifdef CAN_ENABLED
+    ts_can.init_hw();
+    #endif
+
     uext_init();
     init_watchdog(10);      // 10s should be enough for communication ports
 

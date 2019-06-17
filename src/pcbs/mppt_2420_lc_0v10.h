@@ -120,4 +120,10 @@ enum {
     ADC_CHSELR_CHSEL17 \
 )
 
+// defines for CAN BUS SUPPORT
+#define HAS_CAN 1
+#define PIN_CAN_RX    PB_8
+#define PIN_CAN_TX    PB_9
+#define PIN_CAN_STB PA_15
+
 #endif
