@@ -67,7 +67,7 @@ void system_control()
     static int counter = 0;
 
     // convert ADC readings to meaningful measurement values
-    update_measurements(&dcdc, &charger, &load, &hs_bus, &ls_bus, &load_bus);
+    update_measurements(&dcdc, &charger, &hs_bus, &ls_bus, &load_bus);
 
 #ifdef CHARGER_TYPE_PWM
     pwm_switch_control(&pwm_switch, &hs_bus, bat_bus);
@@ -109,7 +109,7 @@ int main()
     battery_conf_overwrite(&bat_conf, &bat_conf_user);  // initialize conf_user with same values
     charger_init(&charger);
 
-    load_init(&load);
+    load_init(&load, &load_bus);
 
 #ifdef CHARGER_TYPE_PWM
     pwm_switch_init(&pwm_switch);
@@ -129,7 +129,7 @@ int main()
     dma_setup();
     adc_timer_start(1000);  // 1 kHz
     wait(0.5);      // wait for ADC to collect some measurement values
-    update_measurements(&dcdc, &charger, &load, &hs_bus, &ls_bus, &load_bus);
+    update_measurements(&dcdc, &charger, &hs_bus, &ls_bus, &load_bus);
     calibrate_current_sensors();
 
     // Communication interfaces

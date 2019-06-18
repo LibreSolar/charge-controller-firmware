@@ -58,7 +58,7 @@ void energy_calculation_init()
 
     // insert values into ADC functions
     prepare_adc_readings(adcval);
-    update_measurements(&dcdc, &charger, &load, &hs_bus, &ls_bus, &load_bus);
+    update_measurements(&dcdc, &charger, &hs_bus, &ls_bus, &load_bus);
 
     for (int i = 0; i < 60*60*sun_hours; i++) {
         dc_bus_energy_balance(&hs_bus);
@@ -69,7 +69,7 @@ void energy_calculation_init()
     // disable DC/DC = solar charging
     adcval.dcdc_current = 0;
     prepare_adc_readings(adcval);
-    update_measurements(&dcdc, &charger, &load, &hs_bus, &ls_bus, &load_bus);
+    update_measurements(&dcdc, &charger, &hs_bus, &ls_bus, &load_bus);
 
     for (int i = 0; i < 60*60*night_hours; i++) {
         dc_bus_energy_balance(&hs_bus);

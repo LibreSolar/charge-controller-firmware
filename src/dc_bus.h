@@ -34,6 +34,7 @@
 typedef struct {
     float voltage;                  ///< measured voltage
     float current;                  ///< sum of currents (positive sign = increasing voltage/charge of the bus)
+    float power;                    ///< multiplication of power & voltage
 
     bool chg_allowed;               ///< charging direction for battery port
     float chg_voltage_target;       ///< target voltage if port is configured as output

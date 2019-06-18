@@ -42,7 +42,7 @@ void half_bridge_init(int freq_kHz, int deadtime_ns, float min_duty, float max_d
 
 void half_bridge_set_duty_cycle(float duty)
 {
-    float duty_target;
+    float duty_target = 0;  // dummy
     // protection against wrong settings which could destroy the hardware
     if (duty < _min_duty) {
         duty_target = _min_duty;
@@ -59,7 +59,7 @@ void half_bridge_set_duty_cycle(float duty)
 
 void half_bridge_duty_cycle_step(int delta)
 {
-    float duty_target;
+    float duty_target = 0;  // dummy
     //duty_target = (float)(TIM1->CCR1 + delta) / (_pwm_resolution / 2);
 
     // protection against wrong settings which could destroy the hardware

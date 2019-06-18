@@ -25,6 +25,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include "dc_bus.h"
 
 /** Load/USB output states
  *
@@ -47,9 +48,8 @@ typedef struct {
     uint16_t switch_state;      ///< Current state of load output switch
     uint16_t usb_state;         ///< Current state of USB output
 
-    float voltage;              ///< actual voltage measurement
+    dc_bus_t *bus;              ///< Pointer to DC bus containting actual voltage and current measurement
 
-    float current;              ///< actual current measurement
     float current_max;          ///< maximum allowed current
     int overcurrent_timestamp;  ///< time at which an overcurrent event occured
 
@@ -61,7 +61,7 @@ typedef struct {
 
 /** Initialize load_output_t struct and overcurrent / short circuit protection comparator (if existing)
  */
-void load_init(load_output_t *load);
+void load_init(load_output_t *load, dc_bus_t *bus);
 
 /** Enable/disable load switch
  */

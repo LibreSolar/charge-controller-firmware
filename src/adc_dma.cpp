@@ -82,7 +82,7 @@ void calibrate_current_sensors()
 }
 
 //----------------------------------------------------------------------------
-void update_measurements(dcdc_t *dcdc, charger_t *charger, load_output_t *load, dc_bus_t *hs, dc_bus_t *ls, dc_bus_t *load_bus)
+void update_measurements(dcdc_t *dcdc, charger_t *charger, dc_bus_t *hs, dc_bus_t *ls, dc_bus_t *load_bus)
 {
     //int v_temp, rts;
 
@@ -100,7 +100,6 @@ void update_measurements(dcdc_t *dcdc, charger_t *charger, load_output_t *load, 
         (float)(((adc_filtered[ADC_POS_V_BAT] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
         ADC_GAIN_V_BAT / 1000.0;
 
-    load->voltage = ls->voltage;
     load_bus->voltage = ls->voltage;
 
     hs->voltage =
@@ -110,25 +109,28 @@ void update_measurements(dcdc_t *dcdc, charger_t *charger, load_output_t *load, 
     hs->voltage = ls->voltage + -(vcc * ADC_OFFSET_V_SOLAR / 1000.0 + hs->voltage);
 #endif
 
-    load->current =
+    load_bus->current =
         (float)(((adc_filtered[ADC_POS_I_LOAD] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
         ADC_GAIN_I_LOAD / 1000.0 + load_current_offset;
-
-    load_bus->current = load->current;
 
 #ifdef CHARGER_TYPE_PWM
     // current multiplied with PWM duty cycle for PWM charger to get avg current for correct power calculation
     hs->current = - pwm_switch_get_duty_cycle() * (
         (float)(((adc_filtered[ADC_POS_I_SOLAR] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
         ADC_GAIN_I_SOLAR / 1000.0 + solar_current_offset);
-    ls->current = -hs->current - load->current;
+    ls->current = -hs->current - load_bus->current;
 #else // MPPT
     dcdc->ls_current =
         (float)(((adc_filtered[ADC_POS_I_DCDC] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
         ADC_GAIN_I_DCDC / 1000.0 + solar_current_offset;
-    ls->current = dcdc->ls_current - load->current;
+    ls->current = dcdc->ls_current - load_bus->current;
     hs->current = -dcdc->ls_current * ls->voltage / hs->voltage;
 #endif
+
+    // power calculations
+    hs->power = hs->voltage * hs->current;
+    ls->power = ls->voltage * ls->current;
+    load_bus->power = load_bus->voltage * load_bus->current;
 
     /** \todo Improved (faster) temperature calculation:
        https://www.embeddedrelated.com/showarticle/91.php

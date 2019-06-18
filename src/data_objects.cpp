@@ -131,7 +131,7 @@ const data_object_t data_objects[] = {
     {0x70, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(ls_bus.voltage),                  "Bat_V"},
     {0x71, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(hs_bus.voltage),                  "Solar_V"},
     {0x72, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(ls_bus.current),                  "Bat_A"},
-    {0x73, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(load.current),                    "Load_A"},
+    {0x73, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(load.bus->current),               "Load_A"},
     {0x74, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 1, (void*) &(charger.bat_temperature),         "Bat_degC"},
     {0x75, TS_OUTPUT, TS_READ_ALL, TS_T_BOOL,    1, (void*) &(charger.ext_temp_sensor),         "BatTempExt"},
     {0x76, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 1, (void*) &(mcu_temp),                        "MCU_degC"},
@@ -143,6 +143,9 @@ const data_object_t data_objects[] = {
     {0x7A, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(hs_bus.current),                  "Solar_A"},
     {0x7B, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(ls_bus.chg_voltage_target),       "BatTarget_V"},
     {0x7C, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(ls_bus.chg_current_max),          "BatTarget_A"},
+    {0x7D, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(ls_bus.power),                    "Bat_W"},
+    {0x7E, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(hs_bus.power),                    "Solar_W"},
+    {0x7F, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(load_bus.power),                  "Load_W"},
 
     // RECORDED DATA ///////////////////////////////////////////////////////
     // using IDs >= 0xA0

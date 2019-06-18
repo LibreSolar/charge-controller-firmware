@@ -53,7 +53,7 @@ void adc_tests()
     prepare_adc_readings(adcval);
 
     // call original update_measurements function
-    update_measurements(&dcdc, &charger, &load, &hs_bus, &ls_bus, &load_bus);
+    update_measurements(&dcdc, &charger, &hs_bus, &ls_bus, &load_bus);
 
     UNITY_BEGIN();
 

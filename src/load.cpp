@@ -178,8 +178,9 @@ void load_usb_set(bool enabled)
 #endif
 }
 
-void load_init(load_output_t *load)
+void load_init(load_output_t *load, dc_bus_t *bus)
 {
+    load->bus = bus;
     load->current_max = LOAD_CURRENT_MAX;
     load->enabled_target = true;
     load->usb_enabled_target = true;
@@ -275,7 +276,7 @@ void load_state_machine(load_output_t *load, bool source_enabled)
         }
         break;
     case LOAD_STATE_OFF_OVERVOLTAGE:
-        if (load->voltage < LOW_SIDE_VOLTAGE_MAX) {     // TODO: add hysteresis?
+        if (load->bus->voltage < LOW_SIDE_VOLTAGE_MAX) {     // TODO: add hysteresis?
             load->switch_state = LOAD_STATE_DISABLED;   // switch to normal mode again
         }
         break;
@@ -305,7 +306,7 @@ void load_control(load_output_t *load)
     // junction temperature calculation model for overcurrent detection
     load->junction_temperature = load->junction_temperature + (
             mcu_temp - load->junction_temperature +
-            load->current * load->current / (LOAD_CURRENT_MAX * LOAD_CURRENT_MAX) * (MOSFET_MAX_JUNCTION_TEMP - 25)
+            load->bus->current * load->bus->current / (LOAD_CURRENT_MAX * LOAD_CURRENT_MAX) * (MOSFET_MAX_JUNCTION_TEMP - 25)
         ) / (MOSFET_THERMAL_TIME_CONSTANT * CONTROL_FREQUENCY);
 
     if (load->junction_temperature > MOSFET_MAX_JUNCTION_TEMP) {
@@ -316,7 +317,7 @@ void load_control(load_output_t *load)
     }
 
     static int debounce_counter = 0;
-    if (load->voltage > LOW_SIDE_VOLTAGE_MAX) {
+    if (load->bus->voltage > LOW_SIDE_VOLTAGE_MAX) {
         debounce_counter++;
         if (debounce_counter > CONTROL_FREQUENCY) {      // waited 1s before setting the flag
             load_switch_set(false);
