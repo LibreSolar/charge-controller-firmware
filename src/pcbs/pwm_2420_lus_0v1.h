@@ -17,6 +17,9 @@
 #ifndef PWM_2420_LUS_0V1_H
 #define PWM_2420_LUS_0V1_H
 
+#define DEVICE_TYPE "PWM-2420-LUS"
+#define HARDWARE_VERSION "v0.1"
+
 #include "mbed.h"
 
 #define CHARGER_TYPE_PWM 1  // PWM charge controller instead of MPPT

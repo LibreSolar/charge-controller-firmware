@@ -17,6 +17,9 @@
 #ifndef MPPT_1210_HUS_0V2_H
 #define MPPT_1210_HUS_0V2_H
 
+#define DEVICE_TYPE "MPPT-1210-HUS"
+#define HARDWARE_VERSION "v0.2"
+
 #include "mbed.h"
 
 // DC/DC converter settings

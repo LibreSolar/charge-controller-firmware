@@ -17,6 +17,9 @@
 #ifndef MPPT_2420_LC_0V10_H
 #define MPPT_2420_LC_0V10_H
 
+#define DEVICE_TYPE "MPPT-2420-LC"
+#define HARDWARE_VERSION "v0.10"
+
 #include "mbed.h"
 
 // DC/DC converter settings

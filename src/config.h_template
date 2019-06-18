@@ -35,6 +35,9 @@
 
 #define DEVICE_ID 12345678
 
+#define THINGSET_USER_PASSWORD   "user123"
+#define THINGSET_MAKER_PASSWORD  "maker456"
+
 // can be used to configure custom data objects in separate file instead (e.g. data_objects_custom.cpp)
 //#define CUSTOM_DATA_OBJECTS_FILE
 

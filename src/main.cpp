@@ -120,7 +120,9 @@ int main()
 
     // Configuration from EEPROM
     data_objects_read_eeprom();
-    ts.set_conf_callback(data_objects_update_conf);    // after each configuration change, data should be written back to EEPROM
+    ts.set_conf_callback(data_objects_update_conf);     // after each configuration change, data should be written back to EEPROM
+    ts.set_user_password(THINGSET_USER_PASSWORD);       // passwords defined in config.h (see template)
+    ts.set_maker_password(THINGSET_MAKER_PASSWORD);
 
     // ADC, DMA and sensor calibration
     adc_setup();
