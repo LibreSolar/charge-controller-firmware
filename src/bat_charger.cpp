@@ -105,8 +105,8 @@ void battery_conf_init(battery_conf_t *bat, bat_type type, int num_cells, float 
 
     case BAT_TYPE_NMC:
     case BAT_TYPE_NMC_HV:
-        bat->voltage_topping = (type == BAT_TYPE_NMC_HV) ? 4.35 : 4.20;
-        bat->voltage_absolute_max = bat->voltage_topping + 0.05;
+        bat->voltage_topping = num_cells * ((type == BAT_TYPE_NMC_HV) ? 4.35 : 4.20);
+        bat->voltage_absolute_max = num_cells * (bat->voltage_topping + 0.05);
         bat->voltage_recharge = num_cells * 3.9;
 
         bat->voltage_load_disconnect = num_cells * 3.3;
