@@ -44,6 +44,28 @@ Try one of these workarounds:
        st-flash write .pioenvs/mppt-2420-lc-v0.10/firmware.bin 0x08000000
 3. Use other debuggers and tools, e.g. Segger J-Link.
 
+#### If flashing fails like this ...
+
+In PlatformIO:
+
+```
+Error: init mode failed (unable to connect to the target)
+in procedure 'program'
+** OpenOCD init failed **
+shutdown command invoked
+```
+
+or with ST-Link:
+
+```bash
+$ st-flash write .pioenvs/mppt-1210-hus-v0.4/firmware.bin  0x08000000
+st-flash 1.5.1
+2019-06-21T18:13:03 INFO common.c: Loading device parameters....
+2019-06-21T18:13:03 WARN common.c: unknown chip id! 0x5fa0004
+```
+
+check the connection between the board used for flashing
+(for example the Nucleo), and the MPPT.
 
 ## API documentation
 
