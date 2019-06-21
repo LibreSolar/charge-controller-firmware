@@ -28,8 +28,9 @@ See the Libre Solar website for project-agnostic instructions on how to
 [develop software](http://libre.solar/docs/toolchain) and
 [flash new firmware](http://libre.solar/docs/flashing).
 
----
-**If flashing the STM32L072 MCU using OpenOCD fails**
+### Troubleshooting
+
+#### If flashing the STM32L072 MCU using OpenOCD fails
 
 ... as seems to happen with the standard settings from PlatformIO.
 
@@ -43,7 +44,6 @@ Try one of these workarounds:
        st-flash write .pioenvs/mppt-2420-lc-v0.10/firmware.bin 0x08000000
 3. Use other debuggers and tools, e.g. Segger J-Link.
 
----
 
 ## API documentation
 
