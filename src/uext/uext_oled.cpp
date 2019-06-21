@@ -130,11 +130,11 @@ void uext_process_1s()
     oled.printf("%5.1fV", ls_bus.voltage);
 
     // load data
-    tmp = ls_bus.voltage * load.current;
+    tmp = ls_bus.voltage * load.bus->current;
     oled.setTextCursor(90, 18);
     oled.printf("%5.1fW", (abs(tmp) < 0.1) ? 0 : tmp);    // remove negative zeros
     oled.setTextCursor(90, 26);
-    oled.printf("%5.1fA\n", (abs(load.current) < 0.1) ? 0 : load.current);
+    oled.printf("%5.1fA\n", (abs(load.bus->current) < 0.1) ? 0 : load.bus->current);
 
     oled.setTextCursor(0, 36);
     oled.printf("Day +%5.0fWh -%5.0fWh", hs_bus.dis_energy_Wh, fabs(load_bus.chg_energy_Wh));
