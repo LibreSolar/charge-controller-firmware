@@ -16,7 +16,7 @@ The software is configurable to support different charge controller PCBs with ei
 
 1. Select the correct board in `platformio.ini` by removing the comment before the board name under `[platformio]`
 2. Copy `src/config.h_template` to `src/config.h`, and adjust basic settings
-   
+
    (`config.h` is ignored by git, so your changes are kept after software updates using `git pull`)
 
        cp src/config.h_template src/config.h
@@ -32,14 +32,14 @@ See the Libre Solar website for project-agnostic instructions on how to
 
 #### If flashing the STM32L072 MCU using OpenOCD fails
 
-... as seems to happen with the standard settings from PlatformIO.
+... as seems to happen with the standard settings from PlatformIO, then ...
 
 *NOTE* This MCU is used in the MPPT 1210 HUS and the PWM charge controller, for example.
 
 Try one of these workarounds:
 
 1. Change OpenOCD settings to `set WORKAREASIZE 0x1000` in the file `~/.platformio/packages/tool-openocd/scripts/board/st_nucleo_l073rz.cfg`.
-2. Use ST-Link tools. For Windows there is a GUI tool. Under Linux use the following command:
+2. Use ST-Link tools. For Windows there is a GUI tool. Under Linux, use the following command:
 
        st-flash write .pioenvs/mppt-2420-lc-v0.10/firmware.bin 0x08000000
 3. Use other debuggers and tools, e.g. Segger J-Link.
