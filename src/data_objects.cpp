@@ -41,10 +41,10 @@ extern dc_bus_t ls_bus;
 extern dc_bus_t load_bus;
 extern pwm_switch_t pwm_switch;
 
-const char* manufacturer = "Libre Solar";
-const char* device_type = DEVICE_TYPE;
-const char* hardware_version = HARDWARE_VERSION;
-const char* firmware_version = "0.1";
+const char* const manufacturer = "Libre Solar";
+const char* const device_type = DEVICE_TYPE;
+const char* const hardware_version = HARDWARE_VERSION;
+const char* const firmware_version = "0.1";
 uint32_t device_id = DEVICE_ID;      // from config.h
 
 extern uint32_t timestamp;
