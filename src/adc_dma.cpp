@@ -136,7 +136,9 @@ void update_measurements(dcdc_t *dcdc, charger_t *charger, dc_bus_t *hs, dc_bus_
        https://www.embeddedrelated.com/showarticle/91.php
     */
 
+#if defined PIN_ADC_TEMP_BAT || defined PIN_ADC_TEMP_FETS
     float v_temp, rts;
+#endif
     float bat_temp = 25.0;
 
 #ifdef PIN_ADC_TEMP_BAT

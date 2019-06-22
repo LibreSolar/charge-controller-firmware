@@ -241,7 +241,7 @@ ThingSet ts(
 
 void data_objects_update_conf()
 {
-    bool changed = false;
+    bool changed;
     if (battery_conf_check(&bat_conf_user)) {
         printf("New config valid and activated.\n");
         battery_conf_overwrite(&bat_conf_user, &bat_conf, &charger);
@@ -250,6 +250,7 @@ void data_objects_update_conf()
     else {
         printf("Check not passed, getting back old config.\n");
         battery_conf_overwrite(&bat_conf, &bat_conf_user);
+        changed = false;
     }
 
     // TODO: check also for changes in Load/USB EnDefault

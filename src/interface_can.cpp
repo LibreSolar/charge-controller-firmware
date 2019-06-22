@@ -66,7 +66,6 @@ void can_pub_msg(data_object_t data_obj)
 
     int32_t value;
     uint32_t value_abs;
-    uint8_t exponent_abs;
 
     // CBOR byte order: most significant byte first
     switch (data_obj.type) {
@@ -83,7 +82,6 @@ void can_pub_msg(data_object_t data_obj)
             if (data_obj.exponent == 0) {
                     msg.len = 5;
                     value = *((int*)data_obj.data);
-                    value_abs = abs(value);
                     if (value >= 0) {
                         msg.data[0] |= TS_T_POS_INT32;
                         value_abs = abs(value);
@@ -103,7 +101,7 @@ void can_pub_msg(data_object_t data_obj)
                 msg.data[1] = 0x82;     // array of length 2
 
                 // exponent in single byte value, valid: -24 ... 23
-                exponent_abs = abs(data_obj.exponent);
+                uint8_t exponent_abs = abs(data_obj.exponent);
                 if (data_obj.exponent >= 0 && data_obj.exponent <= 23) {
                     msg.data[2] = exponent_abs;
                 }
@@ -113,7 +111,6 @@ void can_pub_msg(data_object_t data_obj)
 
                 // value as positive or negative uint32
                 value = *((int*)data_obj.data);
-                value_abs = abs(value);
                 if (value >= 0) {
                     msg.data[3] = 0x1a;     // positive int32
                     value_abs = abs(value);
