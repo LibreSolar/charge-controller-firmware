@@ -16,21 +16,31 @@
 #ifndef _THINGSET_CAN_H_
 #define _THINGSET_CAN_H_
 
+#ifdef CAN_ENABLED
 #include "data_objects.h"
+#include "can_msg_queue.h"
 
 class ThingSetCAN
 {
     public:
-        bool pub_object(const data_object_t& data_obj);
+        ThingSetCAN(uint8_t can_node_id);
+
         void process_asap();
         void process_1s();
 
-        void init_hw();
-        int  pub();
+        void enable();
 
     private:
+        bool pub_object(const data_object_t& data_obj);
+        int  pub();
         void process_outbox();
+
+        CANMsgQueue tx_queue;
+        // CANMsgQueue rx_queue;
+        uint8_t node_id;        
+
 };
 
 extern ThingSetCAN ts_can;
+#endif /* CAN_ENABLED */
 #endif

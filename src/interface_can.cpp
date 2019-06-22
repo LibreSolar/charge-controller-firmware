@@ -33,7 +33,6 @@
 #include "thingset_can.h"
 
 extern Serial serial;
-extern CAN can;
 
 #ifndef CAN_SPEED
 #define CAN_SPEED 250000    // 250 kHz
@@ -42,11 +41,16 @@ extern CAN can;
 #define CAN_NODE_ID 10
 #endif
 
+class ThingSetCAN_Device
+{
+    CAN can;
+    DigitalOut can_disable;
+
+    ThingSetCAN_Device(PinName rd, PinName td, int hz);
+};
+
 CAN can(PIN_CAN_RX, PIN_CAN_TX, CAN_SPEED);
 DigitalOut can_disable(PIN_CAN_STB);
-
-CANMsgQueue can_tx_queue;
-CANMsgQueue can_rx_queue;
 
 //----------------------------------------------------------------------------
 // preliminary simple CAN functions to send data to the bus for logging
@@ -56,22 +60,23 @@ CANMsgQueue can_rx_queue;
 // Protocol details:
 // https://github.com/LibreSolar/ThingSet/blob/master/can.md
 
-static uint8_t can_node_id = CAN_NODE_ID;
-
 extern ThingSet ts;
-ThingSetCAN ts_can;
 
+ThingSetCAN ts_can(CAN_NODE_ID);
 
-void ThingSetCAN::init_hw()
+ThingSetCAN::ThingSetCAN(uint8_t can_node_id): node_id(can_node_id)
 {
-    can_disable = 0;
+    can_disable = 1; // we disable the transceiver
     can.mode(CAN::Normal);
-    //can.attach(&can_receive);
-
     // TXFP: Transmit FIFO priority driven by request order (chronologically)
     // NART: No automatic retransmission
     CAN1->MCR |= CAN_MCR_TXFP | CAN_MCR_NART;
+}
 
+void ThingSetCAN::enable()
+{
+    can_disable = 0; // we enable the transceiver
+    //can.attach(&can_receive); 
 }
 
 void ThingSetCAN::process_1s()
@@ -86,12 +91,12 @@ bool ThingSetCAN::pub_object(const data_object_t& data_obj)
     msg.format = CANExtended;
     msg.type = CANData;
 
-    int encode_len = ts.encode_msg_can(data_obj, can_node_id, msg.id, msg.data);
+    int encode_len = ts.encode_msg_can(data_obj, node_id, msg.id, msg.data);
 
     if (encode_len >= 0)
     {
         msg.len = encode_len;
-        can_tx_queue.enqueue(msg);
+        tx_queue.enqueue(msg);
     }
     return (encode_len >= 0);
 }
@@ -134,11 +139,11 @@ void ThingSetCAN::process_asap()
 void ThingSetCAN::process_outbox()
 {
     int max_attempts = 15;
-    while (!can_tx_queue.empty() && max_attempts > 0) {
+    while (!tx_queue.empty() && max_attempts > 0) {
         CANMessage msg;
-        can_tx_queue.first(msg);
+        tx_queue.first(msg);
         if(can.write(msg)) {
-            can_tx_queue.dequeue();
+            tx_queue.dequeue();
         }
         else {
             //serial.printf("Sending CAN message failed, err: %u, MCR: %u, MSR: %u, TSR: %u, id: %u\n", can.tderror(), (uint32_t)CAN1->MCR, (uint32_t)CAN1->MSR, (uint32_t)CAN1->TSR, msg.id);

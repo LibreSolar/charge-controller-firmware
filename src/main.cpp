@@ -137,8 +137,9 @@ int main()
     #ifdef UART_SERIAL_ENABLED
     thingset_serial_init(&serial);
     #endif
+    
     #ifdef CAN_ENABLED
-    ts_can.init_hw();
+    ts_can.enable();
     #endif
 
     uext_init();
