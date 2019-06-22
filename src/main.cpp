@@ -40,6 +40,7 @@
 #include "log.h"                // log data (error memory, min/max measurements, etc.)
 #include "data_objects.h"       // for access to internal data via ThingSet
 #include "thingset_serial.h"    // UART or USB serial communication
+#include "thingset_can.h"       // CAN bus communication
 
 Serial serial(PIN_SWD_TX, PIN_SWD_RX, "serial");
 
@@ -116,7 +117,7 @@ int main()
 #else // MPPT
     dcdc_init(&dcdc);
     half_bridge_init(PWM_FREQUENCY, 300, 12 / dcdc.hs_voltage_max, 0.97);       // lower duty limit might have to be adjusted dynamically depending on LS voltage
-#endif
+ #endif
 
     // Configuration from EEPROM
     data_objects_read_eeprom();
@@ -133,9 +134,15 @@ int main()
     calibrate_current_sensors();
 
     // Communication interfaces
-    uart_serial_init(&serial);
-    uext_init();
+    #ifdef UART_SERIAL_ENABLED
+    thingset_serial_init(&serial);
+    #endif
+    
+    #ifdef CAN_ENABLED
+    ts_can.enable();
+    #endif
 
+    uext_init();
     init_watchdog(10);      // 10s should be enough for communication ports
 
     // Setup of DC/DC power stage

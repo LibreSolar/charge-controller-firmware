@@ -41,6 +41,11 @@ extern ThingSet ts;
 extern ts_pub_channel_t pub_channels[];
 extern const int pub_channel_serial;
 
+#ifdef CAN_ENABLED
+#include "thingset_can.h"
+#endif
+
+
 void thingset_serial_init(Serial* s)
 {
 #ifdef UART_SERIAL_ENABLED
@@ -59,7 +64,11 @@ void thingset_serial_process_asap()
 #ifdef USB_SERIAL_ENABLED
     usb_serial_process();
 #endif
+#ifdef CAN_ENABLED
+    ts_can.process_asap();
+#endif
 }
+
 
 void thingset_serial_process_1s()
 {
@@ -68,6 +77,10 @@ void thingset_serial_process_1s()
 #endif
 #ifdef USB_SERIAL_ENABLED
     usb_serial_pub();
+#endif
+
+#ifdef CAN_ENABLED
+    ts_can.process_1s();
 #endif
 
     fflush(stdout);
@@ -101,12 +114,16 @@ void uart_serial_isr()
         }
     }
 }
-
+#endif
+#ifdef UART_SERIAL_ENABLED
 void uart_serial_init(Serial* s)
 {
     ser_uart = s;
     s->attach(uart_serial_isr);
 }
+#endif
+#ifdef UART_SERIAL_ENABLED
+extern const int PUB_CHANNEL_SERIAL;
 
 void uart_serial_pub()
 {
