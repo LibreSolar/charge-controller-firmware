@@ -29,6 +29,9 @@
 #define DCDC_CURRENT_MAX 20  // PCB maximum DCDC output current
 #define LOAD_CURRENT_MAX 20  // PCB maximum load switch current
 
+#define LOW_SIDE_VOLTAGE_MAX    32  // Maximum voltage at battery port (V)
+#define HIGH_SIDE_VOLTAGE_MAX   55  // Maximum voltage at PV input port (V)
+
 #define PIN_UEXT_DIS  PC_14     // starting from rev. 0.10
 #define PIN_UEXT_TX   PA_2
 #define PIN_UEXT_RX   PA_3
@@ -60,6 +63,7 @@
 #define PIN_EEPROM_SDA PB_11
 
 #define EEPROM_24AA32
+#define HAS_CAN 1
 
 enum pin_state_t { PIN_HIGH, PIN_LOW, PIN_FLOAT };
 
@@ -119,11 +123,5 @@ enum {
     ADC_CHSELR_CHSEL16 | \
     ADC_CHSELR_CHSEL17 \
 )
-
-// defines for CAN BUS SUPPORT
-#define HAS_CAN 1
-#define PIN_CAN_RX    PB_8
-#define PIN_CAN_TX    PB_9
-#define PIN_CAN_STB PA_15
 
 #endif

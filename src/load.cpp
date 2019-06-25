@@ -296,7 +296,7 @@ extern log_data_t log_data;
 extern float mcu_temp;
 
 // this function is called more often than the state machine
-void load_control(load_output_t *load)
+void load_control(load_output_t *load, float load_max_voltage)
 {
     if (short_circuit) {
         load->switch_state = LOAD_STATE_OFF_SHORT_CIRCUIT;
@@ -317,7 +317,9 @@ void load_control(load_output_t *load)
     }
 
     static int debounce_counter = 0;
-    if (load->bus->voltage > LOW_SIDE_VOLTAGE_MAX) {
+    if (load->bus->voltage > load_max_voltage ||
+        load->bus->voltage > LOW_SIDE_VOLTAGE_MAX)
+    {
         debounce_counter++;
         if (debounce_counter > CONTROL_FREQUENCY) {      // waited 1s before setting the flag
             load_switch_set(false);

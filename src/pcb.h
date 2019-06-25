@@ -26,14 +26,6 @@
 // generic settings (for all charge controller boards)
 ///////////////////////////////////////////////////////////////////////////////
 
-/** Maximum voltage at battery port (V)
- */
-#define LOW_SIDE_VOLTAGE_MAX    32
-
-/** Maximum voltage at PV input port (V)
- */
-#define HIGH_SIDE_VOLTAGE_MAX   55
-
 /** Main control function frequency (Hz)
  *
  * Frequencies higher than 10 Hz caused issues with MPPT control during lab test with

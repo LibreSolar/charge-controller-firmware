@@ -79,6 +79,6 @@ void load_state_machine(load_output_t *load, bool source_enabled);
  *
  * Performs time-critical checks like overcurrent and overvoltage
  */
-void load_control(load_output_t *load);
+void load_control(load_output_t *load, float load_max_voltage);
 
 #endif /* LOAD_H */

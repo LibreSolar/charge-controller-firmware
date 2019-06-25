@@ -80,7 +80,7 @@ void system_control()
     leds_set_charging(half_bridge_enabled());
 #endif
 
-    load_control(&load);
+    load_control(&load, bat_conf.voltage_absolute_max * charger.num_batteries);
 
     if (counter % CONTROL_FREQUENCY == 0) {
         // called once per second (this timer is much more accurate than time(NULL) based on LSI)
@@ -137,7 +137,7 @@ int main()
     #ifdef UART_SERIAL_ENABLED
     thingset_serial_init(&serial);
     #endif
-    
+
     #ifdef CAN_ENABLED
     ts_can.enable();
     #endif

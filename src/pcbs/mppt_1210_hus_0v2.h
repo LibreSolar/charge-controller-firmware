@@ -29,6 +29,9 @@
 #define DCDC_CURRENT_MAX 8   // PCB maximum DCDC output current
 #define LOAD_CURRENT_MAX 10  // PCB maximum load switch current
 
+#define LOW_SIDE_VOLTAGE_MAX    16  // Maximum voltage at battery port (V)
+#define HIGH_SIDE_VOLTAGE_MAX   55  // Maximum voltage at PV input port (V)
+
 #define PIN_UEXT_TX   PA_2
 #define PIN_UEXT_RX   PA_3
 #define PIN_UEXT_SCL  PB_6
