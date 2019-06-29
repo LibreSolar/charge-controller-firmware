@@ -42,7 +42,7 @@
 #include "thingset_serial.h"    // UART or USB serial communication
 #include "thingset_can.h"       // CAN bus communication
 
-Serial serial(PIN_SWD_TX, PIN_SWD_RX, "serial");
+Serial serial(PIN_SWD_TX, PIN_SWD_RX, "serial", 115200);
 
 Dcdc dcdc = {};
 DcBus hv_bus = {};          // high voltage side (solar for typical MPPT)
@@ -102,8 +102,6 @@ void system_control()
  */
 int main()
 {
-    serial.baud(115200);
-
     leds_init();
 
     battery_conf_init(&bat_conf, BATTERY_TYPE, BATTERY_NUM_CELLS, BATTERY_CAPACITY);
@@ -134,14 +132,8 @@ int main()
     calibrate_current_sensors();
 
     // Communication interfaces
-    #ifdef UART_SERIAL_ENABLED
-    thingset_serial_init(&serial);
-    #endif
-
-    #ifdef CAN_ENABLED
-    ts_can.enable();
-    #endif
-
+    ts_devices.enable();
+    
     uext_init();
     init_watchdog(10);      // 10s should be enough for communication ports
 
@@ -172,11 +164,13 @@ int main()
     control_timer_start(CONTROL_FREQUENCY);
     wait(0.1);  // necessary to prevent MCU from randomly getting stuck here if PV panel is connected before battery
 
+    sleep_manager_lock_deep_sleep();
+
     // the main loop is suitable for slow tasks like communication (even blocking wait allowed)
     time_t last_call = timestamp;
     while (1) {
 
-        thingset_serial_process_asap();
+        ts_devices.process_asap();
         uext_process_asap();
 
         time_t now = timestamp;
@@ -194,7 +188,7 @@ int main()
             leds_update_soc(charger.soc, load.switch_state == LOAD_STATE_OFF_LOW_SOC);
 
             uext_process_1s();
-            thingset_serial_process_1s();
+            ts_devices.process_1s();
 
             last_call = now;
         }

@@ -24,24 +24,41 @@
  */
 
 #include "mbed.h"
+#include "thingset_device.h"
 
-/** UART serial interface (either in UEXT connector or from additional SWD serial)
- */
-void thingset_serial_init(Serial* s);
-void thingset_serial_process_asap();
-void thingset_serial_process_1s();
+class ThingSetStream: public ThingSetDevice
+{
+    public:
+        ThingSetStream(Stream& s, const unsigned int c): channel(c), stream(&s) {};
 
+        virtual void process_asap();
+        virtual void process_1s();
 
-/** UART serial interface (either in UEXT connector or from additional SWD serial)
- */
-void uart_serial_init(Serial* s);
-void uart_serial_process();
-void uart_serial_pub();
+    protected:                
+        virtual void process_input(); // this is called from the ISR typically
+        const unsigned int channel;
 
-/** Serial interface via USB CDC device class (currently only supported with STM32F0)
- */
-void usb_serial_init();
-void usb_serial_process();
-void usb_serial_pub();
+    private:
+        Stream* stream;
 
+        static uint8_t buf_resp[1000];           // only one response buffer needed for all objects
+        uint8_t buf_req[500];
+        size_t req_pos = 0;
+        bool command_flag = false;
+};
+
+template<typename T> class ThingSetSerial: public ThingSetStream
+{
+    public:
+        ThingSetSerial(T& s, const unsigned int c): ThingSetStream(s,c), ser(&s) {}
+
+        virtual void enable() { {
+            Callback<void()>  cb([this]() -> void { this->process_input();});
+            // ser->attach(cb);
+        }
+}
+        
+    private:
+        T* ser;
+};
 #endif /* THINGSET_SERIAL_H */
