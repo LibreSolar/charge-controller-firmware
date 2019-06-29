@@ -32,13 +32,8 @@
 #include "thingset.h"
 #include "thingset_can.h"
 
-extern Serial serial;
-
 #ifndef CAN_SPEED
 #define CAN_SPEED 250000    // 250 kHz
-#endif
-#ifndef CAN_NODE_ID
-#define CAN_NODE_ID 10
 #endif
 
 class ThingSetCAN_Device
@@ -62,9 +57,7 @@ DigitalOut can_disable(PIN_CAN_STB);
 
 extern ThingSet ts;
 
-ThingSetCAN ts_can(CAN_NODE_ID);
-
-ThingSetCAN::ThingSetCAN(uint8_t can_node_id): node_id(can_node_id)
+ThingSetCAN::ThingSetCAN(uint8_t can_node_id, const unsigned int c): node_id(can_node_id), channel(c)
 {
     can_disable = 1; // we disable the transceiver
     can.mode(CAN::Normal);
@@ -81,8 +74,8 @@ void ThingSetCAN::enable()
 
 void ThingSetCAN::process_1s()
 {
-    ts_can.pub();
-    ts_can.process_asap();
+    pub();
+    process_asap();
 }
 
 bool ThingSetCAN::pub_object(const data_object_t& data_obj)
@@ -107,12 +100,10 @@ bool ThingSetCAN::pub_object(const data_object_t& data_obj)
 /**
  * returns number of can objects added to queue
  */
-extern const int PUB_CHANNEL_CAN;
-
 int ThingSetCAN::pub()
 {
     int retval = 0;
-    ts_pub_channel_t* can_chan = ts.get_pub_channel(PUB_CHANNEL_CAN);
+    ts_pub_channel_t* can_chan = ts.get_pub_channel(channel);
 
     if (can_chan != NULL)
     {
@@ -121,7 +112,7 @@ int ThingSetCAN::pub()
             const data_object_t *data_obj = ts.get_data_object(can_chan->object_ids[element]);
             if (data_obj != NULL && data_obj->access & TS_ACCESS_READ)
             {
-                if (ts_can.pub_object(*data_obj))
+                if (pub_object(*data_obj))
                 {
                     retval++;
                 }  

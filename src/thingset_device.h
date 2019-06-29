@@ -13,35 +13,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef _THINGSET_CAN_H_
-#define _THINGSET_CAN_H_
+#ifndef _THINGSET_DEVICE_H_
+#define _THINGSET_DEVICE_H_
 
-#include "config.h"
+#include <vector>
 
-#ifdef CAN_ENABLED
-#include "data_objects.h"
-#include "can_msg_queue.h"
-#include "thingset_device.h"
-
-class ThingSetCAN: public ThingSetDevice
+class ThingSetDevice
 {
     public:
-        ThingSetCAN(uint8_t can_node_id, const unsigned int c);
-
-        void process_asap();
-        void process_1s();
-
-        void enable();
-
+        virtual void process_asap()  {};
+        virtual void process_1s() {};
+        virtual void enable() {};
     private:
-        bool pub_object(const data_object_t& data_obj);
-        int  pub();
-        void process_outbox();
 
-        CANMsgQueue tx_queue;
-        // CANMsgQueue rx_queue;
-        uint8_t node_id;        
-        const unsigned int channel;
 };
-#endif /* CAN_ENABLED */
+
+class ThingSetDeviceManager: public ThingSetDevice
+{
+    public:
+        virtual void process_asap();
+        virtual void process_1s();
+
+        virtual void enable();
+    private:
+        static std::vector<ThingSetDevice*> devices;
+};
+
+extern ThingSetDeviceManager ts_devices;
 #endif
