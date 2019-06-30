@@ -41,8 +41,8 @@ class ThingSetStream: public ThingSetDevice
     private:
         Stream* stream;
 
-        static uint8_t buf_resp[1000];           // only one response buffer needed for all objects
-        uint8_t buf_req[500];
+        static char buf_resp[1000];           // only one response buffer needed for all objects
+        char buf_req[500];
         size_t req_pos = 0;
         bool command_flag = false;
 };
@@ -54,7 +54,7 @@ template<typename T> class ThingSetSerial: public ThingSetStream
 
         virtual void enable() { {
             Callback<void()>  cb([this]() -> void { this->process_input();});
-            // ser->attach(cb);
+            ser->attach(cb);
         }
 }
         

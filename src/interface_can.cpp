@@ -44,8 +44,7 @@ class ThingSetCAN_Device
     ThingSetCAN_Device(PinName rd, PinName td, int hz);
 };
 
-CAN can(PIN_CAN_RX, PIN_CAN_TX, CAN_SPEED);
-DigitalOut can_disable(PIN_CAN_STB);
+
 
 //----------------------------------------------------------------------------
 // preliminary simple CAN functions to send data to the bus for logging
@@ -57,7 +56,8 @@ DigitalOut can_disable(PIN_CAN_STB);
 
 extern ThingSet ts;
 
-ThingSetCAN::ThingSetCAN(uint8_t can_node_id, const unsigned int c): node_id(can_node_id), channel(c)
+ThingSetCAN::ThingSetCAN(uint8_t can_node_id, const unsigned int c): node_id(can_node_id), channel(c), can(PIN_CAN_RX, PIN_CAN_TX, CAN_SPEED), 
+can_disable(PIN_CAN_STB)
 {
     can_disable = 1; // we disable the transceiver
     can.mode(CAN::Normal);
@@ -69,7 +69,9 @@ ThingSetCAN::ThingSetCAN(uint8_t can_node_id, const unsigned int c): node_id(can
 void ThingSetCAN::enable()
 {
     can_disable = 0; // we enable the transceiver
-    //can.attach(&can_receive); 
+    #if defined(CAN_RECEIVE)
+    can.attach([this](){ this->process_input(); } ); 
+    #endif
 }
 
 void ThingSetCAN::process_1s()
@@ -125,6 +127,9 @@ int ThingSetCAN::pub()
 void ThingSetCAN::process_asap()
 {
     process_outbox();
+    #if defined(CAN_RECEIVE)
+    process_inbox();
+    #endif
 }
 
 void ThingSetCAN::process_outbox()
@@ -143,38 +148,28 @@ void ThingSetCAN::process_outbox()
     }
 }
 
-#if 0
-
-void can_list_object_ids(int category) {
-
-}
-
-void can_send_object_name(int data_obj_id, uint8_t can_dest_id)
+#if defined(CAN_RECEIVE)
+// TODO: Move encoding to ThingSet class
+void ThingSetCAN::send_object_name(int data_obj_id, uint8_t can_dest_id)
 {
     uint8_t msg_priority = 7;   // low priority service message
     uint8_t function_id = 0x84;
     CANMessage msg;
     msg.format = CANExtended;
     msg.type = CANData;
-    msg.id = msg_priority << 26 | function_id << 16 |(can_dest_id << 8)| can_node_id;      // TODO: add destination node ID
+    msg.id = msg_priority << 26 | function_id << 16 |(can_dest_id << 8)| node_id;      // TODO: add destination node ID
 
-    int arr_id = -1;
-    for (unsigned int idx = 0; idx < dataObjectsCount; idx++) {
-        if (dataObjects[idx].id == data_obj_id) {
-            arr_id = idx;
-            break;  // correct array entry found
-        }
-    }
-
-    if (arr_id >= 0) {
-        if (dataObjects[arr_id].access & ACCESS_READ) {
+    const data_object_t *dop = ts.get_data_object(data_obj_id);
+    
+    if (dop != NULL) {
+        if (dop->access & TS_ACCESS_READ) {
             msg.data[2] = TS_T_STRING;
-            int len = strlen(dataObjects[arr_id].name);
+            int len = strlen(dop->name);
             for (int i = 0; i < len && i < (8-3); i++) {
-                msg.data[i+3] = *(dataObjects[arr_id].name + i);
+                msg.data[i+3] = *(dop->name + i);
             }
             msg.len = ((len < 5) ? 3 + len : 8);
-            serial.printf("TS Send Object Name: %s (id = %d)\n", dataObjects[arr_id].name, data_obj_id);
+            // serial.printf("TS Send Object Name: %s (id = %d)\n", dataObjects[arr_id].name, data_obj_id);
         }
     }
     else {
@@ -184,79 +179,86 @@ void can_send_object_name(int data_obj_id, uint8_t can_dest_id)
         msg.len = 2;
     }
 
-    can_tx_queue.enqueue(msg);
+    tx_queue.enqueue(msg);
 }
-#endif
-#if 0
-void can_process_inbox()
+
+void ThingSetCAN::process_inbox()
 {
     int max_attempts = 15;
-    while (!can_rx_queue.empty() && max_attempts >0) {
+    while (!rx_queue.empty() && max_attempts >0) {
         CANMessage msg;
-        can_rx_queue.dequeue(msg);
+        rx_queue.dequeue(msg);
 
         if (!(msg.id & (0x1U<<25))) {
-            serial.printf("CAN ID bit 25 = 1 --> ignored\n");
+            // serial.printf("CAN ID bit 25 = 1 --> ignored\n");
             continue;  // might be SAE J1939 or NMEA 2000 message --> ignore
         }
 
         if (msg.id & (0x1U<<24)) {
-            serial.printf("Data object publication frame\n");
+            // serial.printf("Data object publication frame\n");
             // data object publication frame
         } else {
-            serial.printf("Service frame\n");
+            // serial.printf("Service frame\n");
             // service frame
             int function_id = (msg.id >> 16) & (int)0xFF;
             uint8_t can_dest_id = msg.id & (int)0xFF;
             int data_obj_id;
-            int value;
 
             switch (function_id) {
+                case TS_OUTPUT:
+                {
+                    if (msg.len >= 2) {
+                        data_obj_id = msg.data[1] + (msg.data[2] << 8);
+                        const data_object_t *dop = ts.get_data_object(data_obj_id);
+                        pub_object(*dop);
+                    }
+                    break;
+                }
                 case TS_INPUT:
-                    data_obj_id = msg.data[1] + (msg.data[2] << 8);
-                    value = msg.data[6] + (msg.data[7] << 8);
-                    for (unsigned int i = 0; i < dataObjectsCount; ++i) {
-                        if (dataObjects[i].id == data_obj_id) {
-                            if (dataObjects[i].access & TS_ACCESS_WRITE) {
+                {
+                    if (msg.len >= 8)
+                    {
+                        data_obj_id = msg.data[1] + (msg.data[2] << 8);
+                        // int value = msg.data[6] + (msg.data[7] << 8);
+                        const data_object_t *dop = ts.get_data_object(data_obj_id);
+
+                        if (dop != NULL)
+                        {
+                            if (dop->access & TS_ACCESS_WRITE)
+                            {
                                 // TODO: write data
-                                serial.printf("ThingSet Write: %d to %s (id = %d)\n", value, dataObjects[i].name, data_obj_id);
-                            } else {
-                                serial.printf("No write allowed to data object %s (id = %d)\n", dataObjects[i].name, data_obj_id);
+                                // serial.printf("ThingSet Write: %d to %s (id = %d)\n", value, dataObjects[i].name, data_obj_id);
                             }
-                            break;
+                            else
+                            {
+                                // serial.printf("No write allowed to data object %s (id = %d)\n", dataObjects[i].name, data_obj_id);
+                            }
                         }
                     }
                     break;
+                }             
                 case TS_NAME:
                     data_obj_id = msg.data[1] + (msg.data[2] << 8);
-                    can_send_object_name(data_obj_id, can_dest_id);
-                    serial.printf("Get Data Object Name: %d\n", data_obj_id);
+                    send_object_name(data_obj_id, can_dest_id);
+                    // serial.printf("Get Data Object Name: %d\n", data_obj_id);
                     break;
-                case TS_LIST:
-                    can_list_object_ids(msg.data[1]);
-                    serial.printf("List Data Object IDs: %d\n", msg.data[1]);
-                    break;
-
             }
         }
-
         max_attempts--;
     }
 }
-#endif
-#if 0
-void can_receive() {
+void ThingSetCAN::process_input() {
     CANMessage msg;
     while (can.read(msg)) {
-        if (!can_rx_queue.full()) {
-            can_rx_queue.enqueue(msg);
-            serial.printf("Message received. id: %d, data: %d\n", msg.id, msg.data[0]);
+        if (!rx_queue.full()) {
+            rx_queue.enqueue(msg);
+            // serial.printf("Message received. id: %d, data: %d\n", msg.id, msg.data[0]);
         } else {
-            serial.printf("CAN rx queue full\n");
+            // serial.printf("CAN rx queue full\n");
         }
     }
 }
-#endif 
+#endif /* CAN_RECEIVE */
 #endif /* CAN_ENABLED */
 
 #endif /* UNIT_TEST */

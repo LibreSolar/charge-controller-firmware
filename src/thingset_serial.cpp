@@ -21,28 +21,29 @@
 #include "thingset.h"
 #include "thingset_serial.h"
 
-uint8_t ThingSetStream::buf_resp[1000];
+char ThingSetStream::buf_resp[1000];
 
 extern ThingSet ts;
 
 void ThingSetStream::process_1s()
 {
     if (ts.get_pub_channel(channel)->enabled) {
-        ts.pub_msg_json((char *)buf_resp, sizeof(buf_resp), channel);
-        stream->puts((const char*)buf_resp);
+        ts.pub_msg_json(buf_resp, sizeof(buf_resp), channel);
+        stream->puts(buf_resp);
         stream->putc('\n');
     }
-    stream->puts(".\n");
 }
 
 void ThingSetStream::process_asap()
 {
     if (command_flag) {
+        // commands must have 2 or more characters
         if (req_pos > 1) {
-            stream->printf("Received Request (%d bytes): %s\n", strlen((char *)buf_req), buf_req);
-            ts.process(buf_req, strlen((char *)buf_req), buf_resp, sizeof(buf_resp));
-            stream->puts((const char*)buf_resp);
+            stream->printf("Received Request (%d bytes): %s\n", strlen(buf_req), buf_req);
+            ts.process((uint8_t *)buf_req, strlen(buf_req), (uint8_t *)buf_resp, sizeof(buf_resp));
+            stream->puts(buf_resp);
             stream->putc('\n');
+            fflush(*stream);
         }
 
         // start listening for new commands
@@ -51,27 +52,41 @@ void ThingSetStream::process_asap()
     }
 }
 
+/**
+ * Read characters from stream until line end \n detected, signal command available then
+ * and wait for processing
+ */
 void ThingSetStream::process_input()
 {
-        while (stream->readable() && command_flag == false) {
-        if (req_pos < sizeof(buf_req)) {
-            buf_req[req_pos] = stream->getc();
+    while (stream->readable() && command_flag == false) {
 
-            if (buf_req[req_pos] == '\n') {
-                if (req_pos > 0 && buf_req[req_pos-1] == '\r')
-                    buf_req[req_pos-1] = '\0';
-                else
-                    buf_req[req_pos] = '\0';
+        int c = stream->getc();
 
-                // start processing
-                command_flag = true;
-            }
-            else if (req_pos > 0 && buf_req[req_pos] == '\b') { // backspace
-                req_pos--;
+        // \r\n and \n are markers for line end, i.e. command end
+        // we accept this at any time, even if the buffer is 'full', since
+        // there is always one last character left for the \0
+        if (c == '\n') {
+            if (req_pos > 0 && buf_req[req_pos-1] == '\r') {
+                buf_req[req_pos-1] = '\0';
             }
             else {
-                req_pos++;
+                buf_req[req_pos] = '\0';
             }
+            // start processing
+            command_flag = true;
+        }
+
+        // backspace
+        // can be done always unless there is nothing in the buffer
+        else if (req_pos > 0 && c == '\b') { 
+            req_pos--;
+        }
+        // we fill the buffer up to all but 1 character
+        // the last character is reserved for '\0'
+        // more read characters are simply dropped, unless it is \n
+        // which ends the command input and triggers processing
+        else if (req_pos < (sizeof(buf_req)-1)) {
+            buf_req[req_pos++] = c;
         }
     }
 }

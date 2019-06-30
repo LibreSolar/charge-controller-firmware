@@ -60,7 +60,7 @@
 // allocated list. Only std::vector works with this code if NO devices are enabled
 // std::array and also plain C arrays work if at least one array element is there.
  
-std::vector<ThingSetDevice*> ThingSetDeviceManager::devices[] =
+std::vector<ThingSetDevice*> ThingSetDeviceManager::devices =
 {
 #ifdef UART_SERIAL_ENABLED
     &ts_uart,
@@ -76,13 +76,9 @@ std::vector<ThingSetDevice*> ThingSetDeviceManager::devices[] =
 // run the respective function on all objects in the "devices" list
 // use the c++11 lambda expressions here for the for_each loop, keeps things compact 
 
-void ThingSetDeviceManager::process_asap()  { for_each(std::begin(devices),std::end(devices), [](ThingSetDevice* dev){ dev->process_asap(); }); }
-void ThingSetDeviceManager::enable()        { for_each(std::begin(devices),std::end(devices), [](ThingSetDevice* dev){ dev->enable(); }); }
-void ThingSetDeviceManager::process_1s()    
-{ 
-    for_each(std::begin(devices),std::end(devices), [](ThingSetDevice* dev) { dev->process_1s(); });     
-    fflush(stdout);
-}
+void ThingSetDeviceManager::process_asap()  { for_each(std::begin(devices),std::end(devices), [](ThingSetDevice* dev) { dev->process_asap(); }); }
+void ThingSetDeviceManager::enable()        { for_each(std::begin(devices),std::end(devices), [](ThingSetDevice* dev) { dev->enable();       }); }
+void ThingSetDeviceManager::process_1s()    { for_each(std::begin(devices),std::end(devices), [](ThingSetDevice* dev) { dev->process_1s();   }); }
 
 ThingSetDeviceManager ts_devices;
 

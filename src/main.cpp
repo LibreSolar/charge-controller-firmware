@@ -164,7 +164,7 @@ int main()
     control_timer_start(CONTROL_FREQUENCY);
     wait(0.1);  // necessary to prevent MCU from randomly getting stuck here if PV panel is connected before battery
 
-    sleep_manager_lock_deep_sleep();
+    // sleep_manager_lock_deep_sleep();
 
     // the main loop is suitable for slow tasks like communication (even blocking wait allowed)
     time_t last_call = timestamp;

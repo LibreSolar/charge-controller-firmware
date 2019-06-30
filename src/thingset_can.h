@@ -37,11 +37,19 @@ class ThingSetCAN: public ThingSetDevice
         bool pub_object(const data_object_t& data_obj);
         int  pub();
         void process_outbox();
+        
+    #if defined(CAN_RECEIVE)
+        void process_inbox();
+        void process_input();
+        void send_object_name(int data_obj_id, uint8_t can_dest_id);
+        CANMsgQueue rx_queue;
+    #endif
 
         CANMsgQueue tx_queue;
-        // CANMsgQueue rx_queue;
         uint8_t node_id;        
         const unsigned int channel;
+        CAN can;
+        DigitalOut can_disable;
 };
 #endif /* CAN_ENABLED */
 #endif
