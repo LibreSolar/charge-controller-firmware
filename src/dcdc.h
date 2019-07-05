@@ -101,6 +101,14 @@ void dcdc_init(dcdc_t *dcdc);
  */
 void dcdc_control(dcdc_t *dcdc, dc_bus_t *high_side, dc_bus_t *low_side);
 
+/** Test mode for DC/DC, ramping up to 50% duty cycle
+ *
+ * @param dcdc DC/DC type description
+ * @param high_side High-side power port (e.g. solar input for typical MPPT charge controller application)
+ * @param low_side  Low-side power port (e.g. battery output for typical MPPT charge controller application)
+ */
+void dcdc_test(dcdc_t *dcdc, dc_bus_t *high_side, dc_bus_t *low_side);
+
 /** Prevent overcharging of battery in case of shorted HS MOSFET
  *
  * This function switches the LS MOSFET continuously on to blow the battery input fuse. The reason for self destruction should

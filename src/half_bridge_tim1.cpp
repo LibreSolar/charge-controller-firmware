@@ -147,11 +147,9 @@ void half_bridge_start(float pwm_duty)
 {
     half_bridge_set_duty_cycle(pwm_duty);
 
-#ifndef PIL_TESTING
     // Break and Dead-Time Register
     // MOE  = 1: Main output enable
     TIM1->BDTR |= TIM_BDTR_MOE;
-#endif
 
     _enabled = true;
 }

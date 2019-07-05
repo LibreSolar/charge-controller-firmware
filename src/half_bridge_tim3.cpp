@@ -146,7 +146,6 @@ void half_bridge_start(float pwm_duty)
 {
     half_bridge_set_duty_cycle(pwm_duty);
 
-#ifndef PIL_TESTING
     // Capture/Compare Enable Register
     // CCxE = 1: Enable the output on OCx
     // CCxP = 0: Active high polarity on OCx (default)
@@ -154,7 +153,6 @@ void half_bridge_start(float pwm_duty)
     // CCxNP = 0: Active high polarity on OC1N (default)
     TIM3->CCER |= TIM_CCER_CC3E;
     TIM3->CCER |= TIM_CCER_CC4E;
-#endif
 
     _enabled = true;
 }

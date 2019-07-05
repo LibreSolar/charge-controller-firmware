@@ -24,6 +24,7 @@
 
 // DC/DC converter settings
 #define PWM_FREQUENCY 50 // kHz  50 = better for cloud solar to increase efficiency
+#define PWM_DEADTIME 300 // ns
 #define PWM_TIM        1 // use TIM1 timer
 
 #define DCDC_CURRENT_MAX 8   // PCB maximum DCDC output current

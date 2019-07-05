@@ -116,7 +116,7 @@ int main()
     pwm_switch_init(&pwm_switch);
 #else // MPPT
     dcdc_init(&dcdc);
-    half_bridge_init(PWM_FREQUENCY, 300, 12 / dcdc.hs_voltage_max, 0.97);       // lower duty limit might have to be adjusted dynamically depending on LS voltage
+    half_bridge_init(PWM_FREQUENCY, PWM_DEADTIME, 12 / dcdc.hs_voltage_max, 0.97);       // lower duty limit might have to be adjusted dynamically depending on LS voltage
  #endif
 
     // Configuration from EEPROM

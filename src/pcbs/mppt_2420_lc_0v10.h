@@ -24,6 +24,7 @@
 
 // DC/DC converter settings
 #define PWM_FREQUENCY 70 // kHz  70 = good compromise between output ripple and efficiency
+#define PWM_DEADTIME 300 // ns
 #define PWM_TIM        1 // use TIM1 timer
 
 #define DCDC_CURRENT_MAX 20  // PCB maximum DCDC output current
