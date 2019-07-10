@@ -12,41 +12,39 @@ The software is configurable to support different charge controller PCBs with ei
 - [Libre Solar MPPT 12V 10A with USB (v0.2 and v0.4)](https://github.com/LibreSolar/MPPT-1210-HUS)
 - [Libre Solar PWM 12/24V 20A](https://github.com/LibreSolar/PWM-2420-LUS)
 
-## Initial software setup (IMPORTANT!)
+## Building and flashing the firmware
 
-1. Select the correct board in `platformio.ini` by removing the comment before the board name under `[platformio]`
-2. Copy `src/config.h_template` to `src/config.h`, and adjust basic settings
+This firmware is developed using the [ARM mbed OS](https://developer.mbed.org/) embedded framework which has easy-to-understand C++ syntax (similar to Arduino) and thus enhances community based software development.
 
-   (`config.h` is ignored by git, so your changes are kept after software updates using `git pull`)
+If used together with Visual Studio Code and PlatformIO, starting firmware development is only a matter of a few clicks:
 
-       cp src/config.h_template src/config.h
-       $EDITOR src/config.h
+1. Install Visual Studio Code and [PlatformIO](https://platformio.org/platformio-ide) to build the firmware.
 
-## Toolchain and flashing instructions
+2. Copy `src/config.h_template` to `src/config.h`, and adjust basic settings. `config.h` is ignored by git, so your changes are kept after software updates using `git pull`.
 
-See the Libre Solar website for project-agnostic instructions on how to
-[develop software](http://libre.solar/docs/toolchain) and
-[flash new firmware](http://libre.solar/docs/flashing).
+3. Select the correct board in `platformio.ini` by removing the comment before the board name under `[platformio]`
+
+4. Connect the board via a programmer. See the Libre Solar website for [further project-agnostic instructions](http://libre.solar/docs/flashing).
+
+5. Press the upload button at the bottom left corner in VS Code.
 
 ### Troubleshooting
 
-#### If flashing the STM32L072 MCU using OpenOCD fails
+#### Errors with STM32L072 MCU using OpenOCD
 
-... as seems to happen with the standard settings from PlatformIO, then ...
-
-*NOTE* This MCU is used in the MPPT 1210 HUS and the PWM charge controller, for example.
+The standard OpenOCD settings sometimes fail to flash firmware to this MCU, which is used in the MPPT 1210 HUS and the PWM charge controller.
 
 Try one of these workarounds:
 
 1. Change OpenOCD settings to `set WORKAREASIZE 0x1000` in the file `~/.platformio/packages/tool-openocd/scripts/board/st_nucleo_l073rz.cfg`.
-2. Use ST-Link tools. For Windows there is a GUI tool. Under Linux, use the following command:
 
-       st-flash write .pioenvs/mppt-2420-lc-v0.10/firmware.bin 0x08000000
+2. Use ST-Link tools. For Windows there is a GUI tool. Under Linux, uncomment the `upload_command` line in `platformio.ini`.
+
 3. Use other debuggers and tools, e.g. Segger J-Link.
 
-#### If flashing fails like this ...
+#### Connection failures
 
-In PlatformIO:
+If flashing fails like this in PlatformIO:
 
 ```
 Error: init mode failed (unable to connect to the target)
@@ -58,14 +56,13 @@ shutdown command invoked
 or with ST-Link:
 
 ```bash
-$ st-flash write .pioenvs/mppt-1210-hus-v0.4/firmware.bin  0x08000000
+$ st-flash write .pio/build/mppt-1210-hus-v0.4/firmware.bin 0x08000000
 st-flash 1.5.1
 2019-06-21T18:13:03 INFO common.c: Loading device parameters....
 2019-06-21T18:13:03 WARN common.c: unknown chip id! 0x5fa0004
 ```
 
-check the connection between the board used for flashing
-(for example the Nucleo), and the MPPT.
+check the connection between the programmer (for example the ST-Link of the Nucleo board) and the charge controller.
 
 ## API documentation
 
