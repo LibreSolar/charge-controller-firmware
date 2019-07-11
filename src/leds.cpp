@@ -228,7 +228,7 @@ void leds_toggle_error()
 }
 
 //----------------------------------------------------------------------------
-void leds_update_soc(int soc)
+void leds_update_soc(int soc, bool load_off_low_soc)
 {
 #ifndef LED_DCDC
     // if there is no dedicated LED for the DC/DC converter status, blink SOC
@@ -246,12 +246,12 @@ void leds_update_soc(int soc)
     trigger_timeout[LED_SOC_1] = -1;
     trigger_timeout[LED_SOC_2] = -1;
     trigger_timeout[LED_SOC_3] = -1;
-    if (soc > 80) {
+    if (soc > 80 && !load_off_low_soc) {
         led_states[LED_SOC_1] = blink_chg;
         led_states[LED_SOC_2] = LED_STATE_ON;
         led_states[LED_SOC_3] = LED_STATE_ON;
     }
-    else if (soc > 20) {
+    else if (soc > 20 && !load_off_low_soc) {
         led_states[LED_SOC_1] = LED_STATE_OFF;
         led_states[LED_SOC_2] = blink_chg;
         led_states[LED_SOC_3] = LED_STATE_ON;

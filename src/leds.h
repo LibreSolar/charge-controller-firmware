@@ -81,8 +81,11 @@ void leds_flicker(int led, int timeout = -1);
 void leds_update_1s();
 
 /** Updates SOC LED bar (if existing)
+ *
+ *  @param soc SOC in percent
+ *  @param load_off_low_soc Prevents showing two SOC LEDs if load is switched off because of low SOC
  */
-void leds_update_soc(int soc);
+void leds_update_soc(int soc, bool load_off_low_soc = false);
 
 /** Toggles between even and uneven LEDs switched on/off to create
  *  annoying flashing in case of an error.

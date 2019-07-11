@@ -186,7 +186,7 @@ int main()
             eeprom_update();
 
             leds_update_1s();
-            leds_update_soc(charger.soc);
+            leds_update_soc(charger.soc, load.switch_state == LOAD_STATE_OFF_LOW_SOC);
 
             uext_process_1s();
             thingset_serial_process_1s();
