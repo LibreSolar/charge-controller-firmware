@@ -250,6 +250,7 @@ typedef struct
     int time_voltage_limit_reached; ///< Last time the CV limit was reached
 
     bool full;                      ///< Flag to indicate if battery was fully charged
+    bool first_full_charge_reached; ///< Set to true if battery was fully charged at least once (necessary for proper capacity estimation)
 
 } charger_t;
 

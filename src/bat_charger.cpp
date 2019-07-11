@@ -213,6 +213,7 @@ void charger_init(charger_t *charger)
     charger->num_batteries = 1;             // initialize with only one battery in series
     charger->soh = 100;                     // assume new battery
     charger->bat_temperature = 25.0;
+    charger->first_full_charge_reached = false;
 }
 
 void charger_detect_num_batteries(charger_t *charger, battery_conf_t *bat, dc_bus_t *bus)
@@ -267,16 +268,19 @@ void charger_state_machine(dc_bus_t *bus, battery_conf_t *bat_conf, charger_t *c
 {
     //printf("time_state_change = %d, time = %d, v_bat = %f, i_bat = %f\n", charger->time_state_changed, time(NULL), voltage, current);
 
-    // Load management
-    // battery port input state (i.e. battery discharging direction) defines load state
+    // load output state is defined by battery bus dis_allowed flag
     if (bus->dis_allowed == true
         && bus->voltage < (bat_conf->voltage_load_disconnect - bus->current * bus->dis_droop_res) * charger->num_batteries)
     {
+        // low state of charge
         bus->dis_allowed = false;
         charger->num_deep_discharges++;
 
         if (charger->usable_capacity < 0.1) {
-            charger->usable_capacity = charger->discharged_Ah;
+            // reset to measured value if discharged the first time
+            if (charger->first_full_charge_reached) {
+                charger->usable_capacity = charger->discharged_Ah;
+            }
         } else {
             // slowly adapt new measurements with low-pass filter
             charger->usable_capacity = 0.8 * charger->usable_capacity + 0.2 * charger->discharged_Ah;
@@ -289,6 +293,7 @@ void charger_state_machine(dc_bus_t *bus, battery_conf_t *bat_conf, charger_t *c
             && (charger->bat_temperature > bat_conf->discharge_temp_max
             || charger->bat_temperature < bat_conf->discharge_temp_min))
     {
+        // temperature limits exceeded
         bus->dis_allowed = false;
     }
 
@@ -299,7 +304,7 @@ void charger_state_machine(dc_bus_t *bus, battery_conf_t *bat_conf, charger_t *c
         bus->dis_allowed = true;
     }
 
-    // check battery temperature
+    // check battery temperature for charging direction
     if (charger->bat_temperature > bat_conf->charge_temp_max
         || charger->bat_temperature < bat_conf->charge_temp_min)
     {
@@ -348,6 +353,7 @@ void charger_state_machine(dc_bus_t *bus, battery_conf_t *bat_conf, charger_t *c
                 charger->full = true;
                 charger->num_full_charges++;
                 charger->discharged_Ah = 0;         // reset coulomb counter
+                charger->first_full_charge_reached = true;
 
                 /*if (bat_conf->equalization_enabled) {
                     // TODO: additional conditions!
