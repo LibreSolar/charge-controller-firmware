@@ -23,6 +23,15 @@
  * Control of status LEDs with charlieplexing
  */
 
+/** LED state type
+ */
+enum led_state_t {
+    LED_STATE_OFF = 0,
+    LED_STATE_ON,
+    LED_STATE_BLINK,
+    LED_STATE_FLICKER
+};
+
 /** Initialize LEDs and start timer for charlieplexing
  */
 void leds_init(bool enabled = true);
@@ -32,29 +41,48 @@ void leds_init(bool enabled = true);
  */
 void leds_set_charging(bool enabled);
 
-/** Enables/disables dedicated load output LED (if existing)
+/** Enables/disables LED
+ *
+ *  @param led Number of LED in array defined in PCB configuration
+ *  @param enabled LED is switched on if enabled is set to true
+ *  @param timeout Defines for how long this state should be set (-1 for permanent setting)
  */
-void leds_set_load(bool enabled);
+void leds_set(int led, bool enabled, int timeout = -1);
+
+/** Enables LED
+ *
+ *  @param led Number of LED in array defined in PCB configuration
+ *  @param timeout Defines for how long this state should be set (-1 for permanent setting)
+ */
+void leds_on(int led, int timeout = -1);
+
+/** Disables LED
+ *
+ *  @param led Number of LED in array defined in PCB configuration
+ */
+void leds_off(int led);
+
+/** Blinks LED
+ *
+ *  @param led Number of LED in array defined in PCB configuration
+ *  @param timeout Defines for how long this state should be set (-1 for permanent setting)
+ */
+void leds_blink(int led, int timeout = -1);
+
+/** Flickers LED
+ *
+ *  @param led Number of LED in array defined in PCB configuration
+ *  @param timeout Defines for how long this state should be set (-1 for permanent setting)
+ */
+void leds_flicker(int led, int timeout = -1);
+
+/** Updates LED blink and timeout states, must be called every second
+ */
+void leds_update_1s();
 
 /** Updates SOC LED bar (if existing)
  */
 void leds_update_soc(int soc);
-
-/** Sets RX/TX LED to TX state (= constant on) for 2 seconds
- */
-void leds_trigger_tx();
-
-/** Sets RX/TX LED to RX state (= flicker) for 2 seconds
- */
-void leds_trigger_rx();
-
-/** Must be called regularly and sets flicker or on state of RX/TX LED
- */
-void leds_update_rxtx();
-
-/** Toggles blinking LEDs and must be called every second
- */
-void leds_toggle_blink();
 
 /** Toggles between even and uneven LEDs switched on/off to create
  *  annoying flashing in case of an error.

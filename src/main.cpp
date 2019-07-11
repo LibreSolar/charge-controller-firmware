@@ -174,8 +174,6 @@ int main()
         thingset_serial_process_asap();
         uext_process_asap();
 
-        leds_update_rxtx();
-
         time_t now = timestamp;
         if (now >= last_call + 1 || now < last_call) {   // called once per second (or slower if blocking wait occured somewhere)
 
@@ -187,8 +185,8 @@ int main()
 
             eeprom_update();
 
+            leds_update_1s();
             leds_update_soc(charger.soc);
-            leds_toggle_blink();
 
             uext_process_1s();
             thingset_serial_process_1s();

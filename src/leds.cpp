@@ -21,15 +21,13 @@
 
 #include "mbed.h"
 
-static bool led_states[NUM_LEDS];
+static int led_states[NUM_LEDS];                // must be one of led_state_t
+static int trigger_timeout[NUM_LEDS];           // seconds until trigger should end
 
-static int blink_state = 1;
-static bool flicker_state = 1;
+static int blink_state = 1;                     // global state of all blinking LEDs
+static bool flicker_state = 1;                  // global state of all flickering LEDs
 
 static bool charging = false;
-static bool rx_flag = false;
-static bool tx_flag = false;
-static int rxtx_trigger_timestamp;
 
 static void charlieplexing()
 {
@@ -41,33 +39,37 @@ static void charlieplexing()
         led_count = 0;
     }
 
-    if (flicker_count > 200) {
+    if (flicker_count > 30) {
         flicker_count = 0;
         flicker_state = !flicker_state;
     }
 
-    if (led_count < NUM_LEDS && led_states[led_count] == true) {
+    if (led_count < NUM_LEDS && (
+            led_states[led_count] == LED_STATE_ON ||
+            (led_states[led_count] == LED_STATE_FLICKER && flicker_state == 1) ||
+            (led_states[led_count] == LED_STATE_BLINK && blink_state == 1)
+       )) {
         for (int pin_number = 0; pin_number < NUM_LED_PINS; pin_number++) {
             DigitalInOut pin(led_pins[pin_number]);
             switch (led_pin_setup[led_count][pin_number]) {
-            case PIN_HIGH:
-                pin.output();
-                pin = 1;
-                break;
-            case PIN_LOW:
-                pin.output();
-                pin = 0;
-                break;
-            case PIN_FLOAT:
-                pin.input();
-                break;
+                case PIN_HIGH:
+                    pin.output();
+                    pin = 1;
+                    break;
+                case PIN_LOW:
+                    pin.output();
+                    pin = 0;
+                    break;
+                case PIN_FLOAT:
+                    pin.input();
+                    break;
             }
         }
     }
     else {
+        // all pins floating
         for (int pin_number = 0; pin_number < NUM_LED_PINS; pin_number++) {
-            DigitalOut pin(led_pins[pin_number]);
-            pin = 0;
+            DigitalIn pin(led_pins[pin_number]);
         }
     }
 
@@ -142,7 +144,14 @@ extern "C" void TIM22_IRQHandler(void)
 void leds_init(bool enabled)
 {
     for (int led = 0; led < NUM_LEDS; led++) {
-        led_states[led] = enabled;
+        if (enabled) {
+            led_states[led] = LED_STATE_ON;
+            trigger_timeout[led] = 0;           // switched off the first time the main loop is called
+        }
+        else {
+            led_states[led] = LED_STATE_OFF;
+            trigger_timeout[led] = -1;
+        }
     }
     timer_start(NUM_LEDS * 60);     // 60 Hz
 }
@@ -151,54 +160,63 @@ void leds_set_charging(bool enabled)
 {
     charging = enabled;
 #ifdef LED_DCDC
-    led_states[LED_DCDC] = enabled;
+    led_states[LED_DCDC] = LED_STATE_ON;
 #endif
 }
 
-void leds_set_load(bool enabled)
+void leds_set(int led, bool enabled, int timeout)
 {
-#ifdef LED_LOAD
-    if (enabled) led_states[LED_LOAD] = 1;
-    else led_states[LED_LOAD] = 0;
-#endif
-}
+    if (led >= NUM_LEDS || led < 0)
+        return;
 
-void leds_update_rxtx()
-{
-#ifdef LED_RXTX
-    if (time(NULL) >= rxtx_trigger_timestamp + 2) {
-        led_states[LED_RXTX] = false;
-        tx_flag = false;
-        rx_flag = false;
+    if (enabled) {
+        led_states[led] = LED_STATE_ON;
     }
     else {
-        if (tx_flag) {
-            led_states[LED_RXTX] = true;               // TX: constant on
-        }
-        else if (rx_flag) {
-            led_states[LED_RXTX] = flicker_state;       // RX: flicker
-        }
+        led_states[led] = LED_STATE_OFF;
     }
-#endif
+
+    trigger_timeout[led] = timeout;
 }
 
-void leds_trigger_rx()
+void leds_on(int led, int timeout)
 {
-    rx_flag = true;
-    tx_flag = false;
-    rxtx_trigger_timestamp = time(NULL);
+    leds_set(led, true, timeout);
 }
 
-void leds_trigger_tx()
+void leds_off(int led)
 {
-    rx_flag = false;
-    tx_flag = true;
-    rxtx_trigger_timestamp = time(NULL);
+    leds_set(led, false, -1);
 }
 
-void leds_toggle_blink()
+void leds_blink(int led, int timeout)
+{
+    if (led < NUM_LEDS && led >= 0) {
+        led_states[led] = LED_STATE_BLINK;
+        trigger_timeout[led] = timeout;
+    }
+}
+
+void leds_flicker(int led, int timeout)
+{
+    if (led < NUM_LEDS && led >= 0) {
+        led_states[led] = LED_STATE_FLICKER;
+        trigger_timeout[led] = timeout;
+    }
+}
+
+void leds_update_1s()
 {
     blink_state = !blink_state;
+
+    for (int led = 0; led < NUM_LEDS; led++) {
+        if (trigger_timeout[led] > 0) {
+            trigger_timeout[led]--;
+        }
+        else if (trigger_timeout[led] == 0) {
+            led_states[led] = LED_STATE_OFF;
+        }
+    }
 }
 
 void leds_toggle_error()
@@ -215,46 +233,33 @@ void leds_update_soc(int soc)
 #ifndef LED_DCDC
     // if there is no dedicated LED for the DC/DC converter status, blink SOC
     // or power LED when charger is enabled
-    int blink_on = (charging) ? blink_state : 1;
+    int blink_chg = (charging) ? LED_STATE_BLINK : LED_STATE_ON;
 #else
-    int blink_on = 1;
+    int blink_chg = LED_STATE_ON;
 #endif
 
+
 #ifdef LED_PWR
-
-    led_states[LED_PWR] = blink_on;
-
+    led_states[LED_PWR] = blink_chg;
+    trigger_timeout[LED_PWR] = -1;
 #elif defined(LED_SOC_3)  // 3-bar SOC gauge
-
+    trigger_timeout[LED_SOC_1] = -1;
+    trigger_timeout[LED_SOC_2] = -1;
+    trigger_timeout[LED_SOC_3] = -1;
     if (soc > 80) {
-        if (blink_on) {
-            led_states[LED_SOC_1] = true;
-        }
-        else {
-            led_states[LED_SOC_1] = false;
-        }
-        led_states[LED_SOC_2] = true;
-        led_states[LED_SOC_3] = true;
+        led_states[LED_SOC_1] = blink_chg;
+        led_states[LED_SOC_2] = LED_STATE_ON;
+        led_states[LED_SOC_3] = LED_STATE_ON;
     }
     else if (soc > 20) {
-        led_states[LED_SOC_1] = false;
-        if (blink_on) {
-            led_states[LED_SOC_2] = true;
-        }
-        else {
-            led_states[LED_SOC_2] = false;
-        }
-        led_states[LED_SOC_3] = true;
+        led_states[LED_SOC_1] = LED_STATE_OFF;
+        led_states[LED_SOC_2] = blink_chg;
+        led_states[LED_SOC_3] = LED_STATE_ON;
     }
     else {
-        led_states[LED_SOC_1] = false;
-        led_states[LED_SOC_2] = false;
-        if (blink_on) {
-            led_states[LED_SOC_3] = true;
-        }
-        else {
-            led_states[LED_SOC_3] = false;
-        }
+        led_states[LED_SOC_1] = LED_STATE_OFF;
+        led_states[LED_SOC_2] = LED_STATE_OFF;
+        led_states[LED_SOC_3] = blink_chg;
     }
 #endif
 }

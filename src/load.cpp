@@ -131,7 +131,7 @@ extern "C" void ADC1_COMP_IRQHandler(void)
     if (COMP2->CSR & COMP_CSR_COMP2VALUE) {
         // Load should be switched off by LPTIM trigger already. This interrupt
         // is mainly used to indicate the failure.
-        load_switch_set(false);     // to update also LEDs
+        leds_flicker(LED_LOAD);
         short_circuit = true;
     }
 
@@ -144,6 +144,8 @@ extern "C" void ADC1_COMP_IRQHandler(void)
 
 void load_switch_set(bool enabled)
 {
+    leds_set(LED_LOAD, enabled);
+
 #ifdef PIN_LOAD_EN
     DigitalOut load_enable(PIN_LOAD_EN);
     if (enabled) load_enable = 1;
@@ -160,8 +162,6 @@ void load_switch_set(bool enabled)
     else load_disable = 1;
     printf("Load enabled = %d\n", enabled);
 #endif
-
-    leds_set_load(enabled);
 }
 
 void load_usb_set(bool enabled)
@@ -193,7 +193,6 @@ void load_init(load_output_t *load, dc_bus_t *bus)
     // analog comparator to detect short circuits and trigger immediate load switch-off
     short_circuit_comp_init();
 }
-
 
 void usb_state_machine(load_output_t *load)
 {
