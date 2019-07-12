@@ -52,13 +52,14 @@ void battery_conf_init(battery_conf_t *bat, bat_type type, int num_cells, float 
 
         // Cell-level thresholds based on EN 62509:2011 (both thresholds current-compensated)
         bat->voltage_load_disconnect = num_cells * 1.95;
-        bat->voltage_load_reconnect = num_cells * 2.05;     // maybe increase to 2.10, if hysteresis observed?
+        bat->voltage_load_reconnect = num_cells * 2.10;
         bat->internal_resistance = num_cells * (1.95 - 1.80) / LOAD_CURRENT_MAX;    // assumption: Battery selection matching charge controller
 
-        bat->voltage_absolute_min = num_cells * 1.8;
+        bat->voltage_absolute_min = num_cells * 1.6;
 
-        bat->ocv_full = num_cells * 2.15;
-        bat->ocv_empty = num_cells * 1.95;
+        // Voltages during idle (no charging/discharging current)
+        bat->ocv_full = num_cells * ((type == BAT_TYPE_FLOODED) ? 2.10 : 2.15);
+        bat->ocv_empty = num_cells * 1.90;
 
         // https://batteryuniversity.com/learn/article/charging_the_lead_acid_battery
         bat->current_cutoff_topping = bat->nominal_capacity * 0.04;  // 3-5 % of C/1
@@ -78,7 +79,6 @@ void battery_conf_init(battery_conf_t *bat, bat_type type, int num_cells, float 
         bat->equalization_trigger_time = 8;         // weeks
         bat->equalization_trigger_deep_cycles = 10; // times
 
-        // not yet implemented...
         bat->temperature_compensation = -0.003;     // -3 mV/°C/cell
         break;
 
@@ -92,7 +92,7 @@ void battery_conf_init(battery_conf_t *bat, bat_type type, int num_cells, float 
         bat->internal_resistance = bat->voltage_load_disconnect * 0.05 / LOAD_CURRENT_MAX;  // 5% voltage drop at max current
         bat->voltage_absolute_min = num_cells * 2.0;
 
-        bat->ocv_full = num_cells * 3.4;       // will give really bad SOC calculation
+        bat->ocv_full = num_cells * 3.4;       // will give really nonlinear SOC calculation
         bat->ocv_empty = num_cells * 3.0;      // because of flat OCV of LFP cells...
 
         bat->current_cutoff_topping = bat->nominal_capacity / 10;    // C/10 cut-off at end of CV phase by default
@@ -236,13 +236,6 @@ void battery_update_soc(battery_conf_t *bat_conf, charger_t *charger, dc_bus_t *
         int soc_new = (int)((bus->voltage - bat_conf->ocv_empty) /
                    (bat_conf->ocv_full - bat_conf->ocv_empty) * 10000.0);
 
-        if (soc_new > 10000) {
-            soc_new = 10000;
-        }
-        else if (soc_new < 0) {
-            soc_new = 0;
-        }
-
         if (soc_new > 500 && soc_filtered == 0) {
             // bypass filter during initialization
             soc_filtered = soc_new;
@@ -250,6 +243,13 @@ void battery_update_soc(battery_conf_t *bat_conf, charger_t *charger, dc_bus_t *
         else {
             // filtering to adjust SOC very slowly
             soc_filtered += (soc_new - soc_filtered) / 100;
+        }
+
+        if (soc_filtered > 10000) {
+            soc_filtered = 10000;
+        }
+        else if (soc_filtered < 0) {
+            soc_filtered = 0;
         }
         charger->soc = soc_filtered / 100;
     }
