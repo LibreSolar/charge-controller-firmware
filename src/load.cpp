@@ -238,6 +238,8 @@ void usb_state_machine(load_output_t *load)
     }
 }
 
+static time_t lvd_timestamp = 0;    // stores when the load was disconnected last time
+
 void load_state_machine(load_output_t *load, bool source_enabled)
 {
     //printf("Load State: %d\n", load->switch_state);
@@ -254,12 +256,13 @@ void load_state_machine(load_output_t *load, bool source_enabled)
             load->switch_state = LOAD_STATE_DISABLED;
         }
         else if (source_enabled == false) {
+            lvd_timestamp = time(NULL);
             load_switch_set(false);
             load->switch_state = LOAD_STATE_OFF_LOW_SOC;
         }
         break;
     case LOAD_STATE_OFF_LOW_SOC:
-        if (source_enabled == true) {
+        if (source_enabled == true && time(NULL) - lvd_timestamp > 60*60) {     // wait at least one hour
             if (load->enabled_target == true) {
                 load_switch_set(true);
                 load->switch_state = LOAD_STATE_ON;
