@@ -6,6 +6,7 @@
 
 #ifdef WIFI_ENABLED
 
+#include "load.h"
 #include "thingset.h"
 #include <inttypes.h>
 
@@ -32,7 +33,7 @@ enum wifi_states {
 extern load_output_t load;
 
 extern ThingSet ts;
-extern const int PUB_CHANNEL_EMONCMS;
+extern const int pub_channel_emoncms;
 
 int wifi_check_ap_connected()
 {
@@ -115,7 +116,7 @@ int wifi_send_emoncms_data()
     // overwrite two publication message start bytes "# " with correct URL
     // content again to avoid strcpy
     int ts_pos = strlen(url) - 2;
-    int ts_len = ts.pub_msg_json(url + ts_pos, sizeof(url) - ts_pos - 1, PUB_CHANNEL_EMONCMS);
+    int ts_len = ts.pub_msg_json(url + ts_pos, sizeof(url) - ts_pos - 1, pub_channel_emoncms);
     url[ts_pos] = 'n';
     url[ts_pos+1] = '=';
     url[ts_pos+ts_len] = '\0';  // ThingSet does not null-terminate
