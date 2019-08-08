@@ -16,6 +16,7 @@
 
 #include "pcb.h"
 #include "config.h"
+#include "version.h"
 
 // can be used to configure custom data objects in separate file instead (e.g. data_objects_custom.cpp)
 #ifndef CUSTOM_DATA_OBJECTS_FILE
@@ -45,6 +46,7 @@ const char* const manufacturer = "Libre Solar";
 const char* const device_type = DEVICE_TYPE;
 const char* const hardware_version = HARDWARE_VERSION;
 const char* const firmware_version = "0.1";
+const char* const firmware_commit = COMMIT_HASH;
 uint32_t device_id = DEVICE_ID;      // from config.h
 
 extern uint32_t timestamp;
@@ -67,6 +69,7 @@ const data_object_t data_objects[] = {
     {0x1A, TS_INFO, TS_READ_ALL,                  TS_T_STRING, 0, (void*) device_type,                                  "DeviceType"},
     {0x1B, TS_INFO, TS_READ_ALL,                  TS_T_STRING, 0, (void*) hardware_version,                             "HardwareVersion"},
     {0x1C, TS_INFO, TS_READ_ALL,                  TS_T_STRING, 0, (void*) firmware_version,                             "FirmwareVersion"},
+    {0x1D, TS_INFO, TS_READ_ALL,                  TS_T_STRING, 0, (void*) firmware_commit,                              "FirmwareCommit"},
 
     // CONFIGURATION //////////////////////////////////////////////////////////
     // using IDs >= 0x30 except for high priority data objects
