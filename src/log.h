@@ -61,14 +61,14 @@ typedef struct {
     int mosfet_temp_max;
     int day_counter;
     uint32_t error_flags;       ///< Instantaneous errors
-} log_data_t;
+} LogData;
 
 /** Updates the total energy counters for solar, battery and load bus
  */
-void log_update_energy(log_data_t *log_data, dc_bus_t *solar, dc_bus_t *bat, dc_bus_t *load);
+void log_update_energy(LogData *log_data, DcBus *solar, DcBus *bat, DcBus *load);
 
 /** Updates the logged min/max values for voltages, power, temperatures etc.
  */
-void log_update_min_max_values(log_data_t *log_data, dcdc_t *dcdc, charger_t *charger, load_output_t *load, dc_bus_t *solar_bus, dc_bus_t *bat_bus, dc_bus_t *load_bus);
+void log_update_min_max_values(LogData *log_data, Dcdc *dcdc, Charger *charger, LoadOutput *load, DcBus *solar_bus, DcBus *bat_bus, DcBus *load_bus);
 
 #endif /* LOG_H */

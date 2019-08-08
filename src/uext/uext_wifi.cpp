@@ -20,7 +20,7 @@ ESP32 wifi(uext_serial);
 //DigitalOut wifi_enable(PIN_UEXT_SCL);
 DigitalOut wifi_enable(PIN_UEXT_SSEL);
 
-enum wifi_states {
+enum WifiState {
     STATE_WIFI_RESET,       // state before reset
     STATE_WIFI_INIT,        // initial state
     STATE_WIFI_CONN,        // successfully connected to WiFi AP
@@ -30,7 +30,7 @@ enum wifi_states {
     STATE_WIFI_ERROR
 };
 
-extern load_output_t load;
+extern LoadOutput load;
 
 extern ThingSet ts;
 extern const int pub_channel_emoncms;
@@ -171,7 +171,7 @@ void uext_process_asap(void) {;}
 
 void uext_process_1s()
 {
-    static wifi_states state = STATE_WIFI_RESET;
+    static WifiState state = STATE_WIFI_RESET;
     static int error_counter = 0;
 
     if (load.usb_state != LOAD_STATE_ON) {

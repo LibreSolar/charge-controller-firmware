@@ -16,7 +16,7 @@
 
 #include "dc_bus.h"
 
-void dc_bus_init_solar(dc_bus_t *bus)
+void dc_bus_init_solar(DcBus *bus)
 {
     bus->dis_allowed = true;         // PV panel may provide power to solar input of DC/DC
     bus->dis_voltage_start = 16.0;
@@ -26,7 +26,7 @@ void dc_bus_init_solar(dc_bus_t *bus)
     bus->chg_allowed = false;
 }
 
-void dc_bus_init_nanogrid(dc_bus_t *bus)
+void dc_bus_init_nanogrid(DcBus *bus)
 {
     bus->dis_allowed = true;
     bus->dis_voltage_start = 30.0;       // starting buck mode above this point
@@ -42,7 +42,7 @@ void dc_bus_init_nanogrid(dc_bus_t *bus)
 }
 
 // must be called exactly once per second, otherwise energy calculation gets wrong
-void dc_bus_energy_balance(dc_bus_t *bus)
+void dc_bus_energy_balance(DcBus *bus)
 {
     // remark: timespan = 1s, so no multiplication with time necessary for energy calculation
     if (bus->current >= 0) {

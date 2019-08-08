@@ -3,26 +3,25 @@
 #include "adc_dma.h"
 #include "adc_dma_stub.h"
 
-extern dcdc_t dcdc;
-extern dc_bus_t hs_bus;
-extern dc_bus_t ls_bus;
-extern dc_bus_t *bat_port;
-extern dc_bus_t load_bus;
-extern charger_t charger;
-extern load_output_t load;
+extern Dcdc dcdc;
+extern DcBus hv_bus;
+extern DcBus lv_bus;
+extern DcBus load_bus;
+extern Charger charger;
+extern LoadOutput load;
 
 static adc_values_t adcval;
 
 void check_solar_bus_readings()
 {
-    TEST_ASSERT_EQUAL_FLOAT(adcval.solar_voltage, round(hs_bus.voltage * 10) / 10);
-    TEST_ASSERT_EQUAL_FLOAT(adcval.dcdc_current / adcval.solar_voltage * adcval.battery_voltage, -round(hs_bus.current * 10) / 10);
+    TEST_ASSERT_EQUAL_FLOAT(adcval.solar_voltage, round(hv_bus.voltage * 10) / 10);
+    TEST_ASSERT_EQUAL_FLOAT(adcval.dcdc_current / adcval.solar_voltage * adcval.battery_voltage, -round(hv_bus.current * 10) / 10);
 }
 
 void check_battery_bus_readings()
 {
-    TEST_ASSERT_EQUAL_FLOAT(adcval.battery_voltage, round(ls_bus.voltage * 10) / 10);
-    TEST_ASSERT_EQUAL_FLOAT(adcval.dcdc_current - adcval.load_current, round(ls_bus.current * 10) / 10);
+    TEST_ASSERT_EQUAL_FLOAT(adcval.battery_voltage, round(lv_bus.voltage * 10) / 10);
+    TEST_ASSERT_EQUAL_FLOAT(adcval.dcdc_current - adcval.load_current, round(lv_bus.current * 10) / 10);
 }
 
 void check_load_bus_readings()
@@ -53,7 +52,7 @@ void adc_tests()
     prepare_adc_readings(adcval);
 
     // call original update_measurements function
-    update_measurements(&dcdc, &charger, &hs_bus, &ls_bus, &load_bus);
+    update_measurements(&dcdc, &charger, &hv_bus, &lv_bus, &load_bus);
 
     UNITY_BEGIN();
 

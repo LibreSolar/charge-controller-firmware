@@ -31,7 +31,7 @@
 
 /** Battery cell types
  */
-enum bat_type {
+enum BatType {
     BAT_TYPE_NONE = 0,      ///< Safe standard settings
     BAT_TYPE_FLOODED,       ///< Old flooded (wet) lead-acid batteries
     BAT_TYPE_GEL,           ///< VRLA gel batteries (maintainance-free)
@@ -223,13 +223,13 @@ typedef struct
      */
     float temperature_compensation;
 
-} battery_conf_t;
+} BatConf;
 
 /** Charger configuration and battery state
  */
 typedef struct
 {
-    unsigned int state;             ///< Current charger state (see enum charger_states)
+    unsigned int state;             ///< Current charger state (see enum ChargerState)
 
     int num_batteries;              ///< Used for automatic 12V/24V battery detection at start-up (can be 1 or 2 only)
 
@@ -252,7 +252,7 @@ typedef struct
     bool full;                      ///< Flag to indicate if battery was fully charged
     bool first_full_charge_reached; ///< Set to true if battery was fully charged at least once (necessary for proper capacity estimation)
 
-} charger_t;
+} Charger;
 
 
 /** Possible charger states
@@ -261,7 +261,7 @@ typedef struct
  * - https://en.wikipedia.org/wiki/IUoU_battery_charging
  * - https://batteryuniversity.com/learn/article/charging_the_lead_acid_battery
  */
-enum charger_state {
+enum ChargerState {
 
     /** Idle
      *
@@ -310,41 +310,41 @@ enum charger_state {
  * Configures battery based on settings defined in config.h and initializes
  * bat_user with same values
  */
-void battery_conf_init(battery_conf_t *bat, bat_type type, int num_cells, float nominal_capacity);
+void battery_conf_init(BatConf *bat, BatType type, int num_cells, float nominal_capacity);
 
 /** Checks battery user settings for plausibility
  */
-bool battery_conf_check(battery_conf_t *bat);
+bool battery_conf_check(BatConf *bat);
 
 /** Overwrites battery settings (config should be checked first)
  *
  * Settings specified in bat_user will be copied to actual battery_t,
  * if suggested updates are valid (includes plausibility check!)
  */
-void battery_conf_overwrite(battery_conf_t *source, battery_conf_t *destination, charger_t *state = NULL);
+void battery_conf_overwrite(BatConf *source, BatConf *destination, Charger *charger = NULL);
 
 /** SOC estimation
  *
  * Must be called exactly once per second, otherwise SOC calculation gets wrong.
  */
-void battery_update_soc(battery_conf_t *bat_conf, charger_t *charger, dc_bus_t *bus);
+void battery_update_soc(BatConf *bat_conf, Charger *charger, DcBus *bus);
 
 /** Initialize dc bus for battery connection
  *
  * @param num_batteries definies the number of series connected batteries, e.g. 2 for 24V system
  */
-void battery_init_dc_bus(dc_bus_t *bus, battery_conf_t *bat, unsigned int num_batteries);
+void battery_init_dc_bus(DcBus *bus, BatConf *bat, unsigned int num_batteries);
 
 /** Basic initialization of charger struct
  */
-void charger_init(charger_t *charger);
+void charger_init(Charger *charger);
 
 /** Detect if two batteries are connected in series (12V/24V auto-detection)
  */
-void charger_detect_num_batteries(charger_t *charger, battery_conf_t *bat, dc_bus_t *bus);
+void charger_detect_num_batteries(Charger *charger, BatConf *bat, DcBus *bus);
 
 /** Charger state machine update, should be called once per second
  */
-void charger_state_machine(dc_bus_t *port, battery_conf_t *bat_conf, charger_t *charger);
+void charger_state_machine(DcBus *port, BatConf *bat_conf, Charger *charger);
 
 #endif /* BAT_CHARGER_H */

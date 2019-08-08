@@ -48,12 +48,12 @@ typedef struct {
     float offset_voltage_start;     // V  charging switched on if Vsolar > Vbat + offset
     float offset_voltage_stop;      // V  charging switched off if Vsolar < Vbat + offset
     int restart_interval;           // s  When should we retry to start charging after low solar power cut-off?
-} pwm_switch_t;
+} PwmSwitch;
 
 
-void pwm_switch_init(pwm_switch_t *pwm_switch);
+void pwm_switch_init(PwmSwitch *pwm_switch);
 
-void pwm_switch_control(pwm_switch_t *pwm_switch, dc_bus_t *solar_port, dc_bus_t *bat_port);
+void pwm_switch_control(PwmSwitch *pwm_switch, DcBus *solar_port, DcBus *bat_port);
 
 void pwm_switch_duty_cycle_step(int delta);
 

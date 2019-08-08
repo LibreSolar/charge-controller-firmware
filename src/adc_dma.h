@@ -36,11 +36,11 @@ void calibrate_current_sensors();
 
 /** Detects if external temperature sensor is attached, otherwise takes internal sensor
  */
-void detect_battery_temperature(charger_t *bat, float bat_temp);
+void detect_battery_temperature(Charger *bat, float bat_temp);
 
 /** Updates structures with data read from ADC
  */
-void update_measurements(dcdc_t *dcdc, charger_t *charger, dc_bus_t *hs, dc_bus_t *ls, dc_bus_t *load_bus);
+void update_measurements(Dcdc *dcdc, Charger *charger, DcBus *hs, DcBus *ls, DcBus *load_bus);
 
 /** Initializes registers and starts ADC timer
  */

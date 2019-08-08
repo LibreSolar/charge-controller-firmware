@@ -26,9 +26,9 @@
 #include <stdlib.h>     // for min/max function
 #include <stdio.h>
 
-extern log_data_t log_data;
+extern LogData log_data;
 
-void dcdc_init(dcdc_t *dcdc)
+void dcdc_init(Dcdc *dcdc)
 {
     dcdc->mode           = DCDC_MODE_INIT;
     dcdc->enabled        = true;
@@ -45,7 +45,7 @@ void dcdc_init(dcdc_t *dcdc)
 }
 
 // returns if output power should be increased (1), decreased (-1) or switched off (0)
-int _dcdc_output_control(dcdc_t *dcdc, dc_bus_t *out, dc_bus_t *in)
+int _dcdc_output_control(Dcdc *dcdc, DcBus *out, DcBus *in)
 {
     float dcdc_power_new = out->voltage * out->current;
     static int pwm_delta = 1;
@@ -92,7 +92,7 @@ int _dcdc_output_control(dcdc_t *dcdc, dc_bus_t *out, dc_bus_t *in)
     }
 }
 
-bool _dcdc_check_start_conditions(dcdc_t *dcdc, dc_bus_t *out, dc_bus_t *in)
+bool _dcdc_check_start_conditions(Dcdc *dcdc, DcBus *out, DcBus *in)
 {
     return dcdc->enabled == true
         && out->chg_allowed == true
@@ -104,7 +104,7 @@ bool _dcdc_check_start_conditions(dcdc_t *dcdc, dc_bus_t *out, dc_bus_t *in)
         && time(NULL) > (dcdc->off_timestamp + dcdc->restart_interval);
 }
 
-void dcdc_control(dcdc_t *dcdc, dc_bus_t *hs, dc_bus_t *ls)
+void dcdc_control(Dcdc *dcdc, DcBus *hs, DcBus *ls)
 {
     if (half_bridge_enabled()) {
         int step;
@@ -181,7 +181,7 @@ void dcdc_control(dcdc_t *dcdc, dc_bus_t *hs, dc_bus_t *ls)
     }
 }
 
-void dcdc_test(dcdc_t *dcdc, dc_bus_t *hs, dc_bus_t *ls)
+void Dcdcest(Dcdc *dcdc, DcBus *hs, DcBus *ls)
 {
     if (half_bridge_enabled()) {
         if (half_bridge_get_duty_cycle() > 0.5) {

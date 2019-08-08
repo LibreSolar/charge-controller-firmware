@@ -44,18 +44,18 @@
 
 Serial serial(PIN_SWD_TX, PIN_SWD_RX, "serial");
 
-dcdc_t dcdc = {};
-dc_bus_t hs_bus = {};           // high-side (solar for typical MPPT)
-dc_bus_t ls_bus = {};           // low-side (battery for typical MPPT)
-dc_bus_t *bat_bus = NULL;
-dc_bus_t load_bus = {};         // load terminal
-pwm_switch_t pwm_switch = {};   // only necessary for PWM charger
-battery_conf_t bat_conf;        // actual (used) battery configuration
-battery_conf_t bat_conf_user;   // temporary storage where the user can write to
-charger_t charger;              // battery state information
-load_output_t load;
-log_data_t log_data;
-extern ThingSet ts;             // defined in data_objects.cpp
+Dcdc dcdc = {};
+DcBus hv_bus = {};          // high voltage side (solar for typical MPPT)
+DcBus lv_bus = {};          // low voltage side (battery for typical MPPT)
+DcBus *bat_bus = NULL;
+DcBus load_bus = {};        // load terminal
+PwmSwitch pwm_switch = {};  // only necessary for PWM charger
+BatConf bat_conf;           // actual (used) battery configuration
+BatConf bat_conf_user;      // temporary storage where the user can write to
+Charger charger;            // battery state information
+LoadOutput load;
+LogData log_data;
+extern ThingSet ts;         // defined in data_objects.cpp
 
 time_t timestamp;    // current unix timestamp (independent of time(NULL), as it is user-configurable)
 
@@ -68,15 +68,15 @@ void system_control()
     static int counter = 0;
 
     // convert ADC readings to meaningful measurement values
-    update_measurements(&dcdc, &charger, &hs_bus, &ls_bus, &load_bus);
+    update_measurements(&dcdc, &charger, &hv_bus, &lv_bus, &load_bus);
 
 #ifdef CHARGER_TYPE_PWM
-    pwm_switch_control(&pwm_switch, &hs_bus, bat_bus);
+    pwm_switch_control(&pwm_switch, &hv_bus, bat_bus);
     leds_set_charging(pwm_switch_enabled());
 #else
     // control PWM of the DC/DC according to hs and ls port settings
     // (this function includes MPPT algorithm)
-    dcdc_control(&dcdc, &hs_bus, &ls_bus);
+    dcdc_control(&dcdc, &hv_bus, &lv_bus);
     leds_set_charging(half_bridge_enabled());
 #endif
 
@@ -88,11 +88,11 @@ void system_control()
         timestamp++;
         counter = 0;
         // energy + soc calculation must be called exactly once per second
-        dc_bus_energy_balance(&hs_bus);
-        dc_bus_energy_balance(&ls_bus);
+        dc_bus_energy_balance(&hv_bus);
+        dc_bus_energy_balance(&lv_bus);
         dc_bus_energy_balance(&load_bus);
-        log_update_energy(&log_data, &hs_bus, &ls_bus, &load_bus);
-        log_update_min_max_values(&log_data, &dcdc, &charger, &load, &hs_bus, &ls_bus, &load_bus);
+        log_update_energy(&log_data, &hv_bus, &lv_bus, &load_bus);
+        log_update_min_max_values(&log_data, &dcdc, &charger, &load, &hv_bus, &lv_bus, &load_bus);
         battery_update_soc(&bat_conf, &charger, bat_bus);
     }
     counter++;
@@ -130,7 +130,7 @@ int main()
     dma_setup();
     adc_timer_start(1000);  // 1 kHz
     wait(0.5);      // wait for ADC to collect some measurement values
-    update_measurements(&dcdc, &charger, &hs_bus, &ls_bus, &load_bus);
+    update_measurements(&dcdc, &charger, &hv_bus, &lv_bus, &load_bus);
     calibrate_current_sensors();
 
     // Communication interfaces
@@ -148,16 +148,16 @@ int main()
     // Setup of DC/DC power stage
     switch(dcdc.mode) {
         case MODE_NANOGRID:
-            dc_bus_init_nanogrid(&hs_bus);
-            bat_bus = &ls_bus;
+            dc_bus_init_nanogrid(&hv_bus);
+            bat_bus = &lv_bus;
             break;
         case MODE_MPPT_BUCK:     // typical MPPT charge controller operation
-            dc_bus_init_solar(&hs_bus);
-            bat_bus = &ls_bus;
+            dc_bus_init_solar(&hv_bus);
+            bat_bus = &lv_bus;
             break;
         case MODE_MPPT_BOOST:    // for charging of e-bike battery via solar panel
-            dc_bus_init_solar(&ls_bus);
-            bat_bus = &hs_bus;
+            dc_bus_init_solar(&lv_bus);
+            bat_bus = &hv_bus;
             break;
     }
     charger_detect_num_batteries(&charger, &bat_conf, bat_bus);     // check if we have 24V instead of 12V system
@@ -181,7 +181,7 @@ int main()
 
             charger_state_machine(bat_bus, &bat_conf, &charger);
 
-            load_state_machine(&load, ls_bus.dis_allowed);
+            load_state_machine(&load, lv_bus.dis_allowed);
 
             eeprom_update();
 

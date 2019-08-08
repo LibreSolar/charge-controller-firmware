@@ -28,7 +28,7 @@ extern float mcu_temp;
 
 //----------------------------------------------------------------------------
 // must be called exactly once per second, otherwise energy calculation gets wrong
-void log_update_energy(log_data_t *log_data, dc_bus_t *solar, dc_bus_t *bat, dc_bus_t *load)
+void log_update_energy(LogData *log_data, DcBus *solar, DcBus *bat, DcBus *load)
 {
     // static variables so that it is not reset for each function call
     static int seconds_zero_solar = 0;
@@ -67,7 +67,7 @@ void log_update_energy(log_data_t *log_data, dc_bus_t *solar, dc_bus_t *bat, dc_
     log_data->load_out_total_Wh = load_out_total_Wh_prev + (load->chg_energy_Wh > 0 ? load->chg_energy_Wh : 0);
 }
 
-void log_update_min_max_values(log_data_t *log_data, dcdc_t *dcdc, charger_t *charger, load_output_t *load, dc_bus_t *solar_bus, dc_bus_t *bat_bus, dc_bus_t *load_bus)
+void log_update_min_max_values(LogData *log_data, Dcdc *dcdc, Charger *charger, LoadOutput *load, DcBus *solar_bus, DcBus *bat_bus, DcBus *load_bus)
 {
     if (bat_bus->voltage > log_data->battery_voltage_max) {
         log_data->battery_voltage_max = bat_bus->voltage;

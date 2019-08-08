@@ -114,7 +114,7 @@ void pwm_switch_stop()
     _enabled = false;
 }
 
-void pwm_switch_init(pwm_switch_t *pwm_switch)
+void pwm_switch_init(PwmSwitch *pwm_switch)
 {
     pwm_switch->solar_current_max = DCDC_CURRENT_MAX;
     pwm_switch->solar_current_min = 0.05;
@@ -133,7 +133,7 @@ void pwm_switch_init(pwm_switch_t *pwm_switch)
     _enabled = false;               // still disable actual switch
 }
 
-void pwm_switch_control(pwm_switch_t *pwm_switch, dc_bus_t *solar_port, dc_bus_t *bat_port)
+void pwm_switch_control(PwmSwitch *pwm_switch, DcBus *solar_port, DcBus *bat_port)
 {
     if (_enabled) {
         if (bat_port->chg_allowed == false || solar_port->dis_allowed == false
@@ -173,8 +173,8 @@ void pwm_switch_control(pwm_switch_t *pwm_switch, dc_bus_t *solar_port, dc_bus_t
 #else
 
 // dummy functions for non-PWM charge controllers
-void pwm_switch_init(pwm_switch_t *pwm_switch) {}
-void pwm_switch_control(pwm_switch_t *pwm_switch, dc_bus_t *solar_port, dc_bus_t *bat_port) {}
+void pwm_switch_init(PwmSwitch *pwm_switch) {}
+void pwm_switch_control(PwmSwitch *pwm_switch, DcBus *solar_port, DcBus *bat_port) {}
 void pwm_switch_duty_cycle_step(int delta) {}
 bool pwm_switch_enabled() {return false;}
 

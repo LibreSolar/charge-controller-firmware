@@ -19,7 +19,7 @@
 
 /** @file
  *
- * @brief Definition of power ports of a DC/DC converter (high-side or low-side terminal)
+ * @brief Definition of power converter terminals (e.g. high voltage or low voltage side of a DC/DC)
  */
 
 #include <stdbool.h>
@@ -53,20 +53,20 @@ typedef struct {
     float chg_energy_Wh;            ///< cumulated energy in charge direction since last counter reset (Wh)
     float dis_energy_Wh;            ///< cumulated energy in discharge direction since last counter reset (Wh)
 
-} dc_bus_t;
+} DcBus;
 
 /** Initialize dc bus for solar panel connection
  */
-void dc_bus_init_solar(dc_bus_t *bus);
+void dc_bus_init_solar(DcBus *bus);
 
 /** Initialize dc bus for nanogrid connection
  */
-void dc_bus_init_nanogrid(dc_bus_t *bus);
+void dc_bus_init_nanogrid(DcBus *bus);
 
 /** Energy balance calculation for dc bus
  *
  * Must be called exactly once per second, otherwise energy calculation gets wrong.
  */
-void dc_bus_energy_balance(dc_bus_t *bus);
+void dc_bus_energy_balance(DcBus *bus);
 
 #endif /* DC_BUS_H */

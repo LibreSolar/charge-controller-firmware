@@ -30,16 +30,16 @@
 #include "pwm_switch.h"
 #include <stdio.h>
 
-extern log_data_t log_data;
-extern charger_t charger;
-extern battery_conf_t bat_conf;
-extern battery_conf_t bat_conf_user;
-extern dcdc_t dcdc;
-extern load_output_t load;
-extern dc_bus_t hs_bus;
-extern dc_bus_t ls_bus;
-extern dc_bus_t load_bus;
-extern pwm_switch_t pwm_switch;
+extern LogData log_data;
+extern Charger charger;
+extern BatConf bat_conf;
+extern BatConf bat_conf_user;
+extern Dcdc dcdc;
+extern LoadOutput load;
+extern DcBus hv_bus;
+extern DcBus lv_bus;
+extern DcBus load_bus;
+extern PwmSwitch pwm_switch;
 
 const char* const manufacturer = "Libre Solar";
 const char* const device_type = DEVICE_TYPE;
@@ -98,11 +98,11 @@ const data_object_t data_objects[] = {
 
     // load settings
     {0x40, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_BOOL,    0, (void*) &(load.enabled_target),                      "LoadEnDefault"},
-    {0x41, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_BOOL,    0, (void*) &(load.usb_enabled_target),                  "USBEnDefault"},
+    {0x41, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_BOOL,    0, (void*) &(load.usb_enabled_target),                  "UsbEnDefault"},
     {0x42, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_FLOAT32, 2, (void*) &(bat_conf_user.voltage_load_disconnect),    "LoadDisconnect_V"},
     {0x43, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_FLOAT32, 2, (void*) &(bat_conf_user.voltage_load_reconnect),     "LoadReconnect_V"},
-    //{0x44, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_FLOAT32, 2, (void*) &(bat_conf_user.voltage_load_disconnect),    "USBDisconnect_V"},
-    //{0x45, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_FLOAT32, 2, (void*) &(bat_conf_user.voltage_load_reconnect),     "USBReconnect_V"},
+    //{0x44, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_FLOAT32, 2, (void*) &(bat_conf_user.voltage_load_disconnect),    "UsbDisconnect_V"},
+    //{0x45, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_FLOAT32, 2, (void*) &(bat_conf_user.voltage_load_reconnect),     "UsbReconnect_V"},
 
     // other configuration items
     //{0x33, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_BOOL,    2, (void*) &(??),   "WarningIndicator"},  // can be set externally
@@ -112,11 +112,11 @@ const data_object_t data_objects[] = {
     // using IDs >= 0x60
 
     {0x60, TS_INPUT, TS_READ_ALL | TS_WRITE_ALL,   TS_T_BOOL,   0, (void*) &(load.enabled_target),                      "LoadEn"},   // change w/o store setting in NVM
-    {0x61, TS_INPUT, TS_READ_ALL | TS_WRITE_ALL,   TS_T_BOOL,   0, (void*) &(load.usb_enabled_target),                  "USBEn"},
+    {0x61, TS_INPUT, TS_READ_ALL | TS_WRITE_ALL,   TS_T_BOOL,   0, (void*) &(load.usb_enabled_target),                  "UsbEn"},
 #ifdef CHARGER_TYPE_PWM
-    {0x62, TS_INPUT, TS_READ_ALL | TS_WRITE_ALL,   TS_T_BOOL,   0, (void*) &(pwm_switch.enabled),                       "PWMEn"},
+    {0x62, TS_INPUT, TS_READ_ALL | TS_WRITE_ALL,   TS_T_BOOL,   0, (void*) &(pwm_switch.enabled),                       "PwmEn"},
 #else
-    {0x62, TS_INPUT, TS_READ_ALL | TS_WRITE_ALL,   TS_T_BOOL,   0, (void*) &(dcdc.enabled),                             "DCDCEn"},
+    {0x62, TS_INPUT, TS_READ_ALL | TS_WRITE_ALL,   TS_T_BOOL,   0, (void*) &(dcdc.enabled),                             "DcdcEn"},
 #endif
 
     // OUTPUT DATA ////////////////////////////////////////////////////////////
@@ -124,27 +124,27 @@ const data_object_t data_objects[] = {
 
     // high priority data objects (low IDs)
     {0x04, TS_OUTPUT, TS_READ_ALL, TS_T_UINT16,  0, (void*) &(load.switch_state),               "LoadState"},
-    {0x05, TS_OUTPUT, TS_READ_ALL, TS_T_UINT16,  0, (void*) &(load.usb_state),                  "USBState"},
+    {0x05, TS_OUTPUT, TS_READ_ALL, TS_T_UINT16,  0, (void*) &(load.usb_state),                  "UsbState"},
     {0x06, TS_OUTPUT, TS_READ_ALL, TS_T_UINT16,  0, (void*) &(charger.soc),                     "SOC_%"},     // output will be uint8_t
 
     // battery related data objects
-    {0x70, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(ls_bus.voltage),                  "Bat_V"},
-    {0x71, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(hs_bus.voltage),                  "Solar_V"},
-    {0x72, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(ls_bus.current),                  "Bat_A"},
+    {0x70, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(lv_bus.voltage),                  "Bat_V"},
+    {0x71, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(hv_bus.voltage),                  "Solar_V"},
+    {0x72, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(lv_bus.current),                  "Bat_A"},
     {0x73, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(load_bus.current),                "Load_A"},
     {0x74, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 1, (void*) &(charger.bat_temperature),         "Bat_degC"},
     {0x75, TS_OUTPUT, TS_READ_ALL, TS_T_BOOL,    1, (void*) &(charger.ext_temp_sensor),         "BatTempExt"},
     {0x76, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 1, (void*) &(mcu_temp),                        "MCU_degC"},
 #ifdef PIN_ADC_TEMP_FETS
-    {0x77, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 1, (void*) &(dcdc.temp_mosfets),               "FETs_degC"},
+    {0x77, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 1, (void*) &(dcdc.temp_mosfets),               "Mosfet_degC"},
 #endif
     {0x78, TS_OUTPUT, TS_READ_ALL, TS_T_UINT16,  0, (void*) &(charger.state),                   "ChgState"},
     {0x79, TS_OUTPUT, TS_READ_ALL, TS_T_UINT16,  0, (void*) &(dcdc.state),                      "DCDCState"},
-    {0x7A, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(hs_bus.current),                  "Solar_A"},
-    {0x7B, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(ls_bus.chg_voltage_target),       "BatTarget_V"},
-    {0x7C, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(ls_bus.chg_current_max),          "BatTarget_A"},
-    {0x7D, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(ls_bus.power),                    "Bat_W"},
-    {0x7E, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(hs_bus.power),                    "Solar_W"},
+    {0x7A, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(hv_bus.current),                  "Solar_A"},
+    {0x7B, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(lv_bus.chg_voltage_target),       "BatTarget_V"},
+    {0x7C, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(lv_bus.chg_current_max),          "BatTarget_A"},
+    {0x7D, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(lv_bus.power),                    "Bat_W"},
+    {0x7E, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(hv_bus.power),                    "Solar_W"},
     {0x7F, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(load_bus.power),                  "Load_W"},
 
     // RECORDED DATA ///////////////////////////////////////////////////////
@@ -161,10 +161,10 @@ const data_object_t data_objects[] = {
     {0x10, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_UINT16,  2, (void*) &(log_data.load_power_max_day),           "LoadMaxDay_W"},
 
     // accumulated data
-    {0xA0, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 2, (void*) &(hs_bus.dis_energy_Wh),                  "SolarInDay_Wh"},
+    {0xA0, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 2, (void*) &(hv_bus.dis_energy_Wh),                  "SolarInDay_Wh"},
     {0xA1, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 2, (void*) &(load_bus.chg_energy_Wh),                "LoadOutDay_Wh"},
-    {0xA2, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 2, (void*) &(ls_bus.chg_energy_Wh),                  "BatChgDay_Wh"},
-    {0xA3, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 2, (void*) &(ls_bus.dis_energy_Wh),                  "BatDisDay_Wh"},
+    {0xA2, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 2, (void*) &(lv_bus.chg_energy_Wh),                  "BatChgDay_Wh"},
+    {0xA3, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 2, (void*) &(lv_bus.dis_energy_Wh),                  "BatDisDay_Wh"},
     {0xA4, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 0, (void*) &(charger.discharged_Ah),                 "Dis_Ah"},    // coulomb counter
     {0xA5, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_UINT16,  0, (void*) &(charger.soh),                           "SOH_%"},     // output will be uint8_t
     {0xA6, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_INT32,   0, (void*) &(log_data.day_counter),                  "DayCount"},
@@ -174,7 +174,7 @@ const data_object_t data_objects[] = {
     {0xB2, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_UINT16,  2, (void*) &(log_data.load_power_max_total),         "LoadMaxTotal_W"},
     {0xB3, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 2, (void*) &(log_data.battery_voltage_max),          "BatMaxTotal_V"},
     {0xB4, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 2, (void*) &(log_data.solar_voltage_max),            "SolarMaxTotal_V"},
-    {0xB5, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 2, (void*) &(log_data.dcdc_current_max),             "DCDCMaxTotal_A"},
+    {0xB5, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 2, (void*) &(log_data.dcdc_current_max),             "DcdcMaxTotal_A"},
     {0xB6, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 2, (void*) &(log_data.load_current_max),             "LoadMaxTotal_A"},
     {0xB7, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_INT32,   1, (void*) &(log_data.bat_temp_max),                 "BatMax_degC"},
     {0xB8, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_INT32,   1, (void*) &(log_data.int_temp_max),                 "IntMax_degC"},

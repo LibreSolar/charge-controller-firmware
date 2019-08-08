@@ -82,7 +82,7 @@ typedef struct {
     //float offset_voltage_start;  // V  charging switched on if Vsolar > Vbat + offset
     //float offset_voltage_stop;   // V  charging switched off if Vsolar < Vbat + offset
     int restart_interval;       ///< Restart interval (s): When should we retry to start charging after low solar power cut-off?
-} dcdc_t;
+} Dcdc;
 
 
 /** Initialize DC/DC and DC/DC port structs
@@ -91,7 +91,7 @@ typedef struct {
  *
  * @param dcdc DC/DC type description
  */
-void dcdc_init(dcdc_t *dcdc);
+void dcdc_init(Dcdc *dcdc);
 
 /** Main control function for the DC/DC converter
  *
@@ -99,7 +99,7 @@ void dcdc_init(dcdc_t *dcdc);
  * @param high_side High-side power port (e.g. solar input for typical MPPT charge controller application)
  * @param low_side  Low-side power port (e.g. battery output for typical MPPT charge controller application)
  */
-void dcdc_control(dcdc_t *dcdc, dc_bus_t *high_side, dc_bus_t *low_side);
+void dcdc_control(Dcdc *dcdc, DcBus *high_side, DcBus *low_side);
 
 /** Test mode for DC/DC, ramping up to 50% duty cycle
  *
@@ -107,7 +107,7 @@ void dcdc_control(dcdc_t *dcdc, dc_bus_t *high_side, dc_bus_t *low_side);
  * @param high_side High-side power port (e.g. solar input for typical MPPT charge controller application)
  * @param low_side  Low-side power port (e.g. battery output for typical MPPT charge controller application)
  */
-void dcdc_test(dcdc_t *dcdc, dc_bus_t *high_side, dc_bus_t *low_side);
+void Dcdcest(Dcdc *dcdc, DcBus *high_side, DcBus *low_side);
 
 /** Prevent overcharging of battery in case of shorted HS MOSFET
  *

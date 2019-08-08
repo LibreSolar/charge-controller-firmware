@@ -69,6 +69,7 @@ static const PinName led_pins[NUM_LED_PINS] = {
     //  A         B         C
        PB_13,    PB_14,    PB_15
 };
+/*
 static const pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
     { PIN_HIGH,  PIN_LOW,   PIN_FLOAT }, // LED1
     { PIN_LOW,   PIN_HIGH,  PIN_FLOAT }, // LED2
@@ -76,8 +77,8 @@ static const pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
     { PIN_FLOAT, PIN_HIGH,  PIN_LOW   }, // LED4
     { PIN_FLOAT, PIN_LOW,   PIN_HIGH  }  // LED5
 };
+*/
 
-/*
 // LEDs with wrong polarity
 static const pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
     { PIN_LOW,   PIN_HIGH,  PIN_FLOAT }, // LED1
@@ -86,7 +87,7 @@ static const pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
     { PIN_FLOAT, PIN_LOW,   PIN_HIGH  }, // LED4
     { PIN_FLOAT, PIN_HIGH,  PIN_LOW   }  // LED5
 };
-*/
+
 
 // pin definition only needed in adc_dma.cpp to detect if they are present on the PCB
 #define PIN_ADC_TEMP_BAT

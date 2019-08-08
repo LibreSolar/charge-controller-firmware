@@ -178,7 +178,7 @@ void load_usb_set(bool enabled)
 #endif
 }
 
-void load_init(load_output_t *load, dc_bus_t *bus)
+void load_init(LoadOutput *load, DcBus *bus)
 {
     load->bus = bus;
     load->current_max = LOAD_CURRENT_MAX;
@@ -194,111 +194,113 @@ void load_init(load_output_t *load, dc_bus_t *bus)
     short_circuit_comp_init();
 }
 
-void usb_state_machine(load_output_t *load)
+void usb_state_machine(LoadOutput *load)
 {
     switch (load->usb_state) {
-    case LOAD_STATE_DISABLED:
-        if (load->usb_enabled_target == true) {
-            load_usb_set(true);
-            load->usb_state = LOAD_STATE_ON;
-        }
-        break;
-    case LOAD_STATE_ON:
-        // currently still same cut-off SOC limit as the load
-        if (load->switch_state == LOAD_STATE_OFF_LOW_SOC) {
-            load_usb_set(false);
-            load->usb_state = LOAD_STATE_OFF_LOW_SOC;
-        }
-        else if (load->switch_state == LOAD_STATE_OFF_OVERCURRENT) {
-            load_usb_set(false);
-            load->usb_state = LOAD_STATE_OFF_OVERCURRENT;
-        }
-        else if (load->usb_enabled_target == false) {
-            load_usb_set(false);
-            load->usb_state = LOAD_STATE_DISABLED;
-        }
-        break;
-    case LOAD_STATE_OFF_LOW_SOC:
-        // currently still same cut-off SOC limit as the load
-        if (load->switch_state == LOAD_STATE_ON) {
+        case LOAD_STATE_DISABLED:
             if (load->usb_enabled_target == true) {
                 load_usb_set(true);
                 load->usb_state = LOAD_STATE_ON;
             }
-            else {
+            break;
+        case LOAD_STATE_ON:
+            // currently still same cut-off SOC limit as the load
+            if (load->switch_state == LOAD_STATE_OFF_LOW_SOC) {
+                load_usb_set(false);
+                load->usb_state = LOAD_STATE_OFF_LOW_SOC;
+            }
+            else if (load->switch_state == LOAD_STATE_OFF_OVERCURRENT) {
+                load_usb_set(false);
+                load->usb_state = LOAD_STATE_OFF_OVERCURRENT;
+            }
+            else if (load->usb_enabled_target == false) {
+                load_usb_set(false);
                 load->usb_state = LOAD_STATE_DISABLED;
             }
-        }
-        break;
-    case LOAD_STATE_OFF_OVERCURRENT:
-        if (load->switch_state != LOAD_STATE_OFF_OVERCURRENT) {
-            load->usb_state = LOAD_STATE_DISABLED;
-        }
-        break;
+            break;
+        case LOAD_STATE_OFF_LOW_SOC:
+            // currently still same cut-off SOC limit as the load
+            if (load->switch_state == LOAD_STATE_ON) {
+                if (load->usb_enabled_target == true) {
+                    load_usb_set(true);
+                    load->usb_state = LOAD_STATE_ON;
+                }
+                else {
+                    load->usb_state = LOAD_STATE_DISABLED;
+                }
+            }
+            break;
+        case LOAD_STATE_OFF_OVERCURRENT:
+            if (load->switch_state != LOAD_STATE_OFF_OVERCURRENT) {
+                load->usb_state = LOAD_STATE_DISABLED;
+            }
+            break;
     }
 }
 
 static time_t lvd_timestamp = 0;    // stores when the load was disconnected last time
 
-void load_state_machine(load_output_t *load, bool source_enabled)
+void load_state_machine(LoadOutput *load, bool source_enabled)
 {
     //printf("Load State: %d\n", load->switch_state);
     switch (load->switch_state) {
-    case LOAD_STATE_DISABLED:
-        if (source_enabled == true && load->enabled_target == true) {
-            load_switch_set(true);
-            load->switch_state = LOAD_STATE_ON;
-        }
-        break;
-    case LOAD_STATE_ON:
-        if (load->enabled_target == false) {
-            load_switch_set(false);
-            load->switch_state = LOAD_STATE_DISABLED;
-        }
-        else if (source_enabled == false) {
-            lvd_timestamp = time(NULL);
-            load_switch_set(false);
-            load->switch_state = LOAD_STATE_OFF_LOW_SOC;
-        }
-        break;
-    case LOAD_STATE_OFF_LOW_SOC:
-        if (source_enabled == true && time(NULL) - lvd_timestamp > 60*60) {     // wait at least one hour
-            if (load->enabled_target == true) {
+        case LOAD_STATE_DISABLED:
+            if (source_enabled == true && load->enabled_target == true) {
                 load_switch_set(true);
                 load->switch_state = LOAD_STATE_ON;
             }
-            else {
+            break;
+        case LOAD_STATE_ON:
+            if (load->enabled_target == false) {
+                load_switch_set(false);
                 load->switch_state = LOAD_STATE_DISABLED;
             }
-        }
-        break;
-    case LOAD_STATE_OFF_OVERCURRENT:
-        if (time(NULL) > load->overcurrent_timestamp + LOAD_OVERCURRENT_RECOVERY_TIMEOUT) {         // wait some time
-            load->switch_state = LOAD_STATE_DISABLED;   // switch to normal mode again
-        }
-        break;
-    case LOAD_STATE_OFF_OVERVOLTAGE:
-        if (load->bus->voltage < LOW_SIDE_VOLTAGE_MAX) {     // TODO: add hysteresis?
-            load->switch_state = LOAD_STATE_DISABLED;   // switch to normal mode again
-        }
-        break;
-    case LOAD_STATE_OFF_SHORT_CIRCUIT:
-        // stay here until the charge controller is reset or load is switched off remotely
-        if (load->enabled_target == false) {
-            short_circuit = false;
-            load->switch_state = LOAD_STATE_DISABLED;   // switch to normal mode again
-        }
-        break;
+            else if (source_enabled == false) {
+                lvd_timestamp = time(NULL);
+                load_switch_set(false);
+                load->switch_state = LOAD_STATE_OFF_LOW_SOC;
+            }
+            break;
+        case LOAD_STATE_OFF_LOW_SOC:
+            // wait at least one hour
+            if (source_enabled == true && time(NULL) - lvd_timestamp > 60*60) {
+                if (load->enabled_target == true) {
+                    load_switch_set(true);
+                    load->switch_state = LOAD_STATE_ON;
+                }
+                else {
+                    load->switch_state = LOAD_STATE_DISABLED;
+                }
+            }
+            break;
+        case LOAD_STATE_OFF_OVERCURRENT:
+            // wait some time
+            if (time(NULL) > load->overcurrent_timestamp + LOAD_OVERCURRENT_RECOVERY_TIMEOUT) {
+                load->switch_state = LOAD_STATE_DISABLED;   // switch to normal mode again
+            }
+            break;
+        case LOAD_STATE_OFF_OVERVOLTAGE:
+            if (load->bus->voltage < LOW_SIDE_VOLTAGE_MAX) {     // TODO: add hysteresis?
+                load->switch_state = LOAD_STATE_DISABLED;   // switch to normal mode again
+            }
+            break;
+        case LOAD_STATE_OFF_SHORT_CIRCUIT:
+            // stay here until the charge controller is reset or load is switched off remotely
+            if (load->enabled_target == false) {
+                short_circuit = false;
+                load->switch_state = LOAD_STATE_DISABLED;   // switch to normal mode again
+            }
+            break;
     }
 
     usb_state_machine(load);
 }
 
-extern log_data_t log_data;
+extern LogData log_data;
 extern float mcu_temp;
 
 // this function is called more often than the state machine
-void load_control(load_output_t *load, float load_max_voltage)
+void load_control(LoadOutput *load, float load_max_voltage)
 {
     if (short_circuit) {
         load->switch_state = LOAD_STATE_OFF_SHORT_CIRCUIT;
@@ -308,7 +310,8 @@ void load_control(load_output_t *load, float load_max_voltage)
     // junction temperature calculation model for overcurrent detection
     load->junction_temperature = load->junction_temperature + (
             mcu_temp - load->junction_temperature +
-            load->bus->current * load->bus->current / (LOAD_CURRENT_MAX * LOAD_CURRENT_MAX) * (MOSFET_MAX_JUNCTION_TEMP - 25)
+            load->bus->current * load->bus->current /
+            (LOAD_CURRENT_MAX * LOAD_CURRENT_MAX) * (MOSFET_MAX_JUNCTION_TEMP - 25)
         ) / (MOSFET_THERMAL_TIME_CONSTANT * CONTROL_FREQUENCY);
 
     if (load->junction_temperature > MOSFET_MAX_JUNCTION_TEMP) {

@@ -31,7 +31,7 @@
  *
  * Used for USB or normal load outputs connecting to battery via switch.
  */
-enum load_state_t {
+enum LoadState {
     LOAD_STATE_DISABLED = 0,        ///< Actively disabled
     LOAD_STATE_ON,                  ///< Normal state: On
     LOAD_STATE_OFF_LOW_SOC,         ///< Off to protect battery (overrules target setting)
@@ -48,7 +48,7 @@ typedef struct {
     uint16_t switch_state;      ///< Current state of load output switch
     uint16_t usb_state;         ///< Current state of USB output
 
-    dc_bus_t *bus;              ///< Pointer to DC bus containting actual voltage and current measurement
+    DcBus *bus;              ///< Pointer to DC bus containting actual voltage and current measurement
 
     float current_max;          ///< maximum allowed current
     int overcurrent_timestamp;  ///< time at which an overcurrent event occured
@@ -57,11 +57,11 @@ typedef struct {
 
     bool enabled_target;        ///< target setting defined via communication port (overruled if battery is empty)
     bool usb_enabled_target;    ///< same for USB output
-} load_output_t;
+} LoadOutput;
 
-/** Initialize load_output_t struct and overcurrent / short circuit protection comparator (if existing)
+/** Initialize LoadOutput struct and overcurrent / short circuit protection comparator (if existing)
  */
-void load_init(load_output_t *load, dc_bus_t *bus);
+void load_init(LoadOutput *load, DcBus *bus);
 
 /** Enable/disable load switch
  */
@@ -73,12 +73,12 @@ void load_usb_set(bool enabled);
 
 /** State machine, called every second.
  */
-void load_state_machine(load_output_t *load, bool source_enabled);
+void load_state_machine(LoadOutput *load, bool source_enabled);
 
 /** Main load control function, should be called by control timer
  *
  * Performs time-critical checks like overcurrent and overvoltage
  */
-void load_control(load_output_t *load, float load_max_voltage);
+void load_control(LoadOutput *load, float load_max_voltage);
 
 #endif /* LOAD_H */

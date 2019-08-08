@@ -27,7 +27,8 @@
 #include "log.h"
 #include "pwm_switch.h"
 
-// factory calibration values for internal voltage reference and temperature sensor (see MCU datasheet, not RM)
+// factory calibration values for internal voltage reference and temperature sensor
+// (see MCU datasheet, not RM)
 #if defined(STM32F0)
     const uint16_t VREFINT_CAL = *((uint16_t *)0x1FFFF7BA); // VREFINT @3.3V/30°C
     #define VREFINT_VALUE 3300 // mV
@@ -67,12 +68,13 @@ volatile uint16_t adc_readings[NUM_ADC_CH] = {0};
 volatile uint32_t adc_filtered[NUM_ADC_CH] = {0};
 //volatile int num_adc_conversions;
 
-extern log_data_t log_data;
+extern LogData log_data;
 extern float mcu_temp;
 
 void calibrate_current_sensors()
 {
-    int vcc = VREFINT_VALUE * VREFINT_CAL / (adc_filtered[ADC_POS_VREF_MCU] >> (4 + ADC_FILTER_CONST));
+    int vcc = VREFINT_VALUE * VREFINT_CAL /
+        (adc_filtered[ADC_POS_VREF_MCU] >> (4 + ADC_FILTER_CONST));
 #ifdef CHARGER_TYPE_PWM
     solar_current_offset = -(float)(((adc_filtered[ADC_POS_I_SOLAR] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) * ADC_GAIN_I_SOLAR / 1000.0;
 #else
@@ -82,7 +84,7 @@ void calibrate_current_sensors()
 }
 
 //----------------------------------------------------------------------------
-void update_measurements(dcdc_t *dcdc, charger_t *charger, dc_bus_t *hs, dc_bus_t *ls, dc_bus_t *load_bus)
+void update_measurements(Dcdc *dcdc, Charger *charger, DcBus *hs, DcBus *ls, DcBus *load_bus)
 {
     //int v_temp, rts;
 
@@ -90,7 +92,8 @@ void update_measurements(dcdc_t *dcdc, charger_t *charger, dc_bus_t *hs, dc_bus_
     //int vcc = 2500 * 4096 / (adc_filtered[ADC_POS_V_REF] >> (4 + ADC_FILTER_CONST));
 
     // internal STM reference voltage
-    int vcc = VREFINT_VALUE * VREFINT_CAL / (adc_filtered[ADC_POS_VREF_MCU] >> (4 + ADC_FILTER_CONST));
+    int vcc = VREFINT_VALUE * VREFINT_CAL / 
+        (adc_filtered[ADC_POS_VREF_MCU] >> (4 + ADC_FILTER_CONST));
 
     // rely on LDO accuracy
     //int vcc = 3300;
@@ -166,7 +169,7 @@ void update_measurements(dcdc_t *dcdc, charger_t *charger, dc_bus_t *hs, dc_bus_
     //printf("TS_CAL1:%d TS_CAL2:%d ADC:%d, temp_int:%f\n", TS_CAL1, TS_CAL2, adcval, meas->temp_int);
 }
 
-void detect_battery_temperature(charger_t *charger, float bat_temp)
+void detect_battery_temperature(Charger *charger, float bat_temp)
 {
 #ifdef PIN_TEMP_INT_PD
 

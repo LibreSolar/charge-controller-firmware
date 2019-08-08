@@ -17,18 +17,18 @@
 
 #include "tests.h"
 
-dcdc_t dcdc = {};
-dc_bus_t hs_bus = {};       // high-side (solar for typical MPPT)
-dc_bus_t ls_bus = {};       // low-side (battery for typical MPPT)
-dc_bus_t *bat_port = NULL;
-dc_bus_t load_bus = {};         // load terminal
-pwm_switch_t pwm_switch = {};   // only necessary for PWM charger
-battery_conf_t bat_conf;        // actual (used) battery configuration
-battery_conf_t bat_conf_user;   // temporary storage where the user can write to
-charger_t charger;              // battery state information
-load_output_t load;
-log_data_t log_data;
-extern ThingSet ts;             // defined in data_objects.cpp
+Dcdc dcdc = {};
+DcBus hv_bus = {};          // high voltage side (solar for typical MPPT)
+DcBus lv_bus = {};          // low voltage side (battery for typical MPPT)
+DcBus *bat_bus = NULL;
+DcBus load_bus = {};        // load terminal
+PwmSwitch pwm_switch = {};  // only necessary for PWM charger
+BatConf bat_conf;           // actual (used) battery configuration
+BatConf bat_conf_user;      // temporary storage where the user can write to
+Charger charger;            // battery state information
+LoadOutput load;
+LogData log_data;
+extern ThingSet ts;         // defined in data_objects.cpp
 
 time_t timestamp;    // current unix timestamp (independent of time(NULL), as it is user-configurable)
 
