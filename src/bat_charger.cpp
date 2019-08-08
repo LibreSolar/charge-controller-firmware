@@ -232,10 +232,10 @@ void charger_detect_num_batteries(Charger *charger, BatConf *bat, DcBus *bus)
     if (bus->voltage > bat->voltage_absolute_min * 2 &&
         bus->voltage < bat->voltage_absolute_max * 2) {
         charger->num_batteries = 2;
-        printf("Detected 24V battery\n");
+        printf("Detected two batteries (total %.2f V max)\n", bat->voltage_topping * 2);
     }
     else {
-        printf("Detected 12V battery\n");
+        printf("Detected single battery (%.2f V max)\n", bat->voltage_topping);
     }
 }
 
