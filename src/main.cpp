@@ -117,7 +117,7 @@ int main()
 #else // MPPT
     dcdc_init(&dcdc);
     half_bridge_init(PWM_FREQUENCY, PWM_DEADTIME, 12 / dcdc.hs_voltage_max, 0.97);       // lower duty limit might have to be adjusted dynamically depending on LS voltage
- #endif
+#endif
 
     // Configuration from EEPROM
     data_objects_read_eeprom();
@@ -145,6 +145,10 @@ int main()
     uext_init();
     init_watchdog(10);      // 10s should be enough for communication ports
 
+#ifdef CHARGER_TYPE_PWM
+    dc_bus_init_solar(&hv_bus, PWM_CURRENT_MAX);
+    bat_bus = &lv_bus;
+#else
     // Setup of DC/DC power stage
     switch(dcdc.mode) {
         case MODE_NANOGRID:
@@ -152,14 +156,15 @@ int main()
             bat_bus = &lv_bus;
             break;
         case MODE_MPPT_BUCK:     // typical MPPT charge controller operation
-            dc_bus_init_solar(&hv_bus);
+            dc_bus_init_solar(&hv_bus, DCDC_CURRENT_MAX);
             bat_bus = &lv_bus;
             break;
         case MODE_MPPT_BOOST:    // for charging of e-bike battery via solar panel
-            dc_bus_init_solar(&lv_bus);
+            dc_bus_init_solar(&lv_bus, DCDC_CURRENT_MAX);
             bat_bus = &hv_bus;
             break;
     }
+#endif
     charger_detect_num_batteries(&charger, &bat_conf, bat_bus);     // check if we have 24V instead of 12V system
     battery_init_dc_bus(bat_bus, &bat_conf, charger.num_batteries);
 

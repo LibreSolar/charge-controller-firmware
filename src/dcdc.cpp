@@ -19,6 +19,8 @@
 #include "pcb.h"
 #include "log.h"
 
+#ifndef CHARGER_TYPE_PWM
+
 #include "half_bridge.h"
 
 #include <time.h>       // for time(NULL) function
@@ -181,7 +183,7 @@ void dcdc_control(Dcdc *dcdc, DcBus *hs, DcBus *ls)
     }
 }
 
-void Dcdcest(Dcdc *dcdc, DcBus *hs, DcBus *ls)
+void dcdc_test(Dcdc *dcdc, DcBus *hs, DcBus *ls)
 {
     if (half_bridge_enabled()) {
         if (half_bridge_get_duty_cycle() > 0.5) {
@@ -225,3 +227,5 @@ void dcdc_self_destruction()
     //half_bridge_start(0);
     // now the fuse should be triggered and we disappear
 }
+
+#endif /* CHARGER_TYPE_PWM */

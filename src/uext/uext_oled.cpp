@@ -105,7 +105,11 @@ void uext_process_1s()
     oled.drawRect(66, 4, 2, 5, 1);      // bar 5
 
     // solar panel data
-    if (half_bridge_enabled() || pwm_switch_enabled()) {
+#ifdef CHARGER_TYPE_PWM
+    if (pwm_switch_enabled()) {
+#else
+    if (half_bridge_enabled()) {
+#endif
         tmp = - hv_bus.voltage * hv_bus.current;
         oled.setTextCursor(0, 18);
         oled.printf("%4.0fW", (abs(tmp) < 1) ? 0 : tmp);     // remove negative zeros

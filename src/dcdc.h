@@ -107,7 +107,7 @@ void dcdc_control(Dcdc *dcdc, DcBus *high_side, DcBus *low_side);
  * @param high_side High-side power port (e.g. solar input for typical MPPT charge controller application)
  * @param low_side  Low-side power port (e.g. battery output for typical MPPT charge controller application)
  */
-void Dcdcest(Dcdc *dcdc, DcBus *high_side, DcBus *low_side);
+void dcdc_test(Dcdc *dcdc, DcBus *high_side, DcBus *low_side);
 
 /** Prevent overcharging of battery in case of shorted HS MOSFET
  *

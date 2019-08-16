@@ -56,8 +56,11 @@ typedef struct {
 } DcBus;
 
 /** Initialize dc bus for solar panel connection
+ *
+ * @param bus The DC bus struct to initialize
+ * @param max_abs_current Maximum input current allowed by PCB (as a positive value)
  */
-void dc_bus_init_solar(DcBus *bus);
+void dc_bus_init_solar(DcBus *bus, float max_abs_current);
 
 /** Initialize dc bus for nanogrid connection
  */

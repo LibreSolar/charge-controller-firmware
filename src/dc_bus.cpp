@@ -16,12 +16,12 @@
 
 #include "dc_bus.h"
 
-void dc_bus_init_solar(DcBus *bus)
+void dc_bus_init_solar(DcBus *bus, float max_abs_current)
 {
     bus->dis_allowed = true;         // PV panel may provide power to solar input of DC/DC
     bus->dis_voltage_start = 16.0;
     bus->dis_voltage_stop = 14.0;
-    bus->dis_current_max = -18.0;
+    bus->dis_current_max = -max_abs_current;
 
     bus->chg_allowed = false;
 }

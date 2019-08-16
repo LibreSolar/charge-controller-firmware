@@ -25,9 +25,10 @@
 #define CHARGER_TYPE_PWM 1  // PWM charge controller instead of MPPT
 
 #define PWM_TIM        3    // use TIM3 timer
+#define PWM_FREQUENCY  25   // Hz
 
-#define DCDC_CURRENT_MAX 20  // PCB maximum DCDC output current
-#define LOAD_CURRENT_MAX 20  // PCB maximum load switch current
+#define PWM_CURRENT_MAX     20  // PCB maximum PWM switch (solar) current
+#define LOAD_CURRENT_MAX    20  // PCB maximum load switch current
 
 #define LOW_SIDE_VOLTAGE_MAX    30  // Maximum voltage at battery port (V)
 #define HIGH_SIDE_VOLTAGE_MAX   55  // Maximum voltage at PV input port (V)

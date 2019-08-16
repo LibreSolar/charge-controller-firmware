@@ -27,36 +27,31 @@
 
 /** PWM charger type
  *
- * Contains all data belonging to the PWM switching sub-component of the PCB, incl.
- * actual measurements and calibration parameters.
+ * Contains all data belonging to the PWM switching sub-component.
  */
 typedef struct {
     bool enabled;                   ///< Can be used to disable the PWM power stage
-
-    // actual measurements
-    float solar_current;
-    float temp_mosfets;
-    float solar_power;
-
-    float solar_current_max;        // MOSFET maximum (continuous)
-    float solar_current_min;        // --> if lower, charger is switched off
-
-    int pwm_delta;                  // direction of PWM change
-    int off_timestamp;              // time when charger was switched off last time
-
-    // calibration parameters
-    float offset_voltage_start;     // V  charging switched on if Vsolar > Vbat + offset
-    float offset_voltage_stop;      // V  charging switched off if Vsolar < Vbat + offset
-    int restart_interval;           // s  When should we retry to start charging after low solar power cut-off?
+    float offset_voltage_start;     ///< Offset voltage of solar panel vs. battery to start charging (V)
+    int restart_interval;           ///< Interval to wait before retrying charging after low solar power cut-off (s)
+    int off_timestamp;              ///< Time when charger was switched off last time
 } PwmSwitch;
 
-
+/** Initialization of PWM switch struct
+ */
 void pwm_switch_init(PwmSwitch *pwm_switch);
 
-void pwm_switch_control(PwmSwitch *pwm_switch, DcBus *solar_port, DcBus *bat_port);
+/** Main control function for the PWM switching algorithm
+ *
+ * @param pwm_switch PWM switch struct
+ * @param solar_bus Solar connector DC bus struct
+ * @param bat_bus Battery connector DC bus struct
+ */
+void pwm_switch_control(PwmSwitch *pwm_switch, DcBus *solar_bus, DcBus *bat_bus);
 
-void pwm_switch_duty_cycle_step(int delta);
-
+/** Read the on/off status of the PWM switch
+ *
+ * @returns true if enabled
+ */
 bool pwm_switch_enabled();
 
 /** Read the currently set duty cycle
