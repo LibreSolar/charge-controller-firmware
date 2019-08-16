@@ -334,7 +334,9 @@ void load_control(LoadOutput *load, float load_max_voltage)
             log_data.error_flags |= (1 << ERR_BAT_OVERVOLTAGE);
         }
     }
-    debounce_counter = 0;
+    else {
+        debounce_counter = 0;
+    }
 }
 
 #endif /* UNIT_TEST */
