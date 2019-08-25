@@ -65,6 +65,7 @@ typedef struct {
 
     // actual measurements
     float ls_current;           ///< Low-side (inductor) current
+    float ls_voltage;           ///< Low-side (inductor) voltage
     float temp_mosfets;         ///< MOSFET temperature measurement (if existing)
 
     // current state
