@@ -164,7 +164,13 @@ int main()
     control_timer_start(CONTROL_FREQUENCY);
     wait(0.1);  // necessary to prevent MCU from randomly getting stuck here if PV panel is connected before battery
 
-    // sleep_manager_lock_deep_sleep();
+
+    sleep_manager_lock_deep_sleep(); // required to have sleep returning. 
+    /*  
+        The mBed Serial class calls this internal during "attach", this is why it work with ThingSet Serial enabled even
+        without this statement. Might be an issue of the particular STM32F072 mBed code or may affect
+        also STM32L073 platforms on mBed
+    */
 
     // the main loop is suitable for slow tasks like communication (even blocking wait allowed)
     time_t last_call = timestamp;
