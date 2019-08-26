@@ -49,7 +49,7 @@ void dcdc_init(Dcdc *dcdc)
 // returns if output power should be increased (1), decreased (-1) or switched off (0)
 int _dcdc_output_control(Dcdc *dcdc, DcBus *out, DcBus *in)
 {
-    float dcdc_power_new = out->voltage * out->current;
+    float dcdc_power_new = fabs(dcdc->ls_voltage * dcdc->ls_current); // voltage always positive, current is negative in boost mode
     static int pwm_delta = 1;
 
     //printf("P: %.2f, P_prev: %.2f, v_in: %.2f, v_out: %.2f, i_in: %.2f, i_out: %.2f, i_max: %.2f, PWM: %.1f, chg_en: %d\n",

@@ -104,6 +104,7 @@ void update_measurements(Dcdc *dcdc, Charger *charger, DcBus *hs, DcBus *ls, DcB
         ADC_GAIN_V_BAT / 1000.0;
 
     load_bus->voltage = ls->voltage;
+    dcdc->ls_voltage = ls->voltage;
 
     hs->voltage =
         (float)(((adc_filtered[ADC_POS_V_SOLAR] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
