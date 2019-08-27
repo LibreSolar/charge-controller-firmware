@@ -58,7 +58,7 @@ void ThingSetStream::process_asap()
  */
 void ThingSetStream::process_input()
 {
-    while (stream->readable() && command_flag == false) {
+    while (readable() && command_flag == false) {
 
         int c = stream->getc();
 
