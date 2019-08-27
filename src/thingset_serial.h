@@ -38,6 +38,11 @@ class ThingSetStream: public ThingSetDevice
         virtual void process_input(); // this is called from the ISR typically
         const unsigned int channel;
 
+        virtual bool readable()
+        {
+            return stream->readable();
+        }
+
     private:
         Stream* stream;
 
@@ -50,15 +55,20 @@ class ThingSetStream: public ThingSetDevice
 template<typename T> class ThingSetSerial: public ThingSetStream
 {
     public:
-        ThingSetSerial(T& s, const unsigned int c): ThingSetStream(s,c), ser(&s) {}
+        ThingSetSerial(T& s, const unsigned int c): ThingSetStream(s,c), ser(s) {}
 
-        virtual void enable() { {
+        void enable() {
             Callback<void()>  cb([this]() -> void { this->process_input();});
-            ser->attach(cb);
+            ser.attach(cb);
         }
-}
         
     private:
-        T* ser;
+        bool readable()
+        {
+            return ser.readable();
+        }
+        
+    private:
+        T& ser;
 };
 #endif /* THINGSET_SERIAL_H */
