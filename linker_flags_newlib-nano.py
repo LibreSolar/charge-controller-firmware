@@ -13,5 +13,6 @@ env.Append(
                 "-Wl,-u,_printf_float",
                 "--specs=nano.specs",
                 "--specs=nosys.specs"
-            ]
-           )
+            ])
+
+env.Append( CXXFLAGS=[ "-Wno-register" ] )
