@@ -14,39 +14,43 @@
  * limitations under the License.
  */
 
-#ifndef PWM_2420_LUS_0V1_H
-#define PWM_2420_LUS_0V1_H
+#ifndef MPPT_1210_HUS_0V7_H
+#define MPPT_1210_HUS_0V7_H
 
-#define DEVICE_TYPE "PWM-2420-LUS"
-#define HARDWARE_VERSION "v0.1"
+#define DEVICE_TYPE "MPPT-1210-HUS"
+#define HARDWARE_VERSION "v0.7.1"
 
 #include "mbed.h"
 
-#define CHARGER_TYPE_PWM 1  // PWM charge controller instead of MPPT
+// DC/DC converter settings
+#define PWM_FREQUENCY 50 // kHz  50 = better for cloud solar to increase efficiency
+#define PWM_DEADTIME 230 // ns
+#define PWM_TIM        3 // use TIM3 timer
 
-#define PWM_TIM        3    // use TIM3 timer
+#define DCDC_CURRENT_MAX 10  // PCB maximum DCDC output current
+#define LOAD_CURRENT_MAX 10  // PCB maximum load switch current
 
-#define DCDC_CURRENT_MAX 20  // PCB maximum DCDC output current
-#define LOAD_CURRENT_MAX 20  // PCB maximum load switch current
-
-#define LOW_SIDE_VOLTAGE_MAX    30  // Maximum voltage at battery port (V)
+#define LOW_SIDE_VOLTAGE_MAX    16  // Maximum voltage at battery port (V)
 #define HIGH_SIDE_VOLTAGE_MAX   55  // Maximum voltage at PV input port (V)
 
 #define PIN_UEXT_TX   PA_2
 #define PIN_UEXT_RX   PA_3
 #define PIN_UEXT_SCL  PB_6
 #define PIN_UEXT_SDA  PB_7
-#define PIN_UEXT_MISO PA_11
-#define PIN_UEXT_MOSI PA_12
+#define PIN_UEXT_MISO PB_4
+#define PIN_UEXT_MOSI PB_5
 #define PIN_UEXT_SCK  PB_3
 #define PIN_UEXT_SSEL PA_15
 
 #define PIN_SWD_TX    PA_9
 #define PIN_SWD_RX    PA_10
 
-#define PIN_LOAD_DIS    PB_2
-#define PIN_USB_PWR_DIS PB_5
-#define PIN_I_LOAD_COMP PB_4
+#define PIN_LOAD_EN     PC_13
+#define PIN_USB_PWR_EN  PB_10
+#define PIN_V_SOLAR_EN  PC_14
+#define PIN_5V_PGOOD    PC_15
+
+#define PIN_EXT_BTN     PB_12
 
 #define PIN_REF_I_DCDC  PA_4
 
@@ -57,24 +61,24 @@ enum pin_state_t { PIN_HIGH, PIN_LOW, PIN_FLOAT };
 // assignment LED numbers on PCB to their meaning
 #define NUM_LEDS 5
 
-#define LED_RXTX  0     // LED1, used to indicate when sending data
-#define LED_SOC_1 1     // LED2
-#define LED_SOC_2 2     // LED3
-#define LED_SOC_3 3     // LED4
-#define LED_LOAD  4     // LED5
+#define LED_SOC_1 0     // LED1
+#define LED_SOC_2 1     // LED2
+#define LED_SOC_3 2     // LED3
+#define LED_LOAD  3     // LED4
+#define LED_RXTX  4     // LED5, used to indicate when sending data
 
 // LED pins and pin state configuration to switch above LEDs on
 #define NUM_LED_PINS 3
 static const PinName led_pins[NUM_LED_PINS] = {
     //  A         B         C
-       PB_13,    PB_15,    PB_14
+       PB_13,    PB_2,    PB_14
 };
 static const pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
-    { PIN_FLOAT, PIN_HIGH,  PIN_LOW   }, // LED1
-    { PIN_FLOAT, PIN_LOW,   PIN_HIGH  }, // LED2
-    { PIN_HIGH,  PIN_LOW,   PIN_FLOAT }, // LED3
-    { PIN_LOW,   PIN_HIGH,  PIN_FLOAT }, // LED4
-    { PIN_HIGH,  PIN_FLOAT, PIN_LOW   }  // LED5
+    { PIN_HIGH,  PIN_LOW,   PIN_FLOAT }, // LED1
+    { PIN_LOW,   PIN_HIGH,  PIN_FLOAT }, // LED2
+    { PIN_HIGH,  PIN_FLOAT, PIN_LOW   }, // LED3
+    { PIN_FLOAT, PIN_HIGH,  PIN_LOW   }, // LED4
+    { PIN_FLOAT, PIN_LOW,   PIN_HIGH  }  // LED5
 };
 
 // pin definition only needed in adc_dma.cpp to detect if they are present on the PCB
@@ -82,22 +86,19 @@ static const pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
 
 // typical value for Semitec 103AT-5 thermistor: 3435
 #define NTC_BETA_VALUE 3435
-#define NTC_SERIES_RESISTOR 10400.0
+#define NTC_SERIES_RESISTOR 10000.0
 
-#define ADC_GAIN_V_BAT (132 / 12)
-#define ADC_GAIN_V_SOLAR (1 + 120/12 + 120/8.2)
-#define ADC_GAIN_I_LOAD (1000 / 2 / (68.0/2.2)) // amp gain: 150/2.2, resistor: 2 mOhm
-#define ADC_GAIN_I_SOLAR (1000 / 2 / (68.0/2.2))
-
-#define ADC_OFFSET_V_SOLAR (-120.0 / 8.2)        // to be multiplied with VDDA to get absolute voltage offset
-
+#define ADC_GAIN_V_BAT (105.6 / 5.6)    // both voltage dividers: 100k + 5.6k
+#define ADC_GAIN_V_SOLAR (105.6 / 5.6)
+#define ADC_GAIN_I_LOAD (1000.0 / 3.0 / 50.0) // amp gain: 50, resistor: 3 mOhm
+#define ADC_GAIN_I_DCDC (1000.0 / 3.0 / 50.0)
 
 // position in the array written by the DMA controller
 enum {
     ADC_POS_V_BAT,      // ADC 0 (PA_0)
     ADC_POS_V_SOLAR,    // ADC 1 (PA_1)
     ADC_POS_I_LOAD,     // ADC 5 (PA_5)
-    ADC_POS_I_SOLAR,    // ADC 6 (PA_6)
+    ADC_POS_I_DCDC,     // ADC 6 (PA_6)
     ADC_POS_TEMP_BAT,   // ADC 7 (PA_7)
     ADC_POS_VREF_MCU,   // ADC 17
     ADC_POS_TEMP_MCU,   // ADC 18
