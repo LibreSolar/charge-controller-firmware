@@ -15,5 +15,5 @@ f.write("/* Auto-generated file with git commit hash to be included by C code\n"
 f.write(" * Do not change this file manually!\n")
 f.write(" */\n")
 f.write("\n")
-f.write('#define COMMIT_HASH "' + commit_hash + '"\n')
+f.write('#define COMMIT_HASH "' + commit_hash.decode('utf-8') + '"\n')
 f.close
