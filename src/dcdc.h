@@ -64,8 +64,8 @@ typedef struct {
     uint16_t state;             ///< Control state (off / MPPT / CC / CV)
 
     // actual measurements
-    float ls_current;           ///< Low-side (inductor) current
-    float ls_voltage;           ///< Low-side (inductor) voltage
+    DcBus *hv_bus;              ///< Pointer to DC bus at high voltage side
+    DcBus *lv_bus;              ///< Pointer to DC bus at low voltage (inductor) side
     float temp_mosfets;         ///< MOSFET temperature measurement (if existing)
 
     // current state
@@ -91,36 +91,32 @@ typedef struct {
  *
  * See http://libre.solar/docs/dcdc_control for detailed information
  *
- * @param dcdc DC/DC type description
+ * @param dcdc DC/DC object
+ * @param hv High voltage terminal (e.g. solar input for MPPT buck)
+ * @param lv Low voltage terminal (e.g. battery output for MPPT buck)
  */
-void dcdc_init(Dcdc *dcdc);
+void dcdc_init(Dcdc *dcdc, DcBus *hv, DcBus *lv);
 
 /** Check for valid start conditions of the DC/DC converter
  *
- * @param dcdc DC/DC type description
- * @param hv High voltage terminal (e.g. solar input for MPPT buck)
- * @param lv Low voltage terminal (e.g. battery output for MPPT buck)
+ * @param dcdc DC/DC object incl. measurement data
  * @returns 1 for buck mode, -1 for boost mode and 0 for invalid conditions
  */
-int dcdc_check_start_conditions(Dcdc *dcdc, DcBus *hv, DcBus *lv);
+int dcdc_check_start_conditions(Dcdc *dcdc);
 
 /** Main control function for the DC/DC converter
  *
  * If DC/DC is off, this function checks start conditions and starts conversion if possible.
  *
- * @param dcdc DC/DC type description
- * @param hv High voltage side terminal (e.g. solar input for typical MPPT charge controller application)
- * @param lv Low voltage side terminal (e.g. battery output for typical MPPT charge controller application)
+ * @param dcdc DC/DC object incl. measurement data
  */
-void dcdc_control(Dcdc *dcdc, DcBus *hv, DcBus *lv);
+void dcdc_control(Dcdc *dcdc);
 
 /** Test mode for DC/DC, ramping up to 50% duty cycle
  *
- * @param dcdc DC/DC type description
- * @param hv High voltage side terminal (e.g. solar input for typical MPPT charge controller application)
- * @param lv Low voltage side terminal (e.g. battery output for typical MPPT charge controller application)
+ * @param dcdc DC/DC object incl. measurement data
  */
-void dcdc_test(Dcdc *dcdc, DcBus *hv, DcBus *lv);
+void dcdc_test(Dcdc *dcdc);
 
 /** Prevent overcharging of battery in case of shorted HS MOSFET
  *

@@ -12,10 +12,10 @@
 #include <math.h>
 
 extern Dcdc dcdc;
-extern DcBus hv_bus;
-extern DcBus lv_bus;
-extern DcBus *bat_port;
-extern DcBus load_bus;
+extern DcBus hv_terminal;
+extern DcBus lv_terminal;
+extern DcBus lv_bus_int;
+extern DcBus load_terminal;
 extern Charger charger;
 extern BatConf bat_conf;
 extern LoadOutput load;
@@ -25,7 +25,7 @@ static void init_structs()
 {
     battery_conf_init(&bat_conf, BAT_TYPE_FLOODED, 6, 100);
     charger_init(&charger);
-    battery_init_dc_bus(&lv_bus, &bat_conf, 1);
+    battery_init_dc_bus(&lv_terminal, &bat_conf, 1);
     charger.state = CHG_STATE_IDLE;
 }
 
@@ -42,10 +42,10 @@ void energy_calculation_init()
     log_data.load_out_total_Wh = 0;
     log_data.bat_chg_total_Wh = 0;
     log_data.bat_dis_total_Wh = 0;
-    hv_bus.dis_energy_Wh = 0.0;
-    load_bus.chg_energy_Wh = 0.0;
-    lv_bus.chg_energy_Wh = 0.0;
-    lv_bus.dis_energy_Wh = 0.0;
+    hv_terminal.dis_energy_Wh = 0.0;
+    load_terminal.chg_energy_Wh = 0.0;
+    lv_terminal.chg_energy_Wh = 0.0;
+    lv_terminal.dis_energy_Wh = 0.0;
 
     // set desired measurement values
     adcval.bat_temperature = 25;
@@ -58,23 +58,23 @@ void energy_calculation_init()
 
     // insert values into ADC functions
     prepare_adc_readings(adcval);
-    update_measurements(&dcdc, &charger, &hv_bus, &lv_bus, &load_bus);
+    update_measurements();
 
     for (int i = 0; i < 60*60*sun_hours; i++) {
-        dc_bus_energy_balance(&hv_bus);
-        dc_bus_energy_balance(&lv_bus);
-        dc_bus_energy_balance(&load_bus);
+        dc_bus_energy_balance(&hv_terminal);
+        dc_bus_energy_balance(&lv_terminal);
+        dc_bus_energy_balance(&load_terminal);
     }
 
     // disable DC/DC = solar charging
     adcval.dcdc_current = 0;
     prepare_adc_readings(adcval);
-    update_measurements(&dcdc, &charger, &hv_bus, &lv_bus, &load_bus);
+    update_measurements();
 
     for (int i = 0; i < 60*60*night_hours; i++) {
-        dc_bus_energy_balance(&hv_bus);
-        dc_bus_energy_balance(&lv_bus);
-        dc_bus_energy_balance(&load_bus);
+        dc_bus_energy_balance(&hv_terminal);
+        dc_bus_energy_balance(&lv_terminal);
+        dc_bus_energy_balance(&load_terminal);
     }
 }
 
@@ -82,26 +82,26 @@ void charging_energy_calculation_valid()
 {
     energy_calculation_init();
     // charging only during sun hours
-    TEST_ASSERT_EQUAL_FLOAT(round(sun_hours * lv_bus.voltage * (dcdc_current_sun - load_current)), round(lv_bus.chg_energy_Wh));
+    TEST_ASSERT_EQUAL_FLOAT(round(sun_hours * lv_terminal.voltage * (dcdc_current_sun - load_current)), round(lv_terminal.chg_energy_Wh));
 }
 
 void discharging_energy_calculation_valid()
 {
     energy_calculation_init();
     // discharging (sum of current) only during dis hours
-    TEST_ASSERT_EQUAL_FLOAT(round(night_hours * lv_bus.voltage * adcval.load_current), round(lv_bus.dis_energy_Wh));
+    TEST_ASSERT_EQUAL_FLOAT(round(night_hours * lv_terminal.voltage * adcval.load_current), round(lv_terminal.dis_energy_Wh));
 }
 
 void solar_input_energy_calculation_valid()
 {
     energy_calculation_init();
-    TEST_ASSERT_EQUAL_FLOAT(round(sun_hours * lv_bus.voltage * dcdc_current_sun), round(hv_bus.dis_energy_Wh));
+    TEST_ASSERT_EQUAL_FLOAT(round(sun_hours * lv_terminal.voltage * dcdc_current_sun), round(hv_terminal.dis_energy_Wh));
 }
 
 void load_output_energy_calculation_valid()
 {
     energy_calculation_init();
-    TEST_ASSERT_EQUAL_FLOAT(round((sun_hours + night_hours) * lv_bus.voltage * adcval.load_current), round(load_bus.chg_energy_Wh));
+    TEST_ASSERT_EQUAL_FLOAT(round((sun_hours + night_hours) * lv_terminal.voltage * adcval.load_current), round(load_terminal.chg_energy_Wh));
 }
 
 void dc_bus_tests()

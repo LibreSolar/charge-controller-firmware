@@ -37,9 +37,11 @@ extern BatConf bat_conf;
 extern BatConf bat_conf_user;
 extern Dcdc dcdc;
 extern LoadOutput load;
-extern DcBus hv_bus;
-extern DcBus lv_bus;
-extern DcBus load_bus;
+extern DcBus hv_terminal;
+extern DcBus lv_terminal;
+extern DcBus load_terminal;
+//extern DcBus *bat_terminal;       // TODO: pointers cannot be used here, as they are not
+//extern DcBus *solar_terminal;     //       yet initialized...
 extern PwmSwitch pwm_switch;
 
 const char* const manufacturer = "Libre Solar";
@@ -131,10 +133,10 @@ const data_object_t data_objects[] = {
     {0x06, TS_OUTPUT, TS_READ_ALL, TS_T_UINT16,  0, (void*) &(charger.soc),                     "SOC_%"},     // output will be uint8_t
 
     // battery related data objects
-    {0x70, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(lv_bus.voltage),                  "Bat_V"},
-    {0x71, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(hv_bus.voltage),                  "Solar_V"},
-    {0x72, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(lv_bus.current),                  "Bat_A"},
-    {0x73, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(load_bus.current),                "Load_A"},
+    {0x70, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(lv_terminal.voltage),             "Bat_V"},
+    {0x71, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(hv_terminal.voltage),             "Solar_V"},
+    {0x72, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(lv_terminal.current),             "Bat_A"},
+    {0x73, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(load_terminal.current),           "Load_A"},
     {0x74, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 1, (void*) &(charger.bat_temperature),         "Bat_degC"},
     {0x75, TS_OUTPUT, TS_READ_ALL, TS_T_BOOL,    1, (void*) &(charger.ext_temp_sensor),         "BatTempExt"},
     {0x76, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 1, (void*) &(mcu_temp),                        "MCU_degC"},
@@ -143,12 +145,12 @@ const data_object_t data_objects[] = {
 #endif
     {0x78, TS_OUTPUT, TS_READ_ALL, TS_T_UINT16,  0, (void*) &(charger.state),                   "ChgState"},
     {0x79, TS_OUTPUT, TS_READ_ALL, TS_T_UINT16,  0, (void*) &(dcdc.state),                      "DCDCState"},
-    {0x7A, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(hv_bus.current),                  "Solar_A"},
-    {0x7B, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(lv_bus.chg_voltage_target),       "BatTarget_V"},
-    {0x7C, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(lv_bus.chg_current_max),          "BatTarget_A"},
-    {0x7D, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(lv_bus.power),                    "Bat_W"},
-    {0x7E, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(hv_bus.power),                    "Solar_W"},
-    {0x7F, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(load_bus.power),                  "Load_W"},
+    {0x7A, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(hv_terminal.current),             "Solar_A"},
+    {0x7B, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(lv_terminal.chg_voltage_target),  "BatTarget_V"},
+    {0x7C, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(lv_terminal.chg_current_max),     "BatTarget_A"},
+    {0x7D, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(lv_terminal.power),               "Bat_W"},
+    {0x7E, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(hv_terminal.power),               "Solar_W"},
+    {0x7F, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(load_terminal.power),             "Load_W"},
 
     // RECORDED DATA ///////////////////////////////////////////////////////
     // using IDs >= 0xA0
@@ -164,10 +166,10 @@ const data_object_t data_objects[] = {
     {0x10, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_UINT16,  2, (void*) &(log_data.load_power_max_day),           "LoadMaxDay_W"},
 
     // accumulated data
-    {0xA0, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 2, (void*) &(hv_bus.dis_energy_Wh),                  "SolarInDay_Wh"},
-    {0xA1, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 2, (void*) &(load_bus.chg_energy_Wh),                "LoadOutDay_Wh"},
-    {0xA2, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 2, (void*) &(lv_bus.chg_energy_Wh),                  "BatChgDay_Wh"},
-    {0xA3, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 2, (void*) &(lv_bus.dis_energy_Wh),                  "BatDisDay_Wh"},
+    {0xA0, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 2, (void*) &(hv_terminal.dis_energy_Wh),             "SolarInDay_Wh"},
+    {0xA1, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 2, (void*) &(load_terminal.chg_energy_Wh),           "LoadOutDay_Wh"},
+    {0xA2, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 2, (void*) &(lv_terminal.chg_energy_Wh),             "BatChgDay_Wh"},
+    {0xA3, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 2, (void*) &(lv_terminal.dis_energy_Wh),             "BatDisDay_Wh"},
     {0xA4, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 0, (void*) &(charger.discharged_Ah),                 "Dis_Ah"},    // coulomb counter
     {0xA5, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_UINT16,  0, (void*) &(charger.soh),                           "SOH_%"},     // output will be uint8_t
     {0xA6, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_INT32,   0, (void*) &(log_data.day_counter),                  "DayCount"},
