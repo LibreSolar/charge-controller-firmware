@@ -18,22 +18,27 @@
 #include "tests.h"
 
 Dcdc dcdc = {};
-DcBus hv_bus = {};          // high voltage side (solar for typical MPPT)
-DcBus lv_bus = {};          // low voltage side (battery for typical MPPT)
-DcBus *bat_bus = NULL;
-DcBus load_bus = {};        // load terminal
-PwmSwitch pwm_switch = {};  // only necessary for PWM charger
-BatConf bat_conf;           // actual (used) battery configuration
-BatConf bat_conf_user;      // temporary storage where the user can write to
-Charger charger;            // battery state information
+DcBus hv_terminal = {};         // high voltage terminal (solar for typical MPPT)
+DcBus lv_bus_int = {};          // internal low voltage side of DC/DC converter
+DcBus lv_terminal = {};         // low voltage terminal (battery for typical MPPT)
+DcBus load_terminal = {};       // load terminal
+DcBus *bat_terminal = NULL;     // pointer to terminal where battery is connected
+DcBus *solar_terminal = NULL;   // pointer to above terminal where solar panel is connected
+PwmSwitch pwm_switch = {};      // only necessary for PWM charger
+BatConf bat_conf;               // actual (used) battery configuration
+BatConf bat_conf_user;          // temporary storage where the user can write to
+Charger charger;                // charger state information
 LoadOutput load;
 LogData log_data;
-extern ThingSet ts;         // defined in data_objects.cpp
+extern ThingSet ts;             // defined in data_objects.cpp
 
 time_t timestamp;    // current unix timestamp (independent of time(NULL), as it is user-configurable)
 
 int main()
 {
+    bat_terminal = &lv_terminal;
+    solar_terminal = &hv_terminal;
+
     adc_tests();
     bat_charger_tests();
     dc_bus_tests();

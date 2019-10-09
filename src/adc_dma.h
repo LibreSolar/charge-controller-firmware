@@ -40,7 +40,7 @@ void detect_battery_temperature(Charger *bat, float bat_temp);
 
 /** Updates structures with data read from ADC
  */
-void update_measurements(Dcdc *dcdc, Charger *charger, DcBus *hs, DcBus *ls, DcBus *load_bus);
+void update_measurements();
 
 /** Initializes registers and starts ADC timer
  */

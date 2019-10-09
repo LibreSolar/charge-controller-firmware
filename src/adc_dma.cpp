@@ -27,6 +27,15 @@
 #include "log.h"
 #include "pwm_switch.h"
 
+extern Charger charger;
+extern Dcdc dcdc;
+extern LoadOutput load;
+extern DcBus hv_terminal;
+extern DcBus lv_bus_int;
+extern DcBus lv_terminal;
+extern DcBus load_terminal;
+
+
 // factory calibration values for internal voltage reference and temperature sensor
 // (see MCU datasheet, not RM)
 #if defined(STM32F0)
@@ -84,7 +93,7 @@ void calibrate_current_sensors()
 }
 
 //----------------------------------------------------------------------------
-void update_measurements(Dcdc *dcdc, Charger *charger, DcBus *hs, DcBus *ls, DcBus *load_bus)
+void update_measurements()
 {
     //int v_temp, rts;
 
@@ -92,49 +101,49 @@ void update_measurements(Dcdc *dcdc, Charger *charger, DcBus *hs, DcBus *ls, DcB
     //int vcc = 2500 * 4096 / (adc_filtered[ADC_POS_V_REF] >> (4 + ADC_FILTER_CONST));
 
     // internal STM reference voltage
-    int vcc = VREFINT_VALUE * VREFINT_CAL / 
+    int vcc = VREFINT_VALUE * VREFINT_CAL /
         (adc_filtered[ADC_POS_VREF_MCU] >> (4 + ADC_FILTER_CONST));
 
     // rely on LDO accuracy
     //int vcc = 3300;
 
     // calculate LS voltage first, as it is needed for HS voltage calculation for PWM charge controller
-    ls->voltage =
+    lv_terminal.voltage =
         (float)(((adc_filtered[ADC_POS_V_BAT] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
         ADC_GAIN_V_BAT / 1000.0;
+    lv_bus_int.voltage = lv_terminal.voltage;
+    load_terminal.voltage = lv_terminal.voltage;
 
-    load_bus->voltage = ls->voltage;
-    dcdc->ls_voltage = ls->voltage;
-
-    hs->voltage =
+    hv_terminal.voltage =
         (float)(((adc_filtered[ADC_POS_V_SOLAR] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
         ADC_GAIN_V_SOLAR / 1000.0;
 #ifdef ADC_OFFSET_V_SOLAR
-    hs->voltage = ls->voltage + -(vcc * ADC_OFFSET_V_SOLAR / 1000.0 + hs->voltage);
+    hv_terminal.voltage = lv_terminal.voltage + -(vcc * ADC_OFFSET_V_SOLAR / 1000.0 + hv_terminal.voltage);
 #endif
 
-    load_bus->current =
+    load_terminal.current =
         (float)(((adc_filtered[ADC_POS_I_LOAD] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
         ADC_GAIN_I_LOAD / 1000.0 + load_current_offset;
 
 #ifdef CHARGER_TYPE_PWM
     // current multiplied with PWM duty cycle for PWM charger to get avg current for correct power calculation
-    hs->current = - pwm_switch_get_duty_cycle() * (
+    hv_terminal.current = - pwm_switch_get_duty_cycle() * (
         (float)(((adc_filtered[ADC_POS_I_SOLAR] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
         ADC_GAIN_I_SOLAR / 1000.0 + solar_current_offset);
-    ls->current = -hs->current - load_bus->current;
+    lv_terminal.current = -hv_terminal.current - load_terminal.current;
 #else // MPPT
-    dcdc->ls_current =
+    lv_bus_int.current =
         (float)(((adc_filtered[ADC_POS_I_DCDC] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
         ADC_GAIN_I_DCDC / 1000.0 + solar_current_offset;
-    ls->current = dcdc->ls_current - load_bus->current;
-    hs->current = -dcdc->ls_current * ls->voltage / hs->voltage;
+    lv_terminal.current = lv_bus_int.current - load_terminal.current;
+    hv_terminal.current = -lv_bus_int.current * lv_bus_int.voltage / hv_terminal.voltage;
 #endif
 
     // power calculations
-    hs->power = hs->voltage * hs->current;
-    ls->power = ls->voltage * ls->current;
-    load_bus->power = load_bus->voltage * load_bus->current;
+    hv_terminal.power = hv_terminal.voltage * hv_terminal.current;
+    lv_bus_int.power = lv_bus_int.voltage * lv_bus_int.current;
+    lv_terminal.power = lv_terminal.voltage * lv_terminal.current;
+    load_terminal.power = load_terminal.voltage * load_terminal.current;
 
     /** \todo Improved (faster) temperature calculation:
        https://www.embeddedrelated.com/showarticle/91.php
@@ -155,7 +164,7 @@ void update_measurements(Dcdc *dcdc, Charger *charger, DcBus *hs, DcBus *ls, DcB
     bat_temp = 1.0/(1.0/(273.15+25) + 1.0/NTC_BETA_VALUE*log(rts/10000.0)) - 273.15; // °C
 #endif
 
-    detect_battery_temperature(charger, bat_temp);
+    detect_battery_temperature(&charger, bat_temp);
 
 #ifdef PIN_ADC_TEMP_FETS
     // MOSFET temperature calculation

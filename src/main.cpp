@@ -45,17 +45,19 @@
 Serial serial(PIN_SWD_TX, PIN_SWD_RX, "serial", 115200);
 
 Dcdc dcdc = {};
-DcBus hv_bus = {};          // high voltage side (solar for typical MPPT)
-DcBus lv_bus = {};          // low voltage side (battery for typical MPPT)
-DcBus *bat_bus = NULL;
-DcBus load_bus = {};        // load terminal
-PwmSwitch pwm_switch = {};  // only necessary for PWM charger
-BatConf bat_conf;           // actual (used) battery configuration
-BatConf bat_conf_user;      // temporary storage where the user can write to
-Charger charger;            // battery state information
+DcBus hv_terminal = {};         // high voltage terminal (solar for typical MPPT)
+DcBus lv_bus_int = {};          // internal low voltage side of DC/DC converter
+DcBus lv_terminal = {};         // low voltage terminal (battery for typical MPPT)
+DcBus load_terminal = {};       // load terminal
+DcBus *bat_terminal = NULL;     // pointer to terminal where battery is connected
+DcBus *solar_terminal = NULL;   // pointer to above terminal where solar panel is connected
+PwmSwitch pwm_switch = {};      // only necessary for PWM charger
+BatConf bat_conf;               // actual (used) battery configuration
+BatConf bat_conf_user;          // temporary storage where the user can write to
+Charger charger;                // charger state information
 LoadOutput load;
 LogData log_data;
-extern ThingSet ts;         // defined in data_objects.cpp
+extern ThingSet ts;             // defined in data_objects.cpp
 
 time_t timestamp;    // current unix timestamp (independent of time(NULL), as it is user-configurable)
 
@@ -68,15 +70,15 @@ void system_control()
     static int counter = 0;
 
     // convert ADC readings to meaningful measurement values
-    update_measurements(&dcdc, &charger, &hv_bus, &lv_bus, &load_bus);
+    update_measurements();
 
 #ifdef CHARGER_TYPE_PWM
-    pwm_switch_control(&pwm_switch, &hv_bus, bat_bus);
+    pwm_switch_control(&pwm_switch, &hv_terminal, bat_terminal);
     leds_set_charging(pwm_switch_enabled());
 #else
     // control PWM of the DC/DC according to hs and ls port settings
     // (this function includes MPPT algorithm)
-    dcdc_control(&dcdc, &hv_bus, &lv_bus);
+    dcdc_control(&dcdc);
     leds_set_charging(half_bridge_enabled());
 #endif
 
@@ -88,12 +90,12 @@ void system_control()
         timestamp++;
         counter = 0;
         // energy + soc calculation must be called exactly once per second
-        dc_bus_energy_balance(&hv_bus);
-        dc_bus_energy_balance(&lv_bus);
-        dc_bus_energy_balance(&load_bus);
-        log_update_energy(&log_data, &hv_bus, &lv_bus, &load_bus);
-        log_update_min_max_values(&log_data, &dcdc, &charger, &load, &hv_bus, &lv_bus, &load_bus);
-        battery_update_soc(&bat_conf, &charger, bat_bus);
+        dc_bus_energy_balance(&hv_terminal);
+        dc_bus_energy_balance(&lv_terminal);
+        dc_bus_energy_balance(&load_terminal);
+        log_update_energy(&log_data, &hv_terminal, &lv_terminal, &load_terminal);
+        log_update_min_max_values(&log_data, &dcdc, &charger, &load, &hv_terminal, &lv_terminal, &load_terminal);
+        battery_update_soc(&bat_conf, &charger, bat_terminal);
     }
     counter++;
 }
@@ -108,12 +110,12 @@ int main()
     battery_conf_overwrite(&bat_conf, &bat_conf_user);  // initialize conf_user with same values
     charger_init(&charger);
 
-    load_init(&load, &load_bus);
+    load_init(&load, &load_terminal);
 
 #ifdef CHARGER_TYPE_PWM
     pwm_switch_init(&pwm_switch);
 #else // MPPT
-    dcdc_init(&dcdc);
+    dcdc_init(&dcdc, &hv_terminal, &lv_bus_int);
     half_bridge_init(PWM_FREQUENCY, PWM_DEADTIME, 12 / dcdc.hs_voltage_max, 0.97);       // lower duty limit might have to be adjusted dynamically depending on LS voltage
 #endif
 
@@ -128,45 +130,48 @@ int main()
     dma_setup();
     adc_timer_start(1000);  // 1 kHz
     wait(0.5);      // wait for ADC to collect some measurement values
-    update_measurements(&dcdc, &charger, &hv_bus, &lv_bus, &load_bus);
+    update_measurements();
     calibrate_current_sensors();
 
     // Communication interfaces
     ts_devices.enable();
-    
+
     uext_init();
     init_watchdog(10);      // 10s should be enough for communication ports
 
 #ifdef CHARGER_TYPE_PWM
-    dc_bus_init_solar(&hv_bus, PWM_CURRENT_MAX);
-    bat_bus = &lv_bus;
+    bat_terminal = &lv_terminal;
+    solar_terminal = &hv_terminal;
+    dc_bus_init_solar(solar_terminal, PWM_CURRENT_MAX);
 #else
     // Setup of DC/DC power stage
     switch(dcdc.mode) {
         case MODE_NANOGRID:
-            dc_bus_init_nanogrid(&hv_bus);
-            bat_bus = &lv_bus;
+            bat_terminal = &lv_terminal;
+            dc_bus_init_nanogrid(&hv_terminal);
             break;
         case MODE_MPPT_BUCK:     // typical MPPT charge controller operation
-            dc_bus_init_solar(&hv_bus, DCDC_CURRENT_MAX);
-            bat_bus = &lv_bus;
+            bat_terminal = &lv_terminal;
+            solar_terminal = &hv_terminal;
+            dc_bus_init_solar(solar_terminal, DCDC_CURRENT_MAX);
             break;
         case MODE_MPPT_BOOST:    // for charging of e-bike battery via solar panel
-            dc_bus_init_solar(&lv_bus, DCDC_CURRENT_MAX);
-            bat_bus = &hv_bus;
+            bat_terminal = &hv_terminal;
+            solar_terminal = &lv_terminal;
+            dc_bus_init_solar(solar_terminal, DCDC_CURRENT_MAX);
             break;
     }
 #endif
-    charger_detect_num_batteries(&charger, &bat_conf, bat_bus);     // check if we have 24V instead of 12V system
-    battery_init_dc_bus(bat_bus, &bat_conf, charger.num_batteries);
+    charger_detect_num_batteries(&charger, &bat_conf, bat_terminal);     // check if we have 24V instead of 12V system
+    battery_init_dc_bus(bat_terminal, &bat_conf, charger.num_batteries);
 
     wait(2);    // safety feature: be able to re-flash before starting
     control_timer_start(CONTROL_FREQUENCY);
     wait(0.1);  // necessary to prevent MCU from randomly getting stuck here if PV panel is connected before battery
 
 
-    sleep_manager_lock_deep_sleep(); // required to have sleep returning. 
-    /*  
+    sleep_manager_lock_deep_sleep(); // required to have sleep returning.
+    /*
         The mBed Serial class calls this internal during "attach", this is why it work with ThingSet Serial enabled even
         without this statement. Might be an issue of the particular STM32F072 mBed code or may affect
         also STM32L073 platforms on mBed
@@ -184,9 +189,9 @@ int main()
 
             //printf("Still alive... time: %d, mode: %d\n", (int)time(NULL), dcdc.mode);
 
-            charger_state_machine(bat_bus, &bat_conf, &charger);
+            charger_state_machine(bat_terminal, &bat_conf, &charger);
 
-            load_state_machine(&load, lv_bus.dis_allowed);
+            load_state_machine(&load, lv_terminal.dis_allowed);
 
             eeprom_update();
 

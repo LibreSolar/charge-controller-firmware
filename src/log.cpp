@@ -77,8 +77,8 @@ void log_update_min_max_values(LogData *log_data, Dcdc *dcdc, Charger *charger, 
         log_data->solar_voltage_max = solar_bus->voltage;
     }
 
-    if (dcdc->ls_current > log_data->dcdc_current_max) {
-        log_data->dcdc_current_max = dcdc->ls_current;
+    if (dcdc->lv_bus->current > log_data->dcdc_current_max) {
+        log_data->dcdc_current_max = dcdc->lv_bus->current;
     }
 
     if (load->bus->current > log_data->load_current_max) {
