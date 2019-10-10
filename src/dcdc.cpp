@@ -15,7 +15,6 @@
  */
 
 #include "dcdc.h"
-#include "config.h"
 #include "pcb.h"
 #include "log.h"
 
@@ -30,11 +29,11 @@
 
 extern LogData log_data;
 
-void dcdc_init(Dcdc *dcdc, DcBus *hv, DcBus *lv)
+void dcdc_init(Dcdc *dcdc, DcBus *hv, DcBus *lv, DcdcOperationMode mode)
 {
     dcdc->hv_bus = hv;
     dcdc->lv_bus = lv;
-    dcdc->mode           = DCDC_MODE_INIT;
+    dcdc->mode           = mode;
     dcdc->enabled        = true;
     dcdc->state          = DCDC_STATE_OFF;
     dcdc->ls_current_max = DCDC_CURRENT_MAX;
@@ -56,7 +55,6 @@ void dcdc_init(Dcdc *dcdc, DcBus *hv, DcBus *lv)
 int _dcdc_output_control(Dcdc *dcdc, DcBus *out, DcBus *in, const int dcdc_dir)
 {
     float dcdc_power_new = dcdc->lv_bus->voltage * dcdc->lv_bus->current * dcdc_dir;
-    static int pwm_delta = 1;
 
     static uint32_t low_dcdc_power_count = 0;
 
@@ -69,9 +67,9 @@ int _dcdc_output_control(Dcdc *dcdc, DcBus *out, DcBus *in, const int dcdc_dir)
 
     int retval = 0;
 
-    //printf("P: %.2f, P_prev: %.2f, v_in: %.2f, v_out: %.2f, i_in: %.2f, i_out: %.2f, i_max: %.2f, PWM: %.1f, chg_en: %d\n",
-    //     dcdc_power_new, dcdc->power, in->voltage, out->voltage, in->current, out->current,
-    //     out->chg_current_max, half_bridge_get_duty_cycle() * 100.0, out->chg_allowed);
+    //printf("P: %.2f, P_prev: %.2f, v_in: %.2f, v_out: %.2f, i_in: %.2f, i_out: %.2f, v_chg_target: %.2f, i_chg_max: %.2f, PWM: %.1f, chg_state: %d\n",
+    //     dcdc_power_new, dcdc->power, in->voltage, out->voltage, in->current, out->current, out->chg_voltage_target,
+    //     out->chg_current_max, half_bridge_get_duty_cycle() * 100.0, dcdc->state);
     if  (
             (out->chg_allowed == false && out->dis_allowed == false)        // we are not supposed to transfer any energy into the outputs
             || low_dcdc_power_count > 100                                 // the transfered energy drops below a threshold for more than 10s, we make a small averaging here
@@ -79,11 +77,6 @@ int _dcdc_output_control(Dcdc *dcdc, DcBus *out, DcBus *in, const int dcdc_dir)
             // || (in->voltage < in->dis_voltage_stop && out->current < 0.1)   // input voltage is too low and we have no output consumption (battery or grid)
         )
     {
-#if 0
-        printf("P: %.2f, P_prev: %.2f, i_v: %.2f, o_v: %.2f, i_cur: %.2f, o_cur: %.2f, o_chg_cur_max: %.2f, PWM: %.1f, o_chg_en: %d o_dis_en: %d, i_dis_en: %d, i_v_dis_volt_stop: %.2f, dc_ls_cur: %.2f\n",
-         dcdc_power_new, dcdc->power, in->voltage, out->voltage, in->current, out->current,
-         out->chg_current_max, half_bridge_get_duty_cycle() * 100.0, out->chg_allowed, out->dis_allowed, in->dis_allowed, in->dis_voltage_stop, dcdc->ls_current);
-#endif
         low_dcdc_power_count = 0; // reset low dcdc current "timer"
         retval = 0;
     }
@@ -113,9 +106,9 @@ int _dcdc_output_control(Dcdc *dcdc, DcBus *out, DcBus *in, const int dcdc_dir)
         // start MPPT
         dcdc->state = DCDC_STATE_MPPT;
         if (dcdc->power > dcdc_power_new) {
-            pwm_delta = -pwm_delta;
+            dcdc->pwm_delta = -dcdc->pwm_delta;
         }
-        retval = pwm_delta;
+        retval = dcdc->pwm_delta;
     }
     // store the power BEFORE the executing the current change
     dcdc->power = dcdc_power_new;
