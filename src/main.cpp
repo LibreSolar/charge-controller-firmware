@@ -115,7 +115,7 @@ int main()
 #ifdef CHARGER_TYPE_PWM
     pwm_switch_init(&pwm_switch);
 #else // MPPT
-    dcdc_init(&dcdc, &hv_terminal, &lv_bus_int);
+    dcdc_init(&dcdc, &hv_terminal, &lv_bus_int, DCDC_MODE_INIT);
     half_bridge_init(PWM_FREQUENCY, PWM_DEADTIME, 12 / dcdc.hs_voltage_max, 0.97);       // lower duty limit might have to be adjusted dynamically depending on LS voltage
 #endif
 

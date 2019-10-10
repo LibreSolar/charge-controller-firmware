@@ -30,7 +30,7 @@
  *
  * Defines which type of device is connected to the high side and low side ports
  */
-enum dcdc_operation_mode
+enum DcdcOperationMode
 {
     MODE_MPPT_BUCK,     ///< solar panel at high side port, battery / load at low side port (typical MPPT)
     MODE_MPPT_BOOST,    ///< battery at high side port, solar panel at low side (e.g. e-bike charging)
@@ -44,7 +44,7 @@ enum dcdc_operation_mode
  *
  * Allows to determine the current control state (off, CC, CV and MPPT)
  */
-enum dcdc_control_state
+enum DcdcControlState
 {
     DCDC_STATE_OFF,     ///< DC/DC switched off (low input power available or actively disabled)
     DCDC_STATE_MPPT,    ///< Maximum Power Point Tracking
@@ -59,7 +59,7 @@ enum dcdc_control_state
  * actual measurements and calibration parameters.
  */
 typedef struct {
-    dcdc_operation_mode mode;   ///< DC/DC mode (buck, boost or nanogrid)
+    DcdcOperationMode mode;     ///< DC/DC mode (buck, boost or nanogrid)
     bool enabled;               ///< Can be used to disable the DC/DC power stage
     uint16_t state;             ///< Control state (off / MPPT / CC / CV)
 
@@ -94,8 +94,9 @@ typedef struct {
  * @param dcdc DC/DC object
  * @param hv High voltage terminal (e.g. solar input for MPPT buck)
  * @param lv Low voltage terminal (e.g. battery output for MPPT buck)
+ * @param mode Operation mode (buck, boost or nanogrid)
  */
-void dcdc_init(Dcdc *dcdc, DcBus *hv, DcBus *lv);
+void dcdc_init(Dcdc *dcdc, DcBus *hv, DcBus *lv, DcdcOperationMode mode);
 
 /** Check for valid start conditions of the DC/DC converter
  *

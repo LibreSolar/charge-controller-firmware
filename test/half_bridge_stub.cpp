@@ -25,8 +25,11 @@ static float _max_duty;
 
 static bool _enabled;
 
+static int tim_ccr = 0;     // fake register TIM1->CCR1
+
 void _init_registers(int freq_kHz, int deadtime_ns)
 {
+    _pwm_resolution = 48000000 / (freq_kHz * 1000);
 }
 
 void half_bridge_init(int freq_kHz, int deadtime_ns, float min_duty, float max_duty)
@@ -42,7 +45,7 @@ void half_bridge_init(int freq_kHz, int deadtime_ns, float min_duty, float max_d
 
 void half_bridge_set_duty_cycle(float duty)
 {
-    float duty_target = 0;  // dummy
+    float duty_target;
     // protection against wrong settings which could destroy the hardware
     if (duty < _min_duty) {
         duty_target = _min_duty;
@@ -54,13 +57,12 @@ void half_bridge_set_duty_cycle(float duty)
         duty_target = duty;
     }
 
-    //TIM1->CCR1 = _pwm_resolution / 2 * duty_target;
+    tim_ccr = _pwm_resolution / 2 * duty_target;
 }
 
 void half_bridge_duty_cycle_step(int delta)
 {
-    float duty_target = 0;  // dummy
-    //duty_target = (float)(TIM1->CCR1 + delta) / (_pwm_resolution / 2);
+    float duty_target = (float)(tim_ccr + delta) / (_pwm_resolution / 2);
 
     // protection against wrong settings which could destroy the hardware
     if (duty_target < _min_duty) {
@@ -70,13 +72,13 @@ void half_bridge_duty_cycle_step(int delta)
         half_bridge_set_duty_cycle(_max_duty);
     }
     else {
-        //TIM1->CCR1 = TIM1->CCR1 + delta;
+        tim_ccr = tim_ccr + delta;
     }
 }
 
 float half_bridge_get_duty_cycle()
 {
-    return 0;//(float)(TIM1->CCR1) / (_pwm_resolution / 2);;
+    return (float)(tim_ccr) / (_pwm_resolution / 2);;
 }
 
 void half_bridge_start(float pwm_duty)
