@@ -189,7 +189,7 @@ const data_object_t data_objects[] = {
     // CALIBRATION DATA ///////////////////////////////////////////////////////
     // using IDs >= 0xD0
 
-    {0xD0, TS_CAL, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 1, (void*) &(dcdc.ls_current_min),                   "DcdcMin_A"},
+    {0xD0, TS_CAL, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 1, (void*) &(dcdc.output_power_min),                 "DcdcMin_W"},
     {0xD1, TS_CAL, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 1, (void*) &(dcdc.hs_voltage_max),                   "SolarAbsMax_V"},
     {0xD2, TS_CAL, TS_READ_ALL | TS_WRITE_MAKER, TS_T_INT32,   0, (void*) &(dcdc.restart_interval),                 "DcdcRestart_s"},
     //{0xD3, TS_CAL, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 1, (void*) &(dcdc.offset_voltage_start), "SolarOffsetStart_V"},

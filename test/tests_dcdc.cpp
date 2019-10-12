@@ -29,7 +29,7 @@ static void init_structs_buck()
 
     dcdc.temp_mosfets = 25;
     dcdc.off_timestamp = 0;
-    dcdc.power = 0;
+    dcdc.power_prev = 0;
     dcdc.pwm_delta = 1;
     dcdc_init(&dcdc, &hv_terminal, &lv_bus_int, MODE_MPPT_BUCK);
 }
@@ -62,7 +62,7 @@ static void init_structs_boost()
 
     dcdc.temp_mosfets = 25;
     dcdc.off_timestamp = 0;
-    dcdc.power = 0;
+    dcdc.power_prev = 0;
     dcdc.pwm_delta = -1;
     dcdc_init(&dcdc, &hv_terminal, &lv_bus_int, MODE_MPPT_BOOST);
 }
@@ -256,9 +256,8 @@ void buck_stop_input_power_too_low()
 {
     start_buck();
     float pwm_before = half_bridge_get_duty_cycle();
-    for (int i = 0; i < 100; i++) {
-        dcdc_control(&dcdc);
-    }
+    dcdc.power_good_timestamp = time(NULL) - 11;
+    dcdc_control(&dcdc);
     TEST_ASSERT(half_bridge_enabled() == false);
 }
 
@@ -275,15 +274,15 @@ void buck_correct_mppt_operation()
 {
     start_buck();
 
-    lv_bus_int.current = 0.5;
+    lv_bus_int.power = 5;
     dcdc_control(&dcdc);
     float pwm1 = half_bridge_get_duty_cycle();
-    lv_bus_int.current = 0.7;
+    lv_bus_int.power = 7;
     dcdc_control(&dcdc);
     float pwm2 = half_bridge_get_duty_cycle();
     TEST_ASSERT(pwm2 > pwm1);
 
-    lv_bus_int.current = 0.6;     // decrease power to make the direction turn around
+    lv_bus_int.power = 6;     // decrease power to make the direction turn around
     dcdc_control(&dcdc);
     float pwm3 = half_bridge_get_duty_cycle();
     TEST_ASSERT(pwm3 < pwm2);
@@ -326,7 +325,7 @@ void boost_derating_input_voltage_too_low()
     start_boost();
     float pwm_before = half_bridge_get_duty_cycle();
     lv_bus_int.voltage = lv_bus_int.dis_voltage_stop - 0.1;
-    lv_bus_int.current = 0.2;
+    hv_terminal.current = 0.2;
     dcdc_control(&dcdc);
     float pwm_after = half_bridge_get_duty_cycle();
     TEST_ASSERT(pwm_after > pwm_before);
@@ -355,9 +354,8 @@ void boost_derating_temperature_limits_exceeded()
 void boost_stop_input_power_too_low()
 {
     start_boost();
-    for (int i = 0; i < 100; i++) {
-        dcdc_control(&dcdc);
-    }
+    dcdc.power_good_timestamp = time(NULL) - 11;
+    dcdc_control(&dcdc);
     TEST_ASSERT(half_bridge_enabled() == false);
 }
 
@@ -373,15 +371,15 @@ void boost_correct_mppt_operation()
 {
     start_boost();
 
-    lv_bus_int.current = -0.5;
+    hv_terminal.power = 5;
     dcdc_control(&dcdc);
     float pwm1 = half_bridge_get_duty_cycle();
-    lv_bus_int.current = -0.7;
+    hv_terminal.power = 7;
     dcdc_control(&dcdc);
     float pwm2 = half_bridge_get_duty_cycle();
     TEST_ASSERT(pwm2 < pwm1);
 
-    lv_bus_int.current = -0.6;     // decrease power to make the direction turn around
+    hv_terminal.power = 6;     // decrease power to make the direction turn around
     dcdc_control(&dcdc);
     float pwm3 = half_bridge_get_duty_cycle();
     TEST_ASSERT(pwm3 > pwm2);
