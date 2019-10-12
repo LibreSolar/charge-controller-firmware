@@ -170,7 +170,7 @@ void update_measurements()
     // MOSFET temperature calculation
     v_temp = ((adc_filtered[ADC_POS_TEMP_FETS] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096;  // voltage read by ADC (mV)
     rts = 10000 * v_temp / (vcc - v_temp); // resistance of NTC (Ohm)
-    dcdc->temp_mosfets = 1.0/(1.0/(273.15+25) + 1.0/NTC_BETA_VALUE*log(rts/10000.0)) - 273.15; // °C
+    dcdc.temp_mosfets = 1.0/(1.0/(273.15+25) + 1.0/NTC_BETA_VALUE*log(rts/10000.0)) - 273.15; // °C
 #endif
 
     // internal MCU temperature
