@@ -69,21 +69,21 @@ typedef struct {
     float temp_mosfets;         ///< MOSFET temperature measurement (if existing)
 
     // current state
-    float power;                ///< Power at low-side (calculated by dcdc controller)
+    float power_prev;           ///< Stores previous conversion power (set via dcdc_control)
     int pwm_delta;              ///< Direction of PWM change for MPPT
-    int off_timestamp;          ///< Time when DC/DC was switched off last time
+    int off_timestamp;          ///< Last time the DC/DC was switched off
+    int power_good_timestamp;   ///< Last time the DC/DC reached above minimum output power
 
     // maximum allowed values
     float ls_current_max;       ///< Maximum low-side (inductor) current
-    float ls_current_min;       ///< Minimum low-side current (if lower, charger is switched off)
     float hs_voltage_max;       ///< Maximum high-side voltage
     float ls_voltage_max;       ///< Maximum low-side voltage
     float ls_voltage_min;       ///< Minimum low-side voltage, e.g. for driver supply
+    float output_power_min;     ///< Minimum output power (if lower, DC/DC is switched off)
 
     // calibration parameters
-    //float offset_voltage_start;  // V  charging switched on if Vsolar > Vbat + offset
-    //float offset_voltage_stop;   // V  charging switched off if Vsolar < Vbat + offset
-    int restart_interval;       ///< Restart interval (s): When should we retry to start charging after low solar power cut-off?
+    int restart_interval;       ///< Restart interval (s): When should we retry to start charging
+                                ///< after low output power cut-off?
 } Dcdc;
 
 
