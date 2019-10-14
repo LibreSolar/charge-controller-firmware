@@ -14,11 +14,16 @@
  * limitations under the License.
  */
 
-#ifndef PWM_2420_LUS_0V2_H
-#define PWM_2420_LUS_0V2_H
+#ifndef PWM_2420_LUS_H
+#define PWM_2420_LUS_H
 
 #define DEVICE_TYPE "PWM-2420-LUS"
+
+#ifdef PWM_2420_LUS_0V2
 #define HARDWARE_VERSION "v0.2"
+#elif defined(PWM_2420_LUS_0V3)
+#define HARDWARE_VERSION "v0.3"
+#endif
 
 #include "mbed.h"
 
@@ -70,7 +75,7 @@ static const PinName led_pins[NUM_LED_PINS] = {
     //  A         B         C
        PB_13,    PB_14,    PB_15
 };
-/*
+
 static const pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
     { PIN_HIGH,  PIN_LOW,   PIN_FLOAT }, // LED1
     { PIN_LOW,   PIN_HIGH,  PIN_FLOAT }, // LED2
@@ -78,8 +83,8 @@ static const pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
     { PIN_FLOAT, PIN_HIGH,  PIN_LOW   }, // LED4
     { PIN_FLOAT, PIN_LOW,   PIN_HIGH  }  // LED5
 };
-*/
 
+/*
 // LEDs with wrong polarity
 static const pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
     { PIN_LOW,   PIN_HIGH,  PIN_FLOAT }, // LED1
@@ -88,7 +93,7 @@ static const pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
     { PIN_FLOAT, PIN_LOW,   PIN_HIGH  }, // LED4
     { PIN_FLOAT, PIN_HIGH,  PIN_LOW   }  // LED5
 };
-
+*/
 
 // pin definition only needed in adc_dma.cpp to detect if they are present on the PCB
 #define PIN_ADC_TEMP_BAT
@@ -99,7 +104,15 @@ static const pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
 
 #define ADC_GAIN_V_BAT (132 / 12)
 #define ADC_GAIN_V_SOLAR (1 + 120/12 + 120/8.2)
-#define ADC_GAIN_I_LOAD (1000 / 2 / (68/2.2))  // op amp gain: 68/2.2, resistor: 2 mOhm
+
+#ifdef PWM_2420_LUS_0V2
+// op amp gain: 68/2.2, resistor: 2 mOhm
+#define ADC_GAIN_I_LOAD (1000 / 2 / (68/2.2))
+#elif defined(PWM_2420_LUS_0V3)
+// fix for hardware bug in overcurrent comparator voltage divider wiring
+#define ADC_GAIN_I_LOAD (1000 / 2 / (68/2.2) * (39+12+8.2) / (12+8.2))
+#endif
+
 #define ADC_GAIN_I_SOLAR (1000 / 2 / (68/2.2))
 
 #define ADC_OFFSET_V_SOLAR (-120.0 / 8.2)        // to be multiplied with VDDA to get absolute voltage offset

@@ -63,8 +63,8 @@
     #include "pcbs/mppt_1210_hus_0v4.h"
 #elif defined(MPPT_1210_HUS_0V7)
     #include "pcbs/mppt_1210_hus_0v7.h"
-#elif defined(PWM_2420_LUS_0V2)
-    #include "pcbs/pwm_2420_lus_0v2.h"
+#elif defined(PWM_2420_LUS_0V2) || defined(PWM_2420_LUS_0V3)
+    #include "pcbs/pwm_2420_lus.h"
 #elif defined(UNIT_TEST)
     #include "pcbs/pcb_stub.h"
 #else
