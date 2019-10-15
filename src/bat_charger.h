@@ -347,4 +347,8 @@ void charger_detect_num_batteries(Charger *charger, BatConf *bat, DcBus *bus);
  */
 void charger_state_machine(DcBus *port, BatConf *bat_conf, Charger *charger);
 
+/** Calculates targets for junction of load and battery bus at the DC/DC output
+*/
+void charger_update_junction_bus(DcBus *junction, DcBus *bat, DcBus *load);
+
 #endif /* BAT_CHARGER_H */

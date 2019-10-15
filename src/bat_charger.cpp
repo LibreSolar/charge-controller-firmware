@@ -441,3 +441,14 @@ void battery_init_dc_bus(DcBus *bus, BatConf *bat, unsigned int num_batteries)
     // negative sign for compensation of actual resistance
     bus->chg_droop_res = -bat->wire_resistance * n;
 }
+
+void charger_update_junction_bus(DcBus *junction, DcBus *bat, DcBus *load)
+{
+    // relevant for DC/DC
+    junction->chg_current_max =  bat->chg_current_max - bat->current + load->current;
+    junction->chg_voltage_target = bat->chg_voltage_target;
+
+    // relevant for load output
+    junction->dis_voltage_start = bat->dis_voltage_start;
+    junction->dis_voltage_stop = bat->dis_voltage_stop;
+}

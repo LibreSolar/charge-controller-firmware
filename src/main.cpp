@@ -191,6 +191,8 @@ int main()
 
             charger_state_machine(bat_terminal, &bat_conf, &charger);
 
+            charger_update_junction_bus(&lv_bus_int, bat_terminal, &load_terminal);
+
             load_state_machine(&load, lv_terminal.dis_allowed);
 
             eeprom_update();
