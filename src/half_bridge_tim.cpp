@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-#ifndef UNIT_TEST
 
 #include "half_bridge.h"
 #include "pcb.h"
 #include "config.h"
+
 
 
 static int _pwm_resolution;
@@ -28,6 +28,8 @@ static uint8_t _deadtime_clocks;
 
 
 static bool _enabled;
+
+#ifndef UNIT_TEST
 
 class PWM_TIM3
 {
@@ -209,6 +211,51 @@ typedef PWM_TIM1 PWM_TIM_HW;
 typedef PWM_TIM3 PWM_TIM_HW;
 #endif
 
+#else /* #ifndef UNIT_TEST */
+
+const uint32_t SystemCoreClock = 24000000;
+
+class PWM_UT
+{
+    public:
+    static uint32_t m_pwm_resolution;
+    static bool     m_started;
+    static uint32_t m_ccr;
+
+    static void _init_registers(uint32_t pwm_resolution)
+    {
+        m_pwm_resolution = pwm_resolution;
+    }
+
+    static void start()
+    {
+        m_started = true;
+    }
+
+    static void stop()
+    {
+        m_started = false;
+    }
+
+    static int32_t get_ccr()
+    {
+        return m_ccr;
+    }
+
+    static void set_ccr(uint32_t val)
+    {
+        m_ccr = val;                    // high-side
+    }
+};
+
+uint32_t PWM_UT::m_pwm_resolution = 0;
+bool     PWM_UT::m_started = false;
+uint32_t PWM_UT::m_ccr = 0;
+
+typedef PWM_UT PWM_TIM_HW;
+
+#endif /* UNIT_TEST */
+
 void half_bridge_init(int freq_kHz, int deadtime_ns, float min_duty, float max_duty)
 {
     // timers are counting at system clock
@@ -253,7 +300,7 @@ void half_bridge_set_duty_cycle(float duty)
 
 void half_bridge_duty_cycle_step(int delta)
 {
-    half_bridge_set_duty_cycle(PWM_TIM_HW::get_ccr() + delta);
+    half_bridge_set_duty_cycle(((float)(PWM_TIM_HW::get_ccr() + delta))/_pwm_resolution);
 }
 
 float half_bridge_get_duty_cycle()
@@ -280,4 +327,3 @@ bool half_bridge_enabled()
     return _enabled;
 }
 
-#endif /* UNIT_TEST */
