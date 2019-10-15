@@ -37,7 +37,7 @@ int main()
     adc_tests();
     bat_charger_tests();
     dc_bus_tests();
-
+    half_brigde_tests();
     // TODO
     //battery_tests();
     //load_tests();

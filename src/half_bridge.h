@@ -16,7 +16,7 @@
 
 #ifndef HALF_BRIDGE_H
 #define HALF_BRIDGE_H
-
+#include <stdint.h>
 /** @file
  *
  * @brief PWM timer functions for half bridge of DC/DC converter
