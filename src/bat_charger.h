@@ -89,19 +89,19 @@ typedef struct
      *
      * Charger target voltage, switching from CC to CV at this voltage threshold.
      */
-    float voltage_topping;
+    float topping_voltage;
 
     /** CV phase cut-off current limit (A)
      *
      * Constant voltage charging phase stopped if current is below this value.
      */
-    float current_cutoff_topping;
+    float topping_current_cutoff;
 
     /** CV phase cut-off time limit (s)
      *
      * After this time, CV charging is stopped independent of current.
      */
-    int time_limit_topping;
+    int topping_duration;
 
     /** Enable float/trickle charging
      *
@@ -113,7 +113,7 @@ typedef struct
      *
      * Charger target voltage for trickle charging of lead-acid batteries
      */
-    float voltage_trickle;
+    float trickle_voltage;
 
     /** Trickle recharge time (s)
      *
@@ -121,7 +121,7 @@ typedef struct
      * input power) for this period of time, the charger state machine goes back
      * into CC/bulk charging mode.
      */
-    int time_trickle_recharge;
+    int trickle_recharge_time;
 
     /** Enable equalization charging
      *
@@ -133,25 +133,25 @@ typedef struct
      *
      * Charger target voltage for equalization charging of lead-acid batteries
      */
-    float voltage_equalization;
+    float equalization_voltage;
 
-    /** Equalization phase cut-off time limit (s)
+    /** Equalization cut-off time limit (s)
      *
-     * After this time, CV charging is stopped independent of current.
+     * After this time, equalization charging is stopped.
      */
-    int time_limit_equalization;
+    int equalization_duration;
 
-    /** Equalization phase cut-off time limit (s)
+    /** Equalization phase maximum current (A)
      *
-     * After this time, CV charging is stopped independent of current.
+     * The current of the charger is controlled to stay below this limit during equalization.
      */
-    float current_limit_equalization;
+    float equalization_current_limit;
 
-    /** Equalization trigger time (weeks)
+    /** Equalization trigger time interval (days)
      *
-     * After passing specified amount of weeks, an equalization charge is triggered.
+     * After passing specified amount of days, an equalization charge is triggered.
      */
-    int equalization_trigger_time;
+    int equalization_trigger_days;
 
     /** Equalization trigger deep-discharge cycles
      *
@@ -231,9 +231,11 @@ typedef struct
 {
     unsigned int state;             ///< Current charger state (see enum ChargerState)
 
-    int num_batteries;              ///< Used for automatic 12V/24V battery detection at start-up (can be 1 or 2 only)
+    int num_batteries;              ///< Used for automatic 12V/24V battery detection at
+                                    ///< start-up (can be 1 or 2 only)
 
-    float bat_temperature;          ///< Battery temperature in °C from ext. temperature sensor (if existing)
+    float bat_temperature;          ///< Battery temperature in °C from ext. temperature sensor
+                                    ///< (if existing)
     bool ext_temp_sensor;           ///< True if external temperature sensor was detected
 
     float usable_capacity;          ///< Estimated usable capacity (Ah) based on coulomb counting
@@ -249,9 +251,12 @@ typedef struct
     int time_state_changed;         ///< Timestamp of last state change
     int time_voltage_limit_reached; ///< Last time the CV limit was reached
 
-    bool full;                      ///< Flag to indicate if battery was fully charged
-    bool first_full_charge_reached; ///< Set to true if battery was fully charged at least once (necessary for proper capacity estimation)
+    int time_last_equalization;     ///< Timestamp after finish of last equalization charge
+    int deep_dis_last_equalization; ///< Deep discharge counter value after last equalization
 
+    bool full;                      ///< Flag to indicate if battery was fully charged
+    bool first_full_charge_reached; ///< Set to true if battery was fully charged at least once
+                                    ///< (necessary for proper capacity estimation)
 } Charger;
 
 

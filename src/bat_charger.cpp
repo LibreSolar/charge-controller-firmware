@@ -34,7 +34,7 @@ void battery_conf_init(BatConf *bat, BatType type, int num_cells, float nominal_
     bat->charge_current_max = bat->nominal_capacity;   // 1C should be safe for all batteries
 
     bat->time_limit_recharge = 60;              // sec
-    bat->time_limit_topping = 120*60;                // sec
+    bat->topping_duration = 120*60;                // sec
 
     bat->charge_temp_max = 50;
     bat->charge_temp_min = -10;
@@ -47,7 +47,7 @@ void battery_conf_init(BatConf *bat, BatType type, int num_cells, float nominal_
         case BAT_TYPE_AGM:
         case BAT_TYPE_GEL:
             bat->voltage_absolute_max = num_cells * 2.45;
-            bat->voltage_topping = num_cells * 2.4;
+            bat->topping_voltage = num_cells * 2.4;
             bat->voltage_recharge = num_cells * 2.3;
 
             // Cell-level thresholds based on EN 62509:2011 (both thresholds current-compensated)
@@ -64,29 +64,29 @@ void battery_conf_init(BatConf *bat, BatType type, int num_cells, float nominal_
             bat->ocv_empty = num_cells * 1.90;
 
             // https://batteryuniversity.com/learn/article/charging_the_lead_acid_battery
-            bat->current_cutoff_topping = bat->nominal_capacity * 0.04;  // 3-5 % of C/1
+            bat->topping_current_cutoff = bat->nominal_capacity * 0.04;  // 3-5 % of C/1
 
             bat->trickle_enabled = true;
-            bat->time_trickle_recharge = 30*60;
+            bat->trickle_recharge_time = 30*60;
             // Values as suggested in EN 62509:2011
-            bat->voltage_trickle = num_cells * ((type == BAT_TYPE_FLOODED) ? 2.35 : 2.3);
+            bat->trickle_voltage = num_cells * ((type == BAT_TYPE_FLOODED) ? 2.35 : 2.3);
 
             // Enable for flooded batteries only, according to
             // https://discoverbattery.com/battery-101/equalizing-flooded-batteries-only
             bat->equalization_enabled = false;
             // Values as suggested in EN 62509:2011
-            bat->voltage_equalization = num_cells * ((type == BAT_TYPE_FLOODED) ? 2.50 : 2.45);
-            bat->time_limit_equalization = 60*60;
-            bat->current_limit_equalization = (1.0 / 7.0) * bat->nominal_capacity;
-            bat->equalization_trigger_time = 8;         // weeks
-            bat->equalization_trigger_deep_cycles = 10; // times
+            bat->equalization_voltage = num_cells * ((type == BAT_TYPE_FLOODED) ? 2.50 : 2.45);
+            bat->equalization_duration = 60*60;
+            bat->equalization_current_limit = (1.0 / 7.0) * bat->nominal_capacity;
+            bat->equalization_trigger_days = 60;
+            bat->equalization_trigger_deep_cycles = 10;
 
             bat->temperature_compensation = -0.003;     // -3 mV/°C/cell
             break;
 
         case BAT_TYPE_LFP:
             bat->voltage_absolute_max = num_cells * 3.60;
-            bat->voltage_topping = num_cells * 3.55;               // CV voltage
+            bat->topping_voltage = num_cells * 3.55;               // CV voltage
             bat->voltage_recharge = num_cells * 3.35;
 
             bat->voltage_load_disconnect = num_cells * 3.0;
@@ -100,7 +100,7 @@ void battery_conf_init(BatConf *bat, BatType type, int num_cells, float nominal_
             bat->ocv_empty = num_cells * 3.0;      // because of flat OCV of LFP cells...
 
             // C/10 cut-off at end of CV phase by default
-            bat->current_cutoff_topping = bat->nominal_capacity / 10;
+            bat->topping_current_cutoff = bat->nominal_capacity / 10;
 
             bat->trickle_enabled = false;
             bat->equalization_enabled = false;
@@ -110,8 +110,8 @@ void battery_conf_init(BatConf *bat, BatType type, int num_cells, float nominal_
 
         case BAT_TYPE_NMC:
         case BAT_TYPE_NMC_HV:
-            bat->voltage_topping = num_cells * ((type == BAT_TYPE_NMC_HV) ? 4.35 : 4.20);
-            bat->voltage_absolute_max = num_cells * (bat->voltage_topping + 0.05);
+            bat->topping_voltage = num_cells * ((type == BAT_TYPE_NMC_HV) ? 4.35 : 4.20);
+            bat->voltage_absolute_max = num_cells * (bat->topping_voltage + 0.05);
             bat->voltage_recharge = num_cells * 3.9;
 
             bat->voltage_load_disconnect = num_cells * 3.3;
@@ -126,7 +126,7 @@ void battery_conf_init(BatConf *bat, BatType type, int num_cells, float nominal_
             bat->ocv_empty = num_cells * 3.0;
 
             // C/10 cut-off at end of CV phase by default
-            bat->current_cutoff_topping = bat->nominal_capacity / 10;
+            bat->topping_current_cutoff = bat->nominal_capacity / 10;
 
             bat->trickle_enabled = false;
             bat->equalization_enabled = false;
@@ -156,26 +156,26 @@ bool battery_conf_check(BatConf *bat_conf)
         bat_conf->current_cutoff_CV < (bat_conf->nominal_capacity / 10.0), // C/10 or lower allowed
         bat_conf->current_cutoff_CV > 0.01,
         (bat_conf->trickle_enabled == false ||
-            (bat_conf->voltage_trickle < bat_conf->voltage_max &&
-             bat_conf->voltage_trickle > bat_conf->voltage_load_disconnect))
+            (bat_conf->trickle_voltage < bat_conf->voltage_max &&
+             bat_conf->trickle_voltage > bat_conf->voltage_load_disconnect))
     );
     */
 
     return
        (bat_conf->voltage_load_reconnect > (bat_conf->voltage_load_disconnect + 0.4) &&
-        bat_conf->voltage_recharge < (bat_conf->voltage_topping - 0.4) &&
+        bat_conf->voltage_recharge < (bat_conf->topping_voltage - 0.4) &&
         bat_conf->voltage_recharge > (bat_conf->voltage_load_disconnect + 1) &&
         bat_conf->voltage_load_disconnect > (bat_conf->voltage_absolute_min + 0.4) &&
         // max. 10% drop
         bat_conf->internal_resistance < bat_conf->voltage_load_disconnect * 0.1 / LOAD_CURRENT_MAX &&
         // max. 3% loss
-        bat_conf->wire_resistance < bat_conf->voltage_topping * 0.03 / LOAD_CURRENT_MAX &&
+        bat_conf->wire_resistance < bat_conf->topping_voltage * 0.03 / LOAD_CURRENT_MAX &&
         // C/10 or lower current cutoff allowed
-        bat_conf->current_cutoff_topping < (bat_conf->nominal_capacity / 10.0) &&
-        bat_conf->current_cutoff_topping > 0.01 &&
+        bat_conf->topping_current_cutoff < (bat_conf->nominal_capacity / 10.0) &&
+        bat_conf->topping_current_cutoff > 0.01 &&
         (bat_conf->trickle_enabled == false ||
-            (bat_conf->voltage_trickle < bat_conf->voltage_topping &&
-             bat_conf->voltage_trickle > bat_conf->voltage_load_disconnect))
+            (bat_conf->trickle_voltage < bat_conf->topping_voltage &&
+             bat_conf->trickle_voltage > bat_conf->voltage_load_disconnect))
        );
 }
 
@@ -183,18 +183,18 @@ void battery_conf_overwrite(BatConf *source, BatConf *destination, Charger *char
 {
     // TODO: stop DC/DC
 
-    destination->voltage_topping                = source->voltage_topping;
+    destination->topping_voltage                = source->topping_voltage;
     destination->voltage_recharge               = source->voltage_recharge;
     destination->voltage_load_reconnect         = source->voltage_load_reconnect;
     destination->voltage_load_disconnect        = source->voltage_load_disconnect;
     destination->voltage_absolute_max           = source->voltage_absolute_max;
     destination->voltage_absolute_min           = source->voltage_absolute_min;
     destination->charge_current_max             = source->charge_current_max;
-    destination->current_cutoff_topping         = source->current_cutoff_topping;
-    destination->time_limit_topping             = source->time_limit_topping;
+    destination->topping_current_cutoff         = source->topping_current_cutoff;
+    destination->topping_duration             = source->topping_duration;
     destination->trickle_enabled                = source->trickle_enabled;
-    destination->voltage_trickle                = source->voltage_trickle;
-    destination->time_trickle_recharge          = source->time_trickle_recharge;
+    destination->trickle_voltage                = source->trickle_voltage;
+    destination->trickle_recharge_time          = source->trickle_recharge_time;
     destination->charge_temp_max                = source->charge_temp_max;
     destination->charge_temp_min                = source->charge_temp_min;
     destination->discharge_temp_max             = source->discharge_temp_max;
@@ -232,10 +232,10 @@ void charger_detect_num_batteries(Charger *charger, BatConf *bat, DcBus *bus)
     if (bus->voltage > bat->voltage_absolute_min * 2 &&
         bus->voltage < bat->voltage_absolute_max * 2) {
         charger->num_batteries = 2;
-        printf("Detected two batteries (total %.2f V max)\n", bat->voltage_topping * 2);
+        printf("Detected two batteries (total %.2f V max)\n", bat->topping_voltage * 2);
     }
     else {
-        printf("Detected single battery (%.2f V max)\n", bat->voltage_topping);
+        printf("Detected single battery (%.2f V max)\n", bat->topping_voltage);
     }
 }
 
@@ -335,7 +335,7 @@ void charger_state_machine(DcBus *bus, BatConf *bat_conf, Charger *charger)
                 && charger->bat_temperature < bat_conf->charge_temp_max - 1
                 && charger->bat_temperature > bat_conf->charge_temp_min + 1)
             {
-                bus->chg_voltage_target = charger->num_batteries * (bat_conf->voltage_topping +
+                bus->chg_voltage_target = charger->num_batteries * (bat_conf->topping_voltage +
                     bat_conf->temperature_compensation * (charger->bat_temperature - 25));
                 bus->chg_current_max = bat_conf->charge_current_max;
                 bus->chg_allowed = true;
@@ -346,7 +346,7 @@ void charger_state_machine(DcBus *bus, BatConf *bat_conf, Charger *charger)
         }
         case CHG_STATE_BULK: {
             // continuously adjust voltage setting for temperature compensation
-            bus->chg_voltage_target = charger->num_batteries * (bat_conf->voltage_topping +
+            bus->chg_voltage_target = charger->num_batteries * (bat_conf->topping_voltage +
                 bat_conf->temperature_compensation * (charger->bat_temperature - 25));
 
             if (bus->voltage > charger->num_batteries *
@@ -358,7 +358,7 @@ void charger_state_machine(DcBus *bus, BatConf *bat_conf, Charger *charger)
         }
         case CHG_STATE_TOPPING: {
             // continuously adjust voltage setting for temperature compensation
-            bus->chg_voltage_target = charger->num_batteries * (bat_conf->voltage_topping +
+            bus->chg_voltage_target = charger->num_batteries * (bat_conf->topping_voltage +
                 bat_conf->temperature_compensation * (charger->bat_temperature - 25));
 
             if (bus->voltage >= charger->num_batteries *
@@ -369,23 +369,27 @@ void charger_state_machine(DcBus *bus, BatConf *bat_conf, Charger *charger)
 
             // cut-off limit reached because battery full (i.e. CV limit still
             // reached by available solar power within last 2s) or CV period long enough?
-            if ((bus->current < bat_conf->current_cutoff_topping &&
+            if ((bus->current < bat_conf->topping_current_cutoff &&
                 (time(NULL) - charger->time_voltage_limit_reached) < 2)
-                || (time(NULL) - charger->time_state_changed) > bat_conf->time_limit_topping)
+                || (time(NULL) - charger->time_state_changed) > bat_conf->topping_duration)
             {
                 charger->full = true;
                 charger->num_full_charges++;
                 charger->discharged_Ah = 0;         // reset coulomb counter
                 charger->first_full_charge_reached = true;
 
-                /*if (bat_conf->equalization_enabled) {
-                    // TODO: additional conditions!
-                    bus->chg_voltage_target = bat_conf->voltage_equalization;
-                    bus->chg_current_max = bat_conf->current_limit_equalization;
+                if (bat_conf->equalization_enabled && (
+                    (time(NULL) - charger->time_last_equalization) / (24*60*60)
+                    >= bat_conf->equalization_trigger_days ||
+                    charger->num_deep_discharges - charger->deep_dis_last_equalization
+                    >= bat_conf->equalization_trigger_deep_cycles))
+                {
+                    bus->chg_voltage_target = bat_conf->equalization_voltage;
+                    bus->chg_current_max = bat_conf->equalization_current_limit;
                     _enter_state(charger, CHG_STATE_EQUALIZATION);
                 }
-                else */if (bat_conf->trickle_enabled) {
-                    bus->chg_voltage_target = charger->num_batteries * (bat_conf->voltage_trickle +
+                else if (bat_conf->trickle_enabled) {
+                    bus->chg_voltage_target = charger->num_batteries * (bat_conf->trickle_voltage +
                         bat_conf->temperature_compensation * (charger->bat_temperature - 25));
                     _enter_state(charger, CHG_STATE_TRICKLE);
                 }
@@ -399,7 +403,7 @@ void charger_state_machine(DcBus *bus, BatConf *bat_conf, Charger *charger)
         }
         case CHG_STATE_TRICKLE: {
             // continuously adjust voltage setting for temperature compensation
-            bus->chg_voltage_target = charger->num_batteries * (bat_conf->voltage_trickle +
+            bus->chg_voltage_target = charger->num_batteries * (bat_conf->trickle_voltage +
                 bat_conf->temperature_compensation * (charger->bat_temperature - 25));
 
             if (bus->voltage >= charger->num_batteries *
@@ -408,7 +412,7 @@ void charger_state_machine(DcBus *bus, BatConf *bat_conf, Charger *charger)
                 charger->time_voltage_limit_reached = time(NULL);
             }
 
-            if (time(NULL) - charger->time_voltage_limit_reached > bat_conf->time_trickle_recharge)
+            if (time(NULL) - charger->time_voltage_limit_reached > bat_conf->trickle_recharge_time)
             {
                 bus->chg_current_max = bat_conf->charge_current_max;
                 charger->full = false;
@@ -416,6 +420,33 @@ void charger_state_machine(DcBus *bus, BatConf *bat_conf, Charger *charger)
             }
             // assumption: trickle does not harm the battery --> never go back to idle
             // (for Li-ion battery: disable trickle!)
+            break;
+        }
+        case CHG_STATE_EQUALIZATION: {
+            // continuously adjust voltage setting for temperature compensation
+            bus->chg_voltage_target = charger->num_batteries * (bat_conf->equalization_voltage +
+                bat_conf->temperature_compensation * (charger->bat_temperature - 25));
+
+            // current or time limit for equalization reached
+            if (time(NULL) - charger->time_state_changed > bat_conf->equalization_duration)
+            {
+                // reset triggers
+                charger->time_last_equalization = time(NULL);
+                charger->deep_dis_last_equalization = charger->num_deep_discharges;
+
+                charger->discharged_Ah = 0;         // reset coulomb counter again
+
+                if (bat_conf->trickle_enabled) {
+                    bus->chg_voltage_target = charger->num_batteries * (bat_conf->trickle_voltage +
+                        bat_conf->temperature_compensation * (charger->bat_temperature - 25));
+                    _enter_state(charger, CHG_STATE_TRICKLE);
+                }
+                else {
+                    bus->chg_current_max = 0;
+                    bus->chg_allowed = false;
+                    _enter_state(charger, CHG_STATE_IDLE);
+                }
+            }
             break;
         }
     }
@@ -434,7 +465,7 @@ void battery_init_dc_bus(DcBus *bus, BatConf *bat, unsigned int num_batteries)
     bus->dis_droop_res = -(bat->internal_resistance + -bat->wire_resistance) * n;
 
     bus->chg_allowed = true;
-    bus->chg_voltage_target = bat->voltage_topping * n;
+    bus->chg_voltage_target = bat->topping_voltage * n;
     bus->chg_voltage_min = bat->voltage_absolute_min * n;
     bus->chg_current_max = bat->charge_current_max;
 

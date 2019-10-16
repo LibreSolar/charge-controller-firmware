@@ -124,7 +124,7 @@ void no_buck_start_if_bat_voltage_low()
 void no_buck_start_if_bat_voltage_high()
 {
     init_structs_buck();
-    lv_bus_int.voltage = bat_conf.voltage_topping + 0.1;
+    lv_bus_int.voltage = bat_conf.topping_voltage + 0.1;
     TEST_ASSERT_EQUAL(0, dcdc_check_start_conditions(&dcdc));
 }
 
@@ -161,7 +161,7 @@ void no_boost_start_if_bat_voltage_low()
 void no_boost_start_if_bat_voltage_high()
 {
     init_structs_boost();
-    hv_terminal.voltage = bat_conf.voltage_topping + 0.1;
+    hv_terminal.voltage = bat_conf.topping_voltage + 0.1;
     TEST_ASSERT_EQUAL(0, dcdc_check_start_conditions(&dcdc));
 }
 

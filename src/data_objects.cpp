@@ -84,15 +84,13 @@ const data_object_t data_objects[] = {
     {0x31, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_FLOAT32, 2, (void*) &(bat_conf_user.voltage_recharge),           "BatRecharge_V"},
     {0x32, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_FLOAT32, 2, (void*) &(bat_conf_user.voltage_absolute_min),       "BatAbsMin_V"},
     {0x33, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_FLOAT32, 1, (void*) &(bat_conf_user.charge_current_max),         "BatChgMax_A"},
-    {0x34, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_FLOAT32, 2, (void*) &(bat_conf_user.voltage_topping),            "BatTarget_V"},
-    {0x35, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_FLOAT32, 1, (void*) &(bat_conf_user.current_cutoff_topping),     "BatCutoff_A"},
-    {0x36, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_INT32,   0, (void*) &(bat_conf_user.time_limit_topping),         "BatCutoff_s"},
+    {0x34, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_FLOAT32, 2, (void*) &(bat_conf_user.topping_voltage),            "BatTarget_V"},
+    {0x35, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_FLOAT32, 1, (void*) &(bat_conf_user.topping_current_cutoff),     "BatCutoff_A"},
+    {0x36, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_INT32,   0, (void*) &(bat_conf_user.topping_duration),           "BatCutoff_s"},
     {0x37, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_BOOL,    0, (void*) &(bat_conf_user.trickle_enabled),            "TrickleEn"},
-    {0x38, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_FLOAT32, 2, (void*) &(bat_conf_user.voltage_trickle),            "Trickle_V"},
-    {0x39, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_INT32,   0, (void*) &(bat_conf_user.time_trickle_recharge),      "TrickleRecharge_s"},
-    //{0x3A, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_BOOL,    0, (void*) &(bat_conf_user.equalization_enabled),       "EqualEn"},
-    //{0x3B, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_FLOAT32, 2, (void*) &(bat_conf_user.voltage_equalization),       "Equal_V"},
-    // 0x3A-0x3E reserved for equalization charging
+    {0x38, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_FLOAT32, 2, (void*) &(bat_conf_user.trickle_voltage),            "Trickle_V"},
+    {0x39, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_INT32,   0, (void*) &(bat_conf_user.trickle_recharge_time),      "TrickleRecharge_s"},
+
     {0x3F, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_FLOAT32, 3, (void*) &(bat_conf_user.temperature_compensation),   "TempFactor"},
     {0x50, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_FLOAT32, 3, (void*) &(bat_conf_user.internal_resistance),        "BatInt_Ohm"},
     {0x51, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_FLOAT32, 3, (void*) &(bat_conf_user.wire_resistance),            "BatWire_Ohm"},
@@ -100,6 +98,13 @@ const data_object_t data_objects[] = {
     {0x53, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_FLOAT32, 1, (void*) &(bat_conf_user.charge_temp_min),            "BatChgMin_degC"},
     {0x54, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_FLOAT32, 1, (void*) &(bat_conf_user.discharge_temp_max),         "BatDisMax_degC"},
     {0x55, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_FLOAT32, 1, (void*) &(bat_conf_user.discharge_temp_min),         "BatDisMin_degC"},
+
+    {0x58, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_BOOL,    0, (void*) &(bat_conf_user.equalization_enabled),       "EqEn"},
+    {0x59, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_FLOAT32, 2, (void*) &(bat_conf_user.equalization_voltage),       "Eq_V"},
+    {0x5A, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_FLOAT32, 2, (void*) &(bat_conf_user.equalization_current_limit), "Eq_A"},
+    {0x5B, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_INT32,   2, (void*) &(bat_conf_user.equalization_duration),      "EqDuration_s"},
+    {0x5C, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_INT32,   2, (void*) &(bat_conf_user.equalization_trigger_days),  "EqInterval_d"},
+    {0x5D, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_INT32,   2, (void*) &(bat_conf_user.equalization_trigger_deep_cycles),  "EqDeepDisTrigger"},
 
     // load settings
     {0x40, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_BOOL,    0, (void*) &(load.enabled_target),                      "LoadEnDefault"},
