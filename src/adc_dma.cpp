@@ -18,23 +18,11 @@
 #include "mbed.h"
 #endif
 
-#include "config.h"
+#include "main.h"
 
 #include "adc_dma.h"
 #include "pcb.h"        // contains defines for pins
 #include <math.h>       // log for thermistor calculation
-#include <stdio.h>
-#include "log.h"
-#include "pwm_switch.h"
-
-extern Charger charger;
-extern Dcdc dcdc;
-extern LoadOutput load;
-extern DcBus hv_terminal;
-extern DcBus lv_bus_int;
-extern DcBus lv_terminal;
-extern DcBus load_terminal;
-
 
 // factory calibration values for internal voltage reference and temperature sensor
 // (see MCU datasheet, not RM)

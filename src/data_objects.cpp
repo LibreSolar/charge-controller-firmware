@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#include "main.h"
+
 #include "pcb.h"
 #include "config.h"
 #include "version.h"
@@ -22,27 +24,9 @@
 #ifndef CUSTOM_DATA_OBJECTS_FILE
 
 #include "thingset.h"
-#include "bat_charger.h"
-#include "log.h"
-#include "dcdc.h"
-#include "load.h"
 #include "hardware.h"
 #include "eeprom.h"
-#include "pwm_switch.h"
 #include <stdio.h>
-
-extern LogData log_data;
-extern Charger charger;
-extern BatConf bat_conf;
-extern BatConf bat_conf_user;
-extern Dcdc dcdc;
-extern LoadOutput load;
-extern DcBus hv_terminal;
-extern DcBus lv_terminal;
-extern DcBus load_terminal;
-//extern DcBus *bat_terminal;       // TODO: pointers cannot be used here, as they are not
-//extern DcBus *solar_terminal;     //       yet initialized...
-extern PwmSwitch pwm_switch;
 
 const char* const manufacturer = "Libre Solar";
 const char* const device_type = DEVICE_TYPE;

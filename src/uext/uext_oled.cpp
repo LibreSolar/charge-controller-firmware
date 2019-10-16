@@ -16,28 +16,14 @@
 
 #ifndef UNIT_TEST
 
-#include "config.h"
+#include "main.h"
+extern DcBus *bat_terminal;
+extern DcBus *solar_terminal;
 
 #ifdef OLED_ENABLED     // otherwise don't compile code to reduce firmware size
 
 #include "uext.h"
 #include "pcb.h"
-
-#include "half_bridge.h"
-#include "dcdc.h"
-#include "pwm_switch.h"
-#include "dc_bus.h"
-#include "bat_charger.h"
-#include "load.h"
-#include "log.h"
-
-extern LogData log_data;
-extern Dcdc dcdc;
-extern DcBus *solar_terminal;
-extern DcBus *bat_terminal;
-extern DcBus load_terminal;
-extern Charger charger;
-extern LoadOutput load;
 
 #include "Adafruit_SSD1306.h"
 
