@@ -38,14 +38,16 @@ int main()
 {
     bat_terminal = &lv_terminal;
     solar_terminal = &hv_terminal;
+    dcdc_init(&dcdc, &hv_terminal, &lv_bus_int, MODE_MPPT_BUCK);
+    load_init(&load, &lv_bus_int, &load_terminal);
 
     adc_tests();
     bat_charger_tests();
     dc_bus_tests();
     half_brigde_tests();
     dcdc_tests();
+    log_tests();
 
     // TODO
-    //battery_tests();
     //load_tests();
 }

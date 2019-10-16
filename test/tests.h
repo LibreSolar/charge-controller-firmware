@@ -10,3 +10,5 @@ void dc_bus_tests();
 void half_brigde_tests();
 
 void dcdc_tests();
+
+void log_tests();

@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-#ifndef UNIT_TEST
-
 #include "load.h"
 #include "pcb.h"
 #include "config.h"
@@ -24,6 +22,9 @@
 #include "log.h"
 #include <time.h>
 
+volatile bool short_circuit = false;
+
+#ifndef UNIT_TEST
 
 #if defined(PIN_I_LOAD_COMP) && PIN_LOAD_DIS == PB_2
 static void lptim_init()
@@ -121,8 +122,6 @@ static void short_circuit_comp_init()
 #endif
 }
 
-volatile bool short_circuit = false;
-
 #ifdef PIN_I_LOAD_COMP
 
 extern "C" void ADC1_COMP_IRQHandler(void)
@@ -177,6 +176,15 @@ void load_usb_set(bool enabled)
     else usb_pwr_dis = 1;
 #endif
 }
+
+#else /* UNIT_TEST */
+
+// dummy functions
+static void short_circuit_comp_init() {;}
+void load_switch_set(bool enabled) {;}
+void load_usb_set(bool enabled) {;}
+
+#endif
 
 void load_init(LoadOutput *load, DcBus *bus_int, DcBus *terminal)
 {
@@ -343,5 +351,3 @@ void load_control(LoadOutput *load, float load_max_voltage)
         debounce_counter = 0;
     }
 }
-
-#endif /* UNIT_TEST */

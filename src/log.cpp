@@ -85,23 +85,17 @@ void log_update_min_max_values(LogData *log_data, Dcdc *dcdc, Charger *charger, 
         log_data->load_current_max = load->terminal->current;
     }
 
-    if (solar_bus->current < 0) {
-        uint16_t solar_power = -solar_bus->power;
-        if (solar_power > log_data->solar_power_max_day) {
-            log_data->solar_power_max_day = solar_power;
-            if (log_data->solar_power_max_day > log_data->solar_power_max_total) {
-                log_data->solar_power_max_total = log_data->solar_power_max_day;
-            }
+    if (-solar_bus->power > log_data->solar_power_max_day) {
+        log_data->solar_power_max_day = -solar_bus->power;
+        if (log_data->solar_power_max_day > log_data->solar_power_max_total) {
+            log_data->solar_power_max_total = log_data->solar_power_max_day;
         }
     }
 
-    if (load->terminal->current > 0) {
-        uint16_t load_power = load->terminal->voltage * load->terminal->current;
-        if (load_power > log_data->load_power_max_day) {
-            log_data->load_power_max_day = load_power;
-            if (log_data->load_power_max_day > log_data->load_power_max_total) {
-                log_data->load_power_max_total = log_data->load_power_max_day;
-            }
+    if (load->terminal->power > log_data->load_power_max_day) {
+        log_data->load_power_max_day = load->terminal->power;
+        if (log_data->load_power_max_day > log_data->load_power_max_total) {
+            log_data->load_power_max_total = log_data->load_power_max_day;
         }
     }
 
