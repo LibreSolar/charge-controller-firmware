@@ -22,8 +22,9 @@
  * @brief DC/DC buck/boost control functions
  */
 
+#include <stdint.h>
 #include <stdbool.h>
-#include "bat_charger.h"
+
 #include "dc_bus.h"
 
 /** DC/DC basic operation mode

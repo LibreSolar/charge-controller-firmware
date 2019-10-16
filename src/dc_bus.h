@@ -36,19 +36,19 @@ typedef struct {
     float current;                  ///< sum of currents (positive sign = increasing voltage/charge of the bus)
     float power;                    ///< multiplication of power & voltage
 
-    bool chg_allowed;               ///< charging direction for battery port
     float chg_voltage_target;       ///< target voltage if port is configured as output
     float chg_droop_res;            ///< v_target = v_out_max - r_droop_output * current
     float chg_voltage_min;          ///< minimum voltage to allow current output (necessary
                                     ///< to prevent charging of deep-discharged Li-ion batteries)
-    float chg_current_max;          ///< charging direction for battery port
+    float chg_current_limit;        ///< current charging the bus, i.e. increasing its voltage
+                                    ///< (equals charging direction for battery terminal)
 
-    bool dis_allowed;               ///< discharging direction for battery port
     float dis_voltage_start;        ///< minimum voltage to allow current input (= discharging of batteries),
                                     ///< starting point for discharging of batteries (load reconnect)
     float dis_voltage_stop;         ///< absolute minimum = load disconnect for batteries
     float dis_droop_res;            ///< v_stop = v_input_stop - r_droop_input * current
-    float dis_current_max;          ///< discharging direction for battery port: must be negative value !!!
+    float dis_current_limit;        ///< current which discharges the bus, i.e. decreases its
+                                    ///< voltage, value must be negative!!!
 
     float chg_energy_Wh;            ///< cumulated energy in charge direction since last counter reset (Wh)
     float dis_energy_Wh;            ///< cumulated energy in discharge direction since last counter reset (Wh)

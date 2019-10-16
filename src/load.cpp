@@ -178,9 +178,10 @@ void load_usb_set(bool enabled)
 #endif
 }
 
-void load_init(LoadOutput *load, DcBus *bus)
+void load_init(LoadOutput *load, DcBus *bus_int, DcBus *terminal)
 {
-    load->bus = bus;
+    load->bus_int = bus_int;
+    load->terminal = terminal;
     load->current_max = LOAD_CURRENT_MAX;
     load->enabled_target = true;
     load->usb_enabled_target = true;
@@ -240,12 +241,14 @@ void usb_state_machine(LoadOutput *load)
 
 static time_t lvd_timestamp = 0;    // stores when the load was disconnected last time
 
-void load_state_machine(LoadOutput *load, bool source_enabled)
+void load_state_machine(LoadOutput *load)
 {
     //printf("Load State: %d\n", load->switch_state);
     switch (load->switch_state) {
         case LOAD_STATE_DISABLED:
-            if (source_enabled == true && load->enabled_target == true) {
+            if (load->bus_int->dis_current_limit < 0        // discharging enabled
+                && load->enabled_target == true)
+            {
                 load_switch_set(true);
                 load->switch_state = LOAD_STATE_ON;
             }
@@ -255,7 +258,7 @@ void load_state_machine(LoadOutput *load, bool source_enabled)
                 load_switch_set(false);
                 load->switch_state = LOAD_STATE_DISABLED;
             }
-            else if (source_enabled == false) {
+            else if (load->bus_int->dis_current_limit == 0) {  // float == is allowed for 0.0
                 lvd_timestamp = time(NULL);
                 load_switch_set(false);
                 load->switch_state = LOAD_STATE_OFF_LOW_SOC;
@@ -263,7 +266,9 @@ void load_state_machine(LoadOutput *load, bool source_enabled)
             break;
         case LOAD_STATE_OFF_LOW_SOC:
             // wait at least one hour
-            if (source_enabled == true && time(NULL) - lvd_timestamp > 60*60) {
+            if (load->bus_int->dis_current_limit < 0        // discharging enabled again
+                && time(NULL) - lvd_timestamp > 60*60)
+            {
                 if (load->enabled_target == true) {
                     load_switch_set(true);
                     load->switch_state = LOAD_STATE_ON;
@@ -280,7 +285,7 @@ void load_state_machine(LoadOutput *load, bool source_enabled)
             }
             break;
         case LOAD_STATE_OFF_OVERVOLTAGE:
-            if (load->bus->voltage < LOW_SIDE_VOLTAGE_MAX) {     // TODO: add hysteresis?
+            if (load->bus_int->voltage < LOW_SIDE_VOLTAGE_MAX) {     // TODO: add hysteresis?
                 load->switch_state = LOAD_STATE_DISABLED;   // switch to normal mode again
             }
             break;
@@ -310,7 +315,7 @@ void load_control(LoadOutput *load, float load_max_voltage)
     // junction temperature calculation model for overcurrent detection
     load->junction_temperature = load->junction_temperature + (
             mcu_temp - load->junction_temperature +
-            load->bus->current * load->bus->current /
+            load->terminal->current * load->terminal->current /
             (LOAD_CURRENT_MAX * LOAD_CURRENT_MAX) * (MOSFET_MAX_JUNCTION_TEMP - 25)
         ) / (MOSFET_THERMAL_TIME_CONSTANT * CONTROL_FREQUENCY);
 
@@ -322,8 +327,8 @@ void load_control(LoadOutput *load, float load_max_voltage)
     }
 
     static int debounce_counter = 0;
-    if (load->bus->voltage > load_max_voltage ||
-        load->bus->voltage > LOW_SIDE_VOLTAGE_MAX)
+    if (load->bus_int->voltage > load_max_voltage ||
+        load->bus_int->voltage > LOW_SIDE_VOLTAGE_MAX)
     {
         debounce_counter++;
         if (debounce_counter > CONTROL_FREQUENCY) {      // waited 1s before setting the flag

@@ -23,8 +23,9 @@
  * Load/USB output functions and data types
  */
 
-#include <stdbool.h>
 #include <stdint.h>
+#include <stdbool.h>
+
 #include "dc_bus.h"
 
 /** Load/USB output states
@@ -48,20 +49,29 @@ typedef struct {
     uint16_t switch_state;      ///< Current state of load output switch
     uint16_t usb_state;         ///< Current state of USB output
 
-    DcBus *bus;              ///< Pointer to DC bus containting actual voltage and current measurement
+    DcBus *bus_int;             ///< Pointer to internal DC bus where the load output
+                                ///< current is coming from
+    DcBus *terminal;            ///< Pointer to DC bus containting actual voltage and current
+                                ///< measurement of (external) load output terminal
 
     float current_max;          ///< maximum allowed current
     int overcurrent_timestamp;  ///< time at which an overcurrent event occured
 
-    float junction_temperature; ///< calculated using thermal model based on current and ambient temperature measurement (unit: °C)
+    float junction_temperature; ///< calculated using thermal model based on current and ambient
+                                ///< temperature measurement (unit: °C)
 
-    bool enabled_target;        ///< target setting defined via communication port (overruled if battery is empty)
+    bool enabled_target;        ///< target setting defined via communication port (overruled if
+                                ///< battery is empty)
     bool usb_enabled_target;    ///< same for USB output
 } LoadOutput;
 
 /** Initialize LoadOutput struct and overcurrent / short circuit protection comparator (if existing)
+ *
+ * @param load Load output struct
+ * @param bus_int Internal DC bus the load switch is connected to (e.g. battery and DC/DC junction)
+ * @param terminal Load terminal DC bus (external interface)
  */
-void load_init(LoadOutput *load, DcBus *bus);
+void load_init(LoadOutput *load, DcBus *bus_int, DcBus *terminal);
 
 /** Enable/disable load switch
  */
@@ -72,8 +82,10 @@ void load_switch_set(bool enabled);
 void load_usb_set(bool enabled);
 
 /** State machine, called every second.
+ *
+ * @param load Load output struct
  */
-void load_state_machine(LoadOutput *load, bool source_enabled);
+void load_state_machine(LoadOutput *load);
 
 /** Main load control function, should be called by control timer
  *

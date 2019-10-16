@@ -30,8 +30,9 @@ void battery_conf_init(BatConf *bat, BatType type, int num_cells, float nominal_
 {
     bat->nominal_capacity = nominal_capacity;
 
-    // common values for all batteries
-    bat->charge_current_max = bat->nominal_capacity;   // 1C should be safe for all batteries
+    // 1C should be safe for all batteries
+    bat->charge_current_max = bat->nominal_capacity;
+    bat->discharge_current_max = bat->nominal_capacity;
 
     bat->time_limit_recharge = 60;              // sec
     bat->topping_duration = 120*60;                // sec
@@ -275,17 +276,15 @@ static void _enter_state(Charger* charger, int next_state)
     charger->state = next_state;
 }
 
-void charger_state_machine(DcBus *bus, BatConf *bat_conf, Charger *charger)
+void battery_discharge_control(DcBus *bus, BatConf *bat_conf, Charger *charger)
 {
-    //printf("time_state_change = %d, time = %d, v_bat = %f, i_bat = %f\n", charger->time_state_changed, time(NULL), voltage, current);
-
     // load output state is defined by battery bus dis_allowed flag
-    if (bus->dis_allowed == true
+    if (bus->dis_current_limit < 0      // discharging allowed
         && bus->voltage < charger->num_batteries *
         (bat_conf->voltage_load_disconnect - bus->current * bus->dis_droop_res))
     {
         // low state of charge
-        bus->dis_allowed = false;
+        bus->dis_current_limit = 0;
         charger->num_deep_discharges++;
 
         if (charger->usable_capacity < 0.1) {
@@ -303,12 +302,12 @@ void charger_state_machine(DcBus *bus, BatConf *bat_conf, Charger *charger)
         // simple SOH estimation
         charger->soh = charger->usable_capacity / bat_conf->nominal_capacity;
     }
-    else if (bus->dis_allowed == true
+    else if (bus->dis_current_limit < 0
             && (charger->bat_temperature > bat_conf->discharge_temp_max
             || charger->bat_temperature < bat_conf->discharge_temp_min))
     {
         // temperature limits exceeded
-        bus->dis_allowed = false;
+        bus->dis_current_limit = 0;
     }
 
     if (bus->voltage >= charger->num_batteries *
@@ -316,14 +315,19 @@ void charger_state_machine(DcBus *bus, BatConf *bat_conf, Charger *charger)
         && charger->bat_temperature < bat_conf->discharge_temp_max - 1
         && charger->bat_temperature > bat_conf->discharge_temp_min + 1)
     {
-        bus->dis_allowed = true;
+        // discharge current is stored as absolute value in bat_conf, but defined
+        // as negative current for dc_bus
+        bus->dis_current_limit = -bat_conf->discharge_current_max;
     }
+}
 
+void battery_charge_control(DcBus *bus, BatConf *bat_conf, Charger *charger)
+{
     // check battery temperature for charging direction
     if (charger->bat_temperature > bat_conf->charge_temp_max
         || charger->bat_temperature < bat_conf->charge_temp_min)
     {
-        bus->chg_allowed = false;
+        bus->chg_current_limit = 0;
         _enter_state(charger, CHG_STATE_IDLE);
     }
 
@@ -337,8 +341,7 @@ void charger_state_machine(DcBus *bus, BatConf *bat_conf, Charger *charger)
             {
                 bus->chg_voltage_target = charger->num_batteries * (bat_conf->topping_voltage +
                     bat_conf->temperature_compensation * (charger->bat_temperature - 25));
-                bus->chg_current_max = bat_conf->charge_current_max;
-                bus->chg_allowed = true;
+                bus->chg_current_limit = bat_conf->charge_current_max;
                 charger->full = false;
                 _enter_state(charger, CHG_STATE_BULK);
             }
@@ -385,7 +388,7 @@ void charger_state_machine(DcBus *bus, BatConf *bat_conf, Charger *charger)
                     >= bat_conf->equalization_trigger_deep_cycles))
                 {
                     bus->chg_voltage_target = bat_conf->equalization_voltage;
-                    bus->chg_current_max = bat_conf->equalization_current_limit;
+                    bus->chg_current_limit = bat_conf->equalization_current_limit;
                     _enter_state(charger, CHG_STATE_EQUALIZATION);
                 }
                 else if (bat_conf->trickle_enabled) {
@@ -394,8 +397,7 @@ void charger_state_machine(DcBus *bus, BatConf *bat_conf, Charger *charger)
                     _enter_state(charger, CHG_STATE_TRICKLE);
                 }
                 else {
-                    bus->chg_current_max = 0;
-                    bus->chg_allowed = false;
+                    bus->chg_current_limit = 0;
                     _enter_state(charger, CHG_STATE_IDLE);
                 }
             }
@@ -414,7 +416,7 @@ void charger_state_machine(DcBus *bus, BatConf *bat_conf, Charger *charger)
 
             if (time(NULL) - charger->time_voltage_limit_reached > bat_conf->trickle_recharge_time)
             {
-                bus->chg_current_max = bat_conf->charge_current_max;
+                bus->chg_current_limit = bat_conf->charge_current_max;
                 charger->full = false;
                 _enter_state(charger, CHG_STATE_BULK);
             }
@@ -442,8 +444,7 @@ void charger_state_machine(DcBus *bus, BatConf *bat_conf, Charger *charger)
                     _enter_state(charger, CHG_STATE_TRICKLE);
                 }
                 else {
-                    bus->chg_current_max = 0;
-                    bus->chg_allowed = false;
+                    bus->chg_current_limit = 0;
                     _enter_state(charger, CHG_STATE_IDLE);
                 }
             }
@@ -456,18 +457,16 @@ void battery_init_dc_bus(DcBus *bus, BatConf *bat, unsigned int num_batteries)
 {
     unsigned int n = (num_batteries == 2 ? 2 : 1);  // only 1 or 2 allowed
 
-    bus->dis_allowed = true;
     bus->dis_voltage_start = bat->voltage_load_reconnect * n;
     bus->dis_voltage_stop = bat->voltage_load_disconnect * n;
-    bus->dis_current_max = -bat->charge_current_max;          // TODO: discharge current
+    bus->dis_current_limit = -bat->discharge_current_max;
 
     // negative sign for compensation of actual resistance
     bus->dis_droop_res = -(bat->internal_resistance + -bat->wire_resistance) * n;
 
-    bus->chg_allowed = true;
     bus->chg_voltage_target = bat->topping_voltage * n;
     bus->chg_voltage_min = bat->voltage_absolute_min * n;
-    bus->chg_current_max = bat->charge_current_max;
+    bus->chg_current_limit = bat->charge_current_max;
 
     // negative sign for compensation of actual resistance
     bus->chg_droop_res = -bat->wire_resistance * n;
@@ -476,10 +475,15 @@ void battery_init_dc_bus(DcBus *bus, BatConf *bat, unsigned int num_batteries)
 void charger_update_junction_bus(DcBus *junction, DcBus *bat, DcBus *load)
 {
     // relevant for DC/DC
-    junction->chg_current_max =  bat->chg_current_max - bat->current + load->current;
+    junction->chg_current_limit = bat->chg_current_limit - bat->current + load->current;
     junction->chg_voltage_target = bat->chg_voltage_target;
 
     // relevant for load output
     junction->dis_voltage_start = bat->dis_voltage_start;
     junction->dis_voltage_stop = bat->dis_voltage_stop;
+
+    // this is a bit tricky... in theory, we could add the available DC/DC current to keep the
+    // load switched on as long as solar power is available, even if the battery is empty. This
+    // needs a fast point-of-load (PoL) control of the DC/DC, which is not possible (yet).
+    junction->dis_current_limit = bat->dis_current_limit - bat->current;
 }

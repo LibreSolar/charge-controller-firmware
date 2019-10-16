@@ -80,7 +80,7 @@ int duty_cycle_delta(Dcdc *dcdc)
 #if 0
     printf("P: %.2f, P_prev: %.2f, v_in: %.2f, v_out: %.2f, i_in: %.2f, i_out: %.2f, v_chg_target: %.2f, i_chg_max: %.2f, PWM: %.1f, chg_state: %d\n",
          out->power, dcdc->power_prev, in->voltage, out->voltage, in->current, out->current, out->chg_voltage_target,
-         out->chg_current_max, half_bridge_get_duty_cycle() * 100.0, dcdc->state);
+         out->chg_current_limit, half_bridge_get_duty_cycle() * 100.0, dcdc->state);
 #endif
 
     if  (time(NULL) - dcdc->power_good_timestamp > 10 ||      // more than 10s low power
@@ -94,8 +94,8 @@ int duty_cycle_delta(Dcdc *dcdc)
         dcdc->state = DCDC_STATE_CV;
         pwr_inc_goal = -1;  // decrease output power
     }
-    else if (out->current > out->chg_current_max    // output charge current limit exceeded
-        || in->current < in->dis_current_max)       // input current (negative signs) limit exceeded
+    else if (out->current > out->chg_current_limit  // output charge current limit exceeded
+        || in->current < in->dis_current_limit)       // input current (negative signs) limit exceeded
     {
         dcdc->state = DCDC_STATE_CC;
         pwr_inc_goal = -1;  // decrease output power
@@ -136,19 +136,19 @@ int dcdc_check_start_conditions(Dcdc *dcdc)
         return 0;       // no energy transfer allowed
     }
 
-    if (dcdc->lv_bus->chg_current_max > 0 &&
+    if (dcdc->lv_bus->chg_current_limit > 0 &&
         dcdc->lv_bus->voltage < dcdc->lv_bus->chg_voltage_target &&
         dcdc->lv_bus->voltage > dcdc->lv_bus->chg_voltage_min &&
-        dcdc->hv_bus->dis_current_max < 0 &&
+        dcdc->hv_bus->dis_current_limit < 0 &&
         dcdc->hv_bus->voltage > dcdc->hv_bus->dis_voltage_start)
     {
         return 1;       // start in buck mode allowed
     }
 
-    if (dcdc->hv_bus->chg_current_max > 0 &&
+    if (dcdc->hv_bus->chg_current_limit > 0 &&
         dcdc->hv_bus->voltage < dcdc->hv_bus->chg_voltage_target &&
         dcdc->hv_bus->voltage > dcdc->hv_bus->chg_voltage_min &&
-        dcdc->lv_bus->dis_current_max < 0 &&
+        dcdc->lv_bus->dis_current_limit < 0 &&
         dcdc->lv_bus->voltage > dcdc->lv_bus->dis_voltage_start)
     {
         return -1;      // start in boost mode allowed

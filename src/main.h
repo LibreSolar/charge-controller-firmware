@@ -22,6 +22,8 @@
 #include "dc_bus.h"
 #include "log.h"
 #include "pwm_switch.h"
+#include "half_bridge.h"
+#include "load.h"
 
 extern LogData log_data;
 extern Charger charger;

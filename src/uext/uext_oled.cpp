@@ -122,7 +122,7 @@ void uext_process_1s()
     oled.setTextCursor(90, 18);
     oled.printf("%5.1fW", (abs(load_terminal.power) < 0.1) ? 0 : load_terminal.power);    // remove negative zeros
     oled.setTextCursor(90, 26);
-    oled.printf("%5.1fA\n", (abs(load.bus->current) < 0.1) ? 0 : load.bus->current);
+    oled.printf("%5.1fA\n", (abs(load_terminal.current) < 0.1) ? 0 : load_terminal.current);
 
     oled.setTextCursor(0, 36);
     oled.printf("Day +%5.0fWh -%5.0fWh", solar_terminal->dis_energy_Wh, fabs(load_terminal.chg_energy_Wh));

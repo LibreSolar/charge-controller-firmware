@@ -23,6 +23,7 @@
  * Structs needed for data logging (like max/min values, etc.)
  */
 
+#include "bat_charger.h"
 #include "dc_bus.h"
 #include "load.h"
 #include "dcdc.h"

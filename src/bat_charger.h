@@ -22,11 +22,10 @@
  * @brief Battery and charger configuration and functions
  */
 
-#include <stdbool.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include <stddef.h>
 
-#include "dcdc.h"
 #include "dc_bus.h"
 
 /** Battery cell types
@@ -81,9 +80,15 @@ typedef struct
 
     /** Maximum charge current in *CC/bulk* phase (A)
      *
-     * Limits the current if the PCB allows more than the battery.
+     * Limits the current if the PCB allows more than the battery. (positive value)
      */
     float charge_current_max;
+
+    /** Maximum discharge current via load port (A)
+     *
+     * Limits the current if the PCB allows more than the battery. (positive value)
+     */
+    float discharge_current_max;
 
     /** Maximum voltage in CV/absorption phase (V)
      *
@@ -348,9 +353,13 @@ void charger_init(Charger *charger);
  */
 void charger_detect_num_batteries(Charger *charger, BatConf *bat, DcBus *bus);
 
+/** Discharging control update (for load output), should be called once per second
+ */
+void battery_discharge_control(DcBus *bus, BatConf *bat_conf, Charger *charger);
+
 /** Charger state machine update, should be called once per second
  */
-void charger_state_machine(DcBus *port, BatConf *bat_conf, Charger *charger);
+void battery_charge_control(DcBus *bus, BatConf *bat_conf, Charger *charger);
 
 /** Calculates targets for junction of load and battery bus at the DC/DC output
 */

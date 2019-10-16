@@ -131,7 +131,7 @@ void no_buck_start_if_bat_voltage_high()
 void no_buck_start_if_bat_chg_not_allowed()
 {
     init_structs_buck();
-    lv_bus_int.chg_current_max = 0;
+    lv_bus_int.chg_current_limit = 0;
     TEST_ASSERT_EQUAL(0, dcdc_check_start_conditions(&dcdc));
 }
 
@@ -168,7 +168,7 @@ void no_boost_start_if_bat_voltage_high()
 void no_boost_start_if_bat_chg_not_allowed()
 {
     init_structs_boost();
-    hv_terminal.chg_current_max = 0;
+    hv_terminal.chg_current_limit = 0;
     TEST_ASSERT_EQUAL(0, dcdc_check_start_conditions(&dcdc));
 }
 
@@ -212,7 +212,7 @@ void buck_derating_output_current_too_high()
 {
     start_buck();
     float pwm_before = half_bridge_get_duty_cycle();
-    lv_bus_int.current = lv_bus_int.chg_current_max + 0.1;
+    lv_bus_int.current = lv_bus_int.chg_current_limit + 0.1;
     dcdc_control(&dcdc);
     float pwm_after = half_bridge_get_duty_cycle();
     TEST_ASSERT(pwm_after < pwm_before);
@@ -235,7 +235,7 @@ void buck_derating_input_current_too_high()
 {
     start_buck();
     float pwm_before = half_bridge_get_duty_cycle();
-    hv_terminal.current = hv_terminal.dis_current_max - 0.1;
+    hv_terminal.current = hv_terminal.dis_current_limit - 0.1;
     dcdc_control(&dcdc);
     float pwm_after = half_bridge_get_duty_cycle();
     TEST_ASSERT(pwm_after < pwm_before);
@@ -314,7 +314,7 @@ void boost_derating_output_current_too_high()
 {
     start_boost();
     float pwm_before = half_bridge_get_duty_cycle();
-    hv_terminal.current = hv_terminal.chg_current_max + 0.1;
+    hv_terminal.current = hv_terminal.chg_current_limit + 0.1;
     dcdc_control(&dcdc);
     float pwm_after = half_bridge_get_duty_cycle();
     TEST_ASSERT(pwm_after > pwm_before);
@@ -335,7 +335,7 @@ void boost_derating_input_current_too_high()
 {
     start_boost();
     float pwm_before = half_bridge_get_duty_cycle();
-    lv_bus_int.current = lv_bus_int.dis_current_max - 0.1;
+    lv_bus_int.current = lv_bus_int.dis_current_limit - 0.1;
     dcdc_control(&dcdc);
     float pwm_after = half_bridge_get_duty_cycle();
     TEST_ASSERT(pwm_after > pwm_before);

@@ -81,8 +81,8 @@ void log_update_min_max_values(LogData *log_data, Dcdc *dcdc, Charger *charger, 
         log_data->dcdc_current_max = dcdc->lv_bus->current;
     }
 
-    if (load->bus->current > log_data->load_current_max) {
-        log_data->load_current_max = load->bus->current;
+    if (load->terminal->current > log_data->load_current_max) {
+        log_data->load_current_max = load->terminal->current;
     }
 
     if (solar_bus->current < 0) {
@@ -95,8 +95,8 @@ void log_update_min_max_values(LogData *log_data, Dcdc *dcdc, Charger *charger, 
         }
     }
 
-    if (load->bus->current > 0) {
-        uint16_t load_power = load->bus->voltage * load->bus->current;
+    if (load->terminal->current > 0) {
+        uint16_t load_power = load->terminal->voltage * load->terminal->current;
         if (load_power > log_data->load_power_max_day) {
             log_data->load_power_max_day = load_power;
             if (log_data->load_power_max_day > log_data->load_power_max_total) {

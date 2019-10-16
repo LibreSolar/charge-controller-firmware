@@ -18,25 +18,22 @@
 
 void dc_bus_init_solar(DcBus *bus, float max_abs_current)
 {
-    bus->dis_allowed = true;         // PV panel may provide power to solar input of DC/DC
     bus->dis_voltage_start = 16.0;
     bus->dis_voltage_stop = 14.0;
-    bus->dis_current_max = -max_abs_current;
+    bus->dis_current_limit = -max_abs_current;
 
-    bus->chg_allowed = false;
+    bus->chg_current_limit = 0;     // no current towards solar panel allowed
 }
 
 void dc_bus_init_nanogrid(DcBus *bus)
 {
-    bus->dis_allowed = true;
     bus->dis_voltage_start = 30.0;       // starting buck mode above this point
     bus->dis_voltage_stop = 20.0;        // stopping buck mode below this point
-    bus->dis_current_max = -5.0;
+    bus->dis_current_limit = -5.0;
     bus->dis_droop_res = 0.1;            // 1 Ohm means 1V change of target voltage per amp
 
-    bus->chg_allowed = true;
     bus->chg_voltage_target = 28.0;     // starting idle mode above this point
-    bus->chg_current_max = 5.0;
+    bus->chg_current_limit = 5.0;
     bus->chg_voltage_min = 10.0;
     bus->chg_droop_res = 0.1;           // 1 Ohm means 1V change of target voltage per amp
 }

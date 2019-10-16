@@ -110,7 +110,7 @@ int main()
     battery_conf_overwrite(&bat_conf, &bat_conf_user);  // initialize conf_user with same values
     charger_init(&charger);
 
-    load_init(&load, &load_terminal);
+    load_init(&load, &lv_bus_int, &load_terminal);
 
 #ifdef CHARGER_TYPE_PWM
     pwm_switch_init(&pwm_switch);
@@ -189,11 +189,12 @@ int main()
 
             //printf("Still alive... time: %d, mode: %d\n", (int)time(NULL), dcdc.mode);
 
-            charger_state_machine(bat_terminal, &bat_conf, &charger);
+            battery_discharge_control(bat_terminal, &bat_conf, &charger);
+            battery_charge_control(bat_terminal, &bat_conf, &charger);
 
             charger_update_junction_bus(&lv_bus_int, bat_terminal, &load_terminal);
 
-            load_state_machine(&load, lv_terminal.dis_allowed);
+            load_state_machine(&load);
 
             eeprom_update();
 

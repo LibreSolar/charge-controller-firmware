@@ -17,13 +17,16 @@ static void init_structs()
     charger_init(&charger);
     battery_init_dc_bus(bat_terminal, &bat_conf, 1);
     charger.state = CHG_STATE_IDLE;
+    charger.bat_temperature = 25;
+    bat_terminal->voltage = 14.0;
+    bat_terminal->current = 0;
 }
 
 void no_start_at_high_voltage()
 {
     init_structs();
     bat_terminal->voltage = bat_conf.voltage_recharge + 0.1;
-    charger_state_machine(bat_terminal, &bat_conf, &charger);
+    battery_charge_control(bat_terminal, &bat_conf, &charger);
     TEST_ASSERT_EQUAL(CHG_STATE_IDLE, charger.state);
 }
 
@@ -32,7 +35,7 @@ void no_start_after_short_rest()
     init_structs();
     charger.time_state_changed = time(NULL) - bat_conf.time_limit_recharge + 1;
     bat_terminal->voltage = bat_conf.voltage_recharge - 0.1;
-    charger_state_machine(bat_terminal, &bat_conf, &charger);
+    battery_charge_control(bat_terminal, &bat_conf, &charger);
     TEST_ASSERT_EQUAL(CHG_STATE_IDLE, charger.state);
 }
 
@@ -41,11 +44,11 @@ void no_start_outside_temperature_limits()
     init_structs();
     charger.bat_temperature = bat_conf.charge_temp_max + 1;
     bat_terminal->voltage = bat_conf.voltage_recharge - 0.1;
-    charger_state_machine(bat_terminal, &bat_conf, &charger);
+    battery_charge_control(bat_terminal, &bat_conf, &charger);
     TEST_ASSERT_EQUAL(CHG_STATE_IDLE, charger.state);
 
     charger.bat_temperature = bat_conf.charge_temp_min - 1;
-    charger_state_machine(bat_terminal, &bat_conf, &charger);
+    battery_charge_control(bat_terminal, &bat_conf, &charger);
     TEST_ASSERT_EQUAL(CHG_STATE_IDLE, charger.state);
 }
 
@@ -54,7 +57,7 @@ void start_if_everything_just_fine()
     init_structs();
     charger.time_state_changed = time(NULL) - bat_conf.time_limit_recharge - 1;
     bat_terminal->voltage = bat_conf.voltage_recharge - 0.1;
-    charger_state_machine(bat_terminal, &bat_conf, &charger);
+    battery_charge_control(bat_terminal, &bat_conf, &charger);
     TEST_ASSERT_EQUAL(CHG_STATE_BULK, charger.state);
 }
 
@@ -63,10 +66,10 @@ void enter_topping_at_voltage_setpoint()
     init_structs();
     charger.time_state_changed = time(NULL) - bat_conf.time_limit_recharge - 1;
     bat_terminal->voltage = bat_conf.voltage_recharge - 0.1;
-    charger_state_machine(bat_terminal, &bat_conf, &charger);
+    battery_charge_control(bat_terminal, &bat_conf, &charger);
     TEST_ASSERT_EQUAL(CHG_STATE_BULK, charger.state);
     bat_terminal->voltage = bat_conf.topping_voltage + 0.1;
-    charger_state_machine(bat_terminal, &bat_conf, &charger);
+    battery_charge_control(bat_terminal, &bat_conf, &charger);
     TEST_ASSERT_EQUAL(CHG_STATE_TOPPING, charger.state);
 }
 
@@ -78,11 +81,11 @@ void stop_topping_after_time_limit()
     bat_terminal->voltage = bat_conf.topping_voltage + 0.1;
     bat_terminal->current = bat_conf.topping_current_cutoff + 0.1;
 
-    charger_state_machine(bat_terminal, &bat_conf, &charger);
+    battery_charge_control(bat_terminal, &bat_conf, &charger);
     TEST_ASSERT_EQUAL(CHG_STATE_TOPPING, charger.state);
 
     charger.time_state_changed = time(NULL) - bat_conf.topping_duration - 1;
-    charger_state_machine(bat_terminal, &bat_conf, &charger);
+    battery_charge_control(bat_terminal, &bat_conf, &charger);
     TEST_ASSERT_EQUAL(CHG_STATE_TRICKLE, charger.state);
 }
 
@@ -93,7 +96,7 @@ void stop_topping_at_cutoff_current()
     charger.time_state_changed = time(NULL) - 1;
     bat_terminal->voltage = bat_conf.topping_voltage + 0.1;
     bat_terminal->current = bat_conf.topping_current_cutoff - 0.1;
-    charger_state_machine(bat_terminal, &bat_conf, &charger);
+    battery_charge_control(bat_terminal, &bat_conf, &charger);
     TEST_ASSERT_EQUAL(CHG_STATE_TRICKLE, charger.state);
 }
 
@@ -105,7 +108,7 @@ void trickle_to_idle_for_li_ion()
     charger.time_state_changed = time(NULL) - 1;
     bat_terminal->voltage = bat_conf.topping_voltage + 0.1;
     bat_terminal->current = bat_conf.topping_current_cutoff - 0.1;
-    charger_state_machine(bat_terminal, &bat_conf, &charger);
+    battery_charge_control(bat_terminal, &bat_conf, &charger);
     TEST_ASSERT_EQUAL(CHG_STATE_IDLE, charger.state);
 }
 
@@ -118,11 +121,11 @@ void no_trickle_if_low_current_because_of_low_input()
     bat_terminal->voltage = bat_conf.topping_voltage - 0.1;
     bat_terminal->current = bat_conf.topping_current_cutoff - 0.1;
 
-    charger_state_machine(bat_terminal, &bat_conf, &charger);
+    battery_charge_control(bat_terminal, &bat_conf, &charger);
     TEST_ASSERT_EQUAL(CHG_STATE_TOPPING, charger.state);
 
     charger.time_voltage_limit_reached = time(NULL) - 1;
-    charger_state_machine(bat_terminal, &bat_conf, &charger);
+    battery_charge_control(bat_terminal, &bat_conf, &charger);
     TEST_ASSERT_EQUAL(CHG_STATE_TRICKLE, charger.state);
 }
 
@@ -140,7 +143,7 @@ void no_equalization_if_disabled()
     charger.time_state_changed = time(NULL) - 1;
     bat_terminal->voltage = bat_conf.topping_voltage + 0.1;
     bat_terminal->current = bat_conf.topping_current_cutoff - 0.1;
-    charger_state_machine(bat_terminal, &bat_conf, &charger);
+    battery_charge_control(bat_terminal, &bat_conf, &charger);
     TEST_ASSERT_NOT_EQUAL(CHG_STATE_EQUALIZATION, charger.state);
 }
 
@@ -158,7 +161,7 @@ void no_equalization_if_limits_not_reached()
     charger.time_state_changed = time(NULL) - 1;
     bat_terminal->voltage = bat_conf.topping_voltage + 0.1;
     bat_terminal->current = bat_conf.topping_current_cutoff - 0.1;
-    charger_state_machine(bat_terminal, &bat_conf, &charger);
+    battery_charge_control(bat_terminal, &bat_conf, &charger);
     TEST_ASSERT_NOT_EQUAL(CHG_STATE_EQUALIZATION, charger.state);
 }
 
@@ -172,7 +175,7 @@ void trickle_to_equalization_if_enabled_and_time_limit_reached()
     charger.time_state_changed = time(NULL) - 1;
     bat_terminal->voltage = bat_conf.topping_voltage + 0.1;
     bat_terminal->current = bat_conf.topping_current_cutoff - 0.1;
-    charger_state_machine(bat_terminal, &bat_conf, &charger);
+    battery_charge_control(bat_terminal, &bat_conf, &charger);
     TEST_ASSERT_EQUAL(CHG_STATE_EQUALIZATION, charger.state);
 }
 
@@ -187,7 +190,7 @@ void trickle_to_equalization_if_enabled_and_deep_dis_limit_reached()
     charger.time_state_changed = time(NULL) - 1;
     bat_terminal->voltage = bat_conf.topping_voltage + 0.1;
     bat_terminal->current = bat_conf.topping_current_cutoff - 0.1;
-    charger_state_machine(bat_terminal, &bat_conf, &charger);
+    battery_charge_control(bat_terminal, &bat_conf, &charger);
     TEST_ASSERT_EQUAL(CHG_STATE_EQUALIZATION, charger.state);
 }
 
@@ -199,11 +202,11 @@ void stop_equalization_after_time_limit()
     charger.time_state_changed = time(NULL) - bat_conf.equalization_duration + 1;
     bat_terminal->voltage = bat_conf.equalization_voltage + 0.1;
 
-    charger_state_machine(bat_terminal, &bat_conf, &charger);
+    battery_charge_control(bat_terminal, &bat_conf, &charger);
     TEST_ASSERT_EQUAL(CHG_STATE_EQUALIZATION, charger.state);
 
     charger.time_state_changed = time(NULL) - bat_conf.topping_duration - 1;
-    charger_state_machine(bat_terminal, &bat_conf, &charger);
+    battery_charge_control(bat_terminal, &bat_conf, &charger);
     TEST_ASSERT_EQUAL(CHG_STATE_TRICKLE, charger.state);
 }
 
@@ -212,10 +215,79 @@ void restart_bulk_from_trickle_if_voltage_drops()
     TEST_ASSERT(0);
 }
 
+void stop_discharge_at_low_voltage()
+{
+    init_structs();
+
+    bat_terminal->voltage = 14;
+    battery_discharge_control(bat_terminal, &bat_conf, &charger);
+    TEST_ASSERT_LESS_THAN(0, bat_terminal->dis_current_limit);
+
+    bat_terminal->voltage = bat_conf.voltage_load_disconnect - 0.1;
+    battery_discharge_control(bat_terminal, &bat_conf, &charger);
+    TEST_ASSERT_EQUAL(0, bat_terminal->dis_current_limit);
+}
+
+void stop_discharge_at_overtemp()
+{
+    init_structs();
+    TEST_ASSERT_LESS_THAN(0, bat_terminal->dis_current_limit);
+
+    charger.bat_temperature = bat_conf.discharge_temp_max + 1;
+    battery_discharge_control(bat_terminal, &bat_conf, &charger);
+    TEST_ASSERT_EQUAL(0, bat_terminal->dis_current_limit);
+}
+
+void stop_discharge_at_undertemp()
+{
+    init_structs();
+    TEST_ASSERT_LESS_THAN(0, bat_terminal->dis_current_limit);
+
+    charger.bat_temperature = bat_conf.discharge_temp_min - 1;
+    battery_discharge_control(bat_terminal, &bat_conf, &charger);
+    TEST_ASSERT_EQUAL(0, bat_terminal->dis_current_limit);
+}
+
+void restart_discharge_if_allowed()
+{
+    init_structs();
+
+    // stop because of undervoltage
+    bat_terminal->voltage = bat_conf.voltage_load_disconnect - 0.1;
+    battery_discharge_control(bat_terminal, &bat_conf, &charger);
+    TEST_ASSERT_EQUAL(0, bat_terminal->dis_current_limit);
+
+    // increase voltage slightly above DISconnect voltage
+    bat_terminal->voltage = bat_conf.voltage_load_disconnect + 0.1;
+    battery_discharge_control(bat_terminal, &bat_conf, &charger);
+    TEST_ASSERT_EQUAL(0, bat_terminal->dis_current_limit);
+
+    // increase voltage above REconnect voltage
+    bat_terminal->voltage = bat_conf.voltage_load_reconnect + 0.1;
+    battery_discharge_control(bat_terminal, &bat_conf, &charger);
+    TEST_ASSERT_LESS_THAN(0, bat_terminal->dis_current_limit);
+}
+
+void battery_values_propagated_to_lv_bus_int()
+{
+    TEST_ASSERT(0);
+}
+
+void no_soc_above_100()
+{
+    TEST_ASSERT(0);
+}
+
+void no_soc_below_0()
+{
+    TEST_ASSERT(0);
+}
+
 void bat_charger_tests()
 {
     UNITY_BEGIN();
 
+    // startup of charging
     RUN_TEST(no_start_at_high_voltage);
     RUN_TEST(no_start_after_short_rest);
     RUN_TEST(no_start_outside_temperature_limits);
@@ -241,6 +313,17 @@ void bat_charger_tests()
 
     // TODO: temperature compensation
     // TODO: current compensation
+
+    RUN_TEST(stop_discharge_at_low_voltage);
+    RUN_TEST(stop_discharge_at_overtemp);
+    RUN_TEST(stop_discharge_at_undertemp);
+    RUN_TEST(restart_discharge_if_allowed);
+
+    //RUN_TEST(battery_values_propagated_to_lv_bus_int);
+
+    // ToDo: SOC calculation
+    //RUN_TEST(no_soc_above_100);
+    //RUN_TEST(no_soc_below_0);
 
     UNITY_END();
 }

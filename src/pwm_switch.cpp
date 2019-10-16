@@ -130,7 +130,7 @@ void pwm_switch_init(PwmSwitch *pwm_switch)
 void pwm_switch_control(PwmSwitch *pwm_switch, DcBus *solar_bus, DcBus *bat_bus)
 {
     if (_enabled) {
-        if (bat_bus->chg_allowed == false || solar_bus->dis_allowed == false
+        if (bat_bus->chg_current_limit == 0 || solar_bus->dis_current_limit == 0
             || solar_bus->current > 0           // discharging battery into solar panel --> stop
             || pwm_switch->enabled == false)
         {
@@ -139,8 +139,8 @@ void pwm_switch_control(PwmSwitch *pwm_switch, DcBus *solar_bus, DcBus *bat_bus)
             printf("PWM charger stop.\n");
         }
         else if (bat_bus->voltage > (bat_bus->chg_voltage_target - bat_bus->chg_droop_res * bat_bus->current)    // output voltage above target
-            || bat_bus->current > bat_bus->chg_current_max         // output current limit exceeded
-            || solar_bus->current < solar_bus->dis_current_max)    // input current (negative signs) above limit
+            || bat_bus->current > bat_bus->chg_current_limit         // output current limit exceeded
+            || solar_bus->current < solar_bus->dis_current_limit)    // input current (negative signs) above limit
         {
             // The gate driver switch-off time is quite high (fall time around 1ms), so very short
             // on or off periods (duty cycle close to 0 and 1) should be avoided
@@ -169,10 +169,10 @@ void pwm_switch_control(PwmSwitch *pwm_switch, DcBus *solar_bus, DcBus *bat_bus)
         }
     }
     else {
-        if (bat_bus->chg_allowed == true
+        if (bat_bus->chg_current_limit > 0          // charging allowed
             && bat_bus->voltage < bat_bus->chg_voltage_target
             && bat_bus->voltage > bat_bus->chg_voltage_min
-            && solar_bus->dis_allowed == true
+            && solar_bus->dis_current_limit < 0     // dischraging allowed
             && solar_bus->voltage > bat_bus->voltage + pwm_switch->offset_voltage_start
             && time(NULL) > (pwm_switch->off_timestamp + pwm_switch->restart_interval)
             && pwm_switch->enabled == true)
