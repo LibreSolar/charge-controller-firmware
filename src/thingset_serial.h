@@ -24,9 +24,9 @@
  */
 
 #include "mbed.h"
-#include "thingset_device.h"
+#include "thingset_interface.h"
 
-class ThingSetStream: public ThingSetDevice
+class ThingSetStream: public ThingSetInterface
 {
     public:
         ThingSetStream(Stream& s, const unsigned int c): channel(c), stream(&s) {};
@@ -34,7 +34,7 @@ class ThingSetStream: public ThingSetDevice
         virtual void process_asap();
         virtual void process_1s();
 
-    protected:                
+    protected:
         virtual void process_input(); // this is called from the ISR typically
         const unsigned int channel;
 
@@ -61,13 +61,13 @@ template<typename T> class ThingSetSerial: public ThingSetStream
             Callback<void()>  cb([this]() -> void { this->process_input();});
             ser.attach(cb);
         }
-        
+
     private:
         bool readable()
         {
             return ser.readable();
         }
-        
+
     private:
         T& ser;
 };

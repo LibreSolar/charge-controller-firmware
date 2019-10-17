@@ -19,10 +19,10 @@
 #include "config.h"
 #include "mbed.h"
 #include "thingset.h"
-#include "thingset_device.h"
+#include "thingset_interface.h"
 
 /*
- * Construct all global ThingSetDevices here. 
+ * Construct all global ThingSetInterfaces here.
  * All of these are added to the list of devices
  * for later processing in the normal operation
  */
@@ -56,11 +56,11 @@
 #endif /* USB_SERIAL_ENABLED */
 
 
-// we use ifdef here in order to avoid using some dynamically 
+// we use ifdef here in order to avoid using some dynamically
 // allocated list. Only std::vector works with this code if NO devices are enabled
 // std::array and also plain C arrays work if at least one array element is there.
- 
-std::vector<ThingSetDevice*> ThingSetDeviceManager::devices =
+
+std::vector<ThingSetInterface*> ThingSetInterfaceManager::interfaces =
 {
 #ifdef UART_SERIAL_ENABLED
     &ts_uart,
@@ -74,12 +74,29 @@ std::vector<ThingSetDevice*> ThingSetDeviceManager::devices =
 };
 
 // run the respective function on all objects in the "devices" list
-// use the c++11 lambda expressions here for the for_each loop, keeps things compact 
+// use the c++11 lambda expressions here for the for_each loop, keeps things compact
 
-void ThingSetDeviceManager::process_asap()  { for_each(std::begin(devices),std::end(devices), [](ThingSetDevice* dev) { dev->process_asap(); }); }
-void ThingSetDeviceManager::enable()        { for_each(std::begin(devices),std::end(devices), [](ThingSetDevice* dev) { dev->enable();       }); }
-void ThingSetDeviceManager::process_1s()    { for_each(std::begin(devices),std::end(devices), [](ThingSetDevice* dev) { dev->process_1s();   }); }
+void ThingSetInterfaceManager::process_asap()
+{
+    for_each(std::begin(interfaces),std::end(interfaces), [](ThingSetInterface* tsif) {
+        tsif->process_asap();
+    });
+}
 
-ThingSetDeviceManager ts_devices;
+void ThingSetInterfaceManager::enable()
+{
+    for_each(std::begin(interfaces),std::end(interfaces), [](ThingSetInterface* tsif) {
+        tsif->enable();
+    });
+}
+
+void ThingSetInterfaceManager::process_1s()
+{
+    for_each(std::begin(interfaces),std::end(interfaces), [](ThingSetInterface* tsif) {
+        tsif->process_1s();
+    });
+}
+
+ThingSetInterfaceManager ts_interfaces;
 
 #endif /* UNIT_TEST */

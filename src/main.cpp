@@ -134,7 +134,7 @@ int main()
     calibrate_current_sensors();
 
     // Communication interfaces
-    ts_devices.enable();
+    ts_interfaces.enable();
 
     uext_init();
     init_watchdog(10);      // 10s should be enough for communication ports
@@ -181,7 +181,7 @@ int main()
     time_t last_call = timestamp;
     while (1) {
 
-        ts_devices.process_asap();
+        ts_interfaces.process_asap();
         uext_process_asap();
 
         time_t now = timestamp;
@@ -202,7 +202,7 @@ int main()
             leds_update_soc(charger.soc, load.switch_state == LOAD_STATE_OFF_LOW_SOC);
 
             uext_process_1s();
-            ts_devices.process_1s();
+            ts_interfaces.process_1s();
 
             last_call = now;
         }

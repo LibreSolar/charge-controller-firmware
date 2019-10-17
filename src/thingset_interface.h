@@ -13,12 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef _THINGSET_DEVICE_H_
-#define _THINGSET_DEVICE_H_
+
+#ifndef THINGSET_INTERFACE_H
+#define THINGSET_INTERFACE_H
 
 #include <vector>
 
-class ThingSetDevice
+class ThingSetInterface
 {
     public:
         virtual void process_asap()  {};
@@ -28,16 +29,16 @@ class ThingSetDevice
 
 };
 
-class ThingSetDeviceManager: public ThingSetDevice
+class ThingSetInterfaceManager: public ThingSetInterface
 {
     public:
         virtual void process_asap();
         virtual void process_1s();
-
         virtual void enable();
+
     private:
-        static std::vector<ThingSetDevice*> devices;
+        static std::vector<ThingSetInterface*> interfaces;
 };
 
-extern ThingSetDeviceManager ts_devices;
+extern ThingSetInterfaceManager ts_interfaces;
 #endif

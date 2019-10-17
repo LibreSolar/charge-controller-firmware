@@ -45,7 +45,6 @@ class ThingSetCAN_Device
 };
 
 
-
 //----------------------------------------------------------------------------
 // preliminary simple CAN functions to send data to the bus for logging
 // Data format based on CBOR specification (except for first byte, which uses
@@ -56,8 +55,11 @@ class ThingSetCAN_Device
 
 extern ThingSet ts;
 
-ThingSetCAN::ThingSetCAN(uint8_t can_node_id, const unsigned int c): node_id(can_node_id), channel(c), can(PIN_CAN_RX, PIN_CAN_TX, CAN_SPEED), 
-can_disable(PIN_CAN_STB)
+ThingSetCAN::ThingSetCAN(uint8_t can_node_id, const unsigned int c):
+    node_id(can_node_id),
+    channel(c),
+    can(PIN_CAN_RX, PIN_CAN_TX, CAN_SPEED),
+    can_disable(PIN_CAN_STB)
 {
     can_disable = 1; // we disable the transceiver
     can.mode(CAN::Normal);
@@ -70,7 +72,7 @@ void ThingSetCAN::enable()
 {
     can_disable = 0; // we enable the transceiver
     #if defined(CAN_RECEIVE)
-    can.attach([this](){ this->process_input(); } ); 
+    can.attach([this](){ this->process_input(); } );
     #endif
 }
 
@@ -97,8 +99,6 @@ bool ThingSetCAN::pub_object(const data_object_t& data_obj)
 }
 
 
-
-
 /**
  * returns number of can objects added to queue
  */
@@ -117,7 +117,7 @@ int ThingSetCAN::pub()
                 if (pub_object(*data_obj))
                 {
                     retval++;
-                }  
+                }
             }
         }
     }
@@ -160,7 +160,7 @@ void ThingSetCAN::send_object_name(int data_obj_id, uint8_t can_dest_id)
     msg.id = msg_priority << 26 | function_id << 16 |(can_dest_id << 8)| node_id;      // TODO: add destination node ID
 
     const data_object_t *dop = ts.get_data_object(data_obj_id);
-    
+
     if (dop != NULL) {
         if (dop->access & TS_ACCESS_READ) {
             msg.data[2] = TS_T_STRING;
@@ -236,7 +236,7 @@ void ThingSetCAN::process_inbox()
                         }
                     }
                     break;
-                }             
+                }
                 case TS_NAME:
                     data_obj_id = msg.data[1] + (msg.data[2] << 8);
                     send_object_name(data_obj_id, can_dest_id);
@@ -247,7 +247,9 @@ void ThingSetCAN::process_inbox()
         max_attempts--;
     }
 }
-void ThingSetCAN::process_input() {
+
+void ThingSetCAN::process_input()
+{
     CANMessage msg;
     while (can.read(msg)) {
         if (!rx_queue.full()) {
