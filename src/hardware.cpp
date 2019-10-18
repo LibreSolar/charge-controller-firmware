@@ -178,11 +178,21 @@ void mbed_die(void)
 
 #define MAGIC_CODE_ADDR     (SRAM_END - 0xF)    // where the magic code is stored
 
-void start_dfu_bootloader()
+void start_stm32_bootloader()
 {
+#ifdef PIN_BOOT0_EN
+    // pin is connected to BOOT0 via resistor and capacitor
+    DigitalOut boot0_en(PIN_BOOT0_EN);
+
+    boot0_en = 1;
+    wait_ms(100);   // wait for capacitor at BOOT0 pin to charge up
+
+    NVIC_SystemReset();
+#elif defined (STM32F0)
     // place magic code at end of RAM and initiate reset
     *((uint32_t *)(MAGIC_CODE_ADDR)) = 0xDEADBEEF;
     NVIC_SystemReset();
+#endif
 }
 
 // This function should be called at the beginning of SystemInit in system_clock.c (mbed target directory)
@@ -193,28 +203,9 @@ extern "C" void system_init_hook()
 
         uint32_t jump_address;
 
-#ifdef STM32L0
-        // Trying to implement this solution, but doesn't work properly...
-        // https://stackoverflow.com/questions/42020893/stm32l073rz-rev-z-iap-jump-to-bootloader-system-memory
-        if (*((uint32_t *)(MAGIC_CODE_ADDR + 4)) == 0) {      // first jump
-
-            *((uint32_t *)(MAGIC_CODE_ADDR + 4)) = 0xAAAAAAAA;
-
-            // Reinitialize the Stack pointer and jump to application address
-            jump_address = *((uint32_t *) (SYS_MEM_START + 4));
-        }
-        else {
-            *((uint32_t *)(MAGIC_CODE_ADDR)) =  0x00000000;  // reset the first trigger
-            *((uint32_t *)(MAGIC_CODE_ADDR + 4)) =  0x00000000;  // reset the second trigger
-
-            // Reinitialize the Stack pointer and jump to application address
-            jump_address = (*((uint32_t *) (0x1FF00369)));
-        }
-#else // STM32F0 and possibly others
         *((uint32_t *)(MAGIC_CODE_ADDR)) =  0x00000000;  // reset the trigger
 
         jump_address = (*((uint32_t *) (SYS_MEM_START + 4)));
-#endif
 
         // reinitialize stack pointer
         __set_MSP(SYS_MEM_START);
@@ -228,35 +219,6 @@ extern "C" void system_init_hook()
     }
 }
 
-/*
-// alternative approach suggested by STM (without reset and magic bytes)
-
-void BootLoaderInit(uint32_t BootLoaderStatus)
-{
-    void (*SysMemJump)(void);
-    SysMemJump = (void (*)(void)) (*((uint32_t *) (SYS_MEM_START + 4))); // for STM32F0
-
-    if (BootLoaderStatus == 1) {
-
-        printf("Trying to jump to bootloader!\n");
-
-        // shut down any tasks running
-        HAL_RCC_DeInit();
-        SysTick->CTRL = 0;  // reset Systick Timer
-        SysTick->LOAD = 0;
-        SysTick->VAL = 0;
-
-        //__set_PRIMASK(1);   // disable interrupts
-
-        __set_MSP(SYS_MEM_START);
-
-        SysMemJump();
-
-        while(42);
-    }
-}
-*/
-
 #else
 
 // dummy functions for unit tests
@@ -266,6 +228,6 @@ void init_watchdog(float timeout) {;}
 void feed_the_dog() {;}
 void control_timer_start(int freq_Hz) {;}
 void system_control() {;}
-void start_dfu_bootloader() {;}
+void start_stm32_bootloader() {;}
 
 #endif /* UNIT_TEST */

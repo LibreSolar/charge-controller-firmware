@@ -43,8 +43,8 @@ void control_timer_start(int freq_Hz);
  */
 void system_control();
 
-/** Reset device and go into USB DFU mode bootloader
+/** Reset device and start STM32 internal bootloader
  */
-void start_dfu_bootloader();
+void start_stm32_bootloader();
 
 #endif /* HARDWARE_H */

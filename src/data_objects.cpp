@@ -186,10 +186,10 @@ const data_object_t data_objects[] = {
 
     // FUNCTION CALLS (EXEC) //////////////////////////////////////////////////
 #ifndef UNIT_TEST
-    {0xE0, TS_EXEC, TS_EXEC_ALL, TS_T_BOOL, 0, (void*) &NVIC_SystemReset,     "Reset"},
+    {0xE0, TS_EXEC, TS_EXEC_ALL, TS_T_BOOL, 0, (void*) &NVIC_SystemReset,           "Reset"},
 #endif
-    {0xE1, TS_EXEC, TS_EXEC_ALL, TS_T_BOOL, 0, (void*) &start_dfu_bootloader, "BootloaderSTM"},
-    {0xE2, TS_EXEC, TS_EXEC_ALL, TS_T_BOOL, 0, (void*) &eeprom_store_data,    "SaveSettings"},
+    {0xE1, TS_EXEC, TS_EXEC_ALL, TS_T_BOOL, 0, (void*) &start_stm32_bootloader,     "BootloaderSTM"},
+    {0xE2, TS_EXEC, TS_EXEC_ALL, TS_T_BOOL, 0, (void*) &eeprom_store_data,          "SaveSettings"},
 };
 
 // stores object-ids of values to be published via Serial

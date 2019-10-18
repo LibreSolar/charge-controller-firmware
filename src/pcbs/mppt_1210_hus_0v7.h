@@ -51,6 +51,7 @@
 #define PIN_5V_PGOOD    PC_15
 
 #define PIN_EXT_BTN     PB_12
+#define PIN_BOOT0_EN    PB_12
 
 #define PIN_REF_I_DCDC  PA_4
 

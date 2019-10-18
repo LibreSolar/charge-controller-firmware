@@ -54,6 +54,9 @@
 #define PIN_USB_PWR_DIS PB_5
 #define PIN_I_LOAD_COMP PB_4
 
+#define PIN_EXT_BTN     PB_12
+#define PIN_BOOT0_EN    PB_12
+
 #define PIN_REF_I_DCDC  PA_4
 
 #define PIN_TEMP_INT_PD PA_8
