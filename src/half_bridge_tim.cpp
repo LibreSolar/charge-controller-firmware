@@ -297,10 +297,10 @@ void half_bridge_set_duty_cycle(float duty)
 {
     _half_bridge_set_duty_cycle(_pwm_resolution * duty);
 }
-
+#include <stdio.h>
 void half_bridge_duty_cycle_step(int delta)
 {
-    half_bridge_set_duty_cycle(((float)(PWM_TIM_HW::get_ccr() + delta))/_pwm_resolution);
+    _half_bridge_set_duty_cycle(PWM_TIM_HW::get_ccr() + delta);
 }
 
 float half_bridge_get_duty_cycle()
