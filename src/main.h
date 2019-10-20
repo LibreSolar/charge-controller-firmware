@@ -24,15 +24,26 @@
 #include "pwm_switch.h"
 #include "half_bridge.h"
 #include "load.h"
-
-extern DcBus hv_bus;
-extern PowerPort dcdc_port_hv;
-extern PowerPort hv_terminal;
+#include "pcb.h"
 
 extern DcBus lv_bus;
-extern PowerPort dcdc_port_lv;
 extern PowerPort lv_terminal;
 extern PowerPort load_terminal;
+
+#if FEATURE_DCDC_CONVERTER
+extern DcBus hv_bus;
+extern PowerPort hv_terminal;
+extern PowerPort dcdc_port_hv;
+extern PowerPort dcdc_port_lv;
+extern Dcdc dcdc;
+#endif
+
+#if FEATURE_PWM_SWITCH
+extern DcBus pwm_sw_ext;
+extern PowerPort pwm_terminal;
+extern PowerPort pwm_port_int;
+extern PwmSwitch pwm_switch;
+#endif
 
 extern PowerPort &bat_terminal;
 extern PowerPort &solar_terminal;
@@ -42,10 +53,4 @@ extern Charger charger;
 extern BatConf bat_conf;
 extern BatConf bat_conf_user;
 
-#ifndef CHARGER_TYPE_PWM
-extern Dcdc dcdc;
-#endif
-
 extern LoadOutput load;
-
-extern PwmSwitch pwm_switch;

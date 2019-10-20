@@ -14,21 +14,21 @@
  * limitations under the License.
  */
 
-#ifndef UNIT_TEST
-
 #include "pwm_switch.h"
 #include "config.h"
 #include "pcb.h"
 
+#include <stdio.h>
 #include <time.h>       // for time(NULL) function
 
 #if FEATURE_PWM_SWITCH
 
 static int _pwm_resolution;
+static bool _pwm_active;
 
-static bool _enabled;
+#ifndef UNIT_TEST
 
-void pwm_switch_init_registers(int freq_Hz)
+void pwm_signal_init_registers(int freq_Hz)
 {
     // Enable peripheral clock of GPIOB
     RCC->IOPENR |= RCC_IOPENR_IOPBEN;
@@ -69,31 +69,26 @@ void pwm_switch_init_registers(int freq_Hz)
     TIM3->ARR = _pwm_resolution - 1;
 }
 
-void pwm_switch_set_duty_cycle(float duty)
+void pwm_signal_set_duty_cycle(float duty)
 {
     TIM3->CCR4 = _pwm_resolution * duty;
 }
 
-void pwm_switch_duty_cycle_step(int delta)
+void pwm_signal_duty_cycle_step(int delta)
 {
     if ((int)TIM3->CCR4 + delta <= _pwm_resolution && (int)TIM3->CCR4 + delta >= 0) {
         TIM3->CCR4 += delta;
     }
 }
 
-bool pwm_switch_enabled()
-{
-    return _enabled;
-}
-
-float pwm_switch_get_duty_cycle()
+float pwm_signal_get_duty_cycle()
 {
     return (float)(TIM3->CCR4) / _pwm_resolution;
 }
 
-void pwm_switch_start(float pwm_duty)
+void pwm_signal_start(float pwm_duty)
 {
-    pwm_switch_set_duty_cycle(pwm_duty);
+    pwm_signal_set_duty_cycle(pwm_duty);
 
     // Capture/Compare Enable Register
     // CCxE = 1: Enable the output on OCx
@@ -102,86 +97,109 @@ void pwm_switch_start(float pwm_duty)
     // CCxNP = 0: Active high polarity on OC1N (default)
     TIM3->CCER |= TIM_CCER_CC4E;
 
-    _enabled = true;
+    _pwm_active = true;
 }
 
-void pwm_switch_stop()
+void pwm_signal_stop()
 {
     TIM3->CCER &= ~(TIM_CCER_CC4E);
     TIM3->CCR4 = 0;
-    _enabled = false;
+    _pwm_active = false;
 }
 
-void pwm_switch_init(PwmSwitch *pwm_switch)
+#else
+
+// dummy functions for unit tests
+float pwm_signal_get_duty_cycle() { return 0; }
+void pwm_signal_set_duty_cycle(float duty) {;}
+void pwm_signal_duty_cycle_step(int delta) {;}
+void pwm_signal_init_registers(int freq_Hz) {;}
+void pwm_signal_start(float pwm_duty) {;}
+void pwm_signal_stop() {;}
+
+#endif
+
+bool PwmSwitch::active()
 {
-    pwm_switch->off_timestamp = -10000;              // start immediately
+    return _pwm_active;
+}
+
+PwmSwitch::PwmSwitch(PowerPort *pwm_terminal, PowerPort *pwm_port_int)
+{
+    terminal = pwm_terminal;
+    port_int = pwm_port_int;
+
+    off_timestamp = -10000;              // start immediately
 
     // calibration parameters
-    pwm_switch->offset_voltage_start = 2.0;     // V  charging switched on if Vsolar > Vbat + offset
-    pwm_switch->restart_interval = 60;          // s  When should we retry to start charging after low solar power cut-off?
+    offset_voltage_start = 2.0;     // V  charging switched on if Vsolar > Vbat + offset
+    restart_interval = 60;          // s  When should we retry to start charging after low solar power cut-off?
 
-    pwm_switch_init_registers(PWM_FREQUENCY);
+    pwm_signal_init_registers(PWM_FREQUENCY);
 
-    pwm_switch->enabled = true;     // enable charging in general
-    _enabled = false;               // still disable actual switch
+    enabled = true;     // enable charging in general
+    _pwm_active = false;               // still disable actual switch
 }
 
-void pwm_switch_control(PwmSwitch *pwm_switch, PowerPort *solar, PowerPort *bat)
+void PwmSwitch::control()
 {
-    if (_enabled) {
-        if (bat->chg_current_limit == 0 || solar->dis_current_limit == 0
-            || solar->current > 0           // discharging battery into solar panel --> stop
-            || pwm_switch->enabled == false)
+    if (_pwm_active) {
+        if (port_int->chg_current_limit == 0 || terminal->dis_current_limit == 0
+            || terminal->current > 0           // discharging battery into solar panel --> stop
+            || enabled == false)
         {
-            pwm_switch_stop();
-            pwm_switch->off_timestamp = time(NULL);
+            pwm_signal_stop();
+            off_timestamp = time(NULL);
             printf("PWM charger stop.\n");
         }
-        else if (bat->bus->voltage > (bat->bus->chg_voltage_target - bat->chg_droop_res * bat->current)    // output voltage above target
-            || bat->current > bat->chg_current_limit         // output current limit exceeded
-            || solar->current < solar->dis_current_limit)    // input current (negative signs) above limit
+        else if (port_int->bus->voltage > (port_int->bus->chg_voltage_target - port_int->chg_droop_res * port_int->current)    // output voltage above target
+            || port_int->current > port_int->chg_current_limit         // output current limit exceeded
+            || terminal->current < terminal->dis_current_limit)    // input current (negative signs) above limit
         {
             // The gate driver switch-off time is quite high (fall time around 1ms), so very short
             // on or off periods (duty cycle close to 0 and 1) should be avoided
-            if (pwm_switch_get_duty_cycle() > 0.95) {
+            if (pwm_signal_get_duty_cycle() > 0.95) {
                 // prevent very short off periods
-                pwm_switch_set_duty_cycle(0.95);
+                pwm_signal_set_duty_cycle(0.95);
             }
-            else if (pwm_switch_get_duty_cycle() < 0.05) {
+            else if (pwm_signal_get_duty_cycle() < 0.05) {
                 // prevent very short on periods and switch completely off instead
-                pwm_switch_stop();
-                pwm_switch->off_timestamp = time(NULL);
+                pwm_signal_stop();
+                off_timestamp = time(NULL);
                 printf("PWM charger stop, no further derating possible.\n");
             }
             else {
-                pwm_switch_duty_cycle_step(-1);
+                pwm_signal_duty_cycle_step(-1);
             }
         }
         else {
-            if (pwm_switch_get_duty_cycle() > 0.95) {
+            if (pwm_signal_get_duty_cycle() > 0.95) {
                 // prevent very short off periods and switch completely on instead
-                pwm_switch_set_duty_cycle(1);
+                pwm_signal_set_duty_cycle(1);
             }
             else {
-                pwm_switch_duty_cycle_step(1);
+                pwm_signal_duty_cycle_step(1);
             }
         }
     }
     else {
-        if (bat->chg_current_limit > 0          // charging allowed
-            && bat->bus->voltage < bat->bus->chg_voltage_target
-            && bat->bus->voltage > bat->bus->chg_voltage_min
-            && solar->dis_current_limit < 0     // dischraging allowed
-            && solar->bus->voltage > bat->bus->voltage + pwm_switch->offset_voltage_start
-            && time(NULL) > (pwm_switch->off_timestamp + pwm_switch->restart_interval)
-            && pwm_switch->enabled == true)
+        if (port_int->chg_current_limit > 0          // charging allowed
+            && port_int->bus->voltage < port_int->bus->chg_voltage_target
+            && port_int->bus->voltage > port_int->bus->chg_voltage_min
+            && terminal->dis_current_limit < 0     // dischraging allowed
+            && terminal->bus->voltage > port_int->bus->voltage + offset_voltage_start
+            && time(NULL) > (off_timestamp + restart_interval)
+            && enabled == true)
         {
-            pwm_switch_start(1);
+            pwm_signal_start(1);
             printf("PWM charger start.\n");
         }
     }
 }
 
-#endif /* FEATURE_PWM_SWITCH */
+float PwmSwitch::get_duty_cycle()
+{
+    return pwm_signal_get_duty_cycle();
+}
 
-#endif /* UNIT_TEST */
+#endif /* FEATURE_PWM_SWITCH */

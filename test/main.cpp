@@ -17,24 +17,38 @@
 
 #include "tests.h"
 
+DcBus lv_bus;
+PowerPort lv_terminal(&lv_bus);         // low voltage terminal (battery for typical MPPT)
+
+#if FEATURE_DCDC_CONVERTER
 DcBus hv_bus;
 PowerPort hv_terminal(&hv_bus);         // high voltage terminal (solar for typical MPPT)
 PowerPort dcdc_port_hv(&hv_bus);        // internal high voltage side port of DC/DC converter
-
-DcBus lv_bus;
 PowerPort dcdc_port_lv(&lv_bus);        // internal low voltage side of DC/DC converter
-PowerPort lv_terminal(&lv_bus);         // low voltage terminal (battery for typical MPPT)
-PowerPort load_terminal(&lv_bus);       // load terminal (also connected to lv_bus)
-
-PowerPort &bat_terminal = lv_terminal;
-PowerPort &solar_terminal = hv_terminal;
-
 Dcdc dcdc(&dcdc_port_hv, &dcdc_port_lv, DCDC_MODE_INIT);
+#endif
 
-PwmSwitch pwm_switch = {};      // only necessary for PWM charger
+#if FEATURE_PWM_SWITCH
+DcBus pwm_sw_ext;
+PowerPort pwm_terminal(&pwm_sw_ext);    // external terminal of PWM switch port (normally solar)
+PowerPort pwm_port_int(&lv_bus);        // internal side of PWM switch
+PwmSwitch pwm_switch(&pwm_terminal, &pwm_port_int);
+PowerPort &solar_terminal = pwm_terminal;
+#else
+PowerPort &solar_terminal = SOLAR_TERMINAL;     // defined in config.h
+#endif
+
+#if FEATURE_LOAD_OUTPUT
+PowerPort load_terminal(&lv_bus);       // load terminal (also connected to lv_bus)
+LoadOutput load(&load_terminal);
+#endif
+
+PowerPort &bat_terminal = BATTERY_TERMINAL;     // defined in config.h
+#ifdef GRID_TERMINAL
+PowerPort &grid_terminal = GRID_TERMINAL;
+#endif
 
 Charger charger(&lv_terminal);
-LoadOutput load(&load_terminal);
 
 BatConf bat_conf;               // actual (used) battery configuration
 BatConf bat_conf_user;          // temporary storage where the user can write to

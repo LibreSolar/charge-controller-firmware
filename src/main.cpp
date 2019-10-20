@@ -54,9 +54,13 @@ Dcdc dcdc(&dcdc_port_hv, &dcdc_port_lv, DCDC_MODE_INIT);
 #endif
 
 #if FEATURE_PWM_SWITCH
-DcBus hv_bus;
-PowerPort hv_terminal(&hv_bus);         // high voltage terminal (solar for typical MPPT)
-PwmSwitch pwm_switch = {};
+DcBus pwm_sw_ext;
+PowerPort pwm_terminal(&pwm_sw_ext);    // external terminal of PWM switch port (normally solar)
+PowerPort pwm_port_int(&lv_bus);        // internal side of PWM switch
+PwmSwitch pwm_switch(&pwm_terminal, &pwm_port_int);
+PowerPort &solar_terminal = pwm_terminal;
+#else
+PowerPort &solar_terminal = SOLAR_TERMINAL;     // defined in config.h
 #endif
 
 #if FEATURE_LOAD_OUTPUT
@@ -64,9 +68,7 @@ PowerPort load_terminal(&lv_bus);       // load terminal (also connected to lv_b
 LoadOutput load(&load_terminal);
 #endif
 
-// configure actual terminal connections as defined in config.h
-PowerPort &bat_terminal = BATTERY_TERMINAL;
-PowerPort &solar_terminal = SOLAR_TERMINAL;
+PowerPort &bat_terminal = BATTERY_TERMINAL;     // defined in config.h
 #ifdef GRID_TERMINAL
 PowerPort &grid_terminal = GRID_TERMINAL;
 #endif
@@ -84,45 +86,6 @@ time_t timestamp;    // current unix timestamp (independent of time(NULL), as it
 
 Serial serial(PIN_SWD_TX, PIN_SWD_RX, "serial", 115200);
 
-/** High priority function for DC/DC control and safety functions
- *
- * Called by control timer with 10 Hz frequency (see hardware.cpp).
- */
-void system_control()
-{
-    static int counter = 0;
-
-    // convert ADC readings to meaningful measurement values
-    update_measurements();
-
-    #if FEATURE_PWM_SWITCH
-    pwm_switch_control(&pwm_switch, &hv_terminal, &bat_terminal);
-    leds_set_charging(pwm_switch_enabled());
-    #endif
-
-    #if FEATURE_DCDC_CONVERTER
-    dcdc.control();     // control of DC/DC including MPPT algorithm
-    leds_set_charging(half_bridge_enabled());
-    #endif
-
-    load.control(bat_conf.voltage_absolute_max * charger.num_batteries);
-
-    if (counter % CONTROL_FREQUENCY == 0) {
-        // called once per second (this timer is much more accurate than time(NULL) based on LSI)
-        // see also here: https://github.com/ARMmbed/mbed-os/issues/9065
-        timestamp++;
-        counter = 0;
-        // energy + soc calculation must be called exactly once per second
-        solar_terminal.energy_balance();
-        bat_terminal.energy_balance();
-        load_terminal.energy_balance();
-        log_update_energy(&log_data);
-        log_update_min_max_values(&log_data);
-        charger.update_soc(&bat_conf);
-    }
-    counter++;
-}
-
 /** Main function including initialization and continuous loop
  */
 int main()
@@ -131,15 +94,6 @@ int main()
 
     battery_conf_init(&bat_conf, BATTERY_TYPE, BATTERY_NUM_CELLS, BATTERY_CAPACITY);
     battery_conf_overwrite(&bat_conf, &bat_conf_user);  // initialize conf_user with same values
-
-    #if FEATURE_DCDC_CONVERTER
-    // lower duty limit might have to be adjusted dynamically depending on LS voltage
-    half_bridge_init(PWM_FREQUENCY, PWM_DEADTIME, 12 / dcdc.hs_voltage_max, 0.97);
-    #endif
-
-    #if FEATURE_PWM_SWITCH
-    pwm_switch_init(&pwm_switch);
-    #endif
 
     // Configuration from EEPROM
     data_objects_read_eeprom();
@@ -216,6 +170,45 @@ int main()
         feed_the_dog();
         sleep();    // wake-up by timer interrupts
     }
+}
+
+/** High priority function for DC/DC / PWM control and safety functions
+ *
+ * Called by control timer with 10 Hz frequency (see hardware.cpp).
+ */
+void system_control()
+{
+    static int counter = 0;
+
+    // convert ADC readings to meaningful measurement values
+    update_measurements();
+
+    #if FEATURE_PWM_SWITCH
+    pwm_switch.control();
+    leds_set_charging(pwm_switch.active());
+    #endif
+
+    #if FEATURE_DCDC_CONVERTER
+    dcdc.control();     // control of DC/DC including MPPT algorithm
+    leds_set_charging(half_bridge_enabled());
+    #endif
+
+    load.control(bat_conf.voltage_absolute_max * charger.num_batteries);
+
+    if (counter % CONTROL_FREQUENCY == 0) {
+        // called once per second (this timer is much more accurate than time(NULL) based on LSI)
+        // see also here: https://github.com/ARMmbed/mbed-os/issues/9065
+        timestamp++;
+        counter = 0;
+        // energy + soc calculation must be called exactly once per second
+        solar_terminal.energy_balance();
+        bat_terminal.energy_balance();
+        load_terminal.energy_balance();
+        log_update_energy(&log_data);
+        log_update_min_max_values(&log_data);
+        charger.update_soc(&bat_conf);
+    }
+    counter++;
 }
 
 #endif

@@ -48,6 +48,9 @@ Dcdc::Dcdc(PowerPort *hv_side, PowerPort *lv_side, DcdcOperationMode op_mode)
     restart_interval = 60;
     off_timestamp = -10000;       // start immediately
     pwm_delta = 1;                // start-condition of duty cycle pwr_inc_pwm_direction
+
+    // lower duty limit might have to be adjusted dynamically depending on LS voltage
+    half_bridge_init(PWM_FREQUENCY, PWM_DEADTIME, 12 / hs_voltage_max, 0.97);
 }
 
 int Dcdc::duty_cycle_delta()

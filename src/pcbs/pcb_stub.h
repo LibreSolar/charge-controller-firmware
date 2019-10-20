@@ -22,9 +22,11 @@
 
 // specify features of charge controller
 #define FEATURE_DCDC_CONVERTER  1
-#define FEATURE_PWM_SWITCH      0
+#define FEATURE_PWM_SWITCH      1
 #define FEATURE_LOAD_OUTPUT     1
 
+#define PWM_FREQUENCY 50    // kHz
+#define PWM_DEADTIME 230    // ns
 #define PWM_TIM        3    // use TIM3 timer
 
 #define DCDC_CURRENT_MAX 20  // PCB maximum DCDC output current
@@ -85,6 +87,12 @@ static const pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
 #define ADC_GAIN_I_LOAD (1000 / 4 / 50) // amp gain: 50, resistor: 4 mOhm
 #define ADC_GAIN_I_DCDC (1000 / 4 / 50)
 
+#define ADC_OFFSET_V_SOLAR (-120.0 / 8.2)        // to be multiplied with VDDA to get absolute voltage offset
+
+// trick to pass unit tests for MPPT
+#define ADC_POS_I_SOLAR ADC_POS_I_DCDC
+#define ADC_GAIN_I_SOLAR ADC_GAIN_I_DCDC
+
 // position in the array written by the DMA controller
 enum {
     ADC_POS_V_BAT,      // ADC 0 (PA_0)
@@ -96,6 +104,5 @@ enum {
     ADC_POS_TEMP_MCU,   // ADC 18
     NUM_ADC_CH          // trick to get the number of elements
 };
-
 
 #endif
