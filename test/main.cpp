@@ -26,8 +26,8 @@ PowerPort dcdc_port_lv(&lv_bus);        // internal low voltage side of DC/DC co
 PowerPort lv_terminal(&lv_bus);         // low voltage terminal (battery for typical MPPT)
 PowerPort load_terminal(&lv_bus);       // load terminal (also connected to lv_bus)
 
-PowerPort *bat_terminal = NULL;         // pointer to terminal where battery is connected
-PowerPort *solar_terminal = NULL;       // pointer to above terminal where solar panel is connected
+PowerPort &bat_terminal = lv_terminal;
+PowerPort &solar_terminal = hv_terminal;
 
 Dcdc dcdc(&dcdc_port_hv, &dcdc_port_lv, DCDC_MODE_INIT);
 
@@ -47,9 +47,6 @@ time_t timestamp;    // current unix timestamp (independent of time(NULL), as it
 
 int main()
 {
-    bat_terminal = &lv_terminal;
-    solar_terminal = &hv_terminal;
-
     adc_tests();
     bat_charger_tests();
     dc_bus_tests();

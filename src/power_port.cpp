@@ -16,10 +16,10 @@
 
 #include "power_port.h"
 
-void PowerPort::init_solar(float max_abs_current)
+void PowerPort::init_solar()
 {
-    dis_current_limit = -max_abs_current;
-    chg_current_limit = 0;     // no current towards solar panel allowed
+    dis_current_limit = -50;    // derating based on max. DC/DC or PWM switch current only
+    chg_current_limit = 0;      // no current towards solar panel allowed
 
     // also initialize the connected bus
     bus->dis_voltage_start = 16.0;

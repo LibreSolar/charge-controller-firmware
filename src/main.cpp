@@ -42,27 +42,36 @@
 #include "thingset_serial.h"    // UART or USB serial communication
 #include "thingset_can.h"       // CAN bus communication
 
-Serial serial(PIN_SWD_TX, PIN_SWD_RX, "serial", 115200);
+DcBus lv_bus;
+PowerPort lv_terminal(&lv_bus);         // low voltage terminal (battery for typical MPPT)
 
+#if FEATURE_DCDC_CONVERTER
 DcBus hv_bus;
 PowerPort hv_terminal(&hv_bus);         // high voltage terminal (solar for typical MPPT)
 PowerPort dcdc_port_hv(&hv_bus);        // internal high voltage side port of DC/DC converter
-
-DcBus lv_bus;
 PowerPort dcdc_port_lv(&lv_bus);        // internal low voltage side of DC/DC converter
-PowerPort lv_terminal(&lv_bus);         // low voltage terminal (battery for typical MPPT)
-PowerPort load_terminal(&lv_bus);       // load terminal (also connected to lv_bus)
-
-PowerPort *bat_terminal = NULL;
-PowerPort *solar_terminal = NULL;
-PowerPort *grid_terminal = NULL;
-
 Dcdc dcdc(&dcdc_port_hv, &dcdc_port_lv, DCDC_MODE_INIT);
+#endif
 
-PwmSwitch pwm_switch = {};      // only necessary for PWM charger
+#if FEATURE_PWM_SWITCH
+DcBus hv_bus;
+PowerPort hv_terminal(&hv_bus);         // high voltage terminal (solar for typical MPPT)
+PwmSwitch pwm_switch = {};
+#endif
 
-Charger charger(&lv_terminal);
+#if FEATURE_LOAD_OUTPUT
+PowerPort load_terminal(&lv_bus);       // load terminal (also connected to lv_bus)
 LoadOutput load(&load_terminal);
+#endif
+
+// configure actual terminal connections as defined in config.h
+PowerPort &bat_terminal = BATTERY_TERMINAL;
+PowerPort &solar_terminal = SOLAR_TERMINAL;
+#ifdef GRID_TERMINAL
+PowerPort &grid_terminal = GRID_TERMINAL;
+#endif
+
+Charger charger(&bat_terminal);
 
 BatConf bat_conf;               // actual (used) battery configuration
 BatConf bat_conf_user;          // temporary storage where the user can write to
@@ -72,6 +81,8 @@ LogData log_data;
 extern ThingSet ts;             // defined in data_objects.cpp
 
 time_t timestamp;    // current unix timestamp (independent of time(NULL), as it is user-configurable)
+
+Serial serial(PIN_SWD_TX, PIN_SWD_RX, "serial", 115200);
 
 /** High priority function for DC/DC control and safety functions
  *
@@ -84,15 +95,15 @@ void system_control()
     // convert ADC readings to meaningful measurement values
     update_measurements();
 
-#ifdef CHARGER_TYPE_PWM
-    pwm_switch_control(&pwm_switch, &hv_terminal, bat_terminal);
+    #if FEATURE_PWM_SWITCH
+    pwm_switch_control(&pwm_switch, &hv_terminal, &bat_terminal);
     leds_set_charging(pwm_switch_enabled());
-#else
-    // control PWM of the DC/DC according to hs and ls port settings
-    // (this function includes MPPT algorithm)
-    dcdc.control();
+    #endif
+
+    #if FEATURE_DCDC_CONVERTER
+    dcdc.control();     // control of DC/DC including MPPT algorithm
     leds_set_charging(half_bridge_enabled());
-#endif
+    #endif
 
     load.control(bat_conf.voltage_absolute_max * charger.num_batteries);
 
@@ -102,11 +113,11 @@ void system_control()
         timestamp++;
         counter = 0;
         // energy + soc calculation must be called exactly once per second
-        hv_terminal.energy_balance();
-        lv_terminal.energy_balance();
+        solar_terminal.energy_balance();
+        bat_terminal.energy_balance();
         load_terminal.energy_balance();
-        log_update_energy(&log_data, &hv_terminal, &lv_terminal, &load_terminal);
-        log_update_min_max_values(&log_data, &dcdc, &charger, &load, &hv_terminal, &lv_terminal, &load_terminal);
+        log_update_energy(&log_data);
+        log_update_min_max_values(&log_data);
         charger.update_soc(&bat_conf);
     }
     counter++;
@@ -121,11 +132,14 @@ int main()
     battery_conf_init(&bat_conf, BATTERY_TYPE, BATTERY_NUM_CELLS, BATTERY_CAPACITY);
     battery_conf_overwrite(&bat_conf, &bat_conf_user);  // initialize conf_user with same values
 
-#ifdef CHARGER_TYPE_PWM
+    #if FEATURE_DCDC_CONVERTER
+    // lower duty limit might have to be adjusted dynamically depending on LS voltage
+    half_bridge_init(PWM_FREQUENCY, PWM_DEADTIME, 12 / dcdc.hs_voltage_max, 0.97);
+    #endif
+
+    #if FEATURE_PWM_SWITCH
     pwm_switch_init(&pwm_switch);
-#else // MPPT
-    half_bridge_init(PWM_FREQUENCY, PWM_DEADTIME, 12 / dcdc.hs_voltage_max, 0.97);       // lower duty limit might have to be adjusted dynamically depending on LS voltage
-#endif
+    #endif
 
     // Configuration from EEPROM
     data_objects_read_eeprom();
@@ -147,32 +161,14 @@ int main()
     uext_init();
     init_watchdog(10);      // 10s should be enough for communication ports
 
-#ifdef CHARGER_TYPE_PWM
-    bat_terminal = &lv_terminal;
-    solar_terminal = &hv_terminal;
-    solar_terminal->init_solar(PWM_CURRENT_MAX);
-#else
-    // Setup of DC/DC power stage
-    switch(dcdc.mode) {
-        case MODE_NANOGRID:
-            bat_terminal = &lv_terminal;
-            hv_terminal.init_nanogrid();
-            break;
-        case MODE_MPPT_BUCK:     // typical MPPT charge controller operation
-            bat_terminal = &lv_terminal;
-            solar_terminal = &hv_terminal;
-            solar_terminal->init_solar(DCDC_CURRENT_MAX);
-            break;
-        case MODE_MPPT_BOOST:    // for charging of e-bike battery via solar panel
-            bat_terminal = &hv_terminal;
-            solar_terminal = &lv_terminal;
-            solar_terminal->init_solar(DCDC_CURRENT_MAX);
-            break;
-    }
-#endif
+    solar_terminal.init_solar();
+
+    #ifdef GRID_TERMINAL
+    grid_terminal.init_nanogrid();
+    #endif
 
     charger.detect_num_batteries(&bat_conf);     // check if we have 24V instead of 12V system
-    battery_init_dc_bus(&lv_bus, bat_terminal, &bat_conf, charger.num_batteries);
+    battery_init_dc_bus(&bat_terminal, &bat_conf, charger.num_batteries);
 
     wait(2);    // safety feature: be able to re-flash before starting
     control_timer_start(CONTROL_FREQUENCY);
@@ -201,7 +197,9 @@ int main()
             charger.discharge_control(&bat_conf);
             charger.charge_control(&bat_conf);
 
-            update_dcdc_current_targets(&dcdc_port_lv, bat_terminal, &load_terminal);
+            #if FEATURE_DCDC_CONVERTER
+            update_dcdc_current_targets(&dcdc_port_lv, &bat_terminal, &load_terminal);
+            #endif
 
             load.state_machine();
 

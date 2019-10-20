@@ -66,11 +66,10 @@ typedef struct {
 
 /** Updates the total energy counters for solar, battery and load bus
  */
-void log_update_energy(LogData *log_data, PowerPort *solar, PowerPort *bat, PowerPort *load);
+void log_update_energy(LogData *log_data);
 
 /** Updates the logged min/max values for voltages, power, temperatures etc.
  */
-void log_update_min_max_values(LogData *log_data, Dcdc *dcdc, Charger *charger, LoadOutput *load,
-    PowerPort *solar_bus, PowerPort *bat_bus, PowerPort *load_bus);
+void log_update_min_max_values(LogData *log_data);
 
 #endif /* LOG_H */

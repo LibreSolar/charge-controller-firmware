@@ -72,9 +72,10 @@ void calibrate_current_sensors()
 {
     int vcc = VREFINT_VALUE * VREFINT_CAL /
         (adc_filtered[ADC_POS_VREF_MCU] >> (4 + ADC_FILTER_CONST));
-#ifdef CHARGER_TYPE_PWM
+#if FEATURE_PWM_SWITCH
     solar_current_offset = -(float)(((adc_filtered[ADC_POS_I_SOLAR] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) * ADC_GAIN_I_SOLAR / 1000.0;
-#else
+#endif
+#if FEATURE_DCDC_CONVERTER
     solar_current_offset = -(float)(((adc_filtered[ADC_POS_I_DCDC] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) * ADC_GAIN_I_DCDC / 1000.0;
 #endif
     load_current_offset = -(float)(((adc_filtered[ADC_POS_I_LOAD] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) * ADC_GAIN_I_LOAD / 1000.0;
@@ -109,25 +110,26 @@ void update_measurements()
         (float)(((adc_filtered[ADC_POS_I_LOAD] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
         ADC_GAIN_I_LOAD / 1000.0 + load_current_offset;
 
-#ifdef CHARGER_TYPE_PWM
+#if FEATURE_PWM_SWITCH
     // current multiplied with PWM duty cycle for PWM charger to get avg current for correct power calculation
     hv_terminal.current = - pwm_switch_get_duty_cycle() * (
         (float)(((adc_filtered[ADC_POS_I_SOLAR] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
         ADC_GAIN_I_SOLAR / 1000.0 + solar_current_offset);
     lv_terminal.current = -hv_terminal.current - load_terminal.current;
-#else // MPPT
+#endif
+#if FEATURE_DCDC_CONVERTER
     dcdc_port_lv.current =
         (float)(((adc_filtered[ADC_POS_I_DCDC] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
         ADC_GAIN_I_DCDC / 1000.0 + solar_current_offset;
     lv_terminal.current = dcdc_port_lv.current - load_terminal.current;
     hv_terminal.current = -dcdc_port_lv.current * lv_bus.voltage / hv_bus.voltage;
     dcdc_port_hv.current = hv_terminal.current;
+
+    dcdc_port_lv.power  = lv_bus.voltage * dcdc_port_lv.current;
+    dcdc_port_hv.power  = hv_bus.voltage * dcdc_port_hv.current;
 #endif
 
-    // power calculations
-    dcdc_port_hv.power  = hv_bus.voltage * dcdc_port_hv.current;
     hv_terminal.power   = hv_bus.voltage * hv_terminal.current;
-    dcdc_port_lv.power  = lv_bus.voltage * dcdc_port_lv.current;
     lv_terminal.power   = lv_bus.voltage * lv_terminal.current;
     load_terminal.power = lv_bus.voltage * load_terminal.current;
 

@@ -27,7 +27,7 @@
 
 extern LogData log_data;
 
-#ifdef CHARGER_TYPE_PWM
+#if FEATURE_DCDC_CONVERTER == 0
 
 Dcdc::Dcdc(PowerPort *hv_side, PowerPort *lv_side, DcdcOperationMode op_mode) {}
 

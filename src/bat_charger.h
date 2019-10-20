@@ -366,7 +366,7 @@ void battery_conf_overwrite(BatConf *source, BatConf *destination, Charger *char
  *
  * @param num_batteries definies the number of series connected batteries, e.g. 2 for 24V system
  */
-void battery_init_dc_bus(DcBus *bus, PowerPort *port, BatConf *bat, unsigned int num_batteries);
+void battery_init_dc_bus(PowerPort *port, BatConf *bat, unsigned int num_batteries);
 
 /** Calculates targets for junction of load and battery bus at the DC/DC output
 */

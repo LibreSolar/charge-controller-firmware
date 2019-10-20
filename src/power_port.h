@@ -79,7 +79,7 @@ public:
      *
      * @param max_abs_current Maximum input current allowed by PCB (as a positive value)
      */
-    void init_solar(float max_abs_current);
+    void init_solar();
 
     /** Initialize power port for nanogrid connection
      */

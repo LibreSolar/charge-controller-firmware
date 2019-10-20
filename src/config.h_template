@@ -26,6 +26,9 @@
 #define DCDC_MODE_INIT      MODE_MPPT_BUCK
 //#define DCDC_MODE_INIT      MODE_NANOGRID
 
+#define SOLAR_TERMINAL      hv_terminal
+#define BATTERY_TERMINAL    lv_terminal
+
 // basic battery configuration
 #define BATTERY_TYPE        BAT_TYPE_GEL    ///< GEL most suitable for general batteries (see bat_charger.h for other types)
 #define BATTERY_NUM_CELLS   6               ///< For lead-acid batteries: 6 for 12V system, 12 for 24V system

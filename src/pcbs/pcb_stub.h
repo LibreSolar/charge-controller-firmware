@@ -20,6 +20,11 @@
 #define DEVICE_TYPE "PCB-STUB"
 #define HARDWARE_VERSION "v0.1"
 
+// specify features of charge controller
+#define FEATURE_DCDC_CONVERTER  1
+#define FEATURE_PWM_SWITCH      0
+#define FEATURE_LOAD_OUTPUT     1
+
 #define PWM_TIM        3    // use TIM3 timer
 
 #define DCDC_CURRENT_MAX 20  // PCB maximum DCDC output current

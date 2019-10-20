@@ -22,8 +22,7 @@
 
 #include <time.h>       // for time(NULL) function
 
-// timer used for PWM generation has to be globally selected for the used PCB
-#if (PWM_TIM == 3) && defined(CHARGER_TYPE_PWM)
+#if FEATURE_PWM_SWITCH
 
 static int _pwm_resolution;
 
@@ -183,6 +182,6 @@ void pwm_switch_control(PwmSwitch *pwm_switch, PowerPort *solar, PowerPort *bat)
     }
 }
 
-#endif /* CHARGER_TYPE_PWM */
+#endif /* FEATURE_PWM_SWITCH */
 
 #endif /* UNIT_TEST */

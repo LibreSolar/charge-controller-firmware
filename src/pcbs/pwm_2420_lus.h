@@ -27,7 +27,10 @@
 
 #include "mbed.h"
 
-#define CHARGER_TYPE_PWM 1  // PWM charge controller instead of MPPT
+// specify features of charge controller
+#define FEATURE_DCDC_CONVERTER  0
+#define FEATURE_PWM_SWITCH      1
+#define FEATURE_LOAD_OUTPUT     1
 
 #define PWM_TIM        3    // use TIM3 timer
 #define PWM_FREQUENCY  25   // Hz

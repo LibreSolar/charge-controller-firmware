@@ -34,6 +34,9 @@ extern PowerPort dcdc_port_lv;
 extern PowerPort lv_terminal;
 extern PowerPort load_terminal;
 
+extern PowerPort &bat_terminal;
+extern PowerPort &solar_terminal;
+
 extern LogData log_data;
 extern Charger charger;
 extern BatConf bat_conf;

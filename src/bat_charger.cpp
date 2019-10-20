@@ -441,19 +441,19 @@ void Charger::charge_control(BatConf *bat_conf)
     }
 }
 
-void battery_init_dc_bus(DcBus *bus, PowerPort *port, BatConf *bat, unsigned int num_batteries)
+void battery_init_dc_bus(PowerPort *port, BatConf *bat, unsigned int num_batteries)
 {
     unsigned int n = (num_batteries == 2 ? 2 : 1);  // only 1 or 2 allowed
 
-    bus->dis_voltage_start = bat->voltage_load_reconnect * n;
-    bus->dis_voltage_stop = bat->voltage_load_disconnect * n;
+    port->bus->dis_voltage_start = bat->voltage_load_reconnect * n;
+    port->bus->dis_voltage_stop = bat->voltage_load_disconnect * n;
     port->dis_current_limit = -bat->discharge_current_max;
 
     // negative sign for compensation of actual resistance
     port->dis_droop_res = -(bat->internal_resistance + -bat->wire_resistance) * n;
 
-    bus->chg_voltage_target = bat->topping_voltage * n;
-    bus->chg_voltage_min = bat->voltage_absolute_min * n;
+    port->bus->chg_voltage_target = bat->topping_voltage * n;
+    port->bus->chg_voltage_min = bat->voltage_absolute_min * n;
     port->chg_current_limit = bat->charge_current_max;
 
     // negative sign for compensation of actual resistance

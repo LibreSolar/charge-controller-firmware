@@ -11,13 +11,13 @@
 
 static void init_structs_buck()
 {
-    dcdc_port_hv.init_solar(10);
+    dcdc_port_hv.init_solar();
     dcdc_port_hv.bus->voltage = 20;
     dcdc_port_hv.bus->dis_voltage_start = 18;
     dcdc_port_hv.current = 0;
 
     battery_conf_init(&bat_conf, BAT_TYPE_GEL, 6, 100);
-    battery_init_dc_bus(&lv_bus, &dcdc_port_lv, &bat_conf, 1);
+    battery_init_dc_bus(&dcdc_port_lv, &bat_conf, 1);
     dcdc_port_lv.bus->voltage = 14;
     dcdc_port_lv.current = 0;
 
@@ -43,14 +43,14 @@ static void init_structs_boost()
 {
     half_bridge_stop();
 
-    dcdc_port_hv.init_solar(10);
+    dcdc_port_hv.init_solar();
     dcdc_port_lv.bus->voltage = 20;
     dcdc_port_lv.bus->dis_voltage_start = 18;
     dcdc_port_lv.current = 0;
     dcdc_port_lv.power = 0;
 
     battery_conf_init(&bat_conf, BAT_TYPE_NMC, 10, 9);
-    battery_init_dc_bus(&hv_bus, &dcdc_port_hv, &bat_conf, 1);
+    battery_init_dc_bus(&dcdc_port_hv, &bat_conf, 1);
     dcdc_port_hv.bus->voltage = 3.7 * 10;
     dcdc_port_hv.current = 0;
     dcdc_port_hv.power = 0;
