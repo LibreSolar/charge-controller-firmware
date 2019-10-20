@@ -24,7 +24,7 @@
  */
 
 #include "bat_charger.h"
-#include "dc_bus.h"
+#include "power_port.h"
 #include "load.h"
 #include "dcdc.h"
 #include <stdbool.h>
@@ -66,10 +66,11 @@ typedef struct {
 
 /** Updates the total energy counters for solar, battery and load bus
  */
-void log_update_energy(LogData *log_data, DcBus *solar, DcBus *bat, DcBus *load);
+void log_update_energy(LogData *log_data, PowerPort *solar, PowerPort *bat, PowerPort *load);
 
 /** Updates the logged min/max values for voltages, power, temperatures etc.
  */
-void log_update_min_max_values(LogData *log_data, Dcdc *dcdc, Charger *charger, LoadOutput *load, DcBus *solar_bus, DcBus *bat_bus, DcBus *load_bus);
+void log_update_min_max_values(LogData *log_data, Dcdc *dcdc, Charger *charger, LoadOutput *load,
+    PowerPort *solar_bus, PowerPort *bat_bus, PowerPort *load_bus);
 
 #endif /* LOG_H */

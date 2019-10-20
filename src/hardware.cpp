@@ -25,6 +25,8 @@
 #include "us_ticker_data.h"
 #include "leds.h"
 
+extern LoadOutput load;
+
 #if defined(STM32F0)
 
 void control_timer_start(int freq_Hz)   // max. 10 kHz
@@ -152,8 +154,8 @@ void init_watchdog(float timeout) {
 void mbed_die(void)
 {
     half_bridge_stop();
-    load_switch_set(false);
-    load_usb_set(false);
+    load.switch_set(false);
+    load.usb_set(false);
 
     leds_init(false);
 

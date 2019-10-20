@@ -44,19 +44,31 @@
 
 Serial serial(PIN_SWD_TX, PIN_SWD_RX, "serial", 115200);
 
-Dcdc dcdc = {};
-DcBus hv_terminal = {};         // high voltage terminal (solar for typical MPPT)
-DcBus lv_bus_int = {};          // internal low voltage side of DC/DC converter
-DcBus lv_terminal = {};         // low voltage terminal (battery for typical MPPT)
-DcBus load_terminal = {};       // load terminal
-DcBus *bat_terminal = NULL;     // pointer to terminal where battery is connected
-DcBus *solar_terminal = NULL;   // pointer to above terminal where solar panel is connected
+DcBus hv_bus;
+PowerPort hv_terminal(&hv_bus);         // high voltage terminal (solar for typical MPPT)
+PowerPort dcdc_port_hv(&hv_bus);        // internal high voltage side port of DC/DC converter
+
+DcBus lv_bus;
+PowerPort dcdc_port_lv(&lv_bus);        // internal low voltage side of DC/DC converter
+PowerPort lv_terminal(&lv_bus);         // low voltage terminal (battery for typical MPPT)
+PowerPort load_terminal(&lv_bus);       // load terminal (also connected to lv_bus)
+
+PowerPort *bat_terminal = NULL;
+PowerPort *solar_terminal = NULL;
+PowerPort *grid_terminal = NULL;
+
+Dcdc dcdc(&dcdc_port_hv, &dcdc_port_lv, DCDC_MODE_INIT);
+
 PwmSwitch pwm_switch = {};      // only necessary for PWM charger
+
+Charger charger(&lv_terminal);
+LoadOutput load(&load_terminal);
+
 BatConf bat_conf;               // actual (used) battery configuration
 BatConf bat_conf_user;          // temporary storage where the user can write to
-Charger charger;                // charger state information
-LoadOutput load;
+
 LogData log_data;
+
 extern ThingSet ts;             // defined in data_objects.cpp
 
 time_t timestamp;    // current unix timestamp (independent of time(NULL), as it is user-configurable)
@@ -78,11 +90,11 @@ void system_control()
 #else
     // control PWM of the DC/DC according to hs and ls port settings
     // (this function includes MPPT algorithm)
-    dcdc_control(&dcdc);
+    dcdc.control();
     leds_set_charging(half_bridge_enabled());
 #endif
 
-    load_control(&load, bat_conf.voltage_absolute_max * charger.num_batteries);
+    load.control(bat_conf.voltage_absolute_max * charger.num_batteries);
 
     if (counter % CONTROL_FREQUENCY == 0) {
         // called once per second (this timer is much more accurate than time(NULL) based on LSI)
@@ -90,12 +102,12 @@ void system_control()
         timestamp++;
         counter = 0;
         // energy + soc calculation must be called exactly once per second
-        dc_bus_energy_balance(&hv_terminal);
-        dc_bus_energy_balance(&lv_terminal);
-        dc_bus_energy_balance(&load_terminal);
+        hv_terminal.energy_balance();
+        lv_terminal.energy_balance();
+        load_terminal.energy_balance();
         log_update_energy(&log_data, &hv_terminal, &lv_terminal, &load_terminal);
         log_update_min_max_values(&log_data, &dcdc, &charger, &load, &hv_terminal, &lv_terminal, &load_terminal);
-        battery_update_soc(&bat_conf, &charger, bat_terminal);
+        charger.update_soc(&bat_conf);
     }
     counter++;
 }
@@ -108,14 +120,10 @@ int main()
 
     battery_conf_init(&bat_conf, BATTERY_TYPE, BATTERY_NUM_CELLS, BATTERY_CAPACITY);
     battery_conf_overwrite(&bat_conf, &bat_conf_user);  // initialize conf_user with same values
-    charger_init(&charger);
-
-    load_init(&load, &lv_bus_int, &load_terminal);
 
 #ifdef CHARGER_TYPE_PWM
     pwm_switch_init(&pwm_switch);
 #else // MPPT
-    dcdc_init(&dcdc, &hv_terminal, &lv_bus_int, DCDC_MODE_INIT);
     half_bridge_init(PWM_FREQUENCY, PWM_DEADTIME, 12 / dcdc.hs_voltage_max, 0.97);       // lower duty limit might have to be adjusted dynamically depending on LS voltage
 #endif
 
@@ -142,28 +150,29 @@ int main()
 #ifdef CHARGER_TYPE_PWM
     bat_terminal = &lv_terminal;
     solar_terminal = &hv_terminal;
-    dc_bus_init_solar(solar_terminal, PWM_CURRENT_MAX);
+    solar_terminal->init_solar(PWM_CURRENT_MAX);
 #else
     // Setup of DC/DC power stage
     switch(dcdc.mode) {
         case MODE_NANOGRID:
             bat_terminal = &lv_terminal;
-            dc_bus_init_nanogrid(&hv_terminal);
+            hv_terminal.init_nanogrid();
             break;
         case MODE_MPPT_BUCK:     // typical MPPT charge controller operation
             bat_terminal = &lv_terminal;
             solar_terminal = &hv_terminal;
-            dc_bus_init_solar(solar_terminal, DCDC_CURRENT_MAX);
+            solar_terminal->init_solar(DCDC_CURRENT_MAX);
             break;
         case MODE_MPPT_BOOST:    // for charging of e-bike battery via solar panel
             bat_terminal = &hv_terminal;
             solar_terminal = &lv_terminal;
-            dc_bus_init_solar(solar_terminal, DCDC_CURRENT_MAX);
+            solar_terminal->init_solar(DCDC_CURRENT_MAX);
             break;
     }
 #endif
-    charger_detect_num_batteries(&charger, &bat_conf, bat_terminal);     // check if we have 24V instead of 12V system
-    battery_init_dc_bus(bat_terminal, &bat_conf, charger.num_batteries);
+
+    charger.detect_num_batteries(&bat_conf);     // check if we have 24V instead of 12V system
+    battery_init_dc_bus(&lv_bus, bat_terminal, &bat_conf, charger.num_batteries);
 
     wait(2);    // safety feature: be able to re-flash before starting
     control_timer_start(CONTROL_FREQUENCY);
@@ -189,12 +198,12 @@ int main()
 
             //printf("Still alive... time: %d, mode: %d\n", (int)time(NULL), dcdc.mode);
 
-            battery_discharge_control(bat_terminal, &bat_conf, &charger);
-            battery_charge_control(bat_terminal, &bat_conf, &charger);
+            charger.discharge_control(&bat_conf);
+            charger.charge_control(&bat_conf);
 
-            charger_update_junction_bus(&lv_bus_int, bat_terminal, &load_terminal);
+            update_dcdc_current_targets(&dcdc_port_lv, bat_terminal, &load_terminal);
 
-            load_state_machine(&load);
+            load.state_machine();
 
             eeprom_update();
 

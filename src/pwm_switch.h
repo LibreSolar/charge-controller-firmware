@@ -23,7 +23,8 @@
  */
 
 #include <stdbool.h>
-#include "dc_bus.h"
+
+#include "power_port.h"
 
 /** PWM charger type
  *
@@ -46,7 +47,7 @@ void pwm_switch_init(PwmSwitch *pwm_switch);
  * @param solar_bus Solar connector DC bus struct
  * @param bat_bus Battery connector DC bus struct
  */
-void pwm_switch_control(PwmSwitch *pwm_switch, DcBus *solar_bus, DcBus *bat_bus);
+void pwm_switch_control(PwmSwitch *pwm_switch, PowerPort *solar_bus, PowerPort *bat_bus);
 
 /** Read the on/off status of the PWM switch
  *

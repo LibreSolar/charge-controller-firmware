@@ -127,20 +127,20 @@ void pwm_switch_init(PwmSwitch *pwm_switch)
     _enabled = false;               // still disable actual switch
 }
 
-void pwm_switch_control(PwmSwitch *pwm_switch, DcBus *solar_bus, DcBus *bat_bus)
+void pwm_switch_control(PwmSwitch *pwm_switch, PowerPort *solar, PowerPort *bat)
 {
     if (_enabled) {
-        if (bat_bus->chg_current_limit == 0 || solar_bus->dis_current_limit == 0
-            || solar_bus->current > 0           // discharging battery into solar panel --> stop
+        if (bat->chg_current_limit == 0 || solar->dis_current_limit == 0
+            || solar->current > 0           // discharging battery into solar panel --> stop
             || pwm_switch->enabled == false)
         {
             pwm_switch_stop();
             pwm_switch->off_timestamp = time(NULL);
             printf("PWM charger stop.\n");
         }
-        else if (bat_bus->voltage > (bat_bus->chg_voltage_target - bat_bus->chg_droop_res * bat_bus->current)    // output voltage above target
-            || bat_bus->current > bat_bus->chg_current_limit         // output current limit exceeded
-            || solar_bus->current < solar_bus->dis_current_limit)    // input current (negative signs) above limit
+        else if (bat->bus->voltage > (bat->bus->chg_voltage_target - bat->chg_droop_res * bat->current)    // output voltage above target
+            || bat->current > bat->chg_current_limit         // output current limit exceeded
+            || solar->current < solar->dis_current_limit)    // input current (negative signs) above limit
         {
             // The gate driver switch-off time is quite high (fall time around 1ms), so very short
             // on or off periods (duty cycle close to 0 and 1) should be avoided
@@ -169,11 +169,11 @@ void pwm_switch_control(PwmSwitch *pwm_switch, DcBus *solar_bus, DcBus *bat_bus)
         }
     }
     else {
-        if (bat_bus->chg_current_limit > 0          // charging allowed
-            && bat_bus->voltage < bat_bus->chg_voltage_target
-            && bat_bus->voltage > bat_bus->chg_voltage_min
-            && solar_bus->dis_current_limit < 0     // dischraging allowed
-            && solar_bus->voltage > bat_bus->voltage + pwm_switch->offset_voltage_start
+        if (bat->chg_current_limit > 0          // charging allowed
+            && bat->bus->voltage < bat->bus->chg_voltage_target
+            && bat->bus->voltage > bat->bus->chg_voltage_min
+            && solar->dis_current_limit < 0     // dischraging allowed
+            && solar->bus->voltage > bat->bus->voltage + pwm_switch->offset_voltage_start
             && time(NULL) > (pwm_switch->off_timestamp + pwm_switch->restart_interval)
             && pwm_switch->enabled == true)
         {

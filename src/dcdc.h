@@ -25,7 +25,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "dc_bus.h"
+#include "power_port.h"
 
 /** DC/DC basic operation mode
  *
@@ -54,19 +54,55 @@ enum DcdcControlState
     DCDC_STATE_DERATING ///< Hardware-limits (current or temperature) reached
 };
 
-/** DC/DC type
+/** DC/DC class
  *
  * Contains all data belonging to the DC/DC sub-component of the PCB, incl.
  * actual measurements and calibration parameters.
  */
-typedef struct {
+class Dcdc
+{
+public:
+    /** Initialize DC/DC and DC/DC port structs
+     *
+     * See http://libre.solar/docs/dcdc_control for detailed information
+     *
+     * @param hv_side High voltage terminal (e.g. solar input for MPPT buck)
+     * @param lv_side Low voltage terminal (e.g. battery output for MPPT buck)
+     * @param mode Operation mode (buck, boost or nanogrid)
+     */
+    Dcdc(PowerPort *hv_side, PowerPort* lv_side, DcdcOperationMode mode);
+
+    /** Check for valid start conditions of the DC/DC converter
+     *
+     * @returns 1 for buck mode, -1 for boost mode and 0 for invalid conditions
+     */
+    int check_start_conditions();
+
+    /** Main control function for the DC/DC converter
+     *
+     * If DC/DC is off, this function checks start conditions and starts conversion if possible.
+     */
+    void control();
+
+    /** Test mode for DC/DC, ramping up to 50% duty cycle
+     */
+    void test();
+
+    /** Prevent overcharging of battery in case of shorted HS MOSFET
+     *
+     * This function switches the LS MOSFET continuously on to blow the battery input fuse. The
+     * reason for self destruction should be logged and stored to EEPROM prior to calling this
+     * function, as the charge controller power supply will be cut after the fuse is destroyed.
+     */
+    void self_destruction();
+
     DcdcOperationMode mode;     ///< DC/DC mode (buck, boost or nanogrid)
     bool enabled;               ///< Can be used to disable the DC/DC power stage
     uint16_t state;             ///< Control state (off / MPPT / CC / CV)
 
     // actual measurements
-    DcBus *hv_bus;              ///< Pointer to DC bus at high voltage side
-    DcBus *lv_bus;              ///< Pointer to DC bus at low voltage (inductor) side
+    PowerPort *hvs;             ///< Pointer to DC bus at high voltage side
+    PowerPort *lvs;             ///< Pointer to DC bus at low voltage (inductor) side
     float temp_mosfets;         ///< MOSFET temperature measurement (if existing)
 
     // current state
@@ -85,47 +121,13 @@ typedef struct {
     // calibration parameters
     int restart_interval;       ///< Restart interval (s): When should we retry to start charging
                                 ///< after low output power cut-off?
-} Dcdc;
 
-
-/** Initialize DC/DC and DC/DC port structs
- *
- * See http://libre.solar/docs/dcdc_control for detailed information
- *
- * @param dcdc DC/DC object
- * @param hv High voltage terminal (e.g. solar input for MPPT buck)
- * @param lv Low voltage terminal (e.g. battery output for MPPT buck)
- * @param mode Operation mode (buck, boost or nanogrid)
- */
-void dcdc_init(Dcdc *dcdc, DcBus *hv, DcBus *lv, DcdcOperationMode mode);
-
-/** Check for valid start conditions of the DC/DC converter
- *
- * @param dcdc DC/DC object incl. measurement data
- * @returns 1 for buck mode, -1 for boost mode and 0 for invalid conditions
- */
-int dcdc_check_start_conditions(Dcdc *dcdc);
-
-/** Main control function for the DC/DC converter
- *
- * If DC/DC is off, this function checks start conditions and starts conversion if possible.
- *
- * @param dcdc DC/DC object incl. measurement data
- */
-void dcdc_control(Dcdc *dcdc);
-
-/** Test mode for DC/DC, ramping up to 50% duty cycle
- *
- * @param dcdc DC/DC object incl. measurement data
- */
-void dcdc_test(Dcdc *dcdc);
-
-/** Prevent overcharging of battery in case of shorted HS MOSFET
- *
- * This function switches the LS MOSFET continuously on to blow the battery input fuse. The reason for self destruction should
- * be logged and stored to EEPROM prior to calling this function, as the charge controller power supply will be cut after the
- * fuse is destroyed.
- */
-void dcdc_self_destruction();
+private:
+    /** Calculates the duty cycle change depending on operating mode and actual measurements
+     *
+     * @returns duty cycle step (-1 or 1) or 0 if DC/DC should be switched off
+     */
+    int duty_cycle_delta();
+};
 
 #endif /* DCDC_H */

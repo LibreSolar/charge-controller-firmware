@@ -18,8 +18,6 @@
 #include "pcb.h"
 #include "log.h"
 
-#ifndef CHARGER_TYPE_PWM
-
 #include "half_bridge.h"
 
 #include <time.h>       // for time(NULL) function
@@ -29,127 +27,133 @@
 
 extern LogData log_data;
 
-void dcdc_init(Dcdc *dcdc, DcBus *hv, DcBus *lv, DcdcOperationMode mode)
+#ifdef CHARGER_TYPE_PWM
+
+Dcdc::Dcdc(PowerPort *hv_side, PowerPort *lv_side, DcdcOperationMode op_mode) {}
+
+#else
+
+Dcdc::Dcdc(PowerPort *hv_side, PowerPort *lv_side, DcdcOperationMode op_mode)
 {
-    dcdc->hv_bus = hv;
-    dcdc->lv_bus = lv;
-    dcdc->mode           = mode;
-    dcdc->enabled        = true;
-    dcdc->state          = DCDC_STATE_OFF;
-    dcdc->ls_current_max = DCDC_CURRENT_MAX;
-    dcdc->hs_voltage_max = HIGH_SIDE_VOLTAGE_MAX;
-    dcdc->ls_voltage_max = LOW_SIDE_VOLTAGE_MAX;
-    dcdc->ls_voltage_min = 9.0;
-    dcdc->output_power_min = 1;         // switch off iff power < 1 W
-    dcdc->restart_interval = 60;
-    dcdc->off_timestamp = -10000;       // start immediately
-    dcdc->pwm_delta = 1;                // start-condition of duty cycle pwr_inc_pwm_direction
+    hvs = hv_side;
+    lvs = lv_side;
+    mode           = op_mode;
+    enabled        = true;
+    state          = DCDC_STATE_OFF;
+    ls_current_max = DCDC_CURRENT_MAX;
+    hs_voltage_max = HIGH_SIDE_VOLTAGE_MAX;
+    ls_voltage_max = LOW_SIDE_VOLTAGE_MAX;
+    ls_voltage_min = 9.0;
+    output_power_min = 1;         // switch off iff power < 1 W
+    restart_interval = 60;
+    off_timestamp = -10000;       // start immediately
+    pwm_delta = 1;                // start-condition of duty cycle pwr_inc_pwm_direction
 }
 
-/** Calculates the duty cycle change depending on operating mode and actual measurements
- *
- * @returns duty cycle step (-1 or 1) or 0 if DC/DC should be switched off
- */
-int duty_cycle_delta(Dcdc *dcdc)
+int Dcdc::duty_cycle_delta()
 {
     int pwr_inc_pwm_direction;      // direction of PWM duty cycle change for increasing power
-    DcBus *in;
-    DcBus *out;
+    PowerPort *in;
+    PowerPort *out;
 
-    if (dcdc->mode == MODE_MPPT_BUCK ||
-        (dcdc->mode == MODE_NANOGRID && dcdc->lv_bus->current > 0.1))
+    if (mode == MODE_MPPT_BUCK ||
+        (mode == MODE_NANOGRID && lvs->current > 0.1))
     {
         // buck mode
         pwr_inc_pwm_direction = 1;
-        in = dcdc->hv_bus;
-        out = dcdc->lv_bus;
+        in = hvs;
+        out = lvs;
     }
     else {
         // boost mode
         pwr_inc_pwm_direction = -1;
-        in = dcdc->lv_bus;
-        out = dcdc->hv_bus;
+        in = lvs;
+        out = hvs;
     }
 
-    if (out->power >= dcdc->output_power_min) {
-        dcdc->power_good_timestamp = time(NULL);     // reset the time
+    if (out->power >= output_power_min) {
+        power_good_timestamp = time(NULL);     // reset the time
     }
 
     int pwr_inc_goal = 0;     // stores if we want to increase (+1) or decrease (-1) power
 
 #if 0
-    printf("P: %.2f, P_prev: %.2f, v_in: %.2f, v_out: %.2f, i_in: %.2f, i_out: %.2f, v_chg_target: %.2f, i_chg_max: %.2f, PWM: %.1f, chg_state: %d\n",
-         out->power, dcdc->power_prev, in->voltage, out->voltage, in->current, out->current, out->chg_voltage_target,
-         out->chg_current_limit, half_bridge_get_duty_cycle() * 100.0, dcdc->state);
+    printf("P: %.2f, P_prev: %.2f, v_in: %.2f, v_out: %.2f, i_in: %.2f, i_out: %.2f, "
+        "v_chg_target: %.2f, i_chg_max: %.2f, PWM: %.1f, chg_state: %d\n",
+        out->power, power_prev, in->bus->voltage, out->bus->voltage, in->current, out->current,
+        out->bus->chg_voltage_target, out->chg_current_limit, half_bridge_get_duty_cycle() * 100.0,
+        state);
 #endif
 
-    if  (time(NULL) - dcdc->power_good_timestamp > 10 ||      // more than 10s low power
+    if  (time(NULL) - power_good_timestamp > 10 ||      // more than 10s low power
          out->power < -1.0)           // or already generating negative power
     {
         pwr_inc_goal = 0;     // switch off
     }
-    else if (out->voltage > (out->chg_voltage_target - out->chg_droop_res * out->current)                     // output voltage above target
-        || (in->voltage < (in->dis_voltage_start - in->dis_droop_res * in->current) && out->current > 0.1))     // input voltage below limit
+    else if (out->bus->voltage > (out->bus->chg_voltage_target - out->chg_droop_res * out->current))
     {
-        dcdc->state = DCDC_STATE_CV;
+       // output voltage target reached
+        state = DCDC_STATE_CV;
         pwr_inc_goal = -1;  // decrease output power
     }
-    else if (out->current > out->chg_current_limit  // output charge current limit exceeded
-        || in->current < in->dis_current_limit)       // input current (negative signs) limit exceeded
+    else if (out->current > out->chg_current_limit)
     {
-        dcdc->state = DCDC_STATE_CC;
+        // output charge current limit reached
+        state = DCDC_STATE_CC;
         pwr_inc_goal = -1;  // decrease output power
     }
-    else if (fabs(dcdc->lv_bus->current) > dcdc->ls_current_max   // current above hardware maximum
-        || dcdc->temp_mosfets > 80)                               // temperature limits exceeded
+    else if (fabs(lvs->current) > ls_current_max    // current above hardware maximum
+        || temp_mosfets > 80                        // temperature limits exceeded
+        || (in->bus->voltage < (in->bus->dis_voltage_start - in->dis_droop_res * in->current)
+            && out->current > 0.1)                  // input voltage below limit
+        || in->current < in->dis_current_limit)     // input current (negative signs) limit exceeded
     {
-        dcdc->state = DCDC_STATE_DERATING;
+        state = DCDC_STATE_DERATING;
         pwr_inc_goal = -1;  // decrease output power
     }
-    else if (out->power < dcdc->output_power_min
-        && out->voltage < out->dis_voltage_start)   // no load condition (e.g. start-up of nanogrid)
-                                                    // --> raise voltage
+    else if (out->power < output_power_min && out->bus->voltage < out->bus->dis_voltage_start)
     {
+        // no load condition (e.g. start-up of nanogrid) --> raise voltage
         pwr_inc_goal = 1;   // increase output power
     }
     else {
         // start MPPT
-        dcdc->state = DCDC_STATE_MPPT;
-        if (dcdc->power_prev > out->power) {
-            dcdc->pwm_delta = -dcdc->pwm_delta;
+        state = DCDC_STATE_MPPT;
+        if (power_prev > out->power) {
+            pwm_delta = -pwm_delta;
         }
-        pwr_inc_goal = dcdc->pwm_delta;
+        pwr_inc_goal = pwm_delta;
     }
-    // store the power BEFORE the executing the current change
-    dcdc->power_prev = out->power;
+
+    power_prev = out->power;
     return pwr_inc_goal * pwr_inc_pwm_direction;
 }
 
-int dcdc_check_start_conditions(Dcdc *dcdc)
+int Dcdc::check_start_conditions()
 {
-    if (dcdc->enabled == false ||
-        dcdc->hv_bus->voltage > dcdc->hs_voltage_max ||   // also critical for buck mode because of ringing
-        dcdc->lv_bus->voltage > dcdc->ls_voltage_max ||
-        dcdc->lv_bus->voltage < dcdc->ls_voltage_min ||
-        time(NULL) < (dcdc->off_timestamp + dcdc->restart_interval))
+    if (enabled == false ||
+        hvs->bus->voltage > hs_voltage_max ||   // also critical for buck mode because of ringing
+        lvs->bus->voltage > ls_voltage_max ||
+        lvs->bus->voltage < ls_voltage_min ||
+        time(NULL) < (off_timestamp + restart_interval))
     {
         return 0;       // no energy transfer allowed
     }
 
-    if (dcdc->lv_bus->chg_current_limit > 0 &&
-        dcdc->lv_bus->voltage < dcdc->lv_bus->chg_voltage_target &&
-        dcdc->lv_bus->voltage > dcdc->lv_bus->chg_voltage_min &&
-        dcdc->hv_bus->dis_current_limit < 0 &&
-        dcdc->hv_bus->voltage > dcdc->hv_bus->dis_voltage_start)
+    if (lvs->chg_current_limit > 0 &&
+        lvs->bus->voltage < lvs->bus->chg_voltage_target &&
+        lvs->bus->voltage > lvs->bus->chg_voltage_min &&
+        hvs->dis_current_limit < 0 &&
+        hvs->bus->voltage > hvs->bus->dis_voltage_start)
     {
         return 1;       // start in buck mode allowed
     }
 
-    if (dcdc->hv_bus->chg_current_limit > 0 &&
-        dcdc->hv_bus->voltage < dcdc->hv_bus->chg_voltage_target &&
-        dcdc->hv_bus->voltage > dcdc->hv_bus->chg_voltage_min &&
-        dcdc->lv_bus->dis_current_limit < 0 &&
-        dcdc->lv_bus->voltage > dcdc->lv_bus->dis_voltage_start)
+    if (hvs->chg_current_limit > 0 &&
+        hvs->bus->voltage < hvs->bus->chg_voltage_target &&
+        hvs->bus->voltage > hvs->bus->chg_voltage_min &&
+        lvs->dis_current_limit < 0 &&
+        lvs->bus->voltage > lvs->bus->dis_voltage_start)
     {
         return -1;      // start in boost mode allowed
     }
@@ -157,33 +161,33 @@ int dcdc_check_start_conditions(Dcdc *dcdc)
     return 0;
 }
 
-void dcdc_control(Dcdc *dcdc)
+void Dcdc::control()
 {
     if (half_bridge_enabled()) {
-        int step = duty_cycle_delta(dcdc);
+        int step = duty_cycle_delta();
         half_bridge_duty_cycle_step(step);
 
         if (step == 0) {
             half_bridge_stop();
-            dcdc->state = DCDC_STATE_OFF;
-            dcdc->off_timestamp = time(NULL);
+            state = DCDC_STATE_OFF;
+            off_timestamp = time(NULL);
             printf("DC/DC stop (low power).\n");
         }
-        else if (dcdc->lv_bus->voltage > dcdc->ls_voltage_max || dcdc->hv_bus->voltage > dcdc->hs_voltage_max) {
+        else if (lvs->bus->voltage > ls_voltage_max || hvs->bus->voltage > hs_voltage_max) {
             half_bridge_stop();
-            dcdc->state = DCDC_STATE_OFF;
-            dcdc->off_timestamp = time(NULL);
+            state = DCDC_STATE_OFF;
+            off_timestamp = time(NULL);
             printf("DC/DC emergency stop (voltage limits exceeded).\n");
         }
-        else if (dcdc->enabled == false) {
+        else if (enabled == false) {
             half_bridge_stop();
-            dcdc->state = DCDC_STATE_OFF;
+            state = DCDC_STATE_OFF;
             printf("DC/DC stop (disabled).\n");
         }
     }
     else {
         static int current_debounce_counter = 0;
-        if (dcdc->lv_bus->current > 0.5) {
+        if (lvs->current > 0.5) {
             // if there is current even though the DC/DC is switched off, the
             // high-side MOSFET must be broken --> set flag and let main() decide
             // what to do... (e.g. call dcdc_self_destruction)
@@ -198,15 +202,20 @@ void dcdc_control(Dcdc *dcdc)
         }
 
         static int startup_delay_counter = 0;
-        static const int num_wait_calls = (CONTROL_FREQUENCY / 10 >= 1) ? (CONTROL_FREQUENCY / 10) : 1; // wait at least 100 ms for voltages to settle
 
-        int startup_mode = dcdc_check_start_conditions(dcdc);
+        // wait at least 100 ms for voltages to settle
+        static const int num_wait_calls =
+            (CONTROL_FREQUENCY / 10 >= 1) ? (CONTROL_FREQUENCY / 10) : 1;
+
+        int startup_mode = check_start_conditions();
         if (startup_mode == 1) {
             if (startup_delay_counter >= num_wait_calls) {
-                dcdc->power_good_timestamp = time(NULL);
-                // Don't start directly at Vmpp (approx. 0.8 * Voc) to prevent high inrush currents and stress on MOSFETs
-                half_bridge_start(dcdc->lv_bus->voltage / (dcdc->hv_bus->voltage - 1));
-                printf("DC/DC buck mode start (HV: %.2fV, LV: %.2fV, PWM: %.1f).\n", dcdc->hv_bus->voltage, dcdc->lv_bus->voltage, half_bridge_get_duty_cycle() * 100);
+                power_good_timestamp = time(NULL);
+                // Don't start directly at Vmpp (approx. 0.8 * Voc) to prevent high inrush currents
+                // and stress on MOSFETs
+                half_bridge_start(lvs->bus->voltage / (hvs->bus->voltage - 1));
+                printf("DC/DC buck mode start (HV: %.2fV, LV: %.2fV, PWM: %.1f).\n",
+                    hvs->bus->voltage, lvs->bus->voltage, half_bridge_get_duty_cycle() * 100);
             }
             else {
                 startup_delay_counter++;
@@ -214,10 +223,12 @@ void dcdc_control(Dcdc *dcdc)
         }
         else if (startup_mode == -1) {
             if (startup_delay_counter >= num_wait_calls) {
-                dcdc->power_good_timestamp = time(NULL);
-                // will automatically start with max. duty (0.97) if connected to a nanogrid not yet started up (zero voltage)
-                half_bridge_start(dcdc->lv_bus->voltage / (dcdc->hv_bus->voltage + 1));
-                printf("DC/DC boost mode start (HV: %.2fV, LV: %.2fV, PWM: %.1f).\n", dcdc->hv_bus->voltage, dcdc->lv_bus->voltage, half_bridge_get_duty_cycle() * 100);
+                power_good_timestamp = time(NULL);
+                // will automatically start with max. duty (0.97) if connected to a nanogrid not
+                // yet started up (zero voltage)
+                half_bridge_start(lvs->bus->voltage / (hvs->bus->voltage + 1));
+                printf("DC/DC boost mode start (HV: %.2fV, LV: %.2fV, PWM: %.1f).\n",
+                    hvs->bus->voltage, lvs->bus->voltage, half_bridge_get_duty_cycle() * 100);
             }
             else {
                 startup_delay_counter++;
@@ -229,7 +240,7 @@ void dcdc_control(Dcdc *dcdc)
     }
 }
 
-void dcdc_test(Dcdc *dcdc)
+void Dcdc::test()
 {
     if (half_bridge_enabled()) {
         if (half_bridge_get_duty_cycle() > 0.5) {
@@ -238,14 +249,18 @@ void dcdc_test(Dcdc *dcdc)
     }
     else {
         static int startup_delay_counter = 0;
-        static const int num_wait_calls = (CONTROL_FREQUENCY / 10 >= 1) ? (CONTROL_FREQUENCY / 10) : 1; // wait at least 100 ms for voltages to settle
 
-        int startup_mode = dcdc_check_start_conditions(dcdc);
+        // wait at least 100 ms for voltages to settle
+        static const int num_wait_calls = (CONTROL_FREQUENCY / 10 >= 1) ? (CONTROL_FREQUENCY / 10) : 1;
+
+        int startup_mode = check_start_conditions();
         if (startup_mode == 1) {
             if (startup_delay_counter >= num_wait_calls) {
-                // Don't start directly at Vmpp (approx. 0.8 * Voc) to prevent high inrush currents and stress on MOSFETs
-                half_bridge_start(dcdc->lv_bus->voltage / (dcdc->hv_bus->voltage - 1));
-                printf("DC/DC buck mode start (HV: %.2fV, LV: %.2fV, PWM: %.1f).\n", dcdc->hv_bus->voltage, dcdc->lv_bus->voltage, half_bridge_get_duty_cycle() * 100);
+                // Don't start directly at Vmpp (approx. 0.8 * Voc) to prevent high inrush currents
+                // and stress on MOSFETs
+                half_bridge_start(lvs->bus->voltage / (hvs->bus->voltage - 1));
+                printf("DC/DC buck mode start (HV: %.2fV, LV: %.2fV, PWM: %.1f).\n",
+                    hvs->bus->voltage, lvs->bus->voltage, half_bridge_get_duty_cycle() * 100);
             }
             else {
                 startup_delay_counter++;
@@ -253,9 +268,11 @@ void dcdc_test(Dcdc *dcdc)
         }
         else if (startup_mode == -1) {
             if (startup_delay_counter >= num_wait_calls) {
-                // will automatically start with max. duty (0.97) if connected to a nanogrid not yet started up (zero voltage)
-                half_bridge_start(dcdc->lv_bus->voltage / (dcdc->hv_bus->voltage + 1));
-                printf("DC/DC boost mode start (HV: %.2fV, LV: %.2fV, PWM: %.1f).\n", dcdc->hv_bus->voltage, dcdc->lv_bus->voltage, half_bridge_get_duty_cycle() * 100);
+                // will automatically start with max. duty (0.97) if connected to a nanogrid not
+                // yet started up (zero voltage)
+                half_bridge_start(lvs->bus->voltage / (hvs->bus->voltage + 1));
+                printf("DC/DC boost mode start (HV: %.2fV, LV: %.2fV, PWM: %.1f).\n",
+                    hvs->bus->voltage, lvs->bus->voltage, half_bridge_get_duty_cycle() * 100);
             }
             else {
                 startup_delay_counter++;
@@ -267,7 +284,7 @@ void dcdc_test(Dcdc *dcdc)
     }
 }
 
-void dcdc_self_destruction()
+void Dcdc::self_destruction()
 {
     printf("Charge controller self-destruction called!\n");
     //half_bridge_stop();

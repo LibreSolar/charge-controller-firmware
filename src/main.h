@@ -19,20 +19,30 @@
 #include <stdio.h>
 
 #include "bat_charger.h"
-#include "dc_bus.h"
+#include "power_port.h"
 #include "log.h"
 #include "pwm_switch.h"
 #include "half_bridge.h"
 #include "load.h"
 
+extern DcBus hv_bus;
+extern PowerPort dcdc_port_hv;
+extern PowerPort hv_terminal;
+
+extern DcBus lv_bus;
+extern PowerPort dcdc_port_lv;
+extern PowerPort lv_terminal;
+extern PowerPort load_terminal;
+
 extern LogData log_data;
 extern Charger charger;
 extern BatConf bat_conf;
 extern BatConf bat_conf_user;
+
+#ifndef CHARGER_TYPE_PWM
 extern Dcdc dcdc;
+#endif
+
 extern LoadOutput load;
-extern DcBus hv_terminal;
-extern DcBus lv_bus_int;
-extern DcBus lv_terminal;
-extern DcBus load_terminal;
+
 extern PwmSwitch pwm_switch;

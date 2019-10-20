@@ -26,7 +26,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "dc_bus.h"
+#include "power_port.h"
 
 /** Battery cell types
  */
@@ -232,14 +232,21 @@ typedef struct
 
 /** Charger configuration and battery state
  */
-typedef struct
+class Charger
 {
+public:
+    Charger(PowerPort *pwr_port):
+        port(pwr_port), bus(pwr_port->bus) {};
+
+    PowerPort *port;
+    DcBus *bus;
+
     unsigned int state;             ///< Current charger state (see enum ChargerState)
 
-    int num_batteries;              ///< Used for automatic 12V/24V battery detection at
+    int num_batteries = 1;          ///< Used for automatic 12V/24V battery detection at
                                     ///< start-up (can be 1 or 2 only)
 
-    float bat_temperature;          ///< Battery temperature in °C from ext. temperature sensor
+    float bat_temperature = 25;     ///< Battery temperature in °C from ext. temperature sensor
                                     ///< (if existing)
     bool ext_temp_sensor;           ///< True if external temperature sensor was detected
 
@@ -250,8 +257,8 @@ typedef struct
     uint16_t num_full_charges;      ///< Number of full charge cycles
     uint16_t num_deep_discharges;   ///< Number of deep-discharge cycles
 
-    uint16_t soc;                   ///< State of Charge (%)
-    uint16_t soh;                   ///< State of Health (%)
+    uint16_t soc = 100;             ///< State of Charge (%)
+    uint16_t soh = 100;             ///< State of Health (%)
 
     int time_state_changed;         ///< Timestamp of last state change
     int time_voltage_limit_reached; ///< Last time the CV limit was reached
@@ -260,9 +267,31 @@ typedef struct
     int deep_dis_last_equalization; ///< Deep discharge counter value after last equalization
 
     bool full;                      ///< Flag to indicate if battery was fully charged
-    bool first_full_charge_reached; ///< Set to true if battery was fully charged at least once
+    bool first_full_charge_reached = false;
+                                    //< Set to true if battery was fully charged at least once
                                     ///< (necessary for proper capacity estimation)
-} Charger;
+
+    /** Detect if two batteries are connected in series (12V/24V auto-detection)
+     */
+    void detect_num_batteries(BatConf *bat);
+
+    /** Discharging control update (for load output), should be called once per second
+     */
+    void discharge_control(BatConf *bat_conf);
+
+    /** Charger state machine update, should be called once per second
+     */
+    void charge_control(BatConf *bat_conf);
+
+    /** SOC estimation
+     *
+     * Must be called exactly once per second, otherwise SOC calculation gets wrong.
+     */
+    void update_soc(BatConf *bat_conf);
+
+private:
+    void enter_state(int next_state);
+};
 
 
 /** Possible charger states
@@ -333,36 +362,14 @@ bool battery_conf_check(BatConf *bat);
  */
 void battery_conf_overwrite(BatConf *source, BatConf *destination, Charger *charger = NULL);
 
-/** SOC estimation
- *
- * Must be called exactly once per second, otherwise SOC calculation gets wrong.
- */
-void battery_update_soc(BatConf *bat_conf, Charger *charger, DcBus *bus);
-
 /** Initialize dc bus for battery connection
  *
  * @param num_batteries definies the number of series connected batteries, e.g. 2 for 24V system
  */
-void battery_init_dc_bus(DcBus *bus, BatConf *bat, unsigned int num_batteries);
-
-/** Basic initialization of charger struct
- */
-void charger_init(Charger *charger);
-
-/** Detect if two batteries are connected in series (12V/24V auto-detection)
- */
-void charger_detect_num_batteries(Charger *charger, BatConf *bat, DcBus *bus);
-
-/** Discharging control update (for load output), should be called once per second
- */
-void battery_discharge_control(DcBus *bus, BatConf *bat_conf, Charger *charger);
-
-/** Charger state machine update, should be called once per second
- */
-void battery_charge_control(DcBus *bus, BatConf *bat_conf, Charger *charger);
+void battery_init_dc_bus(DcBus *bus, PowerPort *port, BatConf *bat, unsigned int num_batteries);
 
 /** Calculates targets for junction of load and battery bus at the DC/DC output
 */
-void charger_update_junction_bus(DcBus *junction, DcBus *bat, DcBus *load);
+void update_dcdc_current_targets(PowerPort *dcdc_port, PowerPort *bat, PowerPort *load);
 
 #endif /* BAT_CHARGER_H */

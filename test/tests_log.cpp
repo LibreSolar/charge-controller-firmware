@@ -1,26 +1,18 @@
 
 #include "tests.h"
 
-#include "bat_charger.h"
-#include "dc_bus.h"
-#include "log.h"
-
 #include <time.h>
 #include <stdio.h>
 #include <math.h>
 
-extern BatConf bat_conf;
-extern Charger charger;
-extern DcBus *solar_terminal;
-extern DcBus *bat_terminal;
-extern DcBus load_terminal;
-extern LoadOutput load;
-extern Dcdc dcdc;
-extern LogData log_data;
+#include "main.h"
+
+extern PowerPort *solar_terminal;
+extern PowerPort *bat_terminal;
 
 void reset_counters_at_start_of_day()
 {
-    solar_terminal->voltage = bat_terminal->voltage - 1;
+    solar_terminal->bus->voltage = bat_terminal->bus->voltage - 1;
 
     log_data.day_counter = 0;
 
@@ -48,7 +40,7 @@ void reset_counters_at_start_of_day()
     TEST_ASSERT_EQUAL(0, log_data.day_counter);
 
     // now solar power comes back
-    solar_terminal->voltage = bat_terminal->voltage + 1;
+    solar_terminal->bus->voltage = bat_terminal->bus->voltage + 1;
     log_update_energy(&log_data, solar_terminal, bat_terminal, &load_terminal);
 
     // day counter should be increased and daily energy counters reset
@@ -61,28 +53,28 @@ void reset_counters_at_start_of_day()
 
 void log_new_solar_voltage_max()
 {
-    solar_terminal->voltage = 40;
+    solar_terminal->bus->voltage = 40;
     log_update_min_max_values(&log_data, &dcdc, &charger, &load, solar_terminal, bat_terminal, &load_terminal);
     TEST_ASSERT_EQUAL(40, log_data.solar_voltage_max);
 }
 
 void log_new_bat_voltage_max()
 {
-    bat_terminal->voltage = 31;
+    bat_terminal->bus->voltage = 31;
     log_update_min_max_values(&log_data, &dcdc, &charger, &load, solar_terminal, bat_terminal, &load_terminal);
     TEST_ASSERT_EQUAL(31, log_data.battery_voltage_max);
 }
 
 void log_new_dcdc_current_max()
 {
-    dcdc.lv_bus->current = 21;
+    dcdc.lvs->current = 21;
     log_update_min_max_values(&log_data, &dcdc, &charger, &load, solar_terminal, bat_terminal, &load_terminal);
     TEST_ASSERT_EQUAL(21, log_data.dcdc_current_max);
 }
 
 void log_new_load_current_max()
 {
-    load.terminal->current = 21;
+    load.port->current = 21;
     log_update_min_max_values(&log_data, &dcdc, &charger, &load, solar_terminal, bat_terminal, &load_terminal);
     TEST_ASSERT_EQUAL(21, log_data.load_current_max);
 }
@@ -97,7 +89,7 @@ void log_solar_power_max()
 
 void log_load_power_max()
 {
-    load.terminal->power = 50;
+    load.port->power = 50;
     log_update_min_max_values(&log_data, &dcdc, &charger, &load, solar_terminal, bat_terminal, &load_terminal);
     TEST_ASSERT_EQUAL(50, log_data.load_power_max_day);
     TEST_ASSERT_EQUAL(50, log_data.load_power_max_total);
