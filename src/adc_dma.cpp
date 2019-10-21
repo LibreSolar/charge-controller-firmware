@@ -105,7 +105,7 @@ void update_measurements()
         ADC_GAIN_V_SOLAR / 1000.0;
 #endif
 #if FEATURE_PWM_SWITCH
-    pwm_sw_ext.voltage = lv_bus.voltage - vcc * ADC_OFFSET_V_SOLAR / 1000.0 -
+    pwm_bus.voltage = lv_bus.voltage - vcc * ADC_OFFSET_V_SOLAR / 1000.0 -
         (float)(((adc_filtered[ADC_POS_V_SOLAR] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
         ADC_GAIN_V_SOLAR / 1000.0;
 #endif
@@ -121,7 +121,7 @@ void update_measurements()
         ADC_GAIN_I_SOLAR / 1000.0 + solar_current_offset);
     pwm_port_int.current = pwm_terminal.current;
     lv_terminal.current = -pwm_port_int.current - load_terminal.current;
-    pwm_terminal.power = pwm_sw_ext.voltage * pwm_terminal.current;
+    pwm_terminal.power = pwm_bus.voltage * pwm_terminal.current;
 #endif
 #if FEATURE_DCDC_CONVERTER
     dcdc_port_lv.current =

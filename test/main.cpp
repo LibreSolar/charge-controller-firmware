@@ -29,8 +29,8 @@ Dcdc dcdc(&dcdc_port_hv, &dcdc_port_lv, DCDC_MODE_INIT);
 #endif
 
 #if FEATURE_PWM_SWITCH
-DcBus pwm_sw_ext;
-PowerPort pwm_terminal(&pwm_sw_ext);    // external terminal of PWM switch port (normally solar)
+DcBus pwm_bus;
+PowerPort pwm_terminal(&pwm_bus);    // external terminal of PWM switch port (normally solar)
 PowerPort pwm_port_int(&lv_bus);        // internal side of PWM switch
 PwmSwitch pwm_switch(&pwm_terminal, &pwm_port_int);
 PowerPort &solar_terminal = pwm_terminal;

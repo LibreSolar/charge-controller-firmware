@@ -39,7 +39,7 @@ extern Dcdc dcdc;
 #endif
 
 #if FEATURE_PWM_SWITCH
-extern DcBus pwm_sw_ext;
+extern DcBus pwm_bus;
 extern PowerPort pwm_terminal;
 extern PowerPort pwm_port_int;
 extern PwmSwitch pwm_switch;
