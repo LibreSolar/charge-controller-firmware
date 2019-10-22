@@ -81,8 +81,6 @@ public:
     uint16_t switch_state;      ///< Current state of load output switch
     uint16_t usb_state;         ///< Current state of USB output
 
-    DcBus *bus;                 ///< Pointer to internal DC bus where the load output
-                                ///< current is coming from
     PowerPort *port;            ///< Pointer to DC bus containting actual voltage and current
                                 ///< measurement of (external) load output terminal
 

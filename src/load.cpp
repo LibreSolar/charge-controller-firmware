@@ -192,7 +192,6 @@ void LoadOutput::usb_set(bool enabled) {;}
 LoadOutput::LoadOutput(PowerPort *pwr_port)
 {
     port = pwr_port;
-    bus = pwr_port->bus;
     current_max = LOAD_CURRENT_MAX;
     enabled_target = true;
     usb_enabled_target = true;
@@ -296,7 +295,7 @@ void LoadOutput::state_machine()
             }
             break;
         case LOAD_STATE_OFF_OVERVOLTAGE:
-            if (bus->voltage < LOW_SIDE_VOLTAGE_MAX) {     // TODO: add hysteresis?
+            if (port->voltage < LOW_SIDE_VOLTAGE_MAX) {     // TODO: add hysteresis?
                 switch_state = LOAD_STATE_DISABLED;   // switch to normal mode again
             }
             break;
@@ -335,8 +334,8 @@ void LoadOutput::control(float load_max_voltage)
     }
 
     static int debounce_counter = 0;
-    if (bus->voltage > load_max_voltage ||
-        bus->voltage > LOW_SIDE_VOLTAGE_MAX)
+    if (port->voltage > load_max_voltage ||
+        port->voltage > LOW_SIDE_VOLTAGE_MAX)
     {
         debounce_counter++;
         if (debounce_counter > CONTROL_FREQUENCY) {      // waited 1s before setting the flag

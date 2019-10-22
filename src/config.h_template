@@ -26,10 +26,7 @@
 #define DCDC_MODE_INIT      MODE_MPPT_BUCK
 //#define DCDC_MODE_INIT      MODE_NANOGRID
 
-#define SOLAR_BUS           hv_bus
 #define SOLAR_TERMINAL      hv_terminal
-
-#define BATTERY_BUS         lv_bus
 #define BATTERY_TERMINAL    lv_terminal
 
 // basic battery configuration

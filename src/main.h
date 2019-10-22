@@ -26,20 +26,16 @@
 #include "load.h"
 #include "pcb.h"
 
-extern DcBus lv_bus;
 extern PowerPort lv_terminal;
 extern PowerPort load_terminal;
 
 #if FEATURE_DCDC_CONVERTER
-extern DcBus hv_bus;
 extern PowerPort hv_terminal;
-extern PowerPort dcdc_port_hv;
-extern PowerPort dcdc_port_lv;
+extern PowerPort dcdc_lv_port;
 extern Dcdc dcdc;
 #endif
 
 #if FEATURE_PWM_SWITCH
-extern DcBus pwm_bus;
 extern PowerPort pwm_terminal;
 extern PowerPort pwm_port_int;
 extern PwmSwitch pwm_switch;

@@ -94,20 +94,23 @@ void update_measurements()
     // rely on LDO accuracy
     //int vcc = 3300;
 
-    // calculate LS voltage first, as it is needed for HS voltage calculation for PWM charge controller
-    lv_bus.voltage =
+    // calculate lower voltage first, as it is needed for PWM terminal voltage calculation
+    lv_terminal.voltage =
         (float)(((adc_filtered[ADC_POS_V_BAT] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
         ADC_GAIN_V_BAT / 1000.0;
+    load_terminal.voltage = lv_terminal.voltage;
 
 #if FEATURE_DCDC_CONVERTER
-    hv_bus.voltage =
+    hv_terminal.voltage =
         (float)(((adc_filtered[ADC_POS_V_SOLAR] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
         ADC_GAIN_V_SOLAR / 1000.0;
+    dcdc_lv_port.voltage = lv_terminal.voltage;
 #endif
 #if FEATURE_PWM_SWITCH
-    pwm_bus.voltage = lv_bus.voltage - vcc * ADC_OFFSET_V_SOLAR / 1000.0 -
+    pwm_terminal.voltage = lv_terminal.voltage - vcc * ADC_OFFSET_V_SOLAR / 1000.0 -
         (float)(((adc_filtered[ADC_POS_V_SOLAR] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
         ADC_GAIN_V_SOLAR / 1000.0;
+    pwm_port_int.voltage = lv_terminal.voltage;
 #endif
 
     load_terminal.current =
@@ -121,22 +124,20 @@ void update_measurements()
         ADC_GAIN_I_SOLAR / 1000.0 + solar_current_offset);
     pwm_port_int.current = pwm_terminal.current;
     lv_terminal.current = -pwm_port_int.current - load_terminal.current;
-    pwm_terminal.power = pwm_bus.voltage * pwm_terminal.current;
+    pwm_terminal.power = pwm_terminal.voltage * pwm_terminal.current;
 #endif
 #if FEATURE_DCDC_CONVERTER
-    dcdc_port_lv.current =
+    dcdc_lv_port.current =
         (float)(((adc_filtered[ADC_POS_I_DCDC] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
         ADC_GAIN_I_DCDC / 1000.0 + solar_current_offset;
-    lv_terminal.current = dcdc_port_lv.current - load_terminal.current;
-    hv_terminal.current = -dcdc_port_lv.current * lv_bus.voltage / hv_bus.voltage;
-    dcdc_port_hv.current = hv_terminal.current;
+    lv_terminal.current = dcdc_lv_port.current - load_terminal.current;
+    hv_terminal.current = -dcdc_lv_port.current * lv_terminal.voltage / hv_terminal.voltage;
 
-    dcdc_port_lv.power  = lv_bus.voltage * dcdc_port_lv.current;
-    dcdc_port_hv.power  = hv_bus.voltage * dcdc_port_hv.current;
-    hv_terminal.power   = hv_bus.voltage * hv_terminal.current;
+    dcdc_lv_port.power  = dcdc_lv_port.voltage * dcdc_lv_port.current;
+    hv_terminal.power   = hv_terminal.voltage * hv_terminal.current;
 #endif
-    lv_terminal.power   = lv_bus.voltage * lv_terminal.current;
-    load_terminal.power = lv_bus.voltage * load_terminal.current;
+    lv_terminal.power   = lv_terminal.voltage * lv_terminal.current;
+    load_terminal.power = load_terminal.voltage * load_terminal.current;
 
     /** \todo Improved (faster) temperature calculation:
        https://www.embeddedrelated.com/showarticle/91.php

@@ -236,10 +236,9 @@ class Charger
 {
 public:
     Charger(PowerPort *pwr_port):
-        port(pwr_port), bus(pwr_port->bus) {};
+        port(pwr_port) {};
 
     PowerPort *port;
-    DcBus *bus;
 
     unsigned int state;             ///< Current charger state (see enum ChargerState)
 

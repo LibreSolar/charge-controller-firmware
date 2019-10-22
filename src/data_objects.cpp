@@ -123,12 +123,8 @@ const data_object_t data_objects[] = {
     {0x06, TS_OUTPUT, TS_READ_ALL, TS_T_UINT16,  0, (void*) &(charger.soc),                             "SOC_%"},       // output will be uint8_t
 
     // battery related data objects
-    {0x70, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(BATTERY_BUS.voltage),                     "Bat_V"},       // TODO: reference to bat_terminal
-#if FEATURE_PWM_SWITCH
-    {0x71, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(pwm_bus.voltage),                         "Solar_V"},
-#else
-    {0x71, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(SOLAR_BUS.voltage),                       "Solar_V"},
-#endif
+    {0x70, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(bat_terminal.voltage),                    "Bat_V"},
+    {0x71, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(solar_terminal.voltage),                  "Solar_V"},
     {0x72, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(bat_terminal.current),                    "Bat_A"},
     {0x73, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(load_terminal.current),                   "Load_A"},
     {0x74, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 1, (void*) &(charger.bat_temperature),                 "Bat_degC"},
@@ -142,7 +138,7 @@ const data_object_t data_objects[] = {
     {0x79, TS_OUTPUT, TS_READ_ALL, TS_T_UINT16,  0, (void*) &(dcdc.state),                              "DCDCState"},
 #endif
     {0x7A, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(solar_terminal.current),                  "Solar_A"},
-    {0x7B, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(BATTERY_BUS.chg_voltage_target),          "BatTarget_V"}, // TODO: reference to bat_terminal
+    {0x7B, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(bat_terminal.chg_voltage_target),         "BatTarget_V"},
     {0x7C, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(bat_terminal.chg_current_limit),          "BatTarget_A"},
     {0x7D, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(bat_terminal.power),                      "Bat_W"},
     {0x7E, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(solar_terminal.power),                    "Solar_W"},

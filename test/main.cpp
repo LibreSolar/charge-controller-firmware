@@ -17,21 +17,17 @@
 
 #include "tests.h"
 
-DcBus lv_bus;
-PowerPort lv_terminal(&lv_bus);         // low voltage terminal (battery for typical MPPT)
+PowerPort lv_terminal;          // low voltage terminal (battery for typical MPPT)
 
 #if FEATURE_DCDC_CONVERTER
-DcBus hv_bus;
-PowerPort hv_terminal(&hv_bus);         // high voltage terminal (solar for typical MPPT)
-PowerPort dcdc_port_hv(&hv_bus);        // internal high voltage side port of DC/DC converter
-PowerPort dcdc_port_lv(&lv_bus);        // internal low voltage side of DC/DC converter
-Dcdc dcdc(&dcdc_port_hv, &dcdc_port_lv, DCDC_MODE_INIT);
+PowerPort hv_terminal;          // high voltage terminal (solar for typical MPPT)
+PowerPort dcdc_lv_port;         // internal low voltage side of DC/DC converter
+Dcdc dcdc(&hv_terminal, &dcdc_lv_port, DCDC_MODE_INIT);
 #endif
 
 #if FEATURE_PWM_SWITCH
-DcBus pwm_bus;
-PowerPort pwm_terminal(&pwm_bus);    // external terminal of PWM switch port (normally solar)
-PowerPort pwm_port_int(&lv_bus);        // internal side of PWM switch
+PowerPort pwm_terminal;         // external terminal of PWM switch port (normally solar)
+PowerPort pwm_port_int;         // internal side of PWM switch
 PwmSwitch pwm_switch(&pwm_terminal, &pwm_port_int);
 PowerPort &solar_terminal = pwm_terminal;
 #else
@@ -39,7 +35,7 @@ PowerPort &solar_terminal = SOLAR_TERMINAL;     // defined in config.h
 #endif
 
 #if FEATURE_LOAD_OUTPUT
-PowerPort load_terminal(&lv_bus);       // load terminal (also connected to lv_bus)
+PowerPort load_terminal;        // load terminal (also connected to lv_bus)
 LoadOutput load(&load_terminal);
 #endif
 
@@ -63,7 +59,7 @@ int main()
 {
     adc_tests();
     bat_charger_tests();
-    dc_bus_tests();
+    power_port_tests();
     half_brigde_tests();
     dcdc_tests();
     log_tests();

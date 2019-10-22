@@ -39,7 +39,7 @@ void log_update_energy(LogData *log_data)
     static uint32_t bat_chg_total_Wh_prev = log_data->bat_chg_total_Wh;
     static uint32_t bat_dis_total_Wh_prev = log_data->bat_dis_total_Wh;
 
-    if (solar_terminal.bus->voltage < bat_terminal.bus->voltage) {
+    if (solar_terminal.voltage < bat_terminal.voltage) {
         seconds_zero_solar += 1;
     }
     else {
@@ -72,12 +72,12 @@ void log_update_energy(LogData *log_data)
 
 void log_update_min_max_values(LogData *log_data)
 {
-    if (bat_terminal.bus->voltage > log_data->battery_voltage_max) {
-        log_data->battery_voltage_max = bat_terminal.bus->voltage;
+    if (bat_terminal.voltage > log_data->battery_voltage_max) {
+        log_data->battery_voltage_max = bat_terminal.voltage;
     }
 
-    if (solar_terminal.bus->voltage > log_data->solar_voltage_max) {
-        log_data->solar_voltage_max = solar_terminal.bus->voltage;
+    if (solar_terminal.voltage > log_data->solar_voltage_max) {
+        log_data->solar_voltage_max = solar_terminal.voltage;
     }
 
 #if FEATURE_DCDC_CONVERTER

@@ -19,19 +19,16 @@
 
 /** @file
  *
- * @brief Definition of charge controller terminals and internal DC buses
+ * @brief Definition of charge controller terminals and internal power port / connections
  */
 
 #include <stdbool.h>
 
-/** DC bus type
+/** Power Port class
  *
- * Stores the voltage measurement and voltage limits for a DC bus inside the charge controller PCB
- *
- * A DC bus is considered a connection of two or more electrical circuits in one point, such that
- * they have the same electric potential.
+ * Stores actual measurements and voltage / current limits for external terminals or internal ports
  */
-class DcBus
+class PowerPort
 {
 public:
     float voltage;                  ///< Measured bus voltage
@@ -43,22 +40,6 @@ public:
     float dis_voltage_start;        ///< Minimum voltage to allow discharge current from the bus
                                     ///< (equal to load reconnect voltage)
     float dis_voltage_stop;         ///< Absolute minimum = load disconnect for batteries
-};
-
-
-/** Power Port type
- *
- * Stores the current and power measurements and limits for one connection to a DC bus. One power
- * port is assigned to exactly ony DC bus, but one DC bus can have multiple ports.
- */
-class PowerPort
-{
-public:
-    PowerPort(DcBus *dc_bus):
-        bus(dc_bus) {};
-
-    DcBus *bus;                     ///< Pointer to the DC bus this port is connected to (also
-                                    ///< storing its voltage measurement)
 
     float current;                  ///< Measured current through this port (positive sign =
                                     ///< increasing voltage/charge of the named device)
@@ -91,6 +72,5 @@ public:
      */
     void energy_balance();
 };
-
 
 #endif /* POWER_PORT_H */

@@ -152,7 +152,7 @@ void PwmSwitch::control()
             off_timestamp = time(NULL);
             printf("PWM charger stop.\n");
         }
-        else if (port_int->bus->voltage > (port_int->bus->chg_voltage_target - port_int->chg_droop_res * port_int->current)    // output voltage above target
+        else if (port_int->voltage > (port_int->chg_voltage_target - port_int->chg_droop_res * port_int->current)    // output voltage above target
             || port_int->current > port_int->chg_current_limit         // output current limit exceeded
             || terminal->current < terminal->dis_current_limit)    // input current (negative signs) above limit
         {
@@ -184,10 +184,10 @@ void PwmSwitch::control()
     }
     else {
         if (port_int->chg_current_limit > 0          // charging allowed
-            && port_int->bus->voltage < port_int->bus->chg_voltage_target
-            && port_int->bus->voltage > port_int->bus->chg_voltage_min
+            && port_int->voltage < port_int->chg_voltage_target
+            && port_int->voltage > port_int->chg_voltage_min
             && terminal->dis_current_limit < 0     // dischraging allowed
-            && terminal->bus->voltage > port_int->bus->voltage + offset_voltage_start
+            && terminal->voltage > port_int->voltage + offset_voltage_start
             && time(NULL) > (off_timestamp + restart_interval)
             && enabled == true)
         {

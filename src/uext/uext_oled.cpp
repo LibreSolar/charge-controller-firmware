@@ -100,18 +100,18 @@ void uext_process_1s()
         oled.printf("n/a");
     }
 #ifndef CHARGER_TYPE_PWM
-    if (solar_terminal.bus->voltage > bat_terminal.bus->voltage)
+    if (solar_terminal.voltage > bat_terminal.voltage)
 #endif
     {
         oled.setTextCursor(0, 26);
-        oled.printf("%4.1fV", solar_terminal.bus->voltage);
+        oled.printf("%4.1fV", solar_terminal.voltage);
     }
 
     // battery data
     oled.setTextCursor(42, 18);
     oled.printf("%5.1fW", (abs(bat_terminal.power) < 0.1) ? 0 : bat_terminal.power);    // remove negative zeros
     oled.setTextCursor(42, 26);
-    oled.printf("%5.1fV", bat_terminal.bus->voltage);
+    oled.printf("%5.1fV", bat_terminal.voltage);
 
     // load data
     oled.setTextCursor(90, 18);

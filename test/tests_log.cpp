@@ -9,7 +9,7 @@
 
 void reset_counters_at_start_of_day()
 {
-    solar_terminal.bus->voltage = bat_terminal.bus->voltage - 1;
+    solar_terminal.voltage = bat_terminal.voltage - 1;
 
     log_data.day_counter = 0;
 
@@ -37,7 +37,7 @@ void reset_counters_at_start_of_day()
     TEST_ASSERT_EQUAL(0, log_data.day_counter);
 
     // now solar power comes back
-    solar_terminal.bus->voltage = bat_terminal.bus->voltage + 1;
+    solar_terminal.voltage = bat_terminal.voltage + 1;
     log_update_energy(&log_data);
 
     // day counter should be increased and daily energy counters reset
@@ -50,14 +50,14 @@ void reset_counters_at_start_of_day()
 
 void log_new_solar_voltage_max()
 {
-    solar_terminal.bus->voltage = 40;
+    solar_terminal.voltage = 40;
     log_update_min_max_values(&log_data);
     TEST_ASSERT_EQUAL(40, log_data.solar_voltage_max);
 }
 
 void log_new_bat_voltage_max()
 {
-    bat_terminal.bus->voltage = 31;
+    bat_terminal.voltage = 31;
     log_update_min_max_values(&log_data);
     TEST_ASSERT_EQUAL(31, log_data.battery_voltage_max);
 }
