@@ -71,7 +71,7 @@ void uext_process_1s()
         oled.drawBitmap(34, 3, bmp_arrow_right, 5, 7, 1);
     }
 
-    if (load.switch_state == LOAD_STATE_ON) {
+    if (load.state == LOAD_STATE_ON) {
         oled.drawBitmap(84, 3, bmp_arrow_right, 5, 7, 1);
     }
     else {

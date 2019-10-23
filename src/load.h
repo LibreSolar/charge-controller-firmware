@@ -39,7 +39,8 @@ enum LoadState {
     LOAD_STATE_OFF_LOW_SOC,         ///< Off to protect battery (overrules target setting)
     LOAD_STATE_OFF_OVERCURRENT,     ///< Off to protect charge controller (overrules target setting)
     LOAD_STATE_OFF_OVERVOLTAGE,     ///< Off to protect loads (overrules target setting)
-    LOAD_STATE_OFF_SHORT_CIRCUIT    ///< Off to protect charge controller (overrules target setting)
+    LOAD_STATE_OFF_SHORT_CIRCUIT,   ///< Off to protect charge controller (overrules target setting)
+    LOAD_STATE_OFF_BAT_TEMP         ///< Off because of battery over/under-temperature
 };
 
 /** Load output type
@@ -79,15 +80,19 @@ public:
      */
     void control();
 
-    uint16_t switch_state;      ///< Current state of load output switch
+    uint16_t state;             ///< Current state of load output switch
     uint16_t usb_state;         ///< Current state of USB output
 
     PowerPort *port;            ///< Pointer to DC bus containting actual voltage and current
                                 ///< measurement of (external) load output terminal
 
-    float current_max;          ///< maximum allowed current
-    time_t overcurrent_timestamp;  ///< time at which an overcurrent event occured
-    time_t lvd_timestamp;       ///< stores when the load was disconnected last time
+    time_t overcurrent_timestamp;       ///< Time when last overcurrent event occured
+    int overcurrent_recovery_delay;     ///< Seconds before we attempt to re-enable the load
+                                        ///< after an overcurrent event
+
+    time_t lvd_timestamp;       ///< Time when last low voltage disconnect happened
+    int lvd_recovery_delay;     ///< Seconds before we re-enable the load after a low voltage
+                                ///< disconnect
 
     float junction_temperature; ///< calculated using thermal model based on current and ambient
                                 ///< temperature measurement (unit: °C)

@@ -32,10 +32,14 @@
 
 /** Error Flags
  */
-enum error_flag_t {
+enum ErrorFlag {
     ERR_HS_MOSFET_SHORT = 0,        ///< Short-circuit in HS MOSFET
     ERR_BAT_OVERVOLTAGE,
     ERR_BAT_UNDERVOLTAGE,
+    ERR_BAT_DIS_OVERTEMP,
+    ERR_BAT_DIS_UNDERTEMP,
+    ERR_BAT_CHG_OVERTEMP,
+    ERR_BAT_CHG_UNDERTEMP
 };
 
 /** Log Data

@@ -18,6 +18,9 @@
 #include "config.h"
 #include "pcb.h"
 
+#include "log.h"
+extern LogData log_data;
+
 #include <math.h>       // for fabs function
 #include <stdio.h>
 #include <time.h>
@@ -265,57 +268,72 @@ void Charger::enter_state(int next_state)
 
 void Charger::discharge_control(BatConf *bat_conf)
 {
-    // load output state is defined by battery bus dis_allowed flag
-    if (port->neg_current_limit < 0      // discharging allowed
-        && port->voltage < num_batteries *
-        (bat_conf->voltage_load_disconnect - port->current * port->neg_droop_res))
-    {
-        // low state of charge
-        port->neg_current_limit = 0;
-        num_deep_discharges++;
+    // load output state is defined by battery negative current limit
+    if (port->neg_current_limit < 0) {
+        // discharging currently allowed. see if that's still valid:
+        if (port->voltage < num_batteries *
+            (bat_conf->voltage_load_disconnect - port->current * port->neg_droop_res))
+        {
+            // low state of charge
+            port->neg_current_limit = 0;
+            num_deep_discharges++;
+            log_data.error_flags |= (1 << ERR_BAT_UNDERVOLTAGE);
 
-        if (usable_capacity < 0.1) {
-            // reset to measured value if discharged the first time
-            if (first_full_charge_reached) {
-                usable_capacity = discharged_Ah;
+            if (usable_capacity < 0.1) {
+                // reset to measured value if discharged the first time
+                if (first_full_charge_reached) {
+                    usable_capacity = discharged_Ah;
+                }
             }
-        }
-        else {
-            // slowly adapt new measurements with low-pass filter
-            usable_capacity =
-                0.8 * usable_capacity +
-                0.2 * discharged_Ah;
-        }
+            else {
+                // slowly adapt new measurements with low-pass filter
+                usable_capacity =
+                    0.8 * usable_capacity +
+                    0.2 * discharged_Ah;
+            }
 
-        // simple SOH estimation
-        soh = usable_capacity / bat_conf->nominal_capacity;
+            // simple SOH estimation
+            soh = usable_capacity / bat_conf->nominal_capacity;
+        }
+        else if (bat_temperature > bat_conf->discharge_temp_max) {
+            port->neg_current_limit = 0;
+            log_data.error_flags |= (1 << ERR_BAT_DIS_OVERTEMP);
+        }
+        else if (bat_temperature < bat_conf->discharge_temp_min) {
+            port->neg_current_limit = 0;
+            log_data.error_flags |= (1 << ERR_BAT_DIS_UNDERTEMP);
+        }
     }
-    else if (port->neg_current_limit < 0
-            && (bat_temperature > bat_conf->discharge_temp_max
-            || bat_temperature < bat_conf->discharge_temp_min))
-    {
-        // temperature limits exceeded
-        port->neg_current_limit = 0;
-    }
+    else {
+        // discharging currently not allowed. should we allow it?
+        if (port->voltage >= num_batteries *
+            (bat_conf->voltage_load_reconnect - port->current * port->neg_droop_res)
+            && bat_temperature < bat_conf->discharge_temp_max - 1
+            && bat_temperature > bat_conf->discharge_temp_min + 1)
+        {
+            // discharge current is stored as absolute value in bat_conf, but defined
+            // as negative current for power port
+            port->neg_current_limit = -bat_conf->discharge_current_max;
 
-    if (port->voltage >= num_batteries *
-        (bat_conf->voltage_load_reconnect - port->current * port->neg_droop_res)
-        && bat_temperature < bat_conf->discharge_temp_max - 1
-        && bat_temperature > bat_conf->discharge_temp_min + 1)
-    {
-        // discharge current is stored as absolute value in bat_conf, but defined
-        // as negative current for dc_bus
-        port->neg_current_limit = -bat_conf->discharge_current_max;
+            // delete all discharge error flags
+            log_data.error_flags &= ~(1 << ERR_BAT_DIS_OVERTEMP);
+            log_data.error_flags &= ~(1 << ERR_BAT_DIS_UNDERTEMP);
+            log_data.error_flags &= ~(1 << ERR_BAT_UNDERVOLTAGE);
+        }
     }
 }
 
 void Charger::charge_control(BatConf *bat_conf)
 {
     // check battery temperature for charging direction
-    if (bat_temperature > bat_conf->charge_temp_max
-        || bat_temperature < bat_conf->charge_temp_min)
-    {
+    if (bat_temperature > bat_conf->charge_temp_max) {
         port->pos_current_limit = 0;
+        log_data.error_flags |= (1 << ERR_BAT_CHG_OVERTEMP);
+        enter_state(CHG_STATE_IDLE);
+    }
+    else if (bat_temperature < bat_conf->charge_temp_min) {
+        port->pos_current_limit = 0;
+        log_data.error_flags |= (1 << ERR_BAT_CHG_UNDERTEMP);
         enter_state(CHG_STATE_IDLE);
     }
 
@@ -331,6 +349,8 @@ void Charger::charge_control(BatConf *bat_conf)
                     bat_conf->temperature_compensation * (bat_temperature - 25));
                 port->pos_current_limit = bat_conf->charge_current_max;
                 full = false;
+                log_data.error_flags &= ~(1 << ERR_BAT_CHG_OVERTEMP);
+                log_data.error_flags &= ~(1 << ERR_BAT_CHG_UNDERTEMP);
                 enter_state(CHG_STATE_BULK);
             }
             break;
