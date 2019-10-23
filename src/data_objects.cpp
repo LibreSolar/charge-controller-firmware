@@ -91,8 +91,8 @@ const data_object_t data_objects[] = {
     {0x5D, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_INT32,   2, (void*) &(bat_conf_user.equalization_trigger_deep_cycles),  "EqDeepDisTrigger"},
 
     // load settings
-    {0x40, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_BOOL,    0, (void*) &(load.enabled_target),                      "LoadEnDefault"},
-    {0x41, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_BOOL,    0, (void*) &(load.usb_enabled_target),                  "UsbEnDefault"},
+    {0x40, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_BOOL,    0, (void*) &(load.enable),                              "LoadEnDefault"},
+    {0x41, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_BOOL,    0, (void*) &(load.usb_enable),                          "UsbEnDefault"},
     {0x42, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_FLOAT32, 2, (void*) &(bat_conf_user.voltage_load_disconnect),    "LoadDisconnect_V"},
     {0x43, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_FLOAT32, 2, (void*) &(bat_conf_user.voltage_load_reconnect),     "LoadReconnect_V"},
     //{0x44, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_FLOAT32, 2, (void*) &(bat_conf_user.voltage_load_disconnect),    "UsbDisconnect_V"},
@@ -105,8 +105,8 @@ const data_object_t data_objects[] = {
     // INPUT DATA /////////////////////////////////////////////////////////////
     // using IDs >= 0x60
 
-    {0x60, TS_INPUT, TS_READ_ALL | TS_WRITE_ALL,   TS_T_BOOL,   0, (void*) &(load.enabled_target),                      "LoadEn"},   // change w/o store setting in NVM
-    {0x61, TS_INPUT, TS_READ_ALL | TS_WRITE_ALL,   TS_T_BOOL,   0, (void*) &(load.usb_enabled_target),                  "UsbEn"},
+    {0x60, TS_INPUT, TS_READ_ALL | TS_WRITE_ALL,   TS_T_BOOL,   0, (void*) &(load.enable),                              "LoadEn"},   // change w/o store setting in NVM
+    {0x61, TS_INPUT, TS_READ_ALL | TS_WRITE_ALL,   TS_T_BOOL,   0, (void*) &(load.usb_enable),                          "UsbEn"},
 #if FEATURE_PWM_SWITCH
     {0x62, TS_INPUT, TS_READ_ALL | TS_WRITE_ALL,   TS_T_BOOL,   0, (void*) &(pwm_switch.enabled),                       "PwmEn"},
 #endif

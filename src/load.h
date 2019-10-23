@@ -25,6 +25,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <time.h>
 
 #include "power_port.h"
 
@@ -76,7 +77,7 @@ public:
      *
      * Performs time-critical checks like overcurrent and overvoltage
      */
-    void control(float load_max_voltage);
+    void control();
 
     uint16_t switch_state;      ///< Current state of load output switch
     uint16_t usb_state;         ///< Current state of USB output
@@ -85,14 +86,15 @@ public:
                                 ///< measurement of (external) load output terminal
 
     float current_max;          ///< maximum allowed current
-    int overcurrent_timestamp;  ///< time at which an overcurrent event occured
+    time_t overcurrent_timestamp;  ///< time at which an overcurrent event occured
+    time_t lvd_timestamp;       ///< stores when the load was disconnected last time
 
     float junction_temperature; ///< calculated using thermal model based on current and ambient
                                 ///< temperature measurement (unit: °C)
 
-    bool enabled_target;        ///< target setting defined via communication port (overruled if
+    bool enable;                ///< target setting defined via communication port (overruled if
                                 ///< battery is empty)
-    bool usb_enabled_target;    ///< same for USB output
+    bool usb_enable;            ///< same for USB output
 };
 
 #endif /* LOAD_H */

@@ -20,7 +20,6 @@
 #include "hardware.h"
 #include "leds.h"
 #include "log.h"
-#include <time.h>
 
 volatile bool short_circuit = false;
 
@@ -193,8 +192,8 @@ LoadOutput::LoadOutput(PowerPort *pwr_port)
 {
     port = pwr_port;
     current_max = LOAD_CURRENT_MAX;
-    enabled_target = true;
-    usb_enabled_target = true;
+    enable = true;
+    usb_enable = true;
     switch_set(false);
     usb_set(false);
     switch_state = LOAD_STATE_DISABLED;
@@ -209,7 +208,7 @@ void LoadOutput::usb_state_machine()
 {
     switch (usb_state) {
         case LOAD_STATE_DISABLED:
-            if (usb_enabled_target == true) {
+            if (usb_enable == true) {
                 usb_set(true);
                 usb_state = LOAD_STATE_ON;
             }
@@ -224,7 +223,7 @@ void LoadOutput::usb_state_machine()
                 usb_set(false);
                 usb_state = LOAD_STATE_OFF_OVERCURRENT;
             }
-            else if (usb_enabled_target == false) {
+            else if (usb_enable == false) {
                 usb_set(false);
                 usb_state = LOAD_STATE_DISABLED;
             }
@@ -232,7 +231,7 @@ void LoadOutput::usb_state_machine()
         case LOAD_STATE_OFF_LOW_SOC:
             // currently still same cut-off SOC limit as the load
             if (switch_state == LOAD_STATE_ON) {
-                if (usb_enabled_target == true) {
+                if (usb_enable == true) {
                     usb_set(true);
                     usb_state = LOAD_STATE_ON;
                 }
@@ -249,26 +248,22 @@ void LoadOutput::usb_state_machine()
     }
 }
 
-static time_t lvd_timestamp = 0;    // stores when the load was disconnected last time
-
 void LoadOutput::state_machine()
 {
     //printf("Load State: %d\n", switch_state);
     switch (switch_state) {
         case LOAD_STATE_DISABLED:
-            if (port->neg_current_limit < 0        // discharging enabled
-                && enabled_target == true)
-            {
+            if (enable == true && port->pos_current_limit > 0) {
                 switch_set(true);
                 switch_state = LOAD_STATE_ON;
             }
             break;
         case LOAD_STATE_ON:
-            if (enabled_target == false) {
+            if (enable == false) {
                 switch_set(false);
                 switch_state = LOAD_STATE_DISABLED;
             }
-            else if (port->neg_current_limit == 0) {  // float == is allowed for 0.0
+            else if (port->pos_current_limit == 0) {  // float == is allowed for 0.0
                 lvd_timestamp = time(NULL);
                 switch_set(false);
                 switch_state = LOAD_STATE_OFF_LOW_SOC;
@@ -276,10 +271,10 @@ void LoadOutput::state_machine()
             break;
         case LOAD_STATE_OFF_LOW_SOC:
             // wait at least one hour
-            if (port->neg_current_limit < 0        // discharging enabled again
+            if (port->pos_current_limit > 0
                 && time(NULL) - lvd_timestamp > 60*60)
             {
-                if (enabled_target == true) {
+                if (enable == true) {
                     switch_set(true);
                     switch_state = LOAD_STATE_ON;
                 }
@@ -295,13 +290,15 @@ void LoadOutput::state_machine()
             }
             break;
         case LOAD_STATE_OFF_OVERVOLTAGE:
-            if (port->voltage < LOW_SIDE_VOLTAGE_MAX) {     // TODO: add hysteresis?
+            if (port->voltage < port->sink_voltage_max &&
+                port->voltage < LOW_SIDE_VOLTAGE_MAX)
+            {
                 switch_state = LOAD_STATE_DISABLED;   // switch to normal mode again
             }
             break;
         case LOAD_STATE_OFF_SHORT_CIRCUIT:
             // stay here until the charge controller is reset or load is switched off remotely
-            if (enabled_target == false) {
+            if (enable == false) {
                 short_circuit = false;
                 switch_state = LOAD_STATE_DISABLED;   // switch to normal mode again
             }
@@ -312,7 +309,7 @@ void LoadOutput::state_machine()
 }
 
 // this function is called more often than the state machine
-void LoadOutput::control(float load_max_voltage)
+void LoadOutput::control()
 {
     if (short_circuit) {
         switch_state = LOAD_STATE_OFF_SHORT_CIRCUIT;
@@ -334,7 +331,7 @@ void LoadOutput::control(float load_max_voltage)
     }
 
     static int debounce_counter = 0;
-    if (port->voltage > load_max_voltage ||
+    if (port->voltage > port->sink_voltage_max ||
         port->voltage > LOW_SIDE_VOLTAGE_MAX)
     {
         debounce_counter++;

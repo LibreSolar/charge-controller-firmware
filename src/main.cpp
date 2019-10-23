@@ -119,6 +119,7 @@ int main()
 
     charger.detect_num_batteries(&bat_conf);     // check if we have 24V instead of 12V system
     battery_init_dc_bus(&bat_terminal, &bat_conf, charger.num_batteries);
+    load_terminal.init_load(bat_conf.voltage_absolute_max * charger.num_batteries);
 
     wait(2);    // safety feature: be able to re-flash before starting
     control_timer_start(CONTROL_FREQUENCY);
@@ -194,7 +195,7 @@ void system_control()
     leds_set_charging(half_bridge_enabled());
     #endif
 
-    load.control(bat_conf.voltage_absolute_max * charger.num_batteries);
+    load.control();
 
     if (counter % CONTROL_FREQUENCY == 0) {
         // called once per second (this timer is much more accurate than time(NULL) based on LSI)

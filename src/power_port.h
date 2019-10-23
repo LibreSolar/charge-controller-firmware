@@ -92,6 +92,10 @@ public:
      */
     void init_nanogrid();
 
+    /** Initialize power port for load output connection
+     */
+    void init_load(float max_load_voltage);
+
     /** Energy balance calculation for power port
      *
      * Must be called exactly once per second, otherwise energy calculation gets wrong.

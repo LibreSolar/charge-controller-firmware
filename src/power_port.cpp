@@ -42,6 +42,14 @@ void PowerPort::init_nanogrid()
     sink_voltage_min = 10.0;
 }
 
+void PowerPort::init_load(float max_load_voltage)
+{
+    sink_voltage_max = max_load_voltage;        // above this voltage, load is switched off
+    sink_voltage_min = 0;
+
+    // other settings are not relevant for load output
+}
+
 // must be called exactly once per second, otherwise energy calculation gets wrong
 void PowerPort::energy_balance()
 {
@@ -71,4 +79,7 @@ void ports_update_current_limits(PowerPort *p_dcdc, PowerPort *p_bat, PowerPort 
     // load switched on as long as solar power is available, even if the battery is empty. This
     // needs a fast point-of-load (PoL) control of the DC/DC, which is not possible (yet).
     p_dcdc->neg_current_limit = p_bat->neg_current_limit - p_bat->current;
+
+    // this statement enables or disables the load output
+    p_load->pos_current_limit = -p_bat->neg_current_limit;
 }
