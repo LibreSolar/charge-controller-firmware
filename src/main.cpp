@@ -160,7 +160,7 @@ int main()
             eeprom_update();
 
             leds_update_1s();
-            leds_update_soc(charger.soc, load.switch_state == LOAD_STATE_OFF_LOW_SOC);
+            leds_update_soc(charger.soc, load.state == LOAD_STATE_OFF_LOW_SOC);
 
             uext_process_1s();
             ts_interfaces.process_1s();

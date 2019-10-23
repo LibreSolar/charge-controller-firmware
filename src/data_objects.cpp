@@ -97,6 +97,8 @@ const data_object_t data_objects[] = {
     {0x43, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_FLOAT32, 2, (void*) &(bat_conf_user.voltage_load_reconnect),     "LoadReconnect_V"},
     //{0x44, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_FLOAT32, 2, (void*) &(bat_conf_user.voltage_load_disconnect),    "UsbDisconnect_V"},
     //{0x45, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_FLOAT32, 2, (void*) &(bat_conf_user.voltage_load_reconnect),     "UsbReconnect_V"},
+    {0x46, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_FLOAT32, 2, (void*) &(load.overcurrent_recovery_delay),          "LoadOCRecovery_s"},
+    {0x47, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_FLOAT32, 2, (void*) &(load.lvd_recovery_delay),                  "LoadUVRecovery_s"},
 
     // other configuration items
     //{0x33, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_BOOL,    2, (void*) &(??),   "WarningIndicator"},  // can be set externally
@@ -118,7 +120,7 @@ const data_object_t data_objects[] = {
     // using IDs >= 0x70 except for high priority data objects
 
     // high priority data objects (low IDs)
-    {0x04, TS_OUTPUT, TS_READ_ALL, TS_T_UINT16,  0, (void*) &(load.switch_state),                       "LoadState"},
+    {0x04, TS_OUTPUT, TS_READ_ALL, TS_T_UINT16,  0, (void*) &(load.state),                              "LoadState"},
     {0x05, TS_OUTPUT, TS_READ_ALL, TS_T_UINT16,  0, (void*) &(load.usb_state),                          "UsbState"},
     {0x06, TS_OUTPUT, TS_READ_ALL, TS_T_UINT16,  0, (void*) &(charger.soc),                             "SOC_%"},       // output will be uint8_t
 

@@ -63,7 +63,5 @@ int main()
     half_brigde_tests();
     dcdc_tests();
     log_tests();
-
-    // TODO
-    //load_tests();
+    load_tests();
 }
