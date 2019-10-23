@@ -13,7 +13,7 @@ static void init_structs_buck()
 {
     hv_terminal.init_solar();
     hv_terminal.voltage = 20;
-    hv_terminal.dis_voltage_start = 18;
+    hv_terminal.src_voltage_start = 18;
     hv_terminal.current = 0;
 
     battery_conf_init(&bat_conf, BAT_TYPE_GEL, 6, 100);
@@ -45,7 +45,7 @@ static void init_structs_boost()
 
     hv_terminal.init_solar();
     dcdc_lv_port.voltage = 20;
-    dcdc_lv_port.dis_voltage_start = 18;
+    dcdc_lv_port.src_voltage_start = 18;
     dcdc_lv_port.current = 0;
     dcdc_lv_port.power = 0;
 
@@ -127,7 +127,7 @@ void no_buck_start_if_bat_voltage_high()
 void no_buck_start_if_bat_chg_not_allowed()
 {
     init_structs_buck();
-    dcdc_lv_port.chg_current_limit = 0;
+    dcdc_lv_port.pos_current_limit = 0;
     TEST_ASSERT_EQUAL(0, dcdc.check_start_conditions());
 }
 
@@ -164,7 +164,7 @@ void no_boost_start_if_bat_voltage_high()
 void no_boost_start_if_bat_chg_not_allowed()
 {
     init_structs_boost();
-    hv_terminal.chg_current_limit = 0;
+    hv_terminal.pos_current_limit = 0;
     TEST_ASSERT_EQUAL(0, dcdc.check_start_conditions());
 }
 
@@ -197,7 +197,7 @@ void buck_derating_output_voltage_too_high()
 {
     start_buck();
     float pwm_before = half_bridge_get_duty_cycle();
-    dcdc_lv_port.voltage = dcdc_lv_port.chg_voltage_target + 0.1;
+    dcdc_lv_port.voltage = dcdc_lv_port.sink_voltage_max + 0.1;
     dcdc.control();
     float pwm_after = half_bridge_get_duty_cycle();
     TEST_ASSERT(pwm_after < pwm_before);    // less duty cycle = higher voltage
@@ -208,7 +208,7 @@ void buck_derating_output_current_too_high()
 {
     start_buck();
     float pwm_before = half_bridge_get_duty_cycle();
-    dcdc_lv_port.current = dcdc_lv_port.chg_current_limit + 0.1;
+    dcdc_lv_port.current = dcdc_lv_port.pos_current_limit + 0.1;
     dcdc.control();
     float pwm_after = half_bridge_get_duty_cycle();
     TEST_ASSERT(pwm_after < pwm_before);
@@ -219,7 +219,7 @@ void buck_derating_input_voltage_too_low()
 {
     start_buck();
     float pwm_before = half_bridge_get_duty_cycle();
-    hv_terminal.voltage = hv_terminal.dis_voltage_stop - 0.1;
+    hv_terminal.voltage = hv_terminal.src_voltage_stop - 0.1;
     dcdc_lv_port.current = 0.2;
     dcdc.control();
     float pwm_after = half_bridge_get_duty_cycle();
@@ -231,7 +231,7 @@ void buck_derating_input_current_too_high()
 {
     start_buck();
     float pwm_before = half_bridge_get_duty_cycle();
-    hv_terminal.current = hv_terminal.dis_current_limit - 0.1;
+    hv_terminal.current = hv_terminal.neg_current_limit - 0.1;
     dcdc.control();
     float pwm_after = half_bridge_get_duty_cycle();
     TEST_ASSERT(pwm_after < pwm_before);
@@ -300,7 +300,7 @@ void boost_derating_output_voltage_too_high()
 {
     start_boost();
     float pwm_before = half_bridge_get_duty_cycle();
-    hv_terminal.voltage = hv_terminal.chg_voltage_target + 0.5;
+    hv_terminal.voltage = hv_terminal.sink_voltage_max + 0.5;
     dcdc.control();
     float pwm_after = half_bridge_get_duty_cycle();
     TEST_ASSERT(pwm_after > pwm_before);    // higher duty cycle = less power
@@ -310,7 +310,7 @@ void boost_derating_output_current_too_high()
 {
     start_boost();
     float pwm_before = half_bridge_get_duty_cycle();
-    hv_terminal.current = hv_terminal.chg_current_limit + 0.1;
+    hv_terminal.current = hv_terminal.pos_current_limit + 0.1;
     dcdc.control();
     float pwm_after = half_bridge_get_duty_cycle();
     TEST_ASSERT(pwm_after > pwm_before);
@@ -320,7 +320,7 @@ void boost_derating_input_voltage_too_low()
 {
     start_boost();
     float pwm_before = half_bridge_get_duty_cycle();
-    dcdc_lv_port.voltage = dcdc_lv_port.dis_voltage_stop - 0.1;
+    dcdc_lv_port.voltage = dcdc_lv_port.src_voltage_stop - 0.1;
     hv_terminal.current = 0.2;
     dcdc.control();
     float pwm_after = half_bridge_get_duty_cycle();
@@ -331,7 +331,7 @@ void boost_derating_input_current_too_high()
 {
     start_boost();
     float pwm_before = half_bridge_get_duty_cycle();
-    dcdc_lv_port.current = dcdc_lv_port.dis_current_limit - 0.1;
+    dcdc_lv_port.current = dcdc_lv_port.neg_current_limit - 0.1;
     dcdc.control();
     float pwm_after = half_bridge_get_duty_cycle();
     TEST_ASSERT(pwm_after > pwm_before);

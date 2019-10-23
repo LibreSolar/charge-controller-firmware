@@ -138,8 +138,8 @@ const data_object_t data_objects[] = {
     {0x79, TS_OUTPUT, TS_READ_ALL, TS_T_UINT16,  0, (void*) &(dcdc.state),                              "DCDCState"},
 #endif
     {0x7A, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(solar_terminal.current),                  "Solar_A"},
-    {0x7B, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(bat_terminal.chg_voltage_target),         "BatTarget_V"},
-    {0x7C, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(bat_terminal.chg_current_limit),          "BatTarget_A"},
+    {0x7B, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(bat_terminal.sink_voltage_max),           "BatTarget_V"},
+    {0x7C, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(bat_terminal.pos_current_limit),          "BatTarget_A"},
     {0x7D, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(bat_terminal.power),                      "Bat_W"},
     {0x7E, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(solar_terminal.power),                    "Solar_W"},
     {0x7F, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(load_terminal.power),                     "Load_W"},
@@ -158,10 +158,10 @@ const data_object_t data_objects[] = {
     {0x10, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_UINT16,  2, (void*) &(log_data.load_power_max_day),           "LoadMaxDay_W"},
 
     // accumulated data
-    {0xA0, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 2, (void*) &(solar_terminal.dis_energy_Wh),          "SolarInDay_Wh"},
-    {0xA1, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 2, (void*) &(load_terminal.chg_energy_Wh),           "LoadOutDay_Wh"},
-    {0xA2, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 2, (void*) &(bat_terminal.chg_energy_Wh),            "BatChgDay_Wh"},
-    {0xA3, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 2, (void*) &(bat_terminal.dis_energy_Wh),            "BatDisDay_Wh"},
+    {0xA0, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 2, (void*) &(solar_terminal.neg_energy_Wh),          "SolarInDay_Wh"},
+    {0xA1, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 2, (void*) &(load_terminal.pos_energy_Wh),           "LoadOutDay_Wh"},
+    {0xA2, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 2, (void*) &(bat_terminal.pos_energy_Wh),            "BatChgDay_Wh"},
+    {0xA3, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 2, (void*) &(bat_terminal.neg_energy_Wh),            "BatDisDay_Wh"},
     {0xA4, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 0, (void*) &(charger.discharged_Ah),                 "Dis_Ah"},    // coulomb counter
     {0xA5, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_UINT16,  0, (void*) &(charger.soh),                           "SOH_%"},     // output will be uint8_t
     {0xA6, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_INT32,   0, (void*) &(log_data.day_counter),                  "DayCount"},

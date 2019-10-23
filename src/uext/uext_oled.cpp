@@ -120,7 +120,7 @@ void uext_process_1s()
     oled.printf("%5.1fA\n", (abs(load_terminal.current) < 0.1) ? 0 : load_terminal.current);
 
     oled.setTextCursor(0, 36);
-    oled.printf("Day +%5.0fWh -%5.0fWh", solar_terminal.dis_energy_Wh, fabs(load_terminal.chg_energy_Wh));
+    oled.printf("Day +%5.0fWh -%5.0fWh", solar_terminal.neg_energy_Wh, fabs(load_terminal.pos_energy_Wh));
     oled.printf("Tot +%4.1fkWh -%4.1fkWh", log_data.solar_in_total_Wh / 1000.0, fabs(log_data.load_out_total_Wh) / 1000.0);
 
     oled.setTextCursor(0, 56);

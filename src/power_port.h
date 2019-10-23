@@ -24,37 +24,63 @@
 
 #include <stdbool.h>
 
+
+//    -----------------
+//    |               |    >> positive current/power direction
+//    |               o---->----
+//    |               |     +  |
+//    |  considered   |       | | external device: battery / solar panel / load / DC grid
+//    |   system or   |       | |
+//    |  sub-circuit  |       | | (the port should be named after the external device)
+//    |               |     -  |
+//    |               o---------
+//    |               |
+//    -----------------
+
 /** Power Port class
  *
  * Stores actual measurements and voltage / current limits for external terminals or internal ports
+ *
+ * The signs follow the passive sign convention. Current or power from the considered system or
+ * circuit towards an external device connected to the port has a positive sign. For all terminals,
+ * the entire charge controller is considered as the system boundary and acts as a source or a sink.
+ * For internal sub-circuits, e.g. the DC/DC converter circuit defines the sub-system boundaries.
+ *
+ * Examples:
+ * - Charging a connected battery has a positive sign, as current flows from the charge controller
+ *   into the battery, i.e. the battery acts as a sink.
+ * - Power from a solar panel (power source) has a negative sign, as the charge controller acts as
+ *   the sink and power flows from the external device into the charge controller.
+ * - A DC/DC converter in buck mode results in a positive current flow at the low voltage side and
+ *   a negative current at the high voltage side. The system boundary is the DC/DC sub-circuit,
+ *   which sources current from the high side port and sinks it through the low side port.
  */
 class PowerPort
 {
 public:
-    float voltage;                  ///< Measured bus voltage
+    float voltage;                  ///< Measured port voltage
 
-    float chg_voltage_target;       ///< Target voltage if bus is charged
-    float chg_voltage_min;          ///< Minimum voltage to allow charge current (necessary
+    float sink_voltage_max;         ///< Maximum voltage if connected device acts as a sink
+                                    ///< (equivalent to battery charging target voltage)
+    float sink_voltage_min;         ///< Minimum voltage to allow positive current (necessary
                                     ///< to prevent charging of deep-discharged Li-ion batteries)
 
-    float dis_voltage_start;        ///< Minimum voltage to allow discharge current from the bus
+    float src_voltage_start;        ///< Minimum voltage to allow source current from the device
                                     ///< (equal to load reconnect voltage)
-    float dis_voltage_stop;         ///< Absolute minimum = load disconnect for batteries
+    float src_voltage_stop;         ///< Absolute minimum = load disconnect for batteries
 
     float current;                  ///< Measured current through this port (positive sign =
-                                    ///< increasing voltage/charge of the named device)
+                                    ///< sinking current into the named external device)
     float power;                    ///< Product of current & voltage
 
-    float chg_current_limit;        ///< Maximum current charging the bus, i.e. increasing its
-                                    ///< voltage (charging direction for battery terminal)
-    float chg_droop_res;            ///< control voltage = nominal voltage - droop_res * current
+    float pos_current_limit;        ///< Maximum positive current (valid values >= 0.0)
+    float pos_droop_res;            ///< control voltage = nominal voltage - droop_res * current
 
-    float dis_current_limit;        ///< Maximum current to discharge the bus, i.e. decrease its
-                                    ///< voltage, value must be negative!!!
-    float dis_droop_res;            ///< control voltage = nominal voltage - droop_res * current
+    float neg_current_limit;        ///< Maximum negative current (valid values <= 0.0)
+    float neg_droop_res;            ///< control voltage = nominal voltage - droop_res * current
 
-    float chg_energy_Wh;            ///< cumulated energy in charge direction since last counter reset (Wh)
-    float dis_energy_Wh;            ///< cumulated energy in discharge direction since last counter reset (Wh)
+    float pos_energy_Wh;            ///< Cumulated sunk energy since last counter reset (Wh)
+    float neg_energy_Wh;            ///< Cumulated sourced energy since last counter reset (Wh)
 
     /** Initialize power port for solar panel connection
      *

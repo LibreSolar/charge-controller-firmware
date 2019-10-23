@@ -13,10 +13,10 @@ void reset_counters_at_start_of_day()
 
     log_data.day_counter = 0;
 
-    solar_terminal.dis_energy_Wh = 10.0;
-    bat_terminal.dis_energy_Wh = 3.0;
-    bat_terminal.chg_energy_Wh = 4.0;
-    load_terminal.chg_energy_Wh = 9.0;
+    solar_terminal.neg_energy_Wh = 10.0;
+    bat_terminal.neg_energy_Wh = 3.0;
+    bat_terminal.pos_energy_Wh = 4.0;
+    load_terminal.pos_energy_Wh = 9.0;
 
     // 5 houurs without sun
     for (int i = 0; i <= 5 * 60 * 60; i++) {
@@ -28,10 +28,10 @@ void reset_counters_at_start_of_day()
     TEST_ASSERT_EQUAL(4, log_data.bat_chg_total_Wh);
     TEST_ASSERT_EQUAL(9, log_data.load_out_total_Wh);
 
-    TEST_ASSERT_EQUAL(10, solar_terminal.dis_energy_Wh);
-    TEST_ASSERT_EQUAL(3, bat_terminal.dis_energy_Wh);
-    TEST_ASSERT_EQUAL(4, bat_terminal.chg_energy_Wh);
-    TEST_ASSERT_EQUAL(9, load_terminal.chg_energy_Wh);
+    TEST_ASSERT_EQUAL(10, solar_terminal.neg_energy_Wh);
+    TEST_ASSERT_EQUAL(3, bat_terminal.neg_energy_Wh);
+    TEST_ASSERT_EQUAL(4, bat_terminal.pos_energy_Wh);
+    TEST_ASSERT_EQUAL(9, load_terminal.pos_energy_Wh);
 
     // solar didn't come back yet
     TEST_ASSERT_EQUAL(0, log_data.day_counter);
@@ -42,10 +42,10 @@ void reset_counters_at_start_of_day()
 
     // day counter should be increased and daily energy counters reset
     TEST_ASSERT_EQUAL(1, log_data.day_counter);
-    TEST_ASSERT_EQUAL(0, solar_terminal.dis_energy_Wh);
-    TEST_ASSERT_EQUAL(0, bat_terminal.dis_energy_Wh);
-    TEST_ASSERT_EQUAL(0, bat_terminal.chg_energy_Wh);
-    TEST_ASSERT_EQUAL(0, load_terminal.chg_energy_Wh);
+    TEST_ASSERT_EQUAL(0, solar_terminal.neg_energy_Wh);
+    TEST_ASSERT_EQUAL(0, bat_terminal.neg_energy_Wh);
+    TEST_ASSERT_EQUAL(0, bat_terminal.pos_energy_Wh);
+    TEST_ASSERT_EQUAL(0, load_terminal.pos_energy_Wh);
 }
 
 void log_new_solar_voltage_max()

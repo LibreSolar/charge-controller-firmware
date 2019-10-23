@@ -52,22 +52,22 @@ void log_update_energy(LogData *log_data)
             load_out_total_Wh_prev = log_data->load_out_total_Wh;
             bat_chg_total_Wh_prev = log_data->bat_chg_total_Wh;
             bat_dis_total_Wh_prev = log_data->bat_dis_total_Wh;
-            solar_terminal.dis_energy_Wh = 0.0;
-            load_terminal.chg_energy_Wh = 0.0;
-            bat_terminal.chg_energy_Wh = 0.0;
-            bat_terminal.dis_energy_Wh = 0.0;
+            solar_terminal.neg_energy_Wh = 0.0;
+            load_terminal.pos_energy_Wh = 0.0;
+            bat_terminal.pos_energy_Wh = 0.0;
+            bat_terminal.neg_energy_Wh = 0.0;
         }
         seconds_zero_solar = 0;
     }
 
     log_data->bat_chg_total_Wh = bat_chg_total_Wh_prev +
-        (bat_terminal.chg_energy_Wh > 0 ? bat_terminal.chg_energy_Wh : 0);
+        (bat_terminal.pos_energy_Wh > 0 ? bat_terminal.pos_energy_Wh : 0);
     log_data->bat_dis_total_Wh = bat_dis_total_Wh_prev +
-        (bat_terminal.dis_energy_Wh > 0 ? bat_terminal.dis_energy_Wh : 0);
+        (bat_terminal.neg_energy_Wh > 0 ? bat_terminal.neg_energy_Wh : 0);
     log_data->solar_in_total_Wh = solar_in_total_Wh_prev +
-        (solar_terminal.dis_energy_Wh > 0 ? solar_terminal.dis_energy_Wh : 0);
+        (solar_terminal.neg_energy_Wh > 0 ? solar_terminal.neg_energy_Wh : 0);
     log_data->load_out_total_Wh = load_out_total_Wh_prev +
-        (load_terminal.chg_energy_Wh > 0 ? load_terminal.chg_energy_Wh : 0);
+        (load_terminal.pos_energy_Wh > 0 ? load_terminal.pos_energy_Wh : 0);
 }
 
 void log_update_min_max_values(LogData *log_data)

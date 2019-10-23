@@ -29,10 +29,10 @@ void energy_calculation_init()
     log_data.load_out_total_Wh = 0;
     log_data.bat_chg_total_Wh = 0;
     log_data.bat_dis_total_Wh = 0;
-    hv_terminal.dis_energy_Wh = 0.0;
-    load_terminal.chg_energy_Wh = 0.0;
-    lv_terminal.chg_energy_Wh = 0.0;
-    lv_terminal.dis_energy_Wh = 0.0;
+    hv_terminal.neg_energy_Wh = 0.0;
+    load_terminal.pos_energy_Wh = 0.0;
+    lv_terminal.pos_energy_Wh = 0.0;
+    lv_terminal.neg_energy_Wh = 0.0;
 
     // set desired measurement values
     adcval.bat_temperature = 25;
@@ -69,26 +69,26 @@ void charging_energy_calculation_valid()
 {
     energy_calculation_init();
     // charging only during sun hours
-    TEST_ASSERT_EQUAL_FLOAT(round(sun_hours * lv_terminal.voltage * (dcdc_current_sun - load_current)), round(lv_terminal.chg_energy_Wh));
+    TEST_ASSERT_EQUAL_FLOAT(round(sun_hours * lv_terminal.voltage * (dcdc_current_sun - load_current)), round(lv_terminal.pos_energy_Wh));
 }
 
 void discharging_energy_calculation_valid()
 {
     energy_calculation_init();
     // discharging (sum of current) only during dis hours
-    TEST_ASSERT_EQUAL_FLOAT(round(night_hours * lv_terminal.voltage * adcval.load_current), round(lv_terminal.dis_energy_Wh));
+    TEST_ASSERT_EQUAL_FLOAT(round(night_hours * lv_terminal.voltage * adcval.load_current), round(lv_terminal.neg_energy_Wh));
 }
 
 void solar_input_energy_calculation_valid()
 {
     energy_calculation_init();
-    TEST_ASSERT_EQUAL_FLOAT(round(sun_hours * lv_terminal.voltage * dcdc_current_sun), round(hv_terminal.dis_energy_Wh));
+    TEST_ASSERT_EQUAL_FLOAT(round(sun_hours * lv_terminal.voltage * dcdc_current_sun), round(hv_terminal.neg_energy_Wh));
 }
 
 void load_output_energy_calculation_valid()
 {
     energy_calculation_init();
-    TEST_ASSERT_EQUAL_FLOAT(round((sun_hours + night_hours) * lv_terminal.voltage * adcval.load_current), round(load_terminal.chg_energy_Wh));
+    TEST_ASSERT_EQUAL_FLOAT(round((sun_hours + night_hours) * lv_terminal.voltage * adcval.load_current), round(load_terminal.pos_energy_Wh));
 }
 
 void pass_voltage_targets_to_adjacent_bus()
@@ -96,28 +96,28 @@ void pass_voltage_targets_to_adjacent_bus()
     // without any droop
     bat_terminal.current = 0;
     bat_terminal.pass_voltage_targets(&dcdc_lv_port);
-    TEST_ASSERT_EQUAL(bat_terminal.chg_voltage_min, dcdc_lv_port.chg_voltage_min);
-    TEST_ASSERT_EQUAL(bat_terminal.chg_voltage_target, dcdc_lv_port.chg_voltage_target);
-    TEST_ASSERT_EQUAL(bat_terminal.dis_voltage_start, dcdc_lv_port.dis_voltage_start);
-    TEST_ASSERT_EQUAL(bat_terminal.dis_voltage_stop, dcdc_lv_port.dis_voltage_stop);
+    TEST_ASSERT_EQUAL(bat_terminal.sink_voltage_min, dcdc_lv_port.sink_voltage_min);
+    TEST_ASSERT_EQUAL(bat_terminal.sink_voltage_max, dcdc_lv_port.sink_voltage_max);
+    TEST_ASSERT_EQUAL(bat_terminal.src_voltage_start, dcdc_lv_port.src_voltage_start);
+    TEST_ASSERT_EQUAL(bat_terminal.src_voltage_stop, dcdc_lv_port.src_voltage_stop);
 
     // now with droop for positive current
     bat_terminal.current = 11;
-    bat_terminal.chg_droop_res = 0.1;
+    bat_terminal.pos_droop_res = 0.1;
     bat_terminal.pass_voltage_targets(&dcdc_lv_port);
-    TEST_ASSERT_EQUAL(bat_terminal.chg_voltage_min, dcdc_lv_port.chg_voltage_min);
-    TEST_ASSERT_EQUAL(bat_terminal.chg_voltage_target + 11*0.1, dcdc_lv_port.chg_voltage_target);
-    TEST_ASSERT_EQUAL(bat_terminal.dis_voltage_start + 11*0.1, dcdc_lv_port.dis_voltage_start);
-    TEST_ASSERT_EQUAL(bat_terminal.dis_voltage_stop + 11*0.1, dcdc_lv_port.dis_voltage_stop);
+    TEST_ASSERT_EQUAL(bat_terminal.sink_voltage_min, dcdc_lv_port.sink_voltage_min);
+    TEST_ASSERT_EQUAL(bat_terminal.sink_voltage_max + 11*0.1, dcdc_lv_port.sink_voltage_max);
+    TEST_ASSERT_EQUAL(bat_terminal.src_voltage_start + 11*0.1, dcdc_lv_port.src_voltage_start);
+    TEST_ASSERT_EQUAL(bat_terminal.src_voltage_stop + 11*0.1, dcdc_lv_port.src_voltage_stop);
 
     // now with droop for negative current
     bat_terminal.current = -11;
-    bat_terminal.chg_droop_res = 0.1;
+    bat_terminal.pos_droop_res = 0.1;
     bat_terminal.pass_voltage_targets(&dcdc_lv_port);
-    TEST_ASSERT_EQUAL(bat_terminal.chg_voltage_min, dcdc_lv_port.chg_voltage_min);
-    TEST_ASSERT_EQUAL(bat_terminal.chg_voltage_target - 11*0.1, dcdc_lv_port.chg_voltage_target);
-    TEST_ASSERT_EQUAL(bat_terminal.dis_voltage_start - 11*0.1, dcdc_lv_port.dis_voltage_start);
-    TEST_ASSERT_EQUAL(bat_terminal.dis_voltage_stop - 11*0.1, dcdc_lv_port.dis_voltage_stop);
+    TEST_ASSERT_EQUAL(bat_terminal.sink_voltage_min, dcdc_lv_port.sink_voltage_min);
+    TEST_ASSERT_EQUAL(bat_terminal.sink_voltage_max - 11*0.1, dcdc_lv_port.sink_voltage_max);
+    TEST_ASSERT_EQUAL(bat_terminal.src_voltage_start - 11*0.1, dcdc_lv_port.src_voltage_start);
+    TEST_ASSERT_EQUAL(bat_terminal.src_voltage_stop - 11*0.1, dcdc_lv_port.src_voltage_stop);
 }
 
 void power_port_tests()

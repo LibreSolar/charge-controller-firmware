@@ -216,31 +216,31 @@ void stop_discharge_at_low_voltage()
 
     bat_terminal.voltage = 14;
     charger.discharge_control(&bat_conf);
-    TEST_ASSERT_LESS_THAN(0, bat_terminal.dis_current_limit);
+    TEST_ASSERT_LESS_THAN(0, bat_terminal.neg_current_limit);
 
     bat_terminal.voltage = bat_conf.voltage_load_disconnect - 0.1;
     charger.discharge_control(&bat_conf);
-    TEST_ASSERT_EQUAL(0, bat_terminal.dis_current_limit);
+    TEST_ASSERT_EQUAL(0, bat_terminal.neg_current_limit);
 }
 
 void stop_discharge_at_overtemp()
 {
     init_structs();
-    TEST_ASSERT_LESS_THAN(0, bat_terminal.dis_current_limit);
+    TEST_ASSERT_LESS_THAN(0, bat_terminal.neg_current_limit);
 
     charger.bat_temperature = bat_conf.discharge_temp_max + 1;
     charger.discharge_control(&bat_conf);
-    TEST_ASSERT_EQUAL(0, bat_terminal.dis_current_limit);
+    TEST_ASSERT_EQUAL(0, bat_terminal.neg_current_limit);
 }
 
 void stop_discharge_at_undertemp()
 {
     init_structs();
-    TEST_ASSERT_LESS_THAN(0, bat_terminal.dis_current_limit);
+    TEST_ASSERT_LESS_THAN(0, bat_terminal.neg_current_limit);
 
     charger.bat_temperature = bat_conf.discharge_temp_min - 1;
     charger.discharge_control(&bat_conf);
-    TEST_ASSERT_EQUAL(0, bat_terminal.dis_current_limit);
+    TEST_ASSERT_EQUAL(0, bat_terminal.neg_current_limit);
 }
 
 void restart_discharge_if_allowed()
@@ -250,17 +250,17 @@ void restart_discharge_if_allowed()
     // stop because of undervoltage
     bat_terminal.voltage = bat_conf.voltage_load_disconnect - 0.1;
     charger.discharge_control(&bat_conf);
-    TEST_ASSERT_EQUAL(0, bat_terminal.dis_current_limit);
+    TEST_ASSERT_EQUAL(0, bat_terminal.neg_current_limit);
 
     // increase voltage slightly above DISconnect voltage
     bat_terminal.voltage = bat_conf.voltage_load_disconnect + 0.1;
     charger.discharge_control(&bat_conf);
-    TEST_ASSERT_EQUAL(0, bat_terminal.dis_current_limit);
+    TEST_ASSERT_EQUAL(0, bat_terminal.neg_current_limit);
 
     // increase voltage above REconnect voltage
     bat_terminal.voltage = bat_conf.voltage_load_reconnect + 0.1;
     charger.discharge_control(&bat_conf);
-    TEST_ASSERT_LESS_THAN(0, bat_terminal.dis_current_limit);
+    TEST_ASSERT_LESS_THAN(0, bat_terminal.neg_current_limit);
 }
 
 void battery_values_propagated_to_lv_bus_int()

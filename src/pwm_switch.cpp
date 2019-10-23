@@ -144,7 +144,7 @@ PwmSwitch::PwmSwitch(PowerPort *pwm_terminal, PowerPort *pwm_port_int)
 void PwmSwitch::control()
 {
     if (_pwm_active) {
-        if (port_int->chg_current_limit == 0 || terminal->dis_current_limit == 0
+        if (port_int->pos_current_limit == 0 || terminal->neg_current_limit == 0
             || terminal->current > 0           // discharging battery into solar panel --> stop
             || enabled == false)
         {
@@ -152,9 +152,9 @@ void PwmSwitch::control()
             off_timestamp = time(NULL);
             printf("PWM charger stop.\n");
         }
-        else if (port_int->voltage > (port_int->chg_voltage_target - port_int->chg_droop_res * port_int->current)    // output voltage above target
-            || port_int->current > port_int->chg_current_limit         // output current limit exceeded
-            || terminal->current < terminal->dis_current_limit)    // input current (negative signs) above limit
+        else if (port_int->voltage > (port_int->sink_voltage_max - port_int->pos_droop_res * port_int->current)    // output voltage above target
+            || port_int->current > port_int->pos_current_limit         // output current limit exceeded
+            || terminal->current < terminal->neg_current_limit)    // input current (negative signs) above limit
         {
             // The gate driver switch-off time is quite high (fall time around 1ms), so very short
             // on or off periods (duty cycle close to 0 and 1) should be avoided
@@ -183,10 +183,10 @@ void PwmSwitch::control()
         }
     }
     else {
-        if (port_int->chg_current_limit > 0          // charging allowed
-            && port_int->voltage < port_int->chg_voltage_target
-            && port_int->voltage > port_int->chg_voltage_min
-            && terminal->dis_current_limit < 0     // dischraging allowed
+        if (port_int->pos_current_limit > 0          // charging allowed
+            && port_int->voltage < port_int->sink_voltage_max
+            && port_int->voltage > port_int->sink_voltage_min
+            && terminal->neg_current_limit < 0     // discharging allowed
             && terminal->voltage > port_int->voltage + offset_voltage_start
             && time(NULL) > (off_timestamp + restart_interval)
             && enabled == true)

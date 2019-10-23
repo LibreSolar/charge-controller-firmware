@@ -256,7 +256,7 @@ void LoadOutput::state_machine()
     //printf("Load State: %d\n", switch_state);
     switch (switch_state) {
         case LOAD_STATE_DISABLED:
-            if (port->dis_current_limit < 0        // discharging enabled
+            if (port->neg_current_limit < 0        // discharging enabled
                 && enabled_target == true)
             {
                 switch_set(true);
@@ -268,7 +268,7 @@ void LoadOutput::state_machine()
                 switch_set(false);
                 switch_state = LOAD_STATE_DISABLED;
             }
-            else if (port->dis_current_limit == 0) {  // float == is allowed for 0.0
+            else if (port->neg_current_limit == 0) {  // float == is allowed for 0.0
                 lvd_timestamp = time(NULL);
                 switch_set(false);
                 switch_state = LOAD_STATE_OFF_LOW_SOC;
@@ -276,7 +276,7 @@ void LoadOutput::state_machine()
             break;
         case LOAD_STATE_OFF_LOW_SOC:
             // wait at least one hour
-            if (port->dis_current_limit < 0        // discharging enabled again
+            if (port->neg_current_limit < 0        // discharging enabled again
                 && time(NULL) - lvd_timestamp > 60*60)
             {
                 if (enabled_target == true) {
