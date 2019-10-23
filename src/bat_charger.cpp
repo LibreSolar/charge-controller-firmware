@@ -459,14 +459,3 @@ void battery_init_dc_bus(PowerPort *port, BatConf *bat, unsigned int num_batteri
     // negative sign for compensation of actual resistance
     port->chg_droop_res = -bat->wire_resistance * n;
 }
-
-void update_dcdc_current_targets(PowerPort *dcdc_port, PowerPort *bat, PowerPort *load)
-{
-    // relevant for DC/DC
-    dcdc_port->chg_current_limit = bat->chg_current_limit - bat->current + load->current;
-
-    // this is a bit tricky... in theory, we could add the available DC/DC current to keep the
-    // load switched on as long as solar power is available, even if the battery is empty. This
-    // needs a fast point-of-load (PoL) control of the DC/DC, which is not possible (yet).
-    dcdc_port->dis_current_limit = bat->dis_current_limit - bat->current;
-}

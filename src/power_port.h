@@ -19,7 +19,7 @@
 
 /** @file
  *
- * @brief Definition of charge controller terminals and internal power port / connections
+ * @brief Definition of charge controller terminals and internal DC buses
  */
 
 #include <stdbool.h>
@@ -71,6 +71,16 @@ public:
      * Must be called exactly once per second, otherwise energy calculation gets wrong.
      */
     void energy_balance();
+
+    /** Passes own voltage target settings to another port
+     *
+     * @param port Port where the voltage settings will be adjusted
+     */
+    void pass_voltage_targets(PowerPort *port);
 };
+
+/** Sets current limits of DC/DC and load according to battery status
+ */
+void ports_update_current_limits(PowerPort *p_dcdc, PowerPort *p_bat, PowerPort *p_load);
 
 #endif /* POWER_PORT_H */

@@ -53,3 +53,22 @@ void PowerPort::energy_balance()
         dis_energy_Wh -= voltage * current / 3600.0;
     }
 }
+
+void PowerPort::pass_voltage_targets(PowerPort *port)
+{
+    // droop resistance added only to limits where current actually flows
+    port->chg_voltage_min = chg_voltage_min;
+    port->chg_voltage_target = chg_voltage_target + chg_droop_res * current;
+    port->dis_voltage_start = dis_voltage_start + chg_droop_res * current;
+    port->dis_voltage_stop = dis_voltage_stop + chg_droop_res * current;
+}
+
+void ports_update_current_limits(PowerPort *p_dcdc, PowerPort *p_bat, PowerPort *p_load)
+{
+    p_dcdc->chg_current_limit = p_bat->chg_current_limit - p_bat->current + p_load->current;
+
+    // this is a bit tricky... in theory, we could add the available DC/DC current to keep the
+    // load switched on as long as solar power is available, even if the battery is empty. This
+    // needs a fast point-of-load (PoL) control of the DC/DC, which is not possible (yet).
+    p_dcdc->dis_current_limit = p_bat->dis_current_limit - p_bat->current;
+}

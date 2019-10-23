@@ -367,8 +367,4 @@ void battery_conf_overwrite(BatConf *source, BatConf *destination, Charger *char
  */
 void battery_init_dc_bus(PowerPort *port, BatConf *bat, unsigned int num_batteries);
 
-/** Calculates targets for junction of load and battery bus at the DC/DC output
-*/
-void update_dcdc_current_targets(PowerPort *dcdc_port, PowerPort *bat, PowerPort *load);
-
 #endif /* BAT_CHARGER_H */

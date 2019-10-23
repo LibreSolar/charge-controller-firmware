@@ -148,7 +148,10 @@ int main()
             charger.charge_control(&bat_conf);
 
             #if FEATURE_DCDC_CONVERTER
-            update_dcdc_current_targets(&dcdc_lv_port, &bat_terminal, &load_terminal);
+            bat_terminal.pass_voltage_targets(&dcdc_lv_port);
+            #endif
+            #if FEATURE_PWM_SWITCH
+            bat_terminal.pass_voltage_targets(&pwm_port_int);
             #endif
 
             load.state_machine();
@@ -180,11 +183,13 @@ void system_control()
     update_measurements();
 
     #if FEATURE_PWM_SWITCH
+    ports_update_current_limits(&pwm_port_int, &bat_terminal, &load_terminal);
     pwm_switch.control();
     leds_set_charging(pwm_switch.active());
     #endif
 
     #if FEATURE_DCDC_CONVERTER
+    ports_update_current_limits(&dcdc_lv_port, &bat_terminal, &load_terminal);
     dcdc.control();     // control of DC/DC including MPPT algorithm
     leds_set_charging(half_bridge_enabled());
     #endif
