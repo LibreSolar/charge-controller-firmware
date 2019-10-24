@@ -1,46 +1,41 @@
 
 #include "tests.h"
 
-#include "dcdc.h"
-#include "dc_bus.h"
-#include "log.h"
 #include "half_bridge.h"
 
 #include <time.h>
 #include <stdio.h>
 #include <math.h>
 
-extern Dcdc dcdc;
-extern DcBus hv_terminal;
-extern DcBus lv_bus_int;
-extern BatConf bat_conf;
+#include "main.h"
 
 static void init_structs_buck()
 {
-    dc_bus_init_solar(&hv_terminal, 10);
+    hv_terminal.init_solar();
     hv_terminal.voltage = 20;
-    hv_terminal.dis_voltage_start = 18;
+    hv_terminal.src_voltage_start = 18;
     hv_terminal.current = 0;
 
     battery_conf_init(&bat_conf, BAT_TYPE_GEL, 6, 100);
-    battery_init_dc_bus(&lv_bus_int, &bat_conf, 1);
-    lv_bus_int.voltage = 14;
-    lv_bus_int.current = 0;
+    battery_init_dc_bus(&dcdc_lv_port, &bat_conf, 1);
+    dcdc_lv_port.voltage = 14;
+    dcdc_lv_port.current = 0;
 
+    dcdc.mode = MODE_MPPT_BUCK;
     dcdc.temp_mosfets = 25;
     dcdc.off_timestamp = 0;
     dcdc.power_prev = 0;
     dcdc.pwm_delta = 1;
-    dcdc_init(&dcdc, &hv_terminal, &lv_bus_int, MODE_MPPT_BUCK);
+    dcdc.enabled = true;
 }
 
 static void start_buck()
 {
     init_structs_buck();
     half_bridge_init(70, 200, 12 / dcdc.hs_voltage_max, 0.97);
-    dcdc_control(&dcdc);
-    dcdc_control(&dcdc);
-    dcdc_control(&dcdc);    // call multiple times because of startup delay
+    dcdc.control();
+    dcdc.control();
+    dcdc.control();    // call multiple times because of startup delay
     TEST_ASSERT_EQUAL(DCDC_STATE_MPPT, dcdc.state);
 }
 
@@ -48,11 +43,11 @@ static void init_structs_boost()
 {
     half_bridge_stop();
 
-    dc_bus_init_solar(&lv_bus_int, 10);
-    lv_bus_int.voltage = 20;
-    lv_bus_int.dis_voltage_start = 18;
-    lv_bus_int.current = 0;
-    lv_bus_int.power = 0;
+    hv_terminal.init_solar();
+    dcdc_lv_port.voltage = 20;
+    dcdc_lv_port.src_voltage_start = 18;
+    dcdc_lv_port.current = 0;
+    dcdc_lv_port.power = 0;
 
     battery_conf_init(&bat_conf, BAT_TYPE_NMC, 10, 9);
     battery_init_dc_bus(&hv_terminal, &bat_conf, 1);
@@ -60,56 +55,57 @@ static void init_structs_boost()
     hv_terminal.current = 0;
     hv_terminal.power = 0;
 
+    dcdc.mode = MODE_MPPT_BOOST;
     dcdc.temp_mosfets = 25;
     dcdc.off_timestamp = 0;
     dcdc.power_prev = 0;
-    dcdc.pwm_delta = -1;
-    dcdc_init(&dcdc, &hv_terminal, &lv_bus_int, MODE_MPPT_BOOST);
+    dcdc.pwm_delta = 1;
+    dcdc.enabled = true;
 }
 
 static void start_boost()
 {
     init_structs_boost();
     half_bridge_init(70, 200, 12 / dcdc.hs_voltage_max, 0.97);
-    dcdc_control(&dcdc);
-    dcdc_control(&dcdc);
-    dcdc_control(&dcdc);        // call multiple times because of startup delay
+    dcdc.control();
+    dcdc.control();
+    dcdc.control();        // call multiple times because of startup delay
     TEST_ASSERT_EQUAL(DCDC_STATE_MPPT, dcdc.state);
 }
 
 void start_valid_mppt_buck()
 {
     init_structs_buck();
-    TEST_ASSERT_EQUAL(1, dcdc_check_start_conditions(&dcdc));
+    TEST_ASSERT_EQUAL(1, dcdc.check_start_conditions());
 }
 
 void start_valid_mppt_boost()
 {
     init_structs_boost();
-    TEST_ASSERT_EQUAL(-1, dcdc_check_start_conditions(&dcdc));
+    TEST_ASSERT_EQUAL(-1, dcdc.check_start_conditions());
 }
 
 void no_start_before_restart_delay()
 {
     init_structs_buck();
     dcdc.off_timestamp = time(NULL) - dcdc.restart_interval + 1;
-    TEST_ASSERT_EQUAL(0, dcdc_check_start_conditions(&dcdc));
+    TEST_ASSERT_EQUAL(0, dcdc.check_start_conditions());
     dcdc.off_timestamp = time(NULL) - dcdc.restart_interval;
-    TEST_ASSERT_EQUAL(1, dcdc_check_start_conditions(&dcdc));
+    TEST_ASSERT_EQUAL(1, dcdc.check_start_conditions());
 }
 
 void no_start_if_dcdc_disabled()
 {
     init_structs_buck();
     dcdc.enabled = false;
-    TEST_ASSERT_EQUAL(0, dcdc_check_start_conditions(&dcdc));
+    TEST_ASSERT_EQUAL(0, dcdc.check_start_conditions());
 }
 
 void no_start_if_dcdc_lv_voltage_low()
 {
     init_structs_buck();
-    lv_bus_int.voltage = dcdc.ls_voltage_min - 0.5;
-    TEST_ASSERT_EQUAL(0, dcdc_check_start_conditions(&dcdc));
+    dcdc_lv_port.voltage = dcdc.ls_voltage_min - 0.5;
+    TEST_ASSERT_EQUAL(0, dcdc.check_start_conditions());
 }
 
 // buck
@@ -117,36 +113,36 @@ void no_start_if_dcdc_lv_voltage_low()
 void no_buck_start_if_bat_voltage_low()
 {
     init_structs_buck();
-    lv_bus_int.voltage = bat_conf.voltage_absolute_min - 0.1;
-    TEST_ASSERT_EQUAL(0, dcdc_check_start_conditions(&dcdc));
+    dcdc_lv_port.voltage = bat_conf.voltage_absolute_min - 0.1;
+    TEST_ASSERT_EQUAL(0, dcdc.check_start_conditions());
 }
 
 void no_buck_start_if_bat_voltage_high()
 {
     init_structs_buck();
-    lv_bus_int.voltage = bat_conf.topping_voltage + 0.1;
-    TEST_ASSERT_EQUAL(0, dcdc_check_start_conditions(&dcdc));
+    dcdc_lv_port.voltage = bat_conf.topping_voltage + 0.1;
+    TEST_ASSERT_EQUAL(0, dcdc.check_start_conditions());
 }
 
 void no_buck_start_if_bat_chg_not_allowed()
 {
     init_structs_buck();
-    lv_bus_int.chg_current_limit = 0;
-    TEST_ASSERT_EQUAL(0, dcdc_check_start_conditions(&dcdc));
+    dcdc_lv_port.pos_current_limit = 0;
+    TEST_ASSERT_EQUAL(0, dcdc.check_start_conditions());
 }
 
 void no_buck_start_if_solar_voltage_high()
 {
     init_structs_buck();
     hv_terminal.voltage = dcdc.hs_voltage_max + 1;
-    TEST_ASSERT_EQUAL(0, dcdc_check_start_conditions(&dcdc));
+    TEST_ASSERT_EQUAL(0, dcdc.check_start_conditions());
 }
 
 void no_buck_start_if_solar_voltage_low()
 {
     init_structs_buck();
     hv_terminal.voltage = 17;
-    TEST_ASSERT_EQUAL(0, dcdc_check_start_conditions(&dcdc));
+    TEST_ASSERT_EQUAL(0, dcdc.check_start_conditions());
 }
 
 // boost
@@ -155,35 +151,35 @@ void no_boost_start_if_bat_voltage_low()
 {
     init_structs_boost();
     hv_terminal.voltage = bat_conf.voltage_absolute_min - 0.1;
-    TEST_ASSERT_EQUAL(0, dcdc_check_start_conditions(&dcdc));
+    TEST_ASSERT_EQUAL(0, dcdc.check_start_conditions());
 }
 
 void no_boost_start_if_bat_voltage_high()
 {
     init_structs_boost();
     hv_terminal.voltage = bat_conf.topping_voltage + 0.1;
-    TEST_ASSERT_EQUAL(0, dcdc_check_start_conditions(&dcdc));
+    TEST_ASSERT_EQUAL(0, dcdc.check_start_conditions());
 }
 
 void no_boost_start_if_bat_chg_not_allowed()
 {
     init_structs_boost();
-    hv_terminal.chg_current_limit = 0;
-    TEST_ASSERT_EQUAL(0, dcdc_check_start_conditions(&dcdc));
+    hv_terminal.pos_current_limit = 0;
+    TEST_ASSERT_EQUAL(0, dcdc.check_start_conditions());
 }
 
 void no_boost_start_if_solar_voltage_high()
 {
     init_structs_boost();
-    lv_bus_int.voltage = dcdc.ls_voltage_max + 1;
-    TEST_ASSERT_EQUAL(0, dcdc_check_start_conditions(&dcdc));
+    dcdc_lv_port.voltage = dcdc.ls_voltage_max + 1;
+    TEST_ASSERT_EQUAL(0, dcdc.check_start_conditions());
 }
 
 void no_boost_start_if_solar_voltage_low()
 {
     init_structs_boost();
-    lv_bus_int.voltage = 17;
-    TEST_ASSERT_EQUAL(0, dcdc_check_start_conditions(&dcdc));
+    dcdc_lv_port.voltage = 17;
+    TEST_ASSERT_EQUAL(0, dcdc.check_start_conditions());
 }
 
 // buck operation
@@ -192,7 +188,7 @@ void buck_increasing_power()
 {
     start_buck();
     float pwm_before = half_bridge_get_duty_cycle();
-    dcdc_control(&dcdc);
+    dcdc.control();
     float pwm_after = half_bridge_get_duty_cycle();
     TEST_ASSERT(pwm_after > pwm_before);
 }
@@ -201,8 +197,8 @@ void buck_derating_output_voltage_too_high()
 {
     start_buck();
     float pwm_before = half_bridge_get_duty_cycle();
-    lv_bus_int.voltage = lv_bus_int.chg_voltage_target + 0.1;
-    dcdc_control(&dcdc);
+    dcdc_lv_port.voltage = dcdc_lv_port.sink_voltage_max + 0.1;
+    dcdc.control();
     float pwm_after = half_bridge_get_duty_cycle();
     TEST_ASSERT(pwm_after < pwm_before);    // less duty cycle = higher voltage
     TEST_ASSERT_EQUAL(DCDC_STATE_CV, dcdc.state);
@@ -212,8 +208,8 @@ void buck_derating_output_current_too_high()
 {
     start_buck();
     float pwm_before = half_bridge_get_duty_cycle();
-    lv_bus_int.current = lv_bus_int.chg_current_limit + 0.1;
-    dcdc_control(&dcdc);
+    dcdc_lv_port.current = dcdc_lv_port.pos_current_limit + 0.1;
+    dcdc.control();
     float pwm_after = half_bridge_get_duty_cycle();
     TEST_ASSERT(pwm_after < pwm_before);
     TEST_ASSERT_EQUAL(DCDC_STATE_CC, dcdc.state);
@@ -223,23 +219,23 @@ void buck_derating_input_voltage_too_low()
 {
     start_buck();
     float pwm_before = half_bridge_get_duty_cycle();
-    hv_terminal.voltage = hv_terminal.dis_voltage_stop - 0.1;
-    lv_bus_int.current = 0.2;
-    dcdc_control(&dcdc);
+    hv_terminal.voltage = hv_terminal.src_voltage_stop - 0.1;
+    dcdc_lv_port.current = 0.2;
+    dcdc.control();
     float pwm_after = half_bridge_get_duty_cycle();
     TEST_ASSERT(pwm_after < pwm_before);
-    TEST_ASSERT_EQUAL(DCDC_STATE_CV, dcdc.state);
+    TEST_ASSERT_EQUAL(DCDC_STATE_DERATING, dcdc.state);
 }
 
 void buck_derating_input_current_too_high()
 {
     start_buck();
     float pwm_before = half_bridge_get_duty_cycle();
-    hv_terminal.current = hv_terminal.dis_current_limit - 0.1;
-    dcdc_control(&dcdc);
+    hv_terminal.current = hv_terminal.neg_current_limit - 0.1;
+    dcdc.control();
     float pwm_after = half_bridge_get_duty_cycle();
     TEST_ASSERT(pwm_after < pwm_before);
-    TEST_ASSERT_EQUAL(DCDC_STATE_CC, dcdc.state);
+    TEST_ASSERT_EQUAL(DCDC_STATE_DERATING, dcdc.state);
 }
 
 void buck_derating_temperature_limits_exceeded()
@@ -247,7 +243,7 @@ void buck_derating_temperature_limits_exceeded()
     start_buck();
     float pwm_before = half_bridge_get_duty_cycle();
     dcdc.temp_mosfets = 81;
-    dcdc_control(&dcdc);
+    dcdc.control();
     float pwm_after = half_bridge_get_duty_cycle();
     TEST_ASSERT(pwm_after < pwm_before);
 }
@@ -257,7 +253,7 @@ void buck_stop_input_power_too_low()
     start_buck();
     float pwm_before = half_bridge_get_duty_cycle();
     dcdc.power_good_timestamp = time(NULL) - 11;
-    dcdc_control(&dcdc);
+    dcdc.control();
     TEST_ASSERT(half_bridge_enabled() == false);
 }
 
@@ -265,8 +261,8 @@ void buck_stop_high_voltage_emergency()
 {
     start_buck();
     float pwm_before = half_bridge_get_duty_cycle();
-    lv_bus_int.voltage = dcdc.ls_voltage_max + 0.1;
-    dcdc_control(&dcdc);
+    dcdc_lv_port.voltage = dcdc.ls_voltage_max + 0.1;
+    dcdc.control();
     TEST_ASSERT(half_bridge_enabled() == false);
 }
 
@@ -274,16 +270,16 @@ void buck_correct_mppt_operation()
 {
     start_buck();
 
-    lv_bus_int.power = 5;
-    dcdc_control(&dcdc);
+    dcdc_lv_port.power = 5;
+    dcdc.control();
     float pwm1 = half_bridge_get_duty_cycle();
-    lv_bus_int.power = 7;
-    dcdc_control(&dcdc);
+    dcdc_lv_port.power = 7;
+    dcdc.control();
     float pwm2 = half_bridge_get_duty_cycle();
     TEST_ASSERT(pwm2 > pwm1);
 
-    lv_bus_int.power = 6;     // decrease power to make the direction turn around
-    dcdc_control(&dcdc);
+    dcdc_lv_port.power = 6;     // decrease power to make the direction turn around
+    dcdc.control();
     float pwm3 = half_bridge_get_duty_cycle();
     TEST_ASSERT(pwm3 < pwm2);
 }
@@ -295,7 +291,7 @@ void boost_increasing_power()
     // make sure that without changing anything, dcdc_control goes in direction of increasing power
     start_boost();
     float pwm_before = half_bridge_get_duty_cycle();
-    dcdc_control(&dcdc);
+    dcdc.control();
     float pwm_after = half_bridge_get_duty_cycle();
     TEST_ASSERT(pwm_after < pwm_before);
 }
@@ -304,8 +300,8 @@ void boost_derating_output_voltage_too_high()
 {
     start_boost();
     float pwm_before = half_bridge_get_duty_cycle();
-    hv_terminal.voltage = hv_terminal.chg_voltage_target + 0.5;
-    dcdc_control(&dcdc);
+    hv_terminal.voltage = hv_terminal.sink_voltage_max + 0.5;
+    dcdc.control();
     float pwm_after = half_bridge_get_duty_cycle();
     TEST_ASSERT(pwm_after > pwm_before);    // higher duty cycle = less power
 }
@@ -314,8 +310,8 @@ void boost_derating_output_current_too_high()
 {
     start_boost();
     float pwm_before = half_bridge_get_duty_cycle();
-    hv_terminal.current = hv_terminal.chg_current_limit + 0.1;
-    dcdc_control(&dcdc);
+    hv_terminal.current = hv_terminal.pos_current_limit + 0.1;
+    dcdc.control();
     float pwm_after = half_bridge_get_duty_cycle();
     TEST_ASSERT(pwm_after > pwm_before);
 }
@@ -324,9 +320,9 @@ void boost_derating_input_voltage_too_low()
 {
     start_boost();
     float pwm_before = half_bridge_get_duty_cycle();
-    lv_bus_int.voltage = lv_bus_int.dis_voltage_stop - 0.1;
+    dcdc_lv_port.voltage = dcdc_lv_port.src_voltage_stop - 0.1;
     hv_terminal.current = 0.2;
-    dcdc_control(&dcdc);
+    dcdc.control();
     float pwm_after = half_bridge_get_duty_cycle();
     TEST_ASSERT(pwm_after > pwm_before);
 }
@@ -335,8 +331,8 @@ void boost_derating_input_current_too_high()
 {
     start_boost();
     float pwm_before = half_bridge_get_duty_cycle();
-    lv_bus_int.current = lv_bus_int.dis_current_limit - 0.1;
-    dcdc_control(&dcdc);
+    dcdc_lv_port.current = dcdc_lv_port.neg_current_limit - 0.1;
+    dcdc.control();
     float pwm_after = half_bridge_get_duty_cycle();
     TEST_ASSERT(pwm_after > pwm_before);
 }
@@ -346,7 +342,7 @@ void boost_derating_temperature_limits_exceeded()
     start_boost();
     float pwm_before = half_bridge_get_duty_cycle();
     dcdc.temp_mosfets = 81;
-    dcdc_control(&dcdc);
+    dcdc.control();
     float pwm_after = half_bridge_get_duty_cycle();
     TEST_ASSERT(pwm_after > pwm_before);
 }
@@ -355,7 +351,7 @@ void boost_stop_input_power_too_low()
 {
     start_boost();
     dcdc.power_good_timestamp = time(NULL) - 11;
-    dcdc_control(&dcdc);
+    dcdc.control();
     TEST_ASSERT(half_bridge_enabled() == false);
 }
 
@@ -363,7 +359,7 @@ void boost_stop_high_voltage_emergency()
 {
     start_boost();
     hv_terminal.voltage = dcdc.hs_voltage_max + 0.1;
-    dcdc_control(&dcdc);
+    dcdc.control();
     TEST_ASSERT(half_bridge_enabled() == false);
 }
 
@@ -372,15 +368,15 @@ void boost_correct_mppt_operation()
     start_boost();
 
     hv_terminal.power = 5;
-    dcdc_control(&dcdc);
+    dcdc.control();
     float pwm1 = half_bridge_get_duty_cycle();
     hv_terminal.power = 7;
-    dcdc_control(&dcdc);
+    dcdc.control();
     float pwm2 = half_bridge_get_duty_cycle();
     TEST_ASSERT(pwm2 < pwm1);
 
     hv_terminal.power = 6;     // decrease power to make the direction turn around
-    dcdc_control(&dcdc);
+    dcdc.control();
     float pwm3 = half_bridge_get_duty_cycle();
     TEST_ASSERT(pwm3 > pwm2);
 }

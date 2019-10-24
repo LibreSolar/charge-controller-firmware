@@ -72,9 +72,10 @@ void calibrate_current_sensors()
 {
     int vcc = VREFINT_VALUE * VREFINT_CAL /
         (adc_filtered[ADC_POS_VREF_MCU] >> (4 + ADC_FILTER_CONST));
-#ifdef CHARGER_TYPE_PWM
+#if FEATURE_PWM_SWITCH
     solar_current_offset = -(float)(((adc_filtered[ADC_POS_I_SOLAR] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) * ADC_GAIN_I_SOLAR / 1000.0;
-#else
+#endif
+#if FEATURE_DCDC_CONVERTER
     solar_current_offset = -(float)(((adc_filtered[ADC_POS_I_DCDC] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) * ADC_GAIN_I_DCDC / 1000.0;
 #endif
     load_current_offset = -(float)(((adc_filtered[ADC_POS_I_LOAD] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) * ADC_GAIN_I_LOAD / 1000.0;
@@ -83,8 +84,6 @@ void calibrate_current_sensors()
 //----------------------------------------------------------------------------
 void update_measurements()
 {
-    //int v_temp, rts;
-
     // reference voltage of 2.5 V at PIN_V_REF
     //int vcc = 2500 * 4096 / (adc_filtered[ADC_POS_V_REF] >> (4 + ADC_FILTER_CONST));
 
@@ -95,42 +94,49 @@ void update_measurements()
     // rely on LDO accuracy
     //int vcc = 3300;
 
-    // calculate LS voltage first, as it is needed for HS voltage calculation for PWM charge controller
+    // calculate lower voltage first, as it is needed for PWM terminal voltage calculation
     lv_terminal.voltage =
         (float)(((adc_filtered[ADC_POS_V_BAT] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
         ADC_GAIN_V_BAT / 1000.0;
-    lv_bus_int.voltage = lv_terminal.voltage;
     load_terminal.voltage = lv_terminal.voltage;
 
+#if FEATURE_DCDC_CONVERTER
     hv_terminal.voltage =
         (float)(((adc_filtered[ADC_POS_V_SOLAR] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
         ADC_GAIN_V_SOLAR / 1000.0;
-#ifdef ADC_OFFSET_V_SOLAR
-    hv_terminal.voltage = lv_terminal.voltage + -(vcc * ADC_OFFSET_V_SOLAR / 1000.0 + hv_terminal.voltage);
+    dcdc_lv_port.voltage = lv_terminal.voltage;
+#endif
+#if FEATURE_PWM_SWITCH
+    pwm_terminal.voltage = lv_terminal.voltage - vcc * ADC_OFFSET_V_SOLAR / 1000.0 -
+        (float)(((adc_filtered[ADC_POS_V_SOLAR] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
+        ADC_GAIN_V_SOLAR / 1000.0;
+    pwm_port_int.voltage = lv_terminal.voltage;
 #endif
 
     load_terminal.current =
         (float)(((adc_filtered[ADC_POS_I_LOAD] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
         ADC_GAIN_I_LOAD / 1000.0 + load_current_offset;
 
-#ifdef CHARGER_TYPE_PWM
+#if FEATURE_PWM_SWITCH
     // current multiplied with PWM duty cycle for PWM charger to get avg current for correct power calculation
-    hv_terminal.current = - pwm_switch_get_duty_cycle() * (
+    pwm_terminal.current = - pwm_switch.get_duty_cycle() * (
         (float)(((adc_filtered[ADC_POS_I_SOLAR] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
         ADC_GAIN_I_SOLAR / 1000.0 + solar_current_offset);
-    lv_terminal.current = -hv_terminal.current - load_terminal.current;
-#else // MPPT
-    lv_bus_int.current =
+    pwm_port_int.current = pwm_terminal.current;
+    lv_terminal.current = -pwm_port_int.current - load_terminal.current;
+    pwm_terminal.power = pwm_terminal.voltage * pwm_terminal.current;
+#endif
+#if FEATURE_DCDC_CONVERTER
+    dcdc_lv_port.current =
         (float)(((adc_filtered[ADC_POS_I_DCDC] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
         ADC_GAIN_I_DCDC / 1000.0 + solar_current_offset;
-    lv_terminal.current = lv_bus_int.current - load_terminal.current;
-    hv_terminal.current = -lv_bus_int.current * lv_bus_int.voltage / hv_terminal.voltage;
-#endif
+    lv_terminal.current = dcdc_lv_port.current - load_terminal.current;
+    hv_terminal.current = -dcdc_lv_port.current * lv_terminal.voltage / hv_terminal.voltage;
 
-    // power calculations
-    hv_terminal.power = hv_terminal.voltage * hv_terminal.current;
-    lv_bus_int.power = lv_bus_int.voltage * lv_bus_int.current;
-    lv_terminal.power = lv_terminal.voltage * lv_terminal.current;
+    dcdc_lv_port.power  = dcdc_lv_port.voltage * dcdc_lv_port.current;
+    hv_terminal.power   = hv_terminal.voltage * hv_terminal.current;
+#endif
+    lv_terminal.power   = lv_terminal.voltage * lv_terminal.current;
     load_terminal.power = load_terminal.voltage * load_terminal.current;
 
     /** \todo Improved (faster) temperature calculation:

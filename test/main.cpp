@@ -17,33 +17,49 @@
 
 #include "tests.h"
 
-Dcdc dcdc = {};
-DcBus hv_terminal = {};         // high voltage terminal (solar for typical MPPT)
-DcBus lv_bus_int = {};          // internal low voltage side of DC/DC converter
-DcBus lv_terminal = {};         // low voltage terminal (battery for typical MPPT)
-DcBus load_terminal = {};       // load terminal
-DcBus *bat_terminal = NULL;     // pointer to terminal where battery is connected
-DcBus *solar_terminal = NULL;   // pointer to above terminal where solar panel is connected
-PwmSwitch pwm_switch = {};      // only necessary for PWM charger
+PowerPort lv_terminal;          // low voltage terminal (battery for typical MPPT)
+
+#if FEATURE_DCDC_CONVERTER
+PowerPort hv_terminal;          // high voltage terminal (solar for typical MPPT)
+PowerPort dcdc_lv_port;         // internal low voltage side of DC/DC converter
+Dcdc dcdc(&hv_terminal, &dcdc_lv_port, DCDC_MODE_INIT);
+#endif
+
+#if FEATURE_PWM_SWITCH
+PowerPort pwm_terminal;         // external terminal of PWM switch port (normally solar)
+PowerPort pwm_port_int;         // internal side of PWM switch
+PwmSwitch pwm_switch(&pwm_terminal, &pwm_port_int);
+PowerPort &solar_terminal = pwm_terminal;
+#else
+PowerPort &solar_terminal = SOLAR_TERMINAL;     // defined in config.h
+#endif
+
+#if FEATURE_LOAD_OUTPUT
+PowerPort load_terminal;        // load terminal (also connected to lv_bus)
+LoadOutput load(&load_terminal);
+#endif
+
+PowerPort &bat_terminal = BATTERY_TERMINAL;     // defined in config.h
+#ifdef GRID_TERMINAL
+PowerPort &grid_terminal = GRID_TERMINAL;
+#endif
+
+Charger charger(&lv_terminal);
+
 BatConf bat_conf;               // actual (used) battery configuration
 BatConf bat_conf_user;          // temporary storage where the user can write to
-Charger charger;                // charger state information
-LoadOutput load;
+
 LogData log_data;
+
 extern ThingSet ts;             // defined in data_objects.cpp
 
 time_t timestamp;    // current unix timestamp (independent of time(NULL), as it is user-configurable)
 
 int main()
 {
-    bat_terminal = &lv_terminal;
-    solar_terminal = &hv_terminal;
-    dcdc_init(&dcdc, &hv_terminal, &lv_bus_int, MODE_MPPT_BUCK);
-    load_init(&load, &lv_bus_int, &load_terminal);
-
     adc_tests();
     bat_charger_tests();
-    dc_bus_tests();
+    power_port_tests();
     half_brigde_tests();
     dcdc_tests();
     log_tests();

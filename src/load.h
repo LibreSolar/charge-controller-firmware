@@ -25,8 +25,9 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <time.h>
 
-#include "dc_bus.h"
+#include "power_port.h"
 
 /** Load/USB output states
  *
@@ -45,52 +46,55 @@ enum LoadState {
  *
  * Stores status of load output incl. 5V USB output (if existing on PCB)
  */
-typedef struct {
+class LoadOutput
+{
+public:
+    /** Initialize LoadOutput struct and overcurrent / short circuit protection comparator (if existing)
+     *
+     * @param load Load output struct
+     * @param bus_int Internal DC bus the load switch is connected to (e.g. battery and DC/DC junction)
+     * @param terminal Load terminal DC bus (external interface)
+     */
+    LoadOutput(PowerPort *pwr_port);
+
+    /** Enable/disable load switch
+     */
+    void switch_set(bool enabled);
+
+    /** Enable/disable USB output
+     */
+    void usb_set(bool enabled);
+
+    /** State machine, called every second.
+     */
+    void state_machine();
+
+    /** USB state machine, called every second.
+     */
+    void usb_state_machine();
+
+    /** Main load control function, should be called by control timer
+     *
+     * Performs time-critical checks like overcurrent and overvoltage
+     */
+    void control();
+
     uint16_t switch_state;      ///< Current state of load output switch
     uint16_t usb_state;         ///< Current state of USB output
 
-    DcBus *bus_int;             ///< Pointer to internal DC bus where the load output
-                                ///< current is coming from
-    DcBus *terminal;            ///< Pointer to DC bus containting actual voltage and current
+    PowerPort *port;            ///< Pointer to DC bus containting actual voltage and current
                                 ///< measurement of (external) load output terminal
 
     float current_max;          ///< maximum allowed current
-    int overcurrent_timestamp;  ///< time at which an overcurrent event occured
+    time_t overcurrent_timestamp;  ///< time at which an overcurrent event occured
+    time_t lvd_timestamp;       ///< stores when the load was disconnected last time
 
     float junction_temperature; ///< calculated using thermal model based on current and ambient
                                 ///< temperature measurement (unit: °C)
 
-    bool enabled_target;        ///< target setting defined via communication port (overruled if
+    bool enable;                ///< target setting defined via communication port (overruled if
                                 ///< battery is empty)
-    bool usb_enabled_target;    ///< same for USB output
-} LoadOutput;
-
-/** Initialize LoadOutput struct and overcurrent / short circuit protection comparator (if existing)
- *
- * @param load Load output struct
- * @param bus_int Internal DC bus the load switch is connected to (e.g. battery and DC/DC junction)
- * @param terminal Load terminal DC bus (external interface)
- */
-void load_init(LoadOutput *load, DcBus *bus_int, DcBus *terminal);
-
-/** Enable/disable load switch
- */
-void load_switch_set(bool enabled);
-
-/** Enable/disable USB output
- */
-void load_usb_set(bool enabled);
-
-/** State machine, called every second.
- *
- * @param load Load output struct
- */
-void load_state_machine(LoadOutput *load);
-
-/** Main load control function, should be called by control timer
- *
- * Performs time-critical checks like overcurrent and overvoltage
- */
-void load_control(LoadOutput *load, float load_max_voltage);
+    bool usb_enable;            ///< same for USB output
+};
 
 #endif /* LOAD_H */

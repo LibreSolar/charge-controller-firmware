@@ -18,8 +18,7 @@
 #include "config.h"
 #include "pcb.h"
 
-#include "dc_bus.h"
-#include "load.h"
+#include "main.h"
 
 #include <math.h>       // for fabs function
 #include <stdio.h>
@@ -28,7 +27,7 @@ extern float mcu_temp;
 
 //----------------------------------------------------------------------------
 // must be called exactly once per second, otherwise energy calculation gets wrong
-void log_update_energy(LogData *log_data, DcBus *solar, DcBus *bat, DcBus *load)
+void log_update_energy(LogData *log_data)
 {
     // static variables so that it is not reset for each function call
     static int seconds_zero_solar = 0;
@@ -40,7 +39,7 @@ void log_update_energy(LogData *log_data, DcBus *solar, DcBus *bat, DcBus *load)
     static uint32_t bat_chg_total_Wh_prev = log_data->bat_chg_total_Wh;
     static uint32_t bat_dis_total_Wh_prev = log_data->bat_dis_total_Wh;
 
-    if (solar->voltage < bat->voltage) {
+    if (solar_terminal.voltage < bat_terminal.voltage) {
         seconds_zero_solar += 1;
     }
     else {
@@ -53,58 +52,64 @@ void log_update_energy(LogData *log_data, DcBus *solar, DcBus *bat, DcBus *load)
             load_out_total_Wh_prev = log_data->load_out_total_Wh;
             bat_chg_total_Wh_prev = log_data->bat_chg_total_Wh;
             bat_dis_total_Wh_prev = log_data->bat_dis_total_Wh;
-            solar->dis_energy_Wh = 0.0;
-            load->chg_energy_Wh = 0.0;
-            bat->chg_energy_Wh = 0.0;
-            bat->dis_energy_Wh = 0.0;
+            solar_terminal.neg_energy_Wh = 0.0;
+            load_terminal.pos_energy_Wh = 0.0;
+            bat_terminal.pos_energy_Wh = 0.0;
+            bat_terminal.neg_energy_Wh = 0.0;
         }
         seconds_zero_solar = 0;
     }
 
-    log_data->bat_chg_total_Wh = bat_chg_total_Wh_prev + (bat->chg_energy_Wh > 0 ? bat->chg_energy_Wh : 0);
-    log_data->bat_dis_total_Wh = bat_dis_total_Wh_prev + (bat->dis_energy_Wh > 0 ? bat->dis_energy_Wh : 0);
-    log_data->solar_in_total_Wh = solar_in_total_Wh_prev + (solar->dis_energy_Wh > 0 ? solar->dis_energy_Wh : 0);
-    log_data->load_out_total_Wh = load_out_total_Wh_prev + (load->chg_energy_Wh > 0 ? load->chg_energy_Wh : 0);
+    log_data->bat_chg_total_Wh = bat_chg_total_Wh_prev +
+        (bat_terminal.pos_energy_Wh > 0 ? bat_terminal.pos_energy_Wh : 0);
+    log_data->bat_dis_total_Wh = bat_dis_total_Wh_prev +
+        (bat_terminal.neg_energy_Wh > 0 ? bat_terminal.neg_energy_Wh : 0);
+    log_data->solar_in_total_Wh = solar_in_total_Wh_prev +
+        (solar_terminal.neg_energy_Wh > 0 ? solar_terminal.neg_energy_Wh : 0);
+    log_data->load_out_total_Wh = load_out_total_Wh_prev +
+        (load_terminal.pos_energy_Wh > 0 ? load_terminal.pos_energy_Wh : 0);
 }
 
-void log_update_min_max_values(LogData *log_data, Dcdc *dcdc, Charger *charger, LoadOutput *load, DcBus *solar_bus, DcBus *bat_bus, DcBus *load_bus)
+void log_update_min_max_values(LogData *log_data)
 {
-    if (bat_bus->voltage > log_data->battery_voltage_max) {
-        log_data->battery_voltage_max = bat_bus->voltage;
+    if (bat_terminal.voltage > log_data->battery_voltage_max) {
+        log_data->battery_voltage_max = bat_terminal.voltage;
     }
 
-    if (solar_bus->voltage > log_data->solar_voltage_max) {
-        log_data->solar_voltage_max = solar_bus->voltage;
+    if (solar_terminal.voltage > log_data->solar_voltage_max) {
+        log_data->solar_voltage_max = solar_terminal.voltage;
     }
 
-    if (dcdc->lv_bus->current > log_data->dcdc_current_max) {
-        log_data->dcdc_current_max = dcdc->lv_bus->current;
+#if FEATURE_DCDC_CONVERTER
+    if (dcdc.lvs->current > log_data->dcdc_current_max) {
+        log_data->dcdc_current_max = dcdc.lvs->current;
     }
 
-    if (load->terminal->current > log_data->load_current_max) {
-        log_data->load_current_max = load->terminal->current;
+    if (dcdc.temp_mosfets > log_data->mosfet_temp_max) {
+        log_data->mosfet_temp_max = dcdc.temp_mosfets;
+    }
+#endif
+
+    if (load_terminal.current > log_data->load_current_max) {
+        log_data->load_current_max = load_terminal.current;
     }
 
-    if (-solar_bus->power > log_data->solar_power_max_day) {
-        log_data->solar_power_max_day = -solar_bus->power;
+    if (-solar_terminal.power > log_data->solar_power_max_day) {
+        log_data->solar_power_max_day = -solar_terminal.power;
         if (log_data->solar_power_max_day > log_data->solar_power_max_total) {
             log_data->solar_power_max_total = log_data->solar_power_max_day;
         }
     }
 
-    if (load->terminal->power > log_data->load_power_max_day) {
-        log_data->load_power_max_day = load->terminal->power;
+    if (load_terminal.power > log_data->load_power_max_day) {
+        log_data->load_power_max_day = load_terminal.power;
         if (log_data->load_power_max_day > log_data->load_power_max_total) {
             log_data->load_power_max_total = log_data->load_power_max_day;
         }
     }
 
-    if (dcdc->temp_mosfets > log_data->mosfet_temp_max) {
-        log_data->mosfet_temp_max = dcdc->temp_mosfets;
-    }
-
-    if (charger->bat_temperature > log_data->bat_temp_max) {
-        log_data->bat_temp_max = charger->bat_temperature;
+    if (charger.bat_temperature > log_data->bat_temp_max) {
+        log_data->bat_temp_max = charger.bat_temperature;
     }
 
     if (mcu_temp > log_data->int_temp_max) {

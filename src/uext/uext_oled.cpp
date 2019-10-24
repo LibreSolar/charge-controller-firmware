@@ -17,8 +17,6 @@
 #ifndef UNIT_TEST
 
 #include "main.h"
-extern DcBus *bat_terminal;
-extern DcBus *solar_terminal;
 
 #ifdef OLED_ENABLED     // otherwise don't compile code to reduce firmware size
 
@@ -61,8 +59,6 @@ void uext_process_asap() {;}
 
 void uext_process_1s()
 {
-    float tmp;
-
     oled.clearDisplay();
 
     oled.drawBitmap(6, 0, bmp_pv_panel, 16, 16, 1);
@@ -96,27 +92,26 @@ void uext_process_1s()
 #else
     if (half_bridge_enabled()) {
 #endif
-        tmp = -solar_terminal->voltage * solar_terminal->current;
         oled.setTextCursor(0, 18);
-        oled.printf("%4.0fW", (abs(tmp) < 1) ? 0 : tmp);     // remove negative zeros
+        oled.printf("%4.0fW", (abs(solar_terminal.power) < 1) ? 0 : -solar_terminal.power);     // remove negative zeros
     }
     else {
         oled.setTextCursor(8, 18);
         oled.printf("n/a");
     }
 #ifndef CHARGER_TYPE_PWM
-    if (solar_terminal->voltage > bat_terminal->voltage)
+    if (solar_terminal.voltage > bat_terminal.voltage)
 #endif
     {
         oled.setTextCursor(0, 26);
-        oled.printf("%4.1fV", solar_terminal->voltage);
+        oled.printf("%4.1fV", solar_terminal.voltage);
     }
 
     // battery data
     oled.setTextCursor(42, 18);
-    oled.printf("%5.1fW", (abs(bat_terminal->power) < 0.1) ? 0 : bat_terminal->power);    // remove negative zeros
+    oled.printf("%5.1fW", (abs(bat_terminal.power) < 0.1) ? 0 : bat_terminal.power);    // remove negative zeros
     oled.setTextCursor(42, 26);
-    oled.printf("%5.1fV", bat_terminal->voltage);
+    oled.printf("%5.1fV", bat_terminal.voltage);
 
     // load data
     oled.setTextCursor(90, 18);
@@ -125,7 +120,7 @@ void uext_process_1s()
     oled.printf("%5.1fA\n", (abs(load_terminal.current) < 0.1) ? 0 : load_terminal.current);
 
     oled.setTextCursor(0, 36);
-    oled.printf("Day +%5.0fWh -%5.0fWh", solar_terminal->dis_energy_Wh, fabs(load_terminal.chg_energy_Wh));
+    oled.printf("Day +%5.0fWh -%5.0fWh", solar_terminal.neg_energy_Wh, fabs(load_terminal.pos_energy_Wh));
     oled.printf("Tot +%4.1fkWh -%4.1fkWh", log_data.solar_in_total_Wh / 1000.0, fabs(log_data.load_out_total_Wh) / 1000.0);
 
     oled.setTextCursor(0, 56);
