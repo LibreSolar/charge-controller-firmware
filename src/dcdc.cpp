@@ -17,6 +17,7 @@
 #include "dcdc.h"
 #include "pcb.h"
 #include "log.h"
+#include "debug.h"
 
 #include "half_bridge.h"
 
@@ -80,15 +81,13 @@ int Dcdc::duty_cycle_delta()
 
     int pwr_inc_goal = 0;     // stores if we want to increase (+1) or decrease (-1) power
 
-#if 0
-    printf("P: %.2f, P_prev: %.2f, v_in: %.2f, v_out: %.2f, i_in: %.2f, i_out: %.2f, "
+    print_test("P: %.2f, P_prev: %.2f, v_in: %.2f, v_out: %.2f, i_in: %.2f, i_out: %.2f, "
         "v_chg_target: %.2f, i_chg_max: %.2f, PWM: %.1f, chg_state: %d\n",
         out->power, power_prev, in->voltage, out->voltage, in->current, out->current,
         out->sink_voltage_max, out->pos_current_limit, half_bridge_get_duty_cycle() * 100.0,
         state);
-#endif
 
-    if  (time(NULL) - power_good_timestamp > 10 ||      // more than 10s low power
+    if (time(NULL) - power_good_timestamp > 10 ||      // more than 10s low power
          out->power < -1.0)           // or already generating negative power
     {
         pwr_inc_goal = 0;     // switch off
@@ -188,7 +187,7 @@ void Dcdc::control()
             half_bridge_stop();
             state = DCDC_STATE_OFF;
             off_timestamp = time(NULL);
-            printf("DC/DC Stop: %s.\n",stop_reason);
+            print_info("DC/DC Stop: %s.\n",stop_reason);
         }
     }
     else { // half bridge is off
@@ -234,7 +233,7 @@ void Dcdc::control()
                         half_bridge_start(lvs->voltage / (hvs->voltage + 1));
                     }
                     power_good_timestamp = time(NULL);
-                    printf("DC/DC %s mode start (HV: %.2fV, LV: %.2fV, PWM: %.1f).\n", mode_name,
+                    print_info("DC/DC %s mode start (HV: %.2fV, LV: %.2fV, PWM: %.1f).\n", mode_name,
                         hvs->voltage, lvs->voltage, half_bridge_get_duty_cycle() * 100);
                     startup_delay_counter = 0; // ensure we will have a delay before next start
                 }
@@ -260,7 +259,7 @@ void Dcdc::test()
         if (startup_delay_counter > num_wait_calls) {
             if (check_start_conditions() != 0) {
                 half_bridge_start(lvs->voltage / hvs->voltage);
-                printf("DC/DC test mode start (HV: %.2fV, LV: %.2fV, PWM: %.1f).\n",
+                print_info("DC/DC test mode start (HV: %.2fV, LV: %.2fV, PWM: %.1f).\n",
                     hvs->voltage, lvs->voltage, half_bridge_get_duty_cycle() * 100);
             }
         }
@@ -272,7 +271,7 @@ void Dcdc::test()
 
 void Dcdc::self_destruction()
 {
-    printf("Charge controller self-destruction called!\n");
+    print_error("Charge controller self-destruction called!\n");
     //half_bridge_stop();
     //half_bridge_init(50, 0, 0, 0.98);   // reset safety limits to allow 0% duty cycle
     //half_bridge_start(0);
