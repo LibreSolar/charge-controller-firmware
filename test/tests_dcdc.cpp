@@ -251,7 +251,6 @@ void buck_derating_temperature_limits_exceeded()
 void buck_stop_input_power_too_low()
 {
     start_buck();
-    float pwm_before = half_bridge_get_duty_cycle();
     dcdc.power_good_timestamp = time(NULL) - 11;
     dcdc.control();
     TEST_ASSERT(half_bridge_enabled() == false);
@@ -260,7 +259,6 @@ void buck_stop_input_power_too_low()
 void buck_stop_high_voltage_emergency()
 {
     start_buck();
-    float pwm_before = half_bridge_get_duty_cycle();
     dcdc_lv_port.voltage = dcdc.ls_voltage_max + 0.1;
     dcdc.control();
     TEST_ASSERT(half_bridge_enabled() == false);

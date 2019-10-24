@@ -9,13 +9,6 @@
 
 #include "main.h"
 
-static void init_structs()
-{
-    battery_conf_init(&bat_conf, BAT_TYPE_FLOODED, 6, 100);
-    battery_init_dc_bus(&bat_terminal, &bat_conf, 1);
-    charger.state = CHG_STATE_IDLE;
-}
-
 static adc_values_t adcval;
 
 const float dcdc_current_sun = 3;

@@ -23,10 +23,11 @@
 
 #if FEATURE_PWM_SWITCH
 
-static int _pwm_resolution;
 static bool _pwm_active;
 
 #ifndef UNIT_TEST
+
+static int _pwm_resolution;
 
 void pwm_signal_init_registers(int freq_Hz)
 {
