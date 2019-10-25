@@ -17,41 +17,31 @@
 #ifndef DEBUG_H
 #define DEBUG_H
 
-void black_hole(const char *str, ...);
+#include <stdio.h>
 
-// serious errors
-#if DEBUG_PRINT_FLAGS & (1 << 0)
-#define print_error printf
-#else
-#define print_error black_hole
-#endif
+// Debug printing macros
+// see https://stackoverflow.com/questions/1644868/define-macro-for-debug-printing-in-c
 
-// warnings
-#if DEBUG_PRINT_FLAGS & (1 << 1)
-#define print_warning printf
-#else
-#define print_warning black_hole
-#endif
+// Set the bits in DEBUG_PRINT_FLAGS via platformio.ini to enable specific debug print levels
 
-// information only
-#if DEBUG_PRINT_FLAGS & (1 << 2)
-#define print_info printf
-#else
-#define print_info black_hole
-#endif
+// Bit 0: Serious errors
+#define print_error(fmt, ...) \
+    do { if (DEBUG_PRINT_FLAGS & (1 << 0)) printf(fmt, ##__VA_ARGS__); } while (0)
 
-// unit test information
-#if DEBUG_PRINT_FLAGS & (1 << 3)
-#define print_test printf
-#else
-#define print_test black_hole
-#endif
+// Bit 1: Warnings
+#define print_warning(fmt, ...) \
+    do { if (DEBUG_PRINT_FLAGS & (1 << 1)) printf(fmt, ##__VA_ARGS__); } while (0)
 
-// communication module special flag
-#if DEBUG_PRINT_FLAGS & (1 << 4)
-#define print_comms printf
-#else
-#define print_comms black_hole
-#endif
+// Bit 2: Information only
+#define print_info(fmt, ...) \
+    do { if (DEBUG_PRINT_FLAGS & (1 << 2)) printf(fmt, ##__VA_ARGS__); } while (0)
+
+// Bit 3: Unit test information
+#define print_test(fmt, ...) \
+    do { if (DEBUG_PRINT_FLAGS & (1 << 3)) printf(fmt, ##__VA_ARGS__); } while (0)
+
+// Bit 4: Communication module special flag
+#define print_comms(fmt, ...) \
+    do { if (DEBUG_PRINT_FLAGS & (1 << 4)) printf(fmt, ##__VA_ARGS__); } while (0)
 
 #endif /* DEBUG_H */
