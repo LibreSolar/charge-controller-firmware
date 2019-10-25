@@ -28,6 +28,10 @@ If used together with Visual Studio Code and PlatformIO, starting firmware devel
 
 5. Press the upload button at the bottom left corner in VS Code.
 
+## Bootloader Support
+
+The custom linker script file need to be updated before generating the application firmware binary. The STM32L073XZ.ld.link_script.ld file is located in the root project directory. For each application, the flash start address and the maximum code size need to be updated in this file. Currently, the locations 0x08001000 and 0x08018000 are used for applications 1 & 2 respectively.
+
 ### Troubleshooting
 
 #### Errors with STM32L072 MCU using OpenOCD
