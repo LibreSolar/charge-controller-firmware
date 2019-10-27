@@ -133,8 +133,11 @@ class PWM_TIM1
         // Enable TIM1 clock
         RCC->APB2ENR |= RCC_APB2ENR_TIM1EN;
 
+        GPIOA->MODER = (GPIOA->MODER & ~(GPIO_MODER_MODER8)) | GPIO_MODER_MODER8_1;
+        GPIOB->MODER = (GPIOB->MODER & ~(GPIO_MODER_MODER13)) | GPIO_MODER_MODER13_1;
+        
         // Select AF2 on PA8 (TIM1_CH1) and PB13 (TIM1_CH1N)
-        GPIOB->AFR[1] |= 0x2 << GPIO_AFRH_AFSEL8_Pos;
+        GPIOA->AFR[1] |= 0x2 << GPIO_AFRH_AFSEL8_Pos;
         GPIOB->AFR[1] |= 0x2 << GPIO_AFRH_AFSEL13_Pos;
 
         // No prescaler --> timer frequency == SystemClock
