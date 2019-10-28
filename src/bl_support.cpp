@@ -25,10 +25,10 @@
  */
 
 #include "bl_support.h"
+#ifdef BOOTLOADER_ENABLED
 #include "stm32l0xx.h"
-#include "thingset_serial.h"
-
-extern Serial serial;
+#endif
+#include "debug.h"
 
 /**
  * Unlock the FLASH control register access and the program memory access.
@@ -142,7 +142,7 @@ void check_bootloader(void)
 {
     #ifdef BOOTLOADER_ENABLED
 
-    //printf("App2...\r\n");
+    //print_info("App1...\r\n");
 
     // Read the bootloader status from the flash memory location
     BootloaderStatus status_reg = *((BootloaderStatus *)BOOTLOADER_STATUS_STRUCT_ADDR);
@@ -151,7 +151,7 @@ void check_bootloader(void)
     if (status_reg.status == BootloaderState::ATTEMPT_NEW_APP) {
         status_reg.status = BootloaderState::STABLE_APP;
         write_status_reg(status_reg); // Write the status to flash
-        //printf("Switched to stable app...\r\n");
+        //print_info("Switched to stable app...\r\n");
     }
     #endif
 }

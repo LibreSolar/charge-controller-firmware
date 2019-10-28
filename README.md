@@ -12,6 +12,10 @@ The software is configurable to support different charge controller PCBs with ei
 - [Libre Solar MPPT 12V 10A with USB (v0.2 and v0.4)](https://github.com/LibreSolar/MPPT-1210-HUS)
 - [Libre Solar PWM 12/24V 20A](https://github.com/LibreSolar/PWM-2420-LUS)
 
+## Bootloader Support
+
+The custom linker script file need to be updated before generating the application firmware binary. The STM32L073XZ.ld.link_script.ld file is located in the root project directory. For each application, the flash start address and the maximum code size need to be updated in this file. Currently, the locations 0x08001000 and 0x08018000 are used for applications 1 & 2 respectively.
+
 ## Building and flashing the firmware
 
 This firmware is developed using the [ARM mbed OS](https://developer.mbed.org/) embedded framework which has easy-to-understand C++ syntax (similar to Arduino) and thus enhances community based software development.
@@ -27,10 +31,6 @@ If used together with Visual Studio Code and PlatformIO, starting firmware devel
 4. Connect the board via a programmer. See the Libre Solar website for [further project-agnostic instructions](http://libre.solar/docs/flashing).
 
 5. Press the upload button at the bottom left corner in VS Code.
-
-## Bootloader Support
-
-The custom linker script file need to be updated before generating the application firmware binary. The STM32L073XZ.ld.link_script.ld file is located in the root project directory. For each application, the flash start address and the maximum code size need to be updated in this file. Currently, the locations 0x08001000 and 0x08018000 are used for applications 1 & 2 respectively.
 
 ### Troubleshooting
 

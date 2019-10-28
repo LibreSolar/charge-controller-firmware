@@ -49,10 +49,10 @@ const uint32_t BOOTLOADER_STATUS_STRUCT_ADDR = 0x0802FF80; // The last flash pag
  * first successful boot 
  */
 enum BootloaderState {
-    NO_STATE = 0,     // State not properly initialized
-    NEW_APP,          // Set By App after download of the binary
-    ATTEMPT_NEW_APP,  // Set by Bootloader when first booting the new binary
-    STABLE_APP,       // Set by App after sucessful boot of the new app
+    NO_STATE = 0,     ///< State not properly initialized
+    NEW_APP,          ///< Set By App after download of the binary
+    ATTEMPT_NEW_APP,  ///< Set by Bootloader when first booting the new binary
+    STABLE_APP,       ///< Set by App after sucessful boot of the new app
 };
 
 /** 
@@ -63,8 +63,8 @@ enum BootloaderState {
 struct BootloaderStatus {
     char bootloader_name[BOOTLADER_NAME_LENGTH];
     uint32_t bootloader_version;
-    uint32_t status;   // Update this field and write to flash in your app!
-    uint32_t live_app_select;
+    uint32_t status;   ///< Update this field and write to flash in your app!
+    uint32_t live_app_select; 
     uint32_t retry_count;
 };
 
