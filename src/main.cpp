@@ -42,6 +42,10 @@
 #include "thingset_serial.h"    // UART or USB serial communication
 #include "thingset_can.h"       // CAN bus communication
 
+#ifdef BOOTLOADER_ENABLED
+#include "bl_support.h"         // Bootloader support from the application side
+#endif
+
 PowerPort lv_terminal;          // low voltage terminal (battery for typical MPPT)
 
 #if FEATURE_DCDC_CONVERTER
@@ -86,6 +90,10 @@ Serial serial(PIN_SWD_TX, PIN_SWD_RX, "serial", 115200);
  */
 int main()
 {
+    #ifdef BOOTLOADER_ENABLED
+    check_bootloader(); // Update the bootloader status in flash to a stable state.
+    #endif
+
     leds_init();
 
     battery_conf_init(&bat_conf, BATTERY_TYPE, BATTERY_NUM_CELLS, BATTERY_CAPACITY);
