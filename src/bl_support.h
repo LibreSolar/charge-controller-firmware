@@ -28,6 +28,8 @@
 
 #pragma once
 
+#ifdef BOOTLOADER_ENABLED
+
 #include <cstdint>
 
 #include "config.h"
@@ -98,6 +100,6 @@ void flash_program(uint32_t address, uint32_t data);
  */
 void check_bootloader(void);
 
-
+#endif /*BOOTLOADER_ENABLED*/
 
 #endif /*BOOTLOADER_H*/

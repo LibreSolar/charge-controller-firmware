@@ -23,11 +23,10 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  */
+#ifdef BOOTLOADER_ENABLED
 
 #include "bl_support.h"
-#ifdef BOOTLOADER_ENABLED
 #include "stm32l0xx.h"
-#endif
 #include "debug.h"
 
 /**
@@ -140,8 +139,6 @@ void write_status_reg(BootloaderStatus& status)
 // Called from main
 void check_bootloader(void)
 {
-    #ifdef BOOTLOADER_ENABLED
-
     //print_info("App1...\r\n");
 
     // Read the bootloader status from the flash memory location
@@ -153,5 +150,6 @@ void check_bootloader(void)
         write_status_reg(status_reg); // Write the status to flash
         //print_info("Switched to stable app...\r\n");
     }
-    #endif
 }
+
+#endif /*BOOTLOADER_ENABLED*/

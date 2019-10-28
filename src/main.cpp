@@ -41,7 +41,10 @@
 #include "data_objects.h"       // for access to internal data via ThingSet
 #include "thingset_serial.h"    // UART or USB serial communication
 #include "thingset_can.h"       // CAN bus communication
+
+#ifdef BOOTLOADER_ENABLED
 #include "bl_support.h"         // Bootloader support from the application side
+#endif
 
 PowerPort lv_terminal;          // low voltage terminal (battery for typical MPPT)
 
