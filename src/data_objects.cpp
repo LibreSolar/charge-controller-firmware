@@ -97,8 +97,8 @@ const data_object_t data_objects[] = {
     {0x43, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_FLOAT32, 2, (void*) &(bat_conf_user.voltage_load_reconnect),     "LoadReconnect_V"},
     //{0x44, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_FLOAT32, 2, (void*) &(bat_conf_user.voltage_load_disconnect),    "UsbDisconnect_V"},
     //{0x45, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_FLOAT32, 2, (void*) &(bat_conf_user.voltage_load_reconnect),     "UsbReconnect_V"},
-    {0x46, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_FLOAT32, 2, (void*) &(load.overcurrent_recovery_delay),          "LoadOCRecovery_s"},
-    {0x47, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_FLOAT32, 2, (void*) &(load.lvd_recovery_delay),                  "LoadUVRecovery_s"},
+    {0x46, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_INT32,   2, (void*) &(load.overcurrent_recovery_delay),          "LoadOCRecovery_s"},
+    {0x47, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_INT32,   2, (void*) &(load.lvd_recovery_delay),                  "LoadUVRecovery_s"},
 
     // other configuration items
     //{0x33, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_BOOL,    2, (void*) &(??),   "WarningIndicator"},  // can be set externally
