@@ -264,4 +264,9 @@ void leds_update_soc(int soc, bool load_off_low_soc)
 #endif
 }
 
+#else
+
+// dummy functions
+void leds_flicker(int led, int timeout) {}
+
 #endif /* UNIT_TEST */

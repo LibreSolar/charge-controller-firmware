@@ -20,6 +20,7 @@
 #include "hardware.h"
 #include "leds.h"
 #include "log.h"
+#include "debug.h"
 
 volatile bool short_circuit = false;
 
@@ -97,7 +98,7 @@ static void short_circuit_comp_init()
     COMP2->CSR |= COMP_INPUT_PLUS_IO2;
 
     // select VREFINT divider as negative input
-    COMP2->CSR |= COMP_INPUT_MINUS_VREFINT;
+    COMP2->CSR |= COMP_INPUT_MINUS_1_4VREFINT;
 
     // propagate comparator value to LPTIM input
     COMP2->CSR |= COMP_CSR_COMP2LPTIM1IN1;
@@ -149,19 +150,29 @@ void LoadOutput::switch_set(bool enabled)
 
 #ifdef PIN_LOAD_EN
     DigitalOut load_enable(PIN_LOAD_EN);
-    if (enabled) load_enable = 1;
-    else load_enable = 0;
+    if (enabled) {
+        load_enable = 1;
+    }
+    else {
+        load_enable = 0;
+    }
 #endif
 
 #ifdef PIN_LOAD_DIS
     DigitalOut load_disable(PIN_LOAD_DIS);
-#ifdef PIN_I_LOAD_COMP
-    if (enabled) lptim_init();
-#else
-    if (enabled) load_disable = 0;
-#endif
-    else load_disable = 1;
-    printf("Load enabled = %d\n", enabled);
+    #ifdef PIN_I_LOAD_COMP
+    if (enabled) {
+        lptim_init();
+    }
+    #else
+    if (enabled) {
+        load_disable = 0;
+    }
+    #endif
+    else {
+        load_disable = 1;
+    }
+    print_info("Load enabled = %d\n", enabled);
 #endif
 }
 
@@ -251,7 +262,6 @@ void LoadOutput::usb_state_machine()
 
 void LoadOutput::state_machine()
 {
-    //printf("Load State: %d\n", state);
     switch (state) {
         case LOAD_STATE_DISABLED:
             if (enable == true) {
@@ -289,14 +299,16 @@ void LoadOutput::state_machine()
             }
             break;
         case LOAD_STATE_OFF_LOW_SOC:
-            // wait at least one hour
+            // wait configured time
             if (time(NULL) - lvd_timestamp > lvd_recovery_delay) {
                 state = LOAD_STATE_DISABLED; // switch to normal mode again
             }
             break;
         case LOAD_STATE_OFF_OVERCURRENT:
-            // wait some time
+            // wait configured time
             if (time(NULL) - overcurrent_timestamp > overcurrent_recovery_delay) {
+                log_data.error_flags &= ~(1 << ERR_LOAD_OVERCURRENT);
+                log_data.error_flags &= ~(1 << ERR_LOAD_VOLTAGE_DIP);
                 state = LOAD_STATE_DISABLED;   // switch to normal mode again
             }
             break;
@@ -304,6 +316,7 @@ void LoadOutput::state_machine()
             if (port->voltage < (port->sink_voltage_max - 0.5) &&
                 port->voltage < (LOW_SIDE_VOLTAGE_MAX - 0.5))
             {
+                log_data.error_flags &= ~(1 << ERR_LOAD_OVERVOLTAGE);
                 state = LOAD_STATE_DISABLED;   // switch to normal mode again
             }
             break;
@@ -311,6 +324,7 @@ void LoadOutput::state_machine()
             // stay here until the charge controller is reset or load is switched off remotely
             if (enable == false) {
                 short_circuit = false;
+                log_data.error_flags &= ~(1 << ERR_LOAD_SHORT_CIRCUIT);
                 state = LOAD_STATE_DISABLED;   // switch to normal mode again
             }
             break;
@@ -323,7 +337,11 @@ void LoadOutput::state_machine()
 void LoadOutput::control()
 {
     if (short_circuit) {
-        state = LOAD_STATE_OFF_SHORT_CIRCUIT;
+        if (state != LOAD_STATE_OFF_SHORT_CIRCUIT) {
+            state = LOAD_STATE_OFF_SHORT_CIRCUIT;
+            log_data.error_flags |= (1 << ERR_LOAD_SHORT_CIRCUIT);
+            print_error("Load short circuit detected\n");
+        }
         return;
     }
 
@@ -334,12 +352,29 @@ void LoadOutput::control()
             (LOAD_CURRENT_MAX * LOAD_CURRENT_MAX) * (MOSFET_MAX_JUNCTION_TEMP - 25)
         ) / (MOSFET_THERMAL_TIME_CONSTANT * CONTROL_FREQUENCY);
 
-    if (junction_temperature > MOSFET_MAX_JUNCTION_TEMP) {
+    if (junction_temperature > MOSFET_MAX_JUNCTION_TEMP
+        || port->current > LOAD_CURRENT_MAX * 2)
+    {
         switch_set(false);
         usb_set(false);
+        leds_flicker(LED_LOAD);
         state = LOAD_STATE_OFF_OVERCURRENT;
+        log_data.error_flags |= (1 << ERR_LOAD_OVERCURRENT);
+        print_error("Load overcurrent detected\n");
         overcurrent_timestamp = time(NULL);
     }
+
+    // overcurrent detected because of voltage dip by 25%
+    if (port->voltage < voltage_prev * 0.75 && voltage_prev != 0) {
+        switch_set(false);
+        usb_set(false);
+        leds_flicker(LED_LOAD);
+        state = LOAD_STATE_OFF_OVERCURRENT;
+        log_data.error_flags |= (1 << ERR_LOAD_VOLTAGE_DIP);
+        print_error("Load voltage dip detected\n");
+        overcurrent_timestamp = time(NULL);
+    }
+    voltage_prev = port->voltage;
 
     static int debounce_counter = 0;
     if (port->voltage > port->sink_voltage_max ||
@@ -349,9 +384,10 @@ void LoadOutput::control()
         if (debounce_counter > CONTROL_FREQUENCY) {      // waited 1s before setting the flag
             switch_set(false);
             usb_set(false);
+            print_error("Load overvoltage detected\n");
             state = LOAD_STATE_OFF_OVERVOLTAGE;
             overcurrent_timestamp = time(NULL);
-            log_data.error_flags |= (1 << ERR_BAT_OVERVOLTAGE);
+            log_data.error_flags |= (1 << ERR_LOAD_OVERVOLTAGE);
         }
     }
     else {
