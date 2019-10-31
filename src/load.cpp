@@ -208,9 +208,9 @@ LoadOutput::LoadOutput(PowerPort *pwr_port)
     usb_set(false);
     state = LOAD_STATE_DISABLED;
     usb_state = LOAD_STATE_DISABLED;
-    junction_temperature = 25;
-    overcurrent_recovery_delay = 5*60;
-    lvd_recovery_delay = 60*60;
+    junction_temperature = 25;              // starting point: 25°C
+    overcurrent_recovery_delay = 5*60;      // default: 5 minutes
+    lvd_recovery_delay = 60*60;             // default: 1 hour
 
     // analog comparator to detect short circuits and trigger immediate load switch-off
     short_circuit_comp_init();
@@ -218,22 +218,28 @@ LoadOutput::LoadOutput(PowerPort *pwr_port)
 
 void LoadOutput::usb_state_machine()
 {
+    // We don't have any overcurrent detection mechanism for USB and the buck converter IC should
+    // reduce output power itself in case of failure. Battey overvoltage should also be handled by
+    // the DC/DC up to a certain degree.
+    // So, we don't use above failure states for the USB output. Only low SOC and exceeded
+    // temperature limits force the USB output to be turned off.
     switch (usb_state) {
         case LOAD_STATE_DISABLED:
             if (usb_enable == true) {
-                usb_set(true);
-                usb_state = LOAD_STATE_ON;
+                if (port->pos_current_limit > 0) {
+                    usb_set(true);
+                    usb_state = LOAD_STATE_ON;
+                }
+                else if (state == LOAD_STATE_OFF_LOW_SOC || state == LOAD_STATE_OFF_TEMPERATURE) {
+                    usb_state = state;
+                }
             }
             break;
         case LOAD_STATE_ON:
             // currently still same cut-off SOC limit as the load
-            if (state == LOAD_STATE_OFF_LOW_SOC) {
+            if (state == LOAD_STATE_OFF_LOW_SOC || state == LOAD_STATE_OFF_TEMPERATURE) {
                 usb_set(false);
-                usb_state = LOAD_STATE_OFF_LOW_SOC;
-            }
-            else if (state == LOAD_STATE_OFF_OVERCURRENT) {
-                usb_set(false);
-                usb_state = LOAD_STATE_OFF_OVERCURRENT;
+                usb_state = state;
             }
             else if (usb_enable == false) {
                 usb_set(false);
@@ -241,19 +247,9 @@ void LoadOutput::usb_state_machine()
             }
             break;
         case LOAD_STATE_OFF_LOW_SOC:
-            // currently still same cut-off SOC limit as the load
-            if (state == LOAD_STATE_ON) {
-                if (usb_enable == true) {
-                    usb_set(true);
-                    usb_state = LOAD_STATE_ON;
-                }
-                else {
-                    usb_state = LOAD_STATE_DISABLED;
-                }
-            }
-            break;
-        case LOAD_STATE_OFF_OVERCURRENT:
-            if (state != LOAD_STATE_OFF_OVERCURRENT) {
+        case LOAD_STATE_OFF_TEMPERATURE:
+            if (state == LOAD_STATE_ON || state == LOAD_STATE_DISABLED) {
+                // also go back to normal operation with the USB charging port
                 usb_state = LOAD_STATE_DISABLED;
             }
             break;
@@ -364,7 +360,6 @@ void LoadOutput::control()
         || port->current > LOAD_CURRENT_MAX * 2)
     {
         switch_set(false);
-        usb_set(false);
         leds_flicker(LED_LOAD);
         state = LOAD_STATE_OFF_OVERCURRENT;
         log_data.error_flags |= (1 << ERR_LOAD_OVERCURRENT);
@@ -376,16 +371,14 @@ void LoadOutput::control()
     // internal overtemperature
     if (log_data.error_flags & (1U << ERR_INT_OVERTEMP)) {
         switch_set(false);
-        usb_set(false);
         state = LOAD_STATE_OFF_TEMPERATURE;
         print_error("Device overtemperature detected\n");
         return;
     }
 
-    // overcurrent detected because of voltage dip by 25%
+    // overcurrent detected because of voltage dip by 25% for around 100ms
     if (port->voltage < voltage_prev * 0.75 && voltage_prev != 0) {
         switch_set(false);
-        usb_set(false);
         leds_flicker(LED_LOAD);
         state = LOAD_STATE_OFF_OVERCURRENT;
         log_data.error_flags |= (1 << ERR_LOAD_VOLTAGE_DIP);
@@ -402,7 +395,6 @@ void LoadOutput::control()
         debounce_counter++;
         if (debounce_counter > CONTROL_FREQUENCY) {      // waited 1s before setting the flag
             switch_set(false);
-            usb_set(false);
             print_error("Load overvoltage detected\n");
             state = LOAD_STATE_OFF_OVERVOLTAGE;
             overcurrent_timestamp = time(NULL);
