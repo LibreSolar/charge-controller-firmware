@@ -20,7 +20,7 @@
 
 #ifdef OLED_ENABLED     // otherwise don't compile code to reduce firmware size
 
-#include "uext.h"
+#include "uext_oled.h"
 #include "pcb.h"
 
 #include "Adafruit_SSD1306.h"
@@ -47,7 +47,9 @@ const unsigned char bmp_disconnected [] = {
 I2C i2c(PIN_UEXT_SDA, PIN_UEXT_SCL);
 Adafruit_SSD1306_I2c oled(i2c, PIN_UEXT_SSEL, 0x78, 64, 128);
 
-void uext_init()
+UExtOled::UExtOled() {}
+
+void UExtOled::enable()
 {
 #ifdef PIN_UEXT_DIS
     DigitalOut uext_dis(PIN_UEXT_DIS);
@@ -55,9 +57,9 @@ void uext_init()
 #endif
 }
 
-void uext_process_asap() {;}
+void UExtOled::process_asap() {;}
 
-void uext_process_1s()
+void UExtOled::process_1s()
 {
     oled.clearDisplay();
 
