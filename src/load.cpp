@@ -349,7 +349,8 @@ void LoadOutput::control()
     junction_temperature = junction_temperature + (
             internal_temp - junction_temperature +
             port->current * port->current /
-            (LOAD_CURRENT_MAX * LOAD_CURRENT_MAX) * (MOSFET_MAX_JUNCTION_TEMP - 25)
+            (LOAD_CURRENT_MAX * LOAD_CURRENT_MAX) *
+            (MOSFET_MAX_JUNCTION_TEMP - INTERNAL_MAX_REFERENCE_TEMP)
         ) / (MOSFET_THERMAL_TIME_CONSTANT * CONTROL_FREQUENCY);
 
     if (junction_temperature > MOSFET_MAX_JUNCTION_TEMP

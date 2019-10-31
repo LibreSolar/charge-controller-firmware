@@ -41,6 +41,14 @@
  */
 #define MOSFET_MAX_JUNCTION_TEMP    120
 
+/** Internal reference temperature at full load (°C)
+ *
+ * This value is used for model-based control of overcurrent protection. It represents
+ * the steady-state internal temperature for max. continuous current at ambient
+ * temperature of 25°C.
+ */
+#define INTERNAL_MAX_REFERENCE_TEMP 50
+
 /** Thermal time constant junction to ambient (s)
  *
  * This value is used for model-based control of overcurrent protection. It does not reflect
