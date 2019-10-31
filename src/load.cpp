@@ -295,8 +295,10 @@ void LoadOutput::state_machine()
             }
             break;
         case LOAD_STATE_OFF_LOW_SOC:
-            // wait configured time
-            if (time(NULL) - lvd_timestamp > lvd_recovery_delay) {
+            // wait at least configured time
+            if (time(NULL) - lvd_timestamp > lvd_recovery_delay &&
+                !(log_data.error_flags & (1 << ERR_BAT_UNDERVOLTAGE)))
+            {
                 state = LOAD_STATE_DISABLED; // switch to normal mode again
             }
             break;
