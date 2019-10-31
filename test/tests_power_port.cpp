@@ -33,7 +33,7 @@ void energy_calculation_init()
     adcval.dcdc_current = dcdc_current_sun;
     adcval.internal_temperature = 25;
     adcval.load_current = load_current;
-    adcval.mcu_temperature = 25;
+    adcval.internal_temperature = 25;
     adcval.solar_voltage = 30;
 
     // insert values into ADC functions

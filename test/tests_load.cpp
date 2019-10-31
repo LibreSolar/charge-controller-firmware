@@ -192,7 +192,7 @@ void control_off_overvoltage()
     TEST_ASSERT_EQUAL(1 << ERR_LOAD_OVERVOLTAGE, log_data.error_flags);
 }
 
-extern float mcu_temp;
+extern float internal_temp;
 
 void control_off_overcurrent()
 {
@@ -204,7 +204,7 @@ void control_off_overcurrent()
     port.voltage = 14;
     load.state = LOAD_STATE_ON;
     load.voltage_prev = port.voltage;
-    mcu_temp = 25;
+    internal_temp = 25;
     load.junction_temperature = 25;
     log_data.error_flags = 0;
 
@@ -227,7 +227,7 @@ void control_off_voltage_dip()
     port.init_load(14.6);
     load.voltage_prev = port.voltage;
     load.state = LOAD_STATE_ON;
-    mcu_temp = 25;
+    internal_temp = 25;
     load.junction_temperature = 25;
     log_data.error_flags = 0;
 

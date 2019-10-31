@@ -53,10 +53,6 @@
 AnalogOut ref_i_dcdc(PIN_REF_I_DCDC);
 #endif
 
-#ifdef PIN_TEMP_INT_PD
-DigitalInOut temp_pd(PIN_TEMP_INT_PD);
-#endif
-
 float solar_current_offset;
 float load_current_offset;
 
@@ -66,7 +62,7 @@ volatile uint32_t adc_filtered[NUM_ADC_CH] = {0};
 //volatile int num_adc_conversions;
 
 extern LogData log_data;
-extern float mcu_temp;
+extern float internal_temp;
 
 void calibrate_current_sensors()
 {
@@ -146,7 +142,6 @@ void update_measurements()
 #if defined PIN_ADC_TEMP_BAT || defined PIN_ADC_TEMP_FETS
     float v_temp, rts;
 #endif
-    float bat_temp = 25.0;
 
 #ifdef PIN_ADC_TEMP_BAT
     // battery temperature calculation
@@ -155,10 +150,19 @@ void update_measurements()
 
     // Temperature calculation using Beta equation for 10k thermistor
     // (25°C reference temperature for Beta equation assumed)
-    bat_temp = 1.0/(1.0/(273.15+25) + 1.0/NTC_BETA_VALUE*log(rts/10000.0)) - 273.15; // °C
-#endif
+    float bat_temp = 1.0/(1.0/(273.15+25) + 1.0/NTC_BETA_VALUE*log(rts/10000.0)) - 273.15; // °C
 
-    detect_battery_temperature(&charger, bat_temp);
+    if (bat_temp > -50) {
+        // external sensor connected: take measured value
+        charger.bat_temperature = bat_temp;
+        charger.ext_temp_sensor = true;
+    }
+    else {
+        // no external sensor: assume typical room temperature
+        charger.bat_temperature = 25;
+        charger.ext_temp_sensor = false;
+    }
+#endif
 
 #ifdef PIN_ADC_TEMP_FETS
     // MOSFET temperature calculation
@@ -169,64 +173,8 @@ void update_measurements()
 
     // internal MCU temperature
     uint16_t adcval = (adc_filtered[ADC_POS_TEMP_MCU] >> (4 + ADC_FILTER_CONST)) * vcc / VREFINT_VALUE;
-    mcu_temp = (TSENSE_CAL2_VALUE - TSENSE_CAL1_VALUE) / (TSENSE_CAL2 - TSENSE_CAL1) * (adcval - TSENSE_CAL1) + TSENSE_CAL1_VALUE;
-    //printf("TS_CAL1:%d TS_CAL2:%d ADC:%d, temp_int:%f\n", TS_CAL1, TS_CAL2, adcval, meas->temp_int);
-}
-
-void detect_battery_temperature(Charger *charger, float bat_temp)
-{
-#ifdef PIN_TEMP_INT_PD
-
-    // state machine for external sensor detection
-    enum temp_sense_state {
-        TSENSE_STATE_CHECK,
-        TSENSE_STATE_CHECK_WAIT,
-        TSENSE_STATE_MEASURE,
-        TSENSE_STATE_MEASURE_WAIT
-    };
-    static temp_sense_state ts_state = TSENSE_STATE_CHECK;
-
-    static int sensor_change_counter = 0;
-
-    switch (ts_state) {
-        case TSENSE_STATE_CHECK:
-            if (bat_temp < -50) {
-                charger->ext_temp_sensor = false;
-                temp_pd.output();
-                temp_pd = 0;
-                ts_state = TSENSE_STATE_CHECK_WAIT;
-            }
-            else {
-                charger->ext_temp_sensor = true;
-                ts_state = TSENSE_STATE_MEASURE;
-            }
-            break;
-        case TSENSE_STATE_CHECK_WAIT:
-            sensor_change_counter++;
-            if (sensor_change_counter > 5) {
-                sensor_change_counter = 0;
-                ts_state = TSENSE_STATE_MEASURE;
-            }
-            break;
-        case TSENSE_STATE_MEASURE:
-            charger->bat_temperature = charger->bat_temperature * 0.8 + bat_temp * 0.2;
-            //printf("Battery temperature: %.2f (%s sensor)\n", bat_temp, (charger->ext_temp_sensor ? "external" : "internal"));
-            temp_pd.input();
-            ts_state = TSENSE_STATE_MEASURE_WAIT;
-            break;
-        case TSENSE_STATE_MEASURE_WAIT:
-            sensor_change_counter++;
-            if (sensor_change_counter > 10) {
-                sensor_change_counter = 0;
-                ts_state = TSENSE_STATE_CHECK;
-            }
-            break;
-    }
-#else
-    if (bat_temp > -50) {
-        charger->bat_temperature = bat_temp;
-    }
-#endif
+    internal_temp = (TSENSE_CAL2_VALUE - TSENSE_CAL1_VALUE) /
+        (TSENSE_CAL2 - TSENSE_CAL1) * (adcval - TSENSE_CAL1) + TSENSE_CAL1_VALUE;
 }
 
 #ifndef UNIT_TEST

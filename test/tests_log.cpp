@@ -106,11 +106,11 @@ void log_new_bat_temp_max()
     TEST_ASSERT_EQUAL(45, log_data.bat_temp_max);
 }
 
-extern float mcu_temp;
+extern float internal_temp;
 
 void log_new_int_temp_max()
 {
-    mcu_temp = 22;
+    internal_temp = 22;
     log_update_min_max_values(&log_data);
     TEST_ASSERT_EQUAL(22, log_data.int_temp_max);
 }

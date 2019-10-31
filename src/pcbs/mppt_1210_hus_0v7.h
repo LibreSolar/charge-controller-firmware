@@ -60,6 +60,8 @@
 
 #define PIN_REF_I_DCDC  PA_4
 
+// Internal NTC temperature currently ignored by firmware as it is similar to MCU temperature and
+// does not reflect external battery temperature. Feature will be removed in future HW revisions.
 #define PIN_TEMP_INT_PD PA_8
 
 enum pin_state_t { PIN_HIGH, PIN_LOW, PIN_FLOAT };

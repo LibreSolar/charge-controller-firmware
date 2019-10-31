@@ -25,7 +25,7 @@
 volatile bool short_circuit = false;
 
 extern LogData log_data;
-extern float mcu_temp;
+extern float internal_temp;
 
 #ifndef UNIT_TEST
 
@@ -347,7 +347,7 @@ void LoadOutput::control()
 
     // junction temperature calculation model for overcurrent detection
     junction_temperature = junction_temperature + (
-            mcu_temp - junction_temperature +
+            internal_temp - junction_temperature +
             port->current * port->current /
             (LOAD_CURRENT_MAX * LOAD_CURRENT_MAX) * (MOSFET_MAX_JUNCTION_TEMP - 25)
         ) / (MOSFET_THERMAL_TIME_CONSTANT * CONTROL_FREQUENCY);
