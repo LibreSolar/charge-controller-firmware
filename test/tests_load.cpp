@@ -40,13 +40,13 @@ void disabled_to_off_bat_temp_if_error_flag_set()
     // overtemp
     log_data.error_flags = 1 << ERR_BAT_CHG_OVERTEMP;
     load.state_machine();
-    TEST_ASSERT_EQUAL(LOAD_STATE_OFF_BAT_TEMP, load.state);
+    TEST_ASSERT_EQUAL(LOAD_STATE_OFF_TEMPERATURE, load.state);
 
     // undertemp
     load.state = LOAD_STATE_DISABLED;
     log_data.error_flags = 1 << ERR_BAT_CHG_UNDERTEMP;
     load.state_machine();
-    TEST_ASSERT_EQUAL(LOAD_STATE_OFF_BAT_TEMP, load.state);
+    TEST_ASSERT_EQUAL(LOAD_STATE_OFF_TEMPERATURE, load.state);
 }
 
 void off_low_soc_to_on_after_delay()
@@ -146,12 +146,12 @@ void on_to_off_bat_temp_if_error_flag_set()
     load.state = LOAD_STATE_ON;
     log_data.error_flags = 1 << ERR_BAT_DIS_OVERTEMP;
     load.state_machine();
-    TEST_ASSERT_EQUAL(LOAD_STATE_OFF_BAT_TEMP, load.state);
+    TEST_ASSERT_EQUAL(LOAD_STATE_OFF_TEMPERATURE, load.state);
 
     load.state = LOAD_STATE_ON;
     log_data.error_flags = 1 << ERR_BAT_DIS_UNDERTEMP;
     load.state_machine();
-    TEST_ASSERT_EQUAL(LOAD_STATE_OFF_BAT_TEMP, load.state);
+    TEST_ASSERT_EQUAL(LOAD_STATE_OFF_TEMPERATURE, load.state);
 }
 
 void on_to_disabled_if_enable_false()
@@ -225,6 +225,7 @@ void control_off_voltage_dip()
     PowerPort port;
     LoadOutput load(&port);
     port.init_load(14.6);
+    port.current = 0;
     load.voltage_prev = port.voltage;
     load.state = LOAD_STATE_ON;
     internal_temp = 25;
@@ -239,6 +240,22 @@ void control_off_voltage_dip()
     load.control();
     TEST_ASSERT_EQUAL(LOAD_STATE_OFF_OVERCURRENT, load.state);
     TEST_ASSERT_EQUAL(1 << ERR_LOAD_VOLTAGE_DIP, log_data.error_flags);
+}
+
+void control_off_temperature()
+{
+    PowerPort port;
+    LoadOutput load(&port);
+    port.init_load(14.6);
+    port.current = 0;
+    load.voltage_prev = port.voltage;
+    load.state = LOAD_STATE_ON;
+    internal_temp = 25;
+    load.junction_temperature = 25;
+    log_data.error_flags = 1U << ERR_INT_OVERTEMP;
+
+    load.control();
+    TEST_ASSERT_EQUAL(LOAD_STATE_OFF_TEMPERATURE, load.state);
 }
 
 void load_tests()
@@ -261,6 +278,7 @@ void load_tests()
     RUN_TEST(control_off_overvoltage);
     RUN_TEST(control_off_overcurrent);
     RUN_TEST(control_off_voltage_dip);
+    RUN_TEST(control_off_temperature);
 
     // ToDo: What to do if port current is above the limit, but the hardware can still handle it?
 

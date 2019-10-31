@@ -43,8 +43,9 @@ enum ErrorFlag {
     ERR_LOAD_OVERVOLTAGE,           ///< To high voltage for load so that it was switched off
     ERR_LOAD_SHORT_CIRCUIT,         ///< Short circuit detected by load port
     ERR_LOAD_OVERCURRENT,           ///< Long-term overcurrent of charge controller
-    ERR_LOAD_VOLTAGE_DIP            ///< Overcurrent identified via voltage dip (may be because of
+    ERR_LOAD_VOLTAGE_DIP,           ///< Overcurrent identified via voltage dip (may be because of
                                     ///< too small battery)
+    ERR_INT_OVERTEMP                ///< Charge controller internal temperature too high
 };
 
 /** Log Data

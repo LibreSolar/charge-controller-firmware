@@ -175,6 +175,15 @@ void update_measurements()
     uint16_t adcval = (adc_filtered[ADC_POS_TEMP_MCU] >> (4 + ADC_FILTER_CONST)) * vcc / VREFINT_VALUE;
     internal_temp = (TSENSE_CAL2_VALUE - TSENSE_CAL1_VALUE) /
         (TSENSE_CAL2 - TSENSE_CAL1) * (adcval - TSENSE_CAL1) + TSENSE_CAL1_VALUE;
+
+    if (internal_temp > 80) {
+        log_data.error_flags |= 1U << ERR_INT_OVERTEMP;
+    }
+    else if (internal_temp < 70 && (log_data.error_flags & (1U << ERR_INT_OVERTEMP))) {
+        // remove error flag with hysteresis of 10°C
+        log_data.error_flags &= ~(1U << ERR_INT_OVERTEMP);
+    }
+    // else: keep previous setting
 }
 
 #ifndef UNIT_TEST

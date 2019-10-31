@@ -275,7 +275,7 @@ void LoadOutput::state_machine()
                     }
                     else {
                         // must be battery over/under temperature then
-                        state = LOAD_STATE_OFF_BAT_TEMP;
+                        state = LOAD_STATE_OFF_TEMPERATURE;
                     }
                 }
             }
@@ -294,7 +294,7 @@ void LoadOutput::state_machine()
                 }
                 else {
                     // must be battery over/under temperature then
-                    state = LOAD_STATE_OFF_BAT_TEMP;
+                    state = LOAD_STATE_OFF_TEMPERATURE;
                 }
             }
             break;
@@ -326,6 +326,13 @@ void LoadOutput::state_machine()
                 short_circuit = false;
                 log_data.error_flags &= ~(1 << ERR_LOAD_SHORT_CIRCUIT);
                 state = LOAD_STATE_DISABLED;   // switch to normal mode again
+            }
+            break;
+        case LOAD_STATE_OFF_TEMPERATURE:
+            if (!(log_data.error_flags & (1U << ERR_INT_OVERTEMP)) &&
+                port->pos_current_limit > 0)
+            {
+                state = LOAD_STATE_DISABLED;
             }
             break;
     }
@@ -363,6 +370,16 @@ void LoadOutput::control()
         log_data.error_flags |= (1 << ERR_LOAD_OVERCURRENT);
         print_error("Load overcurrent detected\n");
         overcurrent_timestamp = time(NULL);
+        return;
+    }
+
+    // internal overtemperature
+    if (log_data.error_flags & (1U << ERR_INT_OVERTEMP)) {
+        switch_set(false);
+        usb_set(false);
+        state = LOAD_STATE_OFF_TEMPERATURE;
+        print_error("Device overtemperature detected\n");
+        return;
     }
 
     // overcurrent detected because of voltage dip by 25%
@@ -374,6 +391,7 @@ void LoadOutput::control()
         log_data.error_flags |= (1 << ERR_LOAD_VOLTAGE_DIP);
         print_error("Load voltage dip detected\n");
         overcurrent_timestamp = time(NULL);
+        return;
     }
     voltage_prev = port->voltage;
 
@@ -389,6 +407,7 @@ void LoadOutput::control()
             state = LOAD_STATE_OFF_OVERVOLTAGE;
             overcurrent_timestamp = time(NULL);
             log_data.error_flags |= (1 << ERR_LOAD_OVERVOLTAGE);
+            return;
         }
     }
     else {

@@ -40,7 +40,7 @@ enum LoadState {
     LOAD_STATE_OFF_OVERCURRENT,     ///< Off to protect charge controller (overrules target setting)
     LOAD_STATE_OFF_OVERVOLTAGE,     ///< Off to protect loads (overrules target setting)
     LOAD_STATE_OFF_SHORT_CIRCUIT,   ///< Off to protect charge controller (overrules target setting)
-    LOAD_STATE_OFF_BAT_TEMP         ///< Off because of battery over/under-temperature
+    LOAD_STATE_OFF_TEMPERATURE      ///< Off because of battery or charge controller temperature
 };
 
 /** Load output type
