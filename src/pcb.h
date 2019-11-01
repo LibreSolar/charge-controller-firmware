@@ -23,43 +23,6 @@
  * Includes PCB hardware specific settings like pin names depending on the compiler flags set in platformio.ini.
  */
 
-// generic settings (for all charge controller boards)
-///////////////////////////////////////////////////////////////////////////////
-
-/** Main control function frequency (Hz)
- *
- * Frequencies higher than 10 Hz caused issues with MPPT control during lab test with
- * PV simulator. Might be different with actual solar panel.
- */
-#define CONTROL_FREQUENCY 10
-
-/** Maximum Tj of MOSFETs (°C)
- *
- * This value is used for model-based control of overcurrent protection. It represents
- * the steady-state junction temperature for max. continuous current at ambient
- * temperature of 25°C.
- */
-#define MOSFET_MAX_JUNCTION_TEMP    120
-
-/** Internal reference temperature at full load (°C)
- *
- * This value is used for model-based control of overcurrent protection. It represents
- * the steady-state internal temperature for max. continuous current at ambient
- * temperature of 25°C.
- */
-#define INTERNAL_MAX_REFERENCE_TEMP 50
-
-/** Thermal time constant junction to ambient (s)
- *
- * This value is used for model-based control of overcurrent protection. It does not reflect
- * the much lower MOSFET-internal time constant junction to case, but includes thermal inertia
- * of the board.
- *
- * Around 5s seems to be a good conservative estimation for 5x6 type SMD MOSFETs
- */
-#define MOSFET_THERMAL_TIME_CONSTANT  5
-
-
 // specific board settings
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -77,6 +40,50 @@
     #include "pcbs/pcb_stub.h"
 #else
     #error "PCB has to be specified!"
+#endif
+
+// generic default settings (if not defined different in board config)
+///////////////////////////////////////////////////////////////////////////////
+
+/** Main control function frequency (Hz)
+ *
+ * Frequencies higher than 10 Hz caused issues with MPPT control during lab test with
+ * PV simulator. Might be different with actual solar panel.
+ */
+#ifndef CONTROL_FREQUENCY
+#define CONTROL_FREQUENCY 10
+#endif
+
+/** Maximum Tj of MOSFETs (°C)
+ *
+ * This value is used for model-based control of overcurrent protection. It represents
+ * the steady-state junction temperature for max. continuous current at ambient
+ * temperature of 25°C.
+ */
+#ifndef MOSFET_MAX_JUNCTION_TEMP
+#define MOSFET_MAX_JUNCTION_TEMP    120
+#endif
+
+/** Internal reference temperature at full load (°C)
+ *
+ * This value is used for model-based control of overcurrent protection. It represents
+ * the steady-state internal temperature for max. continuous current at ambient
+ * temperature of 25°C. Value here is conservative and can be overwritten in PCB configuration.
+ */
+#ifndef INTERNAL_MAX_REFERENCE_TEMP
+#define INTERNAL_MAX_REFERENCE_TEMP 50
+#endif
+
+/** Thermal time constant junction to ambient (s)
+ *
+ * This value is used for model-based control of overcurrent protection. It does not reflect
+ * the much lower MOSFET-internal time constant junction to case, but includes thermal inertia
+ * of the board.
+ *
+ * Around 5s seems to be a good conservative estimation for 5x6 type SMD MOSFETs
+ */
+#ifndef MOSFET_THERMAL_TIME_CONSTANT
+#define MOSFET_THERMAL_TIME_CONSTANT  5
 #endif
 
 #endif /* PCB_H */

@@ -33,13 +33,20 @@
 #define FEATURE_LOAD_OUTPUT     1
 
 #define PWM_TIM        3    // use TIM3 timer
-#define PWM_FREQUENCY  25   // Hz
+#define PWM_FREQUENCY  50   // Hz
 
-#define PWM_CURRENT_MAX     20  // PCB maximum PWM switch (solar) current
-#define LOAD_CURRENT_MAX    20  // PCB maximum load switch current
+// Current reduced to 15A. Increase to 20A PCB max values only if attached to a big heat sink.
+#define PWM_CURRENT_MAX     15  // PCB maximum PWM switch (solar) current
+#define LOAD_CURRENT_MAX    15  // PCB maximum load switch current
 
-#define LOW_SIDE_VOLTAGE_MAX    30  // Maximum voltage at battery port (V)
+#define LOW_SIDE_VOLTAGE_MAX    32  // Maximum voltage at battery port (V)
 #define HIGH_SIDE_VOLTAGE_MAX   55  // Maximum voltage at PV input port (V)
+
+// The MCU, where internal temperature is measured, is close to the MOSFETs. Tests showed that
+// temperature at heat sink is only 10-20°C above measured internal temp. As PWM CC doesn't
+// use electrolytic cap for core charging function, internal temperature of 70°C can be allowed.
+// This value is used for thermal overcurrent model.
+#define INTERNAL_MAX_REFERENCE_TEMP 70
 
 #define PIN_UEXT_TX   PA_2
 #define PIN_UEXT_RX   PA_3
@@ -84,6 +91,7 @@ static const PinName led_pins[NUM_LED_PINS] = {
        PB_13,    PB_14,    PB_15
 };
 
+#ifndef LEDS_WRONG_POLARITY
 static const pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
     { PIN_HIGH,  PIN_LOW,   PIN_FLOAT }, // LED1
     { PIN_LOW,   PIN_HIGH,  PIN_FLOAT }, // LED2
@@ -91,8 +99,7 @@ static const pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
     { PIN_FLOAT, PIN_HIGH,  PIN_LOW   }, // LED4
     { PIN_FLOAT, PIN_LOW,   PIN_HIGH  }  // LED5
 };
-
-/*
+#else
 // LEDs with wrong polarity
 static const pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
     { PIN_LOW,   PIN_HIGH,  PIN_FLOAT }, // LED1
@@ -101,7 +108,7 @@ static const pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
     { PIN_FLOAT, PIN_LOW,   PIN_HIGH  }, // LED4
     { PIN_FLOAT, PIN_HIGH,  PIN_LOW   }  // LED5
 };
-*/
+#endif
 
 // pin definition only needed in adc_dma.cpp to detect if they are present on the PCB
 #define PIN_ADC_TEMP_BAT
