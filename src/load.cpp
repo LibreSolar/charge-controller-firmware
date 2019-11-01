@@ -19,13 +19,12 @@
 #include "config.h"
 #include "hardware.h"
 #include "leds.h"
-#include "log.h"
+#include "device_status.h"
 #include "debug.h"
 
 volatile bool short_circuit = false;
 
-extern LogData log_data;
-extern float internal_temp;
+extern DeviceStatus dev_stat;
 
 #ifndef UNIT_TEST
 
@@ -266,7 +265,7 @@ void LoadOutput::state_machine()
                     state = LOAD_STATE_ON;
                 }
                 else {
-                    if (log_data.error_flags & (1 << ERR_BAT_UNDERVOLTAGE)) {
+                    if (dev_stat.error_flags & (1 << ERR_BAT_UNDERVOLTAGE)) {
                         state = LOAD_STATE_OFF_LOW_SOC;
                     }
                     else {
@@ -284,7 +283,7 @@ void LoadOutput::state_machine()
             else if (port->pos_current_limit == 0) {  // float == is allowed for 0.0
                 switch_set(false);
                 // find out reason why load current is not allowed
-                if (log_data.error_flags & (1 << ERR_BAT_UNDERVOLTAGE)) {
+                if (dev_stat.error_flags & (1 << ERR_BAT_UNDERVOLTAGE)) {
                     lvd_timestamp = time(NULL);
                     state = LOAD_STATE_OFF_LOW_SOC;
                 }
@@ -297,7 +296,7 @@ void LoadOutput::state_machine()
         case LOAD_STATE_OFF_LOW_SOC:
             // wait at least configured time
             if (time(NULL) - lvd_timestamp > lvd_recovery_delay &&
-                !(log_data.error_flags & (1 << ERR_BAT_UNDERVOLTAGE)))
+                !(dev_stat.error_flags & (1 << ERR_BAT_UNDERVOLTAGE)))
             {
                 state = LOAD_STATE_DISABLED; // switch to normal mode again
             }
@@ -305,8 +304,8 @@ void LoadOutput::state_machine()
         case LOAD_STATE_OFF_OVERCURRENT:
             // wait configured time
             if (time(NULL) - overcurrent_timestamp > overcurrent_recovery_delay) {
-                log_data.error_flags &= ~(1 << ERR_LOAD_OVERCURRENT);
-                log_data.error_flags &= ~(1 << ERR_LOAD_VOLTAGE_DIP);
+                dev_stat.error_flags &= ~(1 << ERR_LOAD_OVERCURRENT);
+                dev_stat.error_flags &= ~(1 << ERR_LOAD_VOLTAGE_DIP);
                 state = LOAD_STATE_DISABLED;   // switch to normal mode again
             }
             break;
@@ -314,7 +313,7 @@ void LoadOutput::state_machine()
             if (port->voltage < (port->sink_voltage_max - 0.5) &&
                 port->voltage < (LOW_SIDE_VOLTAGE_MAX - 0.5))
             {
-                log_data.error_flags &= ~(1 << ERR_LOAD_OVERVOLTAGE);
+                dev_stat.error_flags &= ~(1 << ERR_LOAD_OVERVOLTAGE);
                 state = LOAD_STATE_DISABLED;   // switch to normal mode again
             }
             break;
@@ -322,12 +321,12 @@ void LoadOutput::state_machine()
             // stay here until the charge controller is reset or load is switched off remotely
             if (enable == false) {
                 short_circuit = false;
-                log_data.error_flags &= ~(1 << ERR_LOAD_SHORT_CIRCUIT);
+                dev_stat.error_flags &= ~(1 << ERR_LOAD_SHORT_CIRCUIT);
                 state = LOAD_STATE_DISABLED;   // switch to normal mode again
             }
             break;
         case LOAD_STATE_OFF_TEMPERATURE:
-            if (!(log_data.error_flags & (1U << ERR_INT_OVERTEMP)) &&
+            if (!(dev_stat.error_flags & (1U << ERR_INT_OVERTEMP)) &&
                 port->pos_current_limit > 0)
             {
                 state = LOAD_STATE_DISABLED;
@@ -344,7 +343,7 @@ void LoadOutput::control()
     if (short_circuit) {
         if (state != LOAD_STATE_OFF_SHORT_CIRCUIT) {
             state = LOAD_STATE_OFF_SHORT_CIRCUIT;
-            log_data.error_flags |= (1 << ERR_LOAD_SHORT_CIRCUIT);
+            dev_stat.error_flags |= (1 << ERR_LOAD_SHORT_CIRCUIT);
             print_error("Load short circuit detected\n");
         }
         return;
@@ -352,7 +351,7 @@ void LoadOutput::control()
 
     // junction temperature calculation model for overcurrent detection
     junction_temperature = junction_temperature + (
-            internal_temp - junction_temperature +
+            dev_stat.internal_temp - junction_temperature +
             port->current * port->current /
             (LOAD_CURRENT_MAX * LOAD_CURRENT_MAX) *
             (MOSFET_MAX_JUNCTION_TEMP - INTERNAL_MAX_REFERENCE_TEMP)
@@ -364,14 +363,14 @@ void LoadOutput::control()
         switch_set(false);
         leds_flicker(LED_LOAD);
         state = LOAD_STATE_OFF_OVERCURRENT;
-        log_data.error_flags |= (1 << ERR_LOAD_OVERCURRENT);
+        dev_stat.error_flags |= (1 << ERR_LOAD_OVERCURRENT);
         print_error("Load overcurrent detected\n");
         overcurrent_timestamp = time(NULL);
         return;
     }
 
     // internal overtemperature
-    if (log_data.error_flags & (1U << ERR_INT_OVERTEMP)) {
+    if (dev_stat.error_flags & (1U << ERR_INT_OVERTEMP)) {
         switch_set(false);
         state = LOAD_STATE_OFF_TEMPERATURE;
         print_error("Device overtemperature detected\n");
@@ -383,7 +382,7 @@ void LoadOutput::control()
         switch_set(false);
         leds_flicker(LED_LOAD);
         state = LOAD_STATE_OFF_OVERCURRENT;
-        log_data.error_flags |= (1 << ERR_LOAD_VOLTAGE_DIP);
+        dev_stat.error_flags |= (1 << ERR_LOAD_VOLTAGE_DIP);
         print_error("Load voltage dip detected\n");
         overcurrent_timestamp = time(NULL);
         return;
@@ -400,7 +399,7 @@ void LoadOutput::control()
             print_error("Load overvoltage detected\n");
             state = LOAD_STATE_OFF_OVERVOLTAGE;
             overcurrent_timestamp = time(NULL);
-            log_data.error_flags |= (1 << ERR_LOAD_OVERVOLTAGE);
+            dev_stat.error_flags |= (1 << ERR_LOAD_OVERVOLTAGE);
             return;
         }
     }

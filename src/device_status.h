@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-#ifndef LOG_H
-#define LOG_H
+#ifndef DEVICE_STATUS_H
+#define DEVICE_STATUS_H
 
 /** @file
  *
  * @brief
- * Structs needed for data logging (like max/min values, etc.)
+ * Device-level data storage and functions (like max/min values, error flags, etc.)
  */
 
 #include "bat_charger.h"
@@ -48,21 +48,33 @@ enum ErrorFlag {
     ERR_INT_OVERTEMP                ///< Charge controller internal temperature too high
 };
 
-/** Log Data
+/** Device Status data
  *
  * Stores error counters and some maximum ever measured values to EEPROM
  */
-typedef struct {
+class DeviceStatus
+{
+public:
+
+    /** Updates the total energy counters for solar, battery and load bus
+     */
+    void update_energy();
+
+    /** Updates the logged min/max values for voltages, power, temperatures etc.
+     */
+    void update_min_max_values();
+
+    // total energy
     uint32_t bat_chg_total_Wh;
     uint32_t bat_dis_total_Wh;
     uint32_t solar_in_total_Wh;
     uint32_t load_out_total_Wh;
 
+    // maximum/minimum values
     uint16_t solar_power_max_day;
     uint16_t load_power_max_day;
     uint16_t solar_power_max_total;
     uint16_t load_power_max_total;
-
     float battery_voltage_max;
     float solar_voltage_max;
     float dcdc_current_max;
@@ -70,16 +82,12 @@ typedef struct {
     int bat_temp_max;         // °C
     int int_temp_max;         // °C
     int mosfet_temp_max;
+
     int day_counter;
-    uint32_t error_flags;       ///< Instantaneous errors
-} LogData;
 
-/** Updates the total energy counters for solar, battery and load bus
- */
-void log_update_energy(LogData *log_data);
+    // instantaneous device-level data
+    uint32_t error_flags;       ///< Currently detected errors
+    float internal_temp;        ///< Internal temperature (measured in MCU)
+};
 
-/** Updates the logged min/max values for voltages, power, temperatures etc.
- */
-void log_update_min_max_values(LogData *log_data);
-
-#endif /* LOG_H */
+#endif /* DEVICE_STATUS_H */

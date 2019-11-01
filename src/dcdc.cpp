@@ -16,7 +16,7 @@
 
 #include "dcdc.h"
 #include "pcb.h"
-#include "log.h"
+#include "device_status.h"
 #include "debug.h"
 
 #include "half_bridge.h"
@@ -26,7 +26,7 @@
 #include <stdlib.h>     // for min/max function
 #include <stdio.h>
 
-extern LogData log_data;
+extern DeviceStatus dev_stat;
 
 #if FEATURE_DCDC_CONVERTER == 0
 
@@ -199,7 +199,7 @@ void Dcdc::control()
             // what to do... (e.g. call dcdc_self_destruction)
             current_debounce_counter++;
             if (current_debounce_counter > CONTROL_FREQUENCY) {      // waited 1s before setting the flag
-                log_data.error_flags |= (1 << ERR_HS_MOSFET_SHORT);
+                dev_stat.error_flags |= (1 << ERR_HS_MOSFET_SHORT);
             }
         }
         else {  // hardware is fine

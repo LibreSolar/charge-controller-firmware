@@ -61,8 +61,7 @@ volatile uint16_t adc_readings[NUM_ADC_CH] = {0};
 volatile uint32_t adc_filtered[NUM_ADC_CH] = {0};
 //volatile int num_adc_conversions;
 
-extern LogData log_data;
-extern float internal_temp;
+extern DeviceStatus dev_stat;
 
 void calibrate_current_sensors()
 {
@@ -173,15 +172,15 @@ void update_measurements()
 
     // internal MCU temperature
     uint16_t adcval = (adc_filtered[ADC_POS_TEMP_MCU] >> (4 + ADC_FILTER_CONST)) * vcc / VREFINT_VALUE;
-    internal_temp = (TSENSE_CAL2_VALUE - TSENSE_CAL1_VALUE) /
+    dev_stat.internal_temp = (TSENSE_CAL2_VALUE - TSENSE_CAL1_VALUE) /
         (TSENSE_CAL2 - TSENSE_CAL1) * (adcval - TSENSE_CAL1) + TSENSE_CAL1_VALUE;
 
-    if (internal_temp > 80) {
-        log_data.error_flags |= 1U << ERR_INT_OVERTEMP;
+    if (dev_stat.internal_temp > 80) {
+        dev_stat.error_flags |= 1U << ERR_INT_OVERTEMP;
     }
-    else if (internal_temp < 70 && (log_data.error_flags & (1U << ERR_INT_OVERTEMP))) {
+    else if (dev_stat.internal_temp < 70 && (dev_stat.error_flags & (1U << ERR_INT_OVERTEMP))) {
         // remove error flag with hysteresis of 10°C
-        log_data.error_flags &= ~(1U << ERR_INT_OVERTEMP);
+        dev_stat.error_flags &= ~(1U << ERR_INT_OVERTEMP);
     }
     // else: keep previous setting
 }

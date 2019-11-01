@@ -149,15 +149,15 @@ const data_object_t data_objects[] = {
     // RECORDED DATA ///////////////////////////////////////////////////////
     // using IDs >= 0xA0
 
-    {0x08, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_UINT32,  0, (void*) &(log_data.solar_in_total_Wh),            "SolarInTotal_Wh"},
-    {0x09, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_UINT32,  0, (void*) &(log_data.load_out_total_Wh),            "LoadOutTotal_Wh"},
-    {0x0A, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_UINT32,  0, (void*) &(log_data.bat_chg_total_Wh),             "BatChgTotal_Wh"},
-    {0x0B, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_UINT32,  0, (void*) &(log_data.bat_dis_total_Wh),             "BatDisTotal_Wh"},
+    {0x08, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_UINT32,  0, (void*) &(dev_stat.solar_in_total_Wh),            "SolarInTotal_Wh"},
+    {0x09, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_UINT32,  0, (void*) &(dev_stat.load_out_total_Wh),            "LoadOutTotal_Wh"},
+    {0x0A, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_UINT32,  0, (void*) &(dev_stat.bat_chg_total_Wh),             "BatChgTotal_Wh"},
+    {0x0B, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_UINT32,  0, (void*) &(dev_stat.bat_dis_total_Wh),             "BatDisTotal_Wh"},
     {0x0C, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_UINT16,  0, (void*) &(charger.num_full_charges),              "FullChgCount"},
     {0x0D, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_UINT16,  0, (void*) &(charger.num_deep_discharges),           "DeepDisCount"},
     {0x0E, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 0, (void*) &(charger.usable_capacity),               "BatUsable_Ah"}, // usable battery capacity
-    {0x0F, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_UINT16,  2, (void*) &(log_data.solar_power_max_day),          "SolarMaxDay_W"},
-    {0x10, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_UINT16,  2, (void*) &(log_data.load_power_max_day),           "LoadMaxDay_W"},
+    {0x0F, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_UINT16,  2, (void*) &(dev_stat.solar_power_max_day),          "SolarMaxDay_W"},
+    {0x10, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_UINT16,  2, (void*) &(dev_stat.load_power_max_day),           "LoadMaxDay_W"},
 
     // accumulated data
     {0xA0, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 2, (void*) &(solar_terminal.neg_energy_Wh),          "SolarInDay_Wh"},
@@ -166,19 +166,19 @@ const data_object_t data_objects[] = {
     {0xA3, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 2, (void*) &(bat_terminal.neg_energy_Wh),            "BatDisDay_Wh"},
     {0xA4, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 0, (void*) &(charger.discharged_Ah),                 "Dis_Ah"},    // coulomb counter
     {0xA5, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_UINT16,  0, (void*) &(charger.soh),                           "SOH_%"},     // output will be uint8_t
-    {0xA6, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_INT32,   0, (void*) &(log_data.day_counter),                  "DayCount"},
+    {0xA6, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_INT32,   0, (void*) &(dev_stat.day_counter),                  "DayCount"},
 
     // min/max recordings
-    {0xB1, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_UINT16,  2, (void*) &(log_data.solar_power_max_total),        "SolarMaxTotal_W"},
-    {0xB2, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_UINT16,  2, (void*) &(log_data.load_power_max_total),         "LoadMaxTotal_W"},
-    {0xB3, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 2, (void*) &(log_data.battery_voltage_max),          "BatMaxTotal_V"},
-    {0xB4, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 2, (void*) &(log_data.solar_voltage_max),            "SolarMaxTotal_V"},
-    {0xB5, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 2, (void*) &(log_data.dcdc_current_max),             "DcdcMaxTotal_A"},
-    {0xB6, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 2, (void*) &(log_data.load_current_max),             "LoadMaxTotal_A"},
-    {0xB7, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_INT32,   1, (void*) &(log_data.bat_temp_max),                 "BatMax_degC"},
-    {0xB8, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_INT32,   1, (void*) &(log_data.int_temp_max),                 "IntMax_degC"},
-    {0xB9, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_INT32,   1, (void*) &(log_data.mosfet_temp_max),              "MosfetMax_degC"},
-    {0xBA, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_UINT32,  1, (void*) &(log_data.error_flags),                  "ErrorFlags"},
+    {0xB1, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_UINT16,  2, (void*) &(dev_stat.solar_power_max_total),        "SolarMaxTotal_W"},
+    {0xB2, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_UINT16,  2, (void*) &(dev_stat.load_power_max_total),         "LoadMaxTotal_W"},
+    {0xB3, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 2, (void*) &(dev_stat.battery_voltage_max),          "BatMaxTotal_V"},
+    {0xB4, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 2, (void*) &(dev_stat.solar_voltage_max),            "SolarMaxTotal_V"},
+    {0xB5, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 2, (void*) &(dev_stat.dcdc_current_max),             "DcdcMaxTotal_A"},
+    {0xB6, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 2, (void*) &(dev_stat.load_current_max),             "LoadMaxTotal_A"},
+    {0xB7, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_INT32,   1, (void*) &(dev_stat.bat_temp_max),                 "BatMax_degC"},
+    {0xB8, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_INT32,   1, (void*) &(dev_stat.int_temp_max),                 "IntMax_degC"},
+    {0xB9, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_INT32,   1, (void*) &(dev_stat.mosfet_temp_max),              "MosfetMax_degC"},
+    {0xBA, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_UINT32,  1, (void*) &(dev_stat.error_flags),                  "ErrorFlags"},
 
     // CALIBRATION DATA ///////////////////////////////////////////////////////
     // using IDs >= 0xD0

@@ -20,7 +20,7 @@
 
 #include "bat_charger.h"
 #include "power_port.h"
-#include "log.h"
+#include "device_status.h"
 #include "pwm_switch.h"
 #include "half_bridge.h"
 #include "load.h"
@@ -44,7 +44,7 @@ extern PwmSwitch pwm_switch;
 extern PowerPort &bat_terminal;
 extern PowerPort &solar_terminal;
 
-extern LogData log_data;
+extern DeviceStatus dev_stat;
 extern Charger charger;
 extern BatConf bat_conf;
 extern BatConf bat_conf_user;

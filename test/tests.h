@@ -11,6 +11,6 @@ void half_brigde_tests();
 
 void dcdc_tests();
 
-void log_tests();
+void device_status_tests();
 
 void load_tests();

@@ -18,10 +18,10 @@ const int night_hours = 3;
 
 void energy_calculation_init()
 {
-    log_data.solar_in_total_Wh = 0;
-    log_data.load_out_total_Wh = 0;
-    log_data.bat_chg_total_Wh = 0;
-    log_data.bat_dis_total_Wh = 0;
+    dev_stat.solar_in_total_Wh = 0;
+    dev_stat.load_out_total_Wh = 0;
+    dev_stat.bat_chg_total_Wh = 0;
+    dev_stat.bat_dis_total_Wh = 0;
     hv_terminal.neg_energy_Wh = 0.0;
     load_terminal.pos_energy_Wh = 0.0;
     lv_terminal.pos_energy_Wh = 0.0;

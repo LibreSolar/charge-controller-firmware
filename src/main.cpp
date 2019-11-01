@@ -37,7 +37,7 @@
 #include "eeprom.h"             // external I2C EEPROM
 #include "load.h"               // load and USB output management
 #include "leds.h"               // LED switching using charlieplexing
-#include "log.h"                // log data (error memory, min/max measurements, etc.)
+#include "device_status.h"                // log data (error memory, min/max measurements, etc.)
 #include "data_objects.h"       // for access to internal data via ThingSet
 #include "thingset_serial.h"    // UART or USB serial communication
 #include "thingset_can.h"       // CAN bus communication
@@ -78,7 +78,7 @@ Charger charger(&bat_terminal);
 BatConf bat_conf;               // actual (used) battery configuration
 BatConf bat_conf_user;          // temporary storage where the user can write to
 
-LogData log_data;
+DeviceStatus dev_stat;
 
 extern ThingSet ts;             // defined in data_objects.cpp
 
@@ -214,8 +214,8 @@ void system_control()
         solar_terminal.energy_balance();
         bat_terminal.energy_balance();
         load_terminal.energy_balance();
-        log_update_energy(&log_data);
-        log_update_min_max_values(&log_data);
+        dev_stat.update_energy();
+        dev_stat.update_min_max_values();
         charger.update_soc(&bat_conf);
     }
     counter++;
