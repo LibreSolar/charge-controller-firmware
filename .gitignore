@@ -12,3 +12,4 @@ src/config.h
 src/version.h
 html
 memory.map
+custom.ini

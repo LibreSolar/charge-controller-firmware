@@ -8,13 +8,9 @@ Firmware based on ARM mbed framework for the Libre Solar MPPT/PWM solar charge c
 
 The software is configurable to support different charge controller PCBs with either STM32F072 (including CAN support) or low-power STM32L072/3 MCUs.
 
-- [Libre Solar MPPT 12/24V 20A with CAN (v0.10)](https://github.com/LibreSolar/MPPT-2420-LC)
-- [Libre Solar MPPT 12V 10A with USB (v0.2 and v0.4)](https://github.com/LibreSolar/MPPT-1210-HUS)
+- [Libre Solar MPPT 12/24V 20A with CAN](https://github.com/LibreSolar/MPPT-2420-LC)
+- [Libre Solar MPPT 12V 10A with USB](https://github.com/LibreSolar/MPPT-1210-HUS)
 - [Libre Solar PWM 12/24V 20A](https://github.com/LibreSolar/PWM-2420-LUS)
-
-## Bootloader Support
-
-The custom linker script file need to be updated before generating the application firmware binary. The STM32L073XZ.ld.link_script.ld file is located in the root project directory. For each application, the flash start address and the maximum code size need to be updated in this file. Currently, the locations 0x08001000 and 0x08018000 are used for applications 1 & 2 respectively.
 
 ## Building and flashing the firmware
 
@@ -26,7 +22,7 @@ If used together with Visual Studio Code and PlatformIO, starting firmware devel
 
 2. Copy `src/config.h_template` to `src/config.h`, and adjust basic settings. `config.h` is ignored by git, so your changes are kept after software updates using `git pull`.
 
-3. Select the correct board in `platformio.ini` by removing the comment before the board name under `[platformio]`
+3. Select the correct board in `platformio.ini` by removing the comment before the board name under `[platformio]` or create a file `custom.ini` with your personal settings.
 
 4. Connect the board via a programmer. See the Libre Solar website for [further project-agnostic instructions](http://libre.solar/docs/flashing).
 
@@ -67,6 +63,10 @@ st-flash 1.5.1
 ```
 
 check the connection between the programmer (for example the ST-Link of the Nucleo board) and the charge controller.
+
+## Bootloader Support (STM32L07x only)
+
+The custom linker script file STM32L073XZ.ld.link_script.ld needs to be updated before generating the application firmware binary. For each application, the flash start address and the maximum code size need to be updated in this file. Currently, the locations 0x08001000 and 0x08018000 are used for applications 1 & 2 respectively.
 
 ## API documentation
 
