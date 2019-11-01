@@ -86,7 +86,7 @@ public:
     PowerPort *port;            ///< Pointer to DC bus containting actual voltage and current
                                 ///< measurement of (external) load output terminal
 
-    float voltage_prev;         ///< voltage from previous call of control function
+    float voltage_prev = 0;     ///< voltage from previous call of control function
 
     time_t overcurrent_timestamp;       ///< Time when last overcurrent event occured
     int overcurrent_recovery_delay;     ///< Seconds before we attempt to re-enable the load
