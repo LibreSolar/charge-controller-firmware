@@ -86,9 +86,9 @@ const data_object_t data_objects[] = {
     {0x58, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_BOOL,    0, (void*) &(bat_conf_user.equalization_enabled),       "EqEn"},
     {0x59, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_FLOAT32, 2, (void*) &(bat_conf_user.equalization_voltage),       "Eq_V"},
     {0x5A, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_FLOAT32, 2, (void*) &(bat_conf_user.equalization_current_limit), "Eq_A"},
-    {0x5B, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_INT32,   2, (void*) &(bat_conf_user.equalization_duration),      "EqDuration_s"},
-    {0x5C, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_INT32,   2, (void*) &(bat_conf_user.equalization_trigger_days),  "EqInterval_d"},
-    {0x5D, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_INT32,   2, (void*) &(bat_conf_user.equalization_trigger_deep_cycles),  "EqDeepDisTrigger"},
+    {0x5B, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_INT32,   0, (void*) &(bat_conf_user.equalization_duration),      "EqDuration_s"},
+    {0x5C, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_INT32,   0, (void*) &(bat_conf_user.equalization_trigger_days),  "EqInterval_d"},
+    {0x5D, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_INT32,   0, (void*) &(bat_conf_user.equalization_trigger_deep_cycles),  "EqDeepDisTrigger"},
 
     // load settings
     {0x40, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_BOOL,    0, (void*) &(load.enable),                              "LoadEnDefault"},
@@ -97,12 +97,12 @@ const data_object_t data_objects[] = {
     {0x43, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_FLOAT32, 2, (void*) &(bat_conf_user.voltage_load_reconnect),     "LoadReconnect_V"},
     //{0x44, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_FLOAT32, 2, (void*) &(bat_conf_user.voltage_load_disconnect),    "UsbDisconnect_V"},
     //{0x45, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_FLOAT32, 2, (void*) &(bat_conf_user.voltage_load_reconnect),     "UsbReconnect_V"},
-    {0x46, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_INT32,   2, (void*) &(load.overcurrent_recovery_delay),          "LoadOCRecovery_s"},
-    {0x47, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_INT32,   2, (void*) &(load.lvd_recovery_delay),                  "LoadUVRecovery_s"},
+    {0x46, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_INT32,   0, (void*) &(load.overcurrent_recovery_delay),          "LoadOCRecovery_s"},
+    {0x47, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_INT32,   0, (void*) &(load.lvd_recovery_delay),                  "LoadUVRecovery_s"},
 
     // other configuration items
-    //{0x33, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_BOOL,    2, (void*) &(??),   "WarningIndicator"},  // can be set externally
-    //{0x33, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_BOOL,    2, (void*) &(??),   "ErrorIndicator"},
+    //{0x33, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_BOOL,    0, (void*) &(??),   "WarningIndicator"},  // can be set externally
+    //{0x33, TS_CONF, TS_READ_ALL | TS_WRITE_ALL,   TS_T_BOOL,    0, (void*) &(??),   "ErrorIndicator"},
 
     // INPUT DATA /////////////////////////////////////////////////////////////
     // using IDs >= 0x60
@@ -130,7 +130,7 @@ const data_object_t data_objects[] = {
     {0x72, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(bat_terminal.current),                    "Bat_A"},
     {0x73, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(load_terminal.current),                   "Load_A"},
     {0x74, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 1, (void*) &(charger.bat_temperature),                 "Bat_degC"},
-    {0x75, TS_OUTPUT, TS_READ_ALL, TS_T_BOOL,    1, (void*) &(charger.ext_temp_sensor),                 "BatTempExt"},
+    {0x75, TS_OUTPUT, TS_READ_ALL, TS_T_BOOL,    0, (void*) &(charger.ext_temp_sensor),                 "BatTempExt"},
     {0x76, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 1, (void*) &(internal_temp),                           "Int_degC"},
 #if defined(PIN_ADC_TEMP_FETS) && FEATURE_DCDC_CONVERTER
     {0x77, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 1, (void*) &(dcdc.temp_mosfets),                       "Mosfet_degC"},
@@ -146,6 +146,8 @@ const data_object_t data_objects[] = {
     {0x7E, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(solar_terminal.power),                    "Solar_W"},
     {0x7F, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(load_terminal.power),                     "Load_W"},
 
+    {0x90, TS_OUTPUT, TS_READ_ALL, TS_T_UINT32,  0, (void*) &(dev_stat.error_flags),                    "ErrorFlags"},
+
     // RECORDED DATA ///////////////////////////////////////////////////////
     // using IDs >= 0xA0
 
@@ -155,9 +157,9 @@ const data_object_t data_objects[] = {
     {0x0B, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_UINT32,  0, (void*) &(dev_stat.bat_dis_total_Wh),             "BatDisTotal_Wh"},
     {0x0C, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_UINT16,  0, (void*) &(charger.num_full_charges),              "FullChgCount"},
     {0x0D, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_UINT16,  0, (void*) &(charger.num_deep_discharges),           "DeepDisCount"},
-    {0x0E, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 0, (void*) &(charger.usable_capacity),               "BatUsable_Ah"}, // usable battery capacity
-    {0x0F, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_UINT16,  2, (void*) &(dev_stat.solar_power_max_day),          "SolarMaxDay_W"},
-    {0x10, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_UINT16,  2, (void*) &(dev_stat.load_power_max_day),           "LoadMaxDay_W"},
+    {0x0E, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 1, (void*) &(charger.usable_capacity),               "BatUsable_Ah"}, // usable battery capacity
+    {0x0F, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_UINT16,  0, (void*) &(dev_stat.solar_power_max_day),          "SolarMaxDay_W"},
+    {0x10, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_UINT16,  0, (void*) &(dev_stat.load_power_max_day),           "LoadMaxDay_W"},
 
     // accumulated data
     {0xA0, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 2, (void*) &(solar_terminal.neg_energy_Wh),          "SolarInDay_Wh"},
@@ -175,10 +177,9 @@ const data_object_t data_objects[] = {
     {0xB4, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 2, (void*) &(dev_stat.solar_voltage_max),            "SolarMaxTotal_V"},
     {0xB5, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 2, (void*) &(dev_stat.dcdc_current_max),             "DcdcMaxTotal_A"},
     {0xB6, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 2, (void*) &(dev_stat.load_current_max),             "LoadMaxTotal_A"},
-    {0xB7, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_INT32,   1, (void*) &(dev_stat.bat_temp_max),                 "BatMax_degC"},
-    {0xB8, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_INT32,   1, (void*) &(dev_stat.int_temp_max),                 "IntMax_degC"},
-    {0xB9, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_INT32,   1, (void*) &(dev_stat.mosfet_temp_max),              "MosfetMax_degC"},
-    {0xBA, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_UINT32,  1, (void*) &(dev_stat.error_flags),                  "ErrorFlags"},
+    {0xB7, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_INT32,   0, (void*) &(dev_stat.bat_temp_max),                 "BatMax_degC"},
+    {0xB8, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_INT32,   0, (void*) &(dev_stat.int_temp_max),                 "IntMax_degC"},
+    {0xB9, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_INT32,   0, (void*) &(dev_stat.mosfet_temp_max),              "MosfetMax_degC"},
 
     // CALIBRATION DATA ///////////////////////////////////////////////////////
     // using IDs >= 0xD0
@@ -215,7 +216,7 @@ const uint16_t pub_serial_ids[] = {
 const uint16_t pub_emoncms_ids[] = {
     0x01, // internal time stamp
     0x70, 0x71, 0x72, 0x73, 0x7A,     // voltage + current
-    0x74, 0x76, /*0x77,*/           // temperatures
+    /*0x74,*/ 0x76, /*0x77,*/         // temperatures
     0x04, 0x78, 0x79,           // LoadState, ChgState, DCDCState
     0xA0, 0xA1, 0xA2, 0xA3, // daily energy throughput
 //    0x08, 0x09,     // SolarInTotal_Wh, LoadOutTotal_Wh
@@ -223,7 +224,8 @@ const uint16_t pub_emoncms_ids[] = {
 //    0x0F, 0x10,     // SolarMaxDay_W, LoadMaxDay_W
     0x0C, 0x0D,     // FullChgCount, DeepDisCount
     0x0E, 0xA4,     // BatUsable_Ah, coulomb counter
-    0x06, 0xA5, 0xA6      // SOC, SOH, DayCount
+    0x06, 0xA5, 0xA6,      // SOC, SOH, DayCount
+    0x90            // error flags
 };
 
 // stores object-ids of values to be published via CAN

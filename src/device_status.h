@@ -33,19 +33,21 @@
 /** Error Flags
  */
 enum ErrorFlag {
-    ERR_HS_MOSFET_SHORT = 0,        ///< Short-circuit in HS MOSFET
-    ERR_BAT_OVERVOLTAGE,
-    ERR_BAT_UNDERVOLTAGE,
-    ERR_BAT_DIS_OVERTEMP,
-    ERR_BAT_DIS_UNDERTEMP,
-    ERR_BAT_CHG_OVERTEMP,
-    ERR_BAT_CHG_UNDERTEMP,
-    ERR_LOAD_OVERVOLTAGE,           ///< To high voltage for load so that it was switched off
-    ERR_LOAD_SHORT_CIRCUIT,         ///< Short circuit detected by load port
-    ERR_LOAD_OVERCURRENT,           ///< Long-term overcurrent of charge controller
-    ERR_LOAD_VOLTAGE_DIP,           ///< Overcurrent identified via voltage dip (may be because of
+    ERR_BAT_UNDERVOLTAGE = 0,       ///< Battery voltage too low
+    ERR_BAT_OVERVOLTAGE = 1,        ///< Battery voltage too high
+    ERR_BAT_DIS_OVERCURRENT = 2,    ///< Battery discharge overcurrent
+    ERR_BAT_CHG_OVERCURRENT = 3,    ///< Battery charge overcurrent
+    ERR_BAT_DIS_UNDERTEMP = 4,      ///< Temperature below discharge minimum limit
+    ERR_BAT_DIS_OVERTEMP = 5,       ///< Temperature above discharge maximum limit
+    ERR_BAT_CHG_UNDERTEMP = 6,      ///< Temperature below charge minimum limit
+    ERR_BAT_CHG_OVERTEMP = 7,       ///< Temperature above charge maximum limit
+    ERR_LOAD_OVERVOLTAGE = 8,       ///< To high voltage for load so that it was switched off
+    ERR_LOAD_OVERCURRENT = 9,       ///< Long-term overcurrent of load port
+    ERR_LOAD_SHORT_CIRCUIT = 10,    ///< Short circuit detected at load port
+    ERR_LOAD_VOLTAGE_DIP = 11,      ///< Overcurrent identified via voltage dip (may be because of
                                     ///< too small battery)
-    ERR_INT_OVERTEMP                ///< Charge controller internal temperature too high
+    ERR_INT_OVERTEMP = 12,          ///< Charge controller internal temperature too high
+    ERR_DCDC_HS_MOSFET_SHORT = 13,  ///< Short-circuit in HS MOSFET
 };
 
 /** Device Status data
