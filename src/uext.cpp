@@ -14,66 +14,62 @@
  * limitations under the License.
  */
 
-#ifndef UNIT_TEST
-
-#include "config.h"
-#include "mbed.h"
 #include "uext.h"
+#include <algorithm>
 
-/*
- * Construct all global UExtInterfaces here.
- * All of these are added to the list of devices
- * for later processing in the normal operation
- */
-
-#ifdef WIFI_ENABLED
-    #include "uext/uext_wifi.h"
-    UExtWifi uext_wifi;
-#endif
-
-#ifdef OLED_ENABLED
-    #include "uext/uext_oled.h"
-    UExtOled uext_oled;
-#endif 
-
-// we use ifdef here in order to avoid using some dynamically
-// allocated list. Only std::vector works with this code if NO devices are enabled
-// std::array and also plain C arrays work if at least one array element is there.
-
-std::vector<UExtInterface*> UExtInterfaceManager::interfaces =
-{
-#ifdef WIFI_ENABLED
-    &uext_wifi,
-#endif
-#ifdef OLED_ENABLED
-    &uext_oled,
-#endif
-};
+// we use code to self register objects at construction time.
+// It relies on the fact that initially this pointer will be initialized
+// with NULL ! This is only true for global variables or static members of classes
+// so this must remain a static class member
+std::vector<UExtInterface*>* UExtInterfaceManager::interfaces;
 
 // run the respective function on all objects in the "devices" list
 // use the c++11 lambda expressions here for the for_each loop, keeps things compact
 
 void UExtInterfaceManager::process_asap()
 {
-    for_each(std::begin(interfaces),std::end(interfaces), [](UExtInterface* tsif) {
+    for_each(std::begin(*interfaces),std::end(*interfaces), [](UExtInterface* tsif) {
         tsif->process_asap();
     });
 }
 
 void UExtInterfaceManager::enable()
 {
-    for_each(std::begin(interfaces),std::end(interfaces), [](UExtInterface* tsif) {
+    for_each(std::begin(*interfaces),std::end(*interfaces), [](UExtInterface* tsif) {
         tsif->enable();
     });
 }
 
 void UExtInterfaceManager::process_1s()
 {
-    for_each(std::begin(interfaces),std::end(interfaces), [](UExtInterface* tsif) {
+    for_each(std::begin(*interfaces),std::end(*interfaces), [](UExtInterface* tsif) {
         tsif->process_1s();
     });
 }
 
+void UExtInterfaceManager::checkList()
+{
+    if (UExtInterfaceManager::interfaces == NULL)
+    {
+        UExtInterfaceManager::interfaces = new std::vector<UExtInterface*>;
+    }
+}
+
+void UExtInterfaceManager::addExt(UExtInterface* member)
+{
+    checkList();
+    interfaces->push_back(member);
+}
+
+UExtInterfaceManager::UExtInterfaceManager()
+{
+    checkList();
+}
+
+UExtInterface::UExtInterface()
+{
+    uext.addExt(this);
+}
+
 UExtInterfaceManager uext;
 
-#endif /* UNIT_TEST */

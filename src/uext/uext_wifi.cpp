@@ -160,6 +160,8 @@ int wifi_reset(void)
     return res;
 }
 
+static UExtWifi uext_wifi; // local instance, will self register itself
+
 UExtWifi::UExtWifi() {}
 
 void UExtWifi::enable()

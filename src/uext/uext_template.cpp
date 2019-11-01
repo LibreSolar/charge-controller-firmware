@@ -29,7 +29,12 @@
 // Only compile if this UEXT interface is enabled in config.h
 #ifdef UEXT_DUMMY_ENABLED
 
+
+
 #include "uext_template.h"
+
+static UExtDummy uext_dummy; // local instance, will self register itself
+
 /**
  * Constructor, place basic initialization here, if necessary
  */

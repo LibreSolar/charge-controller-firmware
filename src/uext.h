@@ -31,11 +31,12 @@ class UExtInterface
         virtual void process_asap()  {};
         virtual void process_1s() {};
         virtual void enable() {};
-    private:
 
+        UExtInterface();
+    private:
 };
 
-class UExtInterfaceManager: public UExtInterface
+class UExtInterfaceManager
 {
     public:
         /** UEXT interface process function
@@ -57,8 +58,24 @@ class UExtInterfaceManager: public UExtInterface
         */
         virtual void enable();
 
+        /**
+         * Adds an UExtInterface object to the list of managed extensions,
+         * automatically called by UExtInterface objects during construction 
+         */
+        static void addExt(UExtInterface*);
+
+        UExtInterfaceManager();
+
     private:
-        static std::vector<UExtInterface*> interfaces;
+        /**
+         * Stores list of all UExtInterface objects
+         */
+        static std::vector<UExtInterface*>* interfaces;
+
+        /** 
+         * Makes sure there is an internal interfacts vector created, does nothing if it exists 
+         */
+        static void checkList();
 };
 
 extern UExtInterfaceManager uext;
