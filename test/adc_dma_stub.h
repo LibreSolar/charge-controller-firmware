@@ -24,7 +24,6 @@ typedef struct {
     float dcdc_current;
     float load_current;
     float bat_temperature;
-    float mcu_temperature;
     float internal_temperature;
 } adc_values_t;
 

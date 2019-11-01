@@ -50,7 +50,6 @@ void adc_tests()
     adcval.dcdc_current = 3;
     adcval.internal_temperature = 25;
     adcval.load_current = 1;
-    adcval.mcu_temperature = 25;
     adcval.solar_voltage = 30;
     prepare_adc_readings(adcval);
 

@@ -20,11 +20,12 @@
 #include "hardware.h"
 #include "leds.h"
 #include "log.h"
+#include "debug.h"
 
 volatile bool short_circuit = false;
 
 extern LogData log_data;
-extern float mcu_temp;
+extern float internal_temp;
 
 #ifndef UNIT_TEST
 
@@ -97,7 +98,7 @@ static void short_circuit_comp_init()
     COMP2->CSR |= COMP_INPUT_PLUS_IO2;
 
     // select VREFINT divider as negative input
-    COMP2->CSR |= COMP_INPUT_MINUS_VREFINT;
+    COMP2->CSR |= COMP_INPUT_MINUS_1_4VREFINT;
 
     // propagate comparator value to LPTIM input
     COMP2->CSR |= COMP_CSR_COMP2LPTIM1IN1;
@@ -149,19 +150,29 @@ void LoadOutput::switch_set(bool enabled)
 
 #ifdef PIN_LOAD_EN
     DigitalOut load_enable(PIN_LOAD_EN);
-    if (enabled) load_enable = 1;
-    else load_enable = 0;
+    if (enabled) {
+        load_enable = 1;
+    }
+    else {
+        load_enable = 0;
+    }
 #endif
 
 #ifdef PIN_LOAD_DIS
     DigitalOut load_disable(PIN_LOAD_DIS);
-#ifdef PIN_I_LOAD_COMP
-    if (enabled) lptim_init();
-#else
-    if (enabled) load_disable = 0;
-#endif
-    else load_disable = 1;
-    printf("Load enabled = %d\n", enabled);
+    #ifdef PIN_I_LOAD_COMP
+    if (enabled) {
+        lptim_init();
+    }
+    #else
+    if (enabled) {
+        load_disable = 0;
+    }
+    #endif
+    else {
+        load_disable = 1;
+    }
+    print_info("Load enabled = %d\n", enabled);
 #endif
 }
 
@@ -197,9 +208,9 @@ LoadOutput::LoadOutput(PowerPort *pwr_port)
     usb_set(false);
     state = LOAD_STATE_DISABLED;
     usb_state = LOAD_STATE_DISABLED;
-    junction_temperature = 25;
-    overcurrent_recovery_delay = 5*60;
-    lvd_recovery_delay = 60*60;
+    junction_temperature = 25;              // starting point: 25°C
+    overcurrent_recovery_delay = 5*60;      // default: 5 minutes
+    lvd_recovery_delay = 60*60;             // default: 1 hour
 
     // analog comparator to detect short circuits and trigger immediate load switch-off
     short_circuit_comp_init();
@@ -207,22 +218,28 @@ LoadOutput::LoadOutput(PowerPort *pwr_port)
 
 void LoadOutput::usb_state_machine()
 {
+    // We don't have any overcurrent detection mechanism for USB and the buck converter IC should
+    // reduce output power itself in case of failure. Battey overvoltage should also be handled by
+    // the DC/DC up to a certain degree.
+    // So, we don't use above failure states for the USB output. Only low SOC and exceeded
+    // temperature limits force the USB output to be turned off.
     switch (usb_state) {
         case LOAD_STATE_DISABLED:
             if (usb_enable == true) {
-                usb_set(true);
-                usb_state = LOAD_STATE_ON;
+                if (port->pos_current_limit > 0) {
+                    usb_set(true);
+                    usb_state = LOAD_STATE_ON;
+                }
+                else if (state == LOAD_STATE_OFF_LOW_SOC || state == LOAD_STATE_OFF_TEMPERATURE) {
+                    usb_state = state;
+                }
             }
             break;
         case LOAD_STATE_ON:
             // currently still same cut-off SOC limit as the load
-            if (state == LOAD_STATE_OFF_LOW_SOC) {
+            if (state == LOAD_STATE_OFF_LOW_SOC || state == LOAD_STATE_OFF_TEMPERATURE) {
                 usb_set(false);
-                usb_state = LOAD_STATE_OFF_LOW_SOC;
-            }
-            else if (state == LOAD_STATE_OFF_OVERCURRENT) {
-                usb_set(false);
-                usb_state = LOAD_STATE_OFF_OVERCURRENT;
+                usb_state = state;
             }
             else if (usb_enable == false) {
                 usb_set(false);
@@ -230,19 +247,9 @@ void LoadOutput::usb_state_machine()
             }
             break;
         case LOAD_STATE_OFF_LOW_SOC:
-            // currently still same cut-off SOC limit as the load
-            if (state == LOAD_STATE_ON) {
-                if (usb_enable == true) {
-                    usb_set(true);
-                    usb_state = LOAD_STATE_ON;
-                }
-                else {
-                    usb_state = LOAD_STATE_DISABLED;
-                }
-            }
-            break;
-        case LOAD_STATE_OFF_OVERCURRENT:
-            if (state != LOAD_STATE_OFF_OVERCURRENT) {
+        case LOAD_STATE_OFF_TEMPERATURE:
+            if (state == LOAD_STATE_ON || state == LOAD_STATE_DISABLED) {
+                // also go back to normal operation with the USB charging port
                 usb_state = LOAD_STATE_DISABLED;
             }
             break;
@@ -251,7 +258,6 @@ void LoadOutput::usb_state_machine()
 
 void LoadOutput::state_machine()
 {
-    //printf("Load State: %d\n", state);
     switch (state) {
         case LOAD_STATE_DISABLED:
             if (enable == true) {
@@ -265,7 +271,7 @@ void LoadOutput::state_machine()
                     }
                     else {
                         // must be battery over/under temperature then
-                        state = LOAD_STATE_OFF_BAT_TEMP;
+                        state = LOAD_STATE_OFF_TEMPERATURE;
                     }
                 }
             }
@@ -284,19 +290,23 @@ void LoadOutput::state_machine()
                 }
                 else {
                     // must be battery over/under temperature then
-                    state = LOAD_STATE_OFF_BAT_TEMP;
+                    state = LOAD_STATE_OFF_TEMPERATURE;
                 }
             }
             break;
         case LOAD_STATE_OFF_LOW_SOC:
-            // wait at least one hour
-            if (time(NULL) - lvd_timestamp > lvd_recovery_delay) {
+            // wait at least configured time
+            if (time(NULL) - lvd_timestamp > lvd_recovery_delay &&
+                !(log_data.error_flags & (1 << ERR_BAT_UNDERVOLTAGE)))
+            {
                 state = LOAD_STATE_DISABLED; // switch to normal mode again
             }
             break;
         case LOAD_STATE_OFF_OVERCURRENT:
-            // wait some time
+            // wait configured time
             if (time(NULL) - overcurrent_timestamp > overcurrent_recovery_delay) {
+                log_data.error_flags &= ~(1 << ERR_LOAD_OVERCURRENT);
+                log_data.error_flags &= ~(1 << ERR_LOAD_VOLTAGE_DIP);
                 state = LOAD_STATE_DISABLED;   // switch to normal mode again
             }
             break;
@@ -304,6 +314,7 @@ void LoadOutput::state_machine()
             if (port->voltage < (port->sink_voltage_max - 0.5) &&
                 port->voltage < (LOW_SIDE_VOLTAGE_MAX - 0.5))
             {
+                log_data.error_flags &= ~(1 << ERR_LOAD_OVERVOLTAGE);
                 state = LOAD_STATE_DISABLED;   // switch to normal mode again
             }
             break;
@@ -311,7 +322,15 @@ void LoadOutput::state_machine()
             // stay here until the charge controller is reset or load is switched off remotely
             if (enable == false) {
                 short_circuit = false;
+                log_data.error_flags &= ~(1 << ERR_LOAD_SHORT_CIRCUIT);
                 state = LOAD_STATE_DISABLED;   // switch to normal mode again
+            }
+            break;
+        case LOAD_STATE_OFF_TEMPERATURE:
+            if (!(log_data.error_flags & (1U << ERR_INT_OVERTEMP)) &&
+                port->pos_current_limit > 0)
+            {
+                state = LOAD_STATE_DISABLED;
             }
             break;
     }
@@ -323,23 +342,53 @@ void LoadOutput::state_machine()
 void LoadOutput::control()
 {
     if (short_circuit) {
-        state = LOAD_STATE_OFF_SHORT_CIRCUIT;
+        if (state != LOAD_STATE_OFF_SHORT_CIRCUIT) {
+            state = LOAD_STATE_OFF_SHORT_CIRCUIT;
+            log_data.error_flags |= (1 << ERR_LOAD_SHORT_CIRCUIT);
+            print_error("Load short circuit detected\n");
+        }
         return;
     }
 
     // junction temperature calculation model for overcurrent detection
     junction_temperature = junction_temperature + (
-            mcu_temp - junction_temperature +
+            internal_temp - junction_temperature +
             port->current * port->current /
-            (LOAD_CURRENT_MAX * LOAD_CURRENT_MAX) * (MOSFET_MAX_JUNCTION_TEMP - 25)
+            (LOAD_CURRENT_MAX * LOAD_CURRENT_MAX) *
+            (MOSFET_MAX_JUNCTION_TEMP - INTERNAL_MAX_REFERENCE_TEMP)
         ) / (MOSFET_THERMAL_TIME_CONSTANT * CONTROL_FREQUENCY);
 
-    if (junction_temperature > MOSFET_MAX_JUNCTION_TEMP) {
+    if (junction_temperature > MOSFET_MAX_JUNCTION_TEMP
+        || port->current > LOAD_CURRENT_MAX * 2)
+    {
         switch_set(false);
-        usb_set(false);
+        leds_flicker(LED_LOAD);
         state = LOAD_STATE_OFF_OVERCURRENT;
+        log_data.error_flags |= (1 << ERR_LOAD_OVERCURRENT);
+        print_error("Load overcurrent detected\n");
         overcurrent_timestamp = time(NULL);
+        return;
     }
+
+    // internal overtemperature
+    if (log_data.error_flags & (1U << ERR_INT_OVERTEMP)) {
+        switch_set(false);
+        state = LOAD_STATE_OFF_TEMPERATURE;
+        print_error("Device overtemperature detected\n");
+        return;
+    }
+
+    // overcurrent detected because of voltage dip by 25% for around 100ms
+    if (port->voltage < voltage_prev * 0.75 && voltage_prev != 0) {
+        switch_set(false);
+        leds_flicker(LED_LOAD);
+        state = LOAD_STATE_OFF_OVERCURRENT;
+        log_data.error_flags |= (1 << ERR_LOAD_VOLTAGE_DIP);
+        print_error("Load voltage dip detected\n");
+        overcurrent_timestamp = time(NULL);
+        return;
+    }
+    voltage_prev = port->voltage;
 
     static int debounce_counter = 0;
     if (port->voltage > port->sink_voltage_max ||
@@ -348,10 +397,11 @@ void LoadOutput::control()
         debounce_counter++;
         if (debounce_counter > CONTROL_FREQUENCY) {      // waited 1s before setting the flag
             switch_set(false);
-            usb_set(false);
+            print_error("Load overvoltage detected\n");
             state = LOAD_STATE_OFF_OVERVOLTAGE;
             overcurrent_timestamp = time(NULL);
-            log_data.error_flags |= (1 << ERR_BAT_OVERVOLTAGE);
+            log_data.error_flags |= (1 << ERR_LOAD_OVERVOLTAGE);
+            return;
         }
     }
     else {

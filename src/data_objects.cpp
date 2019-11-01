@@ -36,7 +36,7 @@ const char* const firmware_commit = COMMIT_HASH;
 uint32_t device_id = DEVICE_ID;      // from config.h
 
 extern uint32_t timestamp;
-float mcu_temp;
+float internal_temp;
 
 /** Data Objects
  *
@@ -131,7 +131,7 @@ const data_object_t data_objects[] = {
     {0x73, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(load_terminal.current),                   "Load_A"},
     {0x74, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 1, (void*) &(charger.bat_temperature),                 "Bat_degC"},
     {0x75, TS_OUTPUT, TS_READ_ALL, TS_T_BOOL,    1, (void*) &(charger.ext_temp_sensor),                 "BatTempExt"},
-    {0x76, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 1, (void*) &(mcu_temp),                                "MCU_degC"},
+    {0x76, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 1, (void*) &(internal_temp),                           "Int_degC"},
 #if defined(PIN_ADC_TEMP_FETS) && FEATURE_DCDC_CONVERTER
     {0x77, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 1, (void*) &(dcdc.temp_mosfets),                       "Mosfet_degC"},
 #endif

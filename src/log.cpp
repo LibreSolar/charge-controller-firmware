@@ -23,7 +23,7 @@
 #include <math.h>       // for fabs function
 #include <stdio.h>
 
-extern float mcu_temp;
+extern float internal_temp;
 
 //----------------------------------------------------------------------------
 // must be called exactly once per second, otherwise energy calculation gets wrong
@@ -112,7 +112,7 @@ void log_update_min_max_values(LogData *log_data)
         log_data->bat_temp_max = charger.bat_temperature;
     }
 
-    if (mcu_temp > log_data->int_temp_max) {
-        log_data->int_temp_max = mcu_temp;
+    if (internal_temp > log_data->int_temp_max) {
+        log_data->int_temp_max = internal_temp;
     }
 }

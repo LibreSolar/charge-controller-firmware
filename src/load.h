@@ -40,7 +40,7 @@ enum LoadState {
     LOAD_STATE_OFF_OVERCURRENT,     ///< Off to protect charge controller (overrules target setting)
     LOAD_STATE_OFF_OVERVOLTAGE,     ///< Off to protect loads (overrules target setting)
     LOAD_STATE_OFF_SHORT_CIRCUIT,   ///< Off to protect charge controller (overrules target setting)
-    LOAD_STATE_OFF_BAT_TEMP         ///< Off because of battery over/under-temperature
+    LOAD_STATE_OFF_TEMPERATURE      ///< Off because of battery or charge controller temperature
 };
 
 /** Load output type
@@ -85,6 +85,8 @@ public:
 
     PowerPort *port;            ///< Pointer to DC bus containting actual voltage and current
                                 ///< measurement of (external) load output terminal
+
+    float voltage_prev;         ///< voltage from previous call of control function
 
     time_t overcurrent_timestamp;       ///< Time when last overcurrent event occured
     int overcurrent_recovery_delay;     ///< Seconds before we attempt to re-enable the load
