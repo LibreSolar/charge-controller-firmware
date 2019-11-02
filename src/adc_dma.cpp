@@ -176,11 +176,11 @@ void update_measurements()
         (TSENSE_CAL2 - TSENSE_CAL1) * (adcval - TSENSE_CAL1) + TSENSE_CAL1_VALUE;
 
     if (dev_stat.internal_temp > 80) {
-        dev_stat.error_flags |= 1U << ERR_INT_OVERTEMP;
+        dev_stat.set_error(ERR_INT_OVERTEMP);
     }
-    else if (dev_stat.internal_temp < 70 && (dev_stat.error_flags & (1U << ERR_INT_OVERTEMP))) {
+    else if (dev_stat.internal_temp < 70 && (dev_stat.has_error(ERR_INT_OVERTEMP))) {
         // remove error flag with hysteresis of 10°C
-        dev_stat.error_flags &= ~(1U << ERR_INT_OVERTEMP);
+        dev_stat.clear_error(ERR_INT_OVERTEMP);
     }
     // else: keep previous setting
 }

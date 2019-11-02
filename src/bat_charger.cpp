@@ -277,7 +277,7 @@ void Charger::discharge_control(BatConf *bat_conf)
             // low state of charge
             port->neg_current_limit = 0;
             num_deep_discharges++;
-            dev_stat.error_flags |= (1 << ERR_BAT_UNDERVOLTAGE);
+            dev_stat.set_error(ERR_BAT_UNDERVOLTAGE);
 
             if (usable_capacity < 0.1) {
                 // reset to measured value if discharged the first time
@@ -297,11 +297,11 @@ void Charger::discharge_control(BatConf *bat_conf)
         }
         else if (bat_temperature > bat_conf->discharge_temp_max) {
             port->neg_current_limit = 0;
-            dev_stat.error_flags |= (1 << ERR_BAT_DIS_OVERTEMP);
+            dev_stat.set_error(ERR_BAT_DIS_OVERTEMP);
         }
         else if (bat_temperature < bat_conf->discharge_temp_min) {
             port->neg_current_limit = 0;
-            dev_stat.error_flags |= (1 << ERR_BAT_DIS_UNDERTEMP);
+            dev_stat.set_error(ERR_BAT_DIS_UNDERTEMP);
         }
     }
     else {
@@ -316,9 +316,9 @@ void Charger::discharge_control(BatConf *bat_conf)
             port->neg_current_limit = -bat_conf->discharge_current_max;
 
             // delete all discharge error flags
-            dev_stat.error_flags &= ~(1 << ERR_BAT_DIS_OVERTEMP);
-            dev_stat.error_flags &= ~(1 << ERR_BAT_DIS_UNDERTEMP);
-            dev_stat.error_flags &= ~(1 << ERR_BAT_UNDERVOLTAGE);
+            dev_stat.clear_error(ERR_BAT_DIS_OVERTEMP);
+            dev_stat.clear_error(ERR_BAT_DIS_UNDERTEMP);
+            dev_stat.clear_error(ERR_BAT_UNDERVOLTAGE);
         }
     }
 }
@@ -328,12 +328,12 @@ void Charger::charge_control(BatConf *bat_conf)
     // check battery temperature for charging direction
     if (bat_temperature > bat_conf->charge_temp_max) {
         port->pos_current_limit = 0;
-        dev_stat.error_flags |= (1 << ERR_BAT_CHG_OVERTEMP);
+        dev_stat.set_error(ERR_BAT_CHG_OVERTEMP);
         enter_state(CHG_STATE_IDLE);
     }
     else if (bat_temperature < bat_conf->charge_temp_min) {
         port->pos_current_limit = 0;
-        dev_stat.error_flags |= (1 << ERR_BAT_CHG_UNDERTEMP);
+        dev_stat.set_error(ERR_BAT_CHG_UNDERTEMP);
         enter_state(CHG_STATE_IDLE);
     }
 
@@ -349,8 +349,8 @@ void Charger::charge_control(BatConf *bat_conf)
                     bat_conf->temperature_compensation * (bat_temperature - 25));
                 port->pos_current_limit = bat_conf->charge_current_max;
                 full = false;
-                dev_stat.error_flags &= ~(1 << ERR_BAT_CHG_OVERTEMP);
-                dev_stat.error_flags &= ~(1 << ERR_BAT_CHG_UNDERTEMP);
+                dev_stat.clear_error(ERR_BAT_CHG_OVERTEMP);
+                dev_stat.clear_error(ERR_BAT_CHG_UNDERTEMP);
                 enter_state(CHG_STATE_BULK);
             }
             break;
