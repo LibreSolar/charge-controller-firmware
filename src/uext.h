@@ -62,7 +62,7 @@ class UExtInterfaceManager
          * Adds an UExtInterface object to the list of managed extensions,
          * automatically called by UExtInterface objects during construction 
          */
-        static void addExt(UExtInterface*);
+        static void add_ext(UExtInterface*);
 
         UExtInterfaceManager();
 
@@ -75,7 +75,7 @@ class UExtInterfaceManager
         /** 
          * Makes sure there is an internal interfacts vector created, does nothing if it exists 
          */
-        static void checkList();
+        static void check_list();
 };
 
 extern UExtInterfaceManager uext;

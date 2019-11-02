@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef UExt_Oled_H
-#define UExt_Oled_H
+#ifndef UEXT_OLED_H
+#define UEXT_OLED_H
 
 #include "config.h"
 

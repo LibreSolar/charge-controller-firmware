@@ -26,49 +26,42 @@ std::vector<UExtInterface*>* UExtInterfaceManager::interfaces;
 // run the respective function on all objects in the "devices" list
 // use the c++11 lambda expressions here for the for_each loop, keeps things compact
 
-void UExtInterfaceManager::process_asap()
-{
+void UExtInterfaceManager::process_asap() {
     for_each(std::begin(*interfaces),std::end(*interfaces), [](UExtInterface* tsif) {
         tsif->process_asap();
     });
 }
 
-void UExtInterfaceManager::enable()
-{
+void UExtInterfaceManager::enable() {
     for_each(std::begin(*interfaces),std::end(*interfaces), [](UExtInterface* tsif) {
         tsif->enable();
     });
 }
 
-void UExtInterfaceManager::process_1s()
-{
+void UExtInterfaceManager::process_1s() {
     for_each(std::begin(*interfaces),std::end(*interfaces), [](UExtInterface* tsif) {
         tsif->process_1s();
     });
 }
 
-void UExtInterfaceManager::checkList()
-{
+void UExtInterfaceManager::check_list() {
     if (UExtInterfaceManager::interfaces == NULL)
     {
         UExtInterfaceManager::interfaces = new std::vector<UExtInterface*>;
     }
 }
 
-void UExtInterfaceManager::addExt(UExtInterface* member)
-{
-    checkList();
+void UExtInterfaceManager::add_ext(UExtInterface* member) {
+    check_list();
     interfaces->push_back(member);
 }
 
-UExtInterfaceManager::UExtInterfaceManager()
-{
-    checkList();
+UExtInterfaceManager::UExtInterfaceManager() {
+    check_list();
 }
 
-UExtInterface::UExtInterface()
-{
-    uext.addExt(this);
+UExtInterface::UExtInterface() {
+    uext.add_ext(this);
 }
 
 UExtInterfaceManager uext;

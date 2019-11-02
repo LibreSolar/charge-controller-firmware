@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef UExt_Wifi_H
-#define UExt_Wifi_H
+#ifndef UEXT_WIFI_H
+#define UEXT_WIFI_H
 
 #include "config.h"
 

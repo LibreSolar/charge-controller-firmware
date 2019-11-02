@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef UExt_Template_H
-#define UExt_Template_H
+#ifndef UEX_TEMPLATE_H
+#define UEXT_TEMPLATE_H
 
 #include "config.h"
 

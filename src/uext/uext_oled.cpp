@@ -51,18 +51,16 @@ Adafruit_SSD1306_I2c oled(i2c, PIN_UEXT_SSEL, 0x78, 64, 128);
 
 UExtOled::UExtOled() {}
 
-void UExtOled::enable()
-{
+void UExtOled::enable() {
 #ifdef PIN_UEXT_DIS
     DigitalOut uext_dis(PIN_UEXT_DIS);
     uext_dis = 0;
 #endif
 }
 
-void UExtOled::process_asap() {;}
+void UExtOled::process_asap() {}
 
-void UExtOled::process_1s()
-{
+void UExtOled::process_1s() {
     oled.clearDisplay();
 
     oled.drawBitmap(6, 0, bmp_pv_panel, 16, 16, 1);

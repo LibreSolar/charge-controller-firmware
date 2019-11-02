@@ -44,22 +44,19 @@ UExtDummy::UExtDummy() {}
 /**
  * Enable operation, place start of use code here, if necessary
  */
-void UExtDummy::enable()
-{
- #ifdef PIN_UEXT_DIS
+void UExtDummy::enable() {
+#ifdef PIN_UEXT_DIS
     DigitalOut uext_dis(PIN_UEXT_DIS);
     uext_dis = 0;
- #endif
+#endif
     // add you init functions here
 }
 
-void UExtDummy::process_asap(void)
-{
+void UExtDummy::process_asap(void) {
     // add functions to be called as soon as possible during each loop in main function
 }
 
-void UExtDummy::process_1s(void)
-{
+void UExtDummy::process_1s(void) {
     // add functions to be called every second here
 }
 
