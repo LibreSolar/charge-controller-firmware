@@ -40,7 +40,7 @@ void disabled_to_off_bat_temp_if_error_flag_set()
     port.pos_current_limit = 0;
 
     // overtemp
-    dev_stat.dev_stat. = 0;
+    dev_stat.error_flags = 0;
     dev_stat.set_error(ERR_BAT_CHG_OVERTEMP);
     load.state_machine();
     TEST_ASSERT_EQUAL(LOAD_STATE_OFF_TEMPERATURE, load.state);
