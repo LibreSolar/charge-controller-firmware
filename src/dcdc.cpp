@@ -199,7 +199,7 @@ void Dcdc::control()
             // what to do... (e.g. call dcdc_self_destruction)
             current_debounce_counter++;
             if (current_debounce_counter > CONTROL_FREQUENCY) {      // waited 1s before setting the flag
-                dev_stat.error_flags |= (1 << ERR_DCDC_HS_MOSFET_SHORT);
+                dev_stat.set_error(ERR_DCDC_HS_MOSFET_SHORT);
             }
         }
         else {  // hardware is fine
