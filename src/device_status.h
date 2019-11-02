@@ -90,6 +90,10 @@ public:
     // instantaneous device-level data
     uint32_t error_flags;       ///< Currently detected errors
     float internal_temp;        ///< Internal temperature (measured in MCU)
+
+    void set_error(ErrorFlag e) { error_flags |= (1U << e); }
+    void clear_error(ErrorFlag e) { error_flags &= ~(1U << e); }
+    bool has_error(ErrorFlag e) { return (error_flags & (1U << e)) != 0; }
 };
 
 #endif /* DEVICE_STATUS_H */
