@@ -5,7 +5,34 @@
 
 #include "main.h"
 
-static adc_values_t adcval;
+static AdcValues adcval;
+
+extern uint32_t adc_filtered[NUM_ADC_CH];
+
+// testing only for 2 values
+void check_filtering()
+{
+    // reset values
+    adc_filtered[ADC_POS_VREF_MCU] = 0;
+    adc_filtered[ADC_POS_V_SOLAR] = 0;
+
+    // collect 1000 samples to update filtered values
+    for (int s = 0; s < 1000; s++) {
+        for (int i = 0; i < NUM_ADC_CH; i++) {
+            adc_update_value(i);
+        }
+    }
+
+    uint32_t adc_filtered_bak[NUM_ADC_CH];
+    adc_filtered_bak[ADC_POS_VREF_MCU] = adc_filtered[ADC_POS_VREF_MCU];
+    adc_filtered_bak[ADC_POS_V_SOLAR] = adc_filtered[ADC_POS_V_SOLAR];
+
+    // overwrite filtered values
+    prepare_adc_filtered();
+
+    TEST_ASSERT_EQUAL(adc_filtered[ADC_POS_VREF_MCU], adc_filtered_bak[ADC_POS_VREF_MCU]);
+    TEST_ASSERT_EQUAL(adc_filtered[ADC_POS_V_SOLAR], adc_filtered_bak[ADC_POS_V_SOLAR]);
+}
 
 void check_solar_terminal_readings()
 {
@@ -53,10 +80,12 @@ void adc_tests()
     adcval.solar_voltage = 30;
     prepare_adc_readings(adcval);
 
+    UNITY_BEGIN();
+
+    RUN_TEST(check_filtering);
+
     // call original update_measurements function
     update_measurements();
-
-    UNITY_BEGIN();
 
     RUN_TEST(check_solar_terminal_readings);
     RUN_TEST(check_bat_terminal_readings);

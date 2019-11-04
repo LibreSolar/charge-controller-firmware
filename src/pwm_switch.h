@@ -41,11 +41,17 @@ public:
      */
     void control();
 
-    /** Read the on/off status of the PWM switch
+    /** Read the general on/off status of PWM switching
      *
      * @returns true if on
      */
     bool active();
+
+    /** Read the current high or low state of the PWM signal
+     *
+     * @returns true if high, false if low
+     */
+    bool signal_high();
 
     /** Read the currently set duty cycle
      *

@@ -108,6 +108,7 @@ void dev_stat_new_bat_temp_max()
 
 void dev_stat_new_int_temp_max()
 {
+    dev_stat.int_temp_max = 20;
     dev_stat.internal_temp = 22;
     dev_stat.update_min_max_values();
     TEST_ASSERT_EQUAL(22, dev_stat.int_temp_max);

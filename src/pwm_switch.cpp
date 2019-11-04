@@ -108,6 +108,11 @@ void pwm_signal_stop()
     _pwm_active = false;
 }
 
+bool pwm_signal_high()
+{
+    return (GPIOB->IDR & GPIO_PIN_1);
+}
+
 #else
 
 // dummy functions for unit tests
@@ -117,12 +122,18 @@ void pwm_signal_duty_cycle_step(int delta) {;}
 void pwm_signal_init_registers(int freq_Hz) {;}
 void pwm_signal_start(float pwm_duty) {;}
 void pwm_signal_stop() {;}
+bool pwm_signal_high() { return false; }
 
 #endif
 
 bool PwmSwitch::active()
 {
     return _pwm_active;
+}
+
+bool PwmSwitch::signal_high()
+{
+    return pwm_signal_high();
 }
 
 PwmSwitch::PwmSwitch(PowerPort *pwm_terminal, PowerPort *pwm_port_int)

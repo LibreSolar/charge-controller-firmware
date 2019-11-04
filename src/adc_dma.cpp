@@ -76,6 +76,27 @@ void calibrate_current_sensors()
     load_current_offset = -(float)(((adc_filtered[ADC_POS_I_LOAD] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) * ADC_GAIN_I_LOAD / 1000.0;
 }
 
+void adc_update_value(unsigned int pos)
+{
+    // low pass filter with filter constant c = 1/16
+    // y(n) = c * x(n) + (c - 1) * y(n-1)
+
+#if FEATURE_PWM_SWITCH == 1
+    if (pos == ADC_POS_V_SOLAR || pos == ADC_POS_I_SOLAR) {
+        // only read input voltage and current when switch is on or permanently off
+        if (pwm_switch.signal_high() || pwm_switch.active() == false) {
+            adc_filtered[pos] += (uint32_t)adc_readings[pos] - (adc_filtered[pos] >> ADC_FILTER_CONST);
+        }
+    }
+    else
+#endif
+    {
+        // adc_readings: 12-bit ADC values left-aligned in uint16_t
+        adc_filtered[pos] += (uint32_t)adc_readings[pos] - (adc_filtered[pos] >> ADC_FILTER_CONST);
+    }
+}
+
+
 //----------------------------------------------------------------------------
 void update_measurements()
 {
@@ -231,26 +252,9 @@ extern "C" void DMA1_Channel1_IRQHandler(void)
 {
     if ((DMA1->ISR & DMA_ISR_TCIF1) != 0) // Test if transfer completed on DMA channel 1
     {
-        // low pass filter with filter constant c = 1/16
-        // y(n) = c * x(n) + (c - 1) * y(n-1)
-#ifdef CHARGER_TYPE_PWM
         for (unsigned int i = 0; i < NUM_ADC_CH; i++) {
-            if (i == ADC_POS_V_SOLAR || i == ADC_POS_I_SOLAR) {
-                // only read input voltage and current when switch is on or permanently off
-                if (GPIOB->IDR & GPIO_PIN_1 || pwm_switch_enabled() == false) {
-                    adc_filtered[i] += (uint32_t)adc_readings[i] - (adc_filtered[i] >> ADC_FILTER_CONST);
-                }
-            }
-            else {
-                adc_filtered[i] += (uint32_t)adc_readings[i] - (adc_filtered[i] >> ADC_FILTER_CONST);
-            }
+            adc_update_value(i);
         }
-#else
-        for (unsigned int i = 0; i < NUM_ADC_CH; i++) {
-            // adc_readings: 12-bit ADC values left-aligned in uint16_t
-            adc_filtered[i] += (uint32_t)adc_readings[i] - (adc_filtered[i] >> ADC_FILTER_CONST);
-        }
-#endif
     }
     DMA1->IFCR |= 0x0FFFFFFF;       // clear all interrupt registers
 }

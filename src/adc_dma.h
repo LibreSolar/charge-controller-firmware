@@ -50,4 +50,8 @@ void adc_setup(void);
  */
 void dma_setup(void);
 
+/** Read, filter and check raw ADC readings stored by DMA controller
+ */
+void adc_update_value(unsigned int pos);
+
 #endif /* ADC_DMA */
