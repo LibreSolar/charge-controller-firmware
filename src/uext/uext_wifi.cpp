@@ -1,10 +1,11 @@
 
 #ifndef UNIT_TEST
 
-#include "uext.h"
 #include "config.h"
 
 #ifdef WIFI_ENABLED
+
+#include "uext/uext_wifi.h"
 
 #include "load.h"
 #include "thingset.h"
@@ -159,18 +160,20 @@ int wifi_reset(void)
     return res;
 }
 
-void uext_init()
-{
+static UExtWifi uext_wifi; // local instance, will self register itself
+
+UExtWifi::UExtWifi() {}
+
+void UExtWifi::enable() {
 #ifdef PIN_UEXT_DIS
     DigitalOut uext_dis(PIN_UEXT_DIS);
     uext_dis = 0;
 #endif
 }
 
-void uext_process_asap(void) {;}
+void UExtWifi::process_asap(void) {}
 
-void uext_process_1s()
-{
+void UExtWifi::process_1s() {
     static WifiState state = STATE_WIFI_RESET;
     static int error_counter = 0;
 

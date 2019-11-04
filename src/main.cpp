@@ -116,7 +116,7 @@ int main()
     // Communication interfaces
     ts_interfaces.enable();
 
-    uext_init();
+    uext.enable();
     init_watchdog(10);      // 10s should be enough for communication ports
 
     solar_terminal.init_solar();
@@ -146,7 +146,7 @@ int main()
     while (1) {
 
         ts_interfaces.process_asap();
-        uext_process_asap();
+        uext.process_asap();
 
         time_t now = timestamp;
         if (now >= last_call + 1 || now < last_call) {   // called once per second (or slower if blocking wait occured somewhere)
@@ -170,7 +170,7 @@ int main()
             leds_update_1s();
             leds_update_soc(charger.soc, load.state == LOAD_STATE_OFF_LOW_SOC);
 
-            uext_process_1s();
+            uext.process_1s();
             ts_interfaces.process_1s();
 
             last_call = now;

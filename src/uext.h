@@ -17,29 +17,67 @@
 #ifndef UEXT_H
 #define UEXT_H
 
+#include <vector>
+
 /** @file
  *
  * @brief
  * Communication interfaces connected to UEXT port
  */
 
-/* UEXT interface initialization
- *
- * This function is called only once at startup.
- */
-void uext_init();
+class UExtInterface
+{
+    public:
+        virtual void process_asap()  {};
+        virtual void process_1s() {};
+        virtual void enable() {};
 
-/** UEXT interface process function
- *
- * This function is called in each main loop, as soon as all other tasks finished.
- */
-void uext_process_asap();
+        UExtInterface();
+    private:
+};
 
-/** UEXT interface process function
- *
- * This function is called every second, if no other task was blocking for a longer time.
- * It should be used for state machines, etc.
- */
-void uext_process_1s();
+class UExtInterfaceManager
+{
+    public:
+        /** UEXT interface process function
+         *
+         * This function is called in each main loop, as soon as all other tasks finished.
+         */
+        virtual void process_asap();
+
+        /** UEXT interface process function
+         *
+         * This function is called every second, if no other task was blocking for a longer time.
+         * It should be used for state machines, etc.
+         */
+        virtual void process_1s();
+
+        /* UEXT interface initialization
+        *
+        * This function is called only once at startup.
+        */
+        virtual void enable();
+
+        /**
+         * Adds an UExtInterface object to the list of managed extensions,
+         * automatically called by UExtInterface objects during construction 
+         */
+        static void add_ext(UExtInterface*);
+
+        UExtInterfaceManager();
+
+    private:
+        /**
+         * Stores list of all UExtInterface objects
+         */
+        static std::vector<UExtInterface*>* interfaces;
+
+        /** 
+         * Makes sure there is an internal interfacts vector created, does nothing if it exists 
+         */
+        static void check_list();
+};
+
+extern UExtInterfaceManager uext;
 
 #endif /* UEXT_H */
