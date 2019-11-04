@@ -28,6 +28,17 @@
 
 #define ADC_FILTER_CONST 5          // filter multiplier = 1/(2^ADC_FILTER_CONST)
 
+/** Struct to definie upper and lower limit alerts for any ADC channel
+ */
+typedef struct {
+    void *callback = NULL;                  ///< Function to be called when limits are exceeded
+    uint16_t upper_limit = UINT16_MAX;      ///< ADC reading for upper limit
+    uint16_t lower_limit = 0;               ///< ADC reading for lower limit
+    uint32_t err_flag_upper = 0;            ///< Error flag to raise at upper limit
+    uint32_t err_flag_lower = 0;            ///< Error flag to raise at lower limit
+    int debounce_counter;                   ///< Can be used to prevent triggering at fist occurence
+} AdcAlert;
+
 /** Sets offset to actual measured value, i.e. sets zero current point.
  *
  * All input/output switches and consumers should be switched off before calling this function
@@ -53,5 +64,9 @@ void dma_setup(void);
 /** Read, filter and check raw ADC readings stored by DMA controller
  */
 void adc_update_value(unsigned int pos);
+
+/** Set limits where an alert should be triggered after reading the ADC values
+ */
+void adc_set_alerts();
 
 #endif /* ADC_DMA */

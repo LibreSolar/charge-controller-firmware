@@ -209,6 +209,12 @@ void PwmSwitch::control()
     }
 }
 
+void PwmSwitch::emergency_stop()
+{
+    pwm_signal_stop();
+    off_timestamp = time(NULL);
+}
+
 float PwmSwitch::get_duty_cycle()
 {
     return pwm_signal_get_duty_cycle();

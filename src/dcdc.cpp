@@ -137,6 +137,7 @@ int Dcdc::check_start_conditions()
         hvs->voltage > hs_voltage_max ||   // also critical for buck mode because of ringing
         lvs->voltage > ls_voltage_max ||
         lvs->voltage < ls_voltage_min ||
+        dev_stat.has_error(ERR_BAT_UNDERVOLTAGE | ERR_BAT_OVERVOLTAGE) ||
         time(NULL) < (off_timestamp + restart_interval))
     {
         return 0;       // no energy transfer allowed
@@ -267,6 +268,13 @@ void Dcdc::test()
             startup_delay_counter++;
         }
     }
+}
+
+void Dcdc::emergency_stop()
+{
+    half_bridge_stop();
+    state = DCDC_STATE_OFF;
+    off_timestamp = time(NULL);
 }
 
 void Dcdc::self_destruction()

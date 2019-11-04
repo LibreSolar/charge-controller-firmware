@@ -8,6 +8,7 @@
 static AdcValues adcval;
 
 extern uint32_t adc_filtered[NUM_ADC_CH];
+extern AdcAlert adc_alerts[NUM_ADC_CH];
 
 // testing only for 2 values
 void check_filtering()
@@ -65,6 +66,65 @@ void check_temperature_readings()
     TEST_ASSERT_EQUAL_FLOAT(adcval.bat_temperature, round(charger.bat_temperature * 10) / 10);
 }
 
+void adc_alert_undervoltage_triggering()
+{
+    dev_stat.clear_error(ERR_ANY_ERROR);
+    battery_conf_init(&bat_conf, BAT_TYPE_LFP, 4, 100);
+    adc_set_alerts();
+    prepare_adc_filtered();
+    adc_update_value(ADC_POS_V_BAT);
+
+    // undervoltage test
+    adcval.battery_voltage = bat_conf.voltage_absolute_min - 0.1;
+    prepare_adc_readings(adcval);
+    adc_update_value(ADC_POS_V_BAT);
+    TEST_ASSERT_EQUAL(false, dev_stat.has_error(ERR_BAT_UNDERVOLTAGE));
+    adc_update_value(ADC_POS_V_BAT);
+    TEST_ASSERT_EQUAL(true, dev_stat.has_error(ERR_BAT_UNDERVOLTAGE));
+    TEST_ASSERT_EQUAL(false, pwm_switch.active());
+    TEST_ASSERT_EQUAL(DCDC_STATE_OFF, dcdc.state);
+    TEST_ASSERT_EQUAL(LOAD_STATE_OFF_SHORT_CIRCUIT, load.state);
+
+    // reset values
+    adcval.battery_voltage = 13;
+    prepare_adc_readings(adcval);
+    prepare_adc_filtered();
+    update_measurements();
+
+    charger.discharge_control(&bat_conf);
+    TEST_ASSERT_EQUAL(false, dev_stat.has_error(ERR_BAT_UNDERVOLTAGE));
+}
+
+void adc_alert_overvoltage_triggering()
+{
+    dev_stat.clear_error(ERR_ANY_ERROR);
+    battery_conf_init(&bat_conf, BAT_TYPE_LFP, 4, 100);
+    adc_set_alerts();
+    prepare_adc_filtered();
+    adc_update_value(ADC_POS_V_BAT);
+
+    // overvoltage test
+    adcval.battery_voltage = bat_conf.voltage_absolute_max + 0.1;
+    prepare_adc_readings(adcval);
+    adc_update_value(ADC_POS_V_BAT);
+    TEST_ASSERT_EQUAL(false, dev_stat.has_error(ERR_BAT_OVERVOLTAGE));
+    adc_update_value(ADC_POS_V_BAT);
+    TEST_ASSERT_EQUAL(true, dev_stat.has_error(ERR_BAT_OVERVOLTAGE));
+    TEST_ASSERT_EQUAL(false, pwm_switch.active());
+    TEST_ASSERT_EQUAL(DCDC_STATE_OFF, dcdc.state);
+    TEST_ASSERT_EQUAL(LOAD_STATE_OFF_OVERVOLTAGE, load.state);
+
+    // reset values
+    adcval.battery_voltage = 12;
+    prepare_adc_readings(adcval);
+    prepare_adc_filtered();
+    update_measurements();
+
+    charger.time_state_changed = time(NULL) - bat_conf.time_limit_recharge - 1;
+    charger.charge_control(&bat_conf);
+    TEST_ASSERT_EQUAL(false, dev_stat.has_error(ERR_BAT_OVERVOLTAGE));
+}
+
 /** ADC conversion test
  *
  * Purpose: Check if raw data from 2 voltage and 2 current measurements are converted
@@ -93,6 +153,9 @@ void adc_tests()
     RUN_TEST(check_lv_bus_int_readings);
 
     //RUN_TEST(check_temperature_readings);     // TODO
+
+    RUN_TEST(adc_alert_undervoltage_triggering);
+    RUN_TEST(adc_alert_overvoltage_triggering);
 
     UNITY_END();
 }

@@ -165,6 +165,8 @@ int main()
 
             load.state_machine();
 
+            adc_set_alerts();       // update regularly to cover changed configurations
+
             eeprom_update();
 
             leds_update_1s();

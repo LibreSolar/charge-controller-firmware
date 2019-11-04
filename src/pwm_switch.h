@@ -41,6 +41,12 @@ public:
      */
     void control();
 
+    /** Fast emergency stop function
+     *
+     * May be called from an ISR which detected overvoltage / overcurrent conditions
+     */
+    void emergency_stop();
+
     /** Read the general on/off status of PWM switching
      *
      * @returns true if on
