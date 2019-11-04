@@ -25,7 +25,7 @@ void disabled_to_off_low_soc_if_error_flag_set()
     LoadOutput load(&port);
     port.init_load(14.6);
     port.pos_current_limit = 0;
-    dev_stat.error_flags = 0;
+    dev_stat.clear_error(ERR_ANY_ERROR);
     dev_stat.set_error(ERR_BAT_UNDERVOLTAGE);
     load.state_machine();
     TEST_ASSERT_EQUAL(LOAD_STATE_OFF_LOW_SOC, load.state);
@@ -40,7 +40,7 @@ void disabled_to_off_bat_temp_if_error_flag_set()
     port.pos_current_limit = 0;
 
     // overtemp
-    dev_stat.error_flags = 0;
+    dev_stat.clear_error(ERR_ANY_ERROR);
     dev_stat.set_error(ERR_BAT_CHG_OVERTEMP);
     load.state_machine();
     TEST_ASSERT_EQUAL(LOAD_STATE_OFF_TEMPERATURE, load.state);
@@ -48,7 +48,7 @@ void disabled_to_off_bat_temp_if_error_flag_set()
 
     // undertemp
     load.state = LOAD_STATE_DISABLED;
-    dev_stat.error_flags = 0; 
+    dev_stat.clear_error(ERR_ANY_ERROR); 
     dev_stat.set_error(ERR_BAT_CHG_UNDERTEMP);
     load.state_machine();
     TEST_ASSERT_EQUAL(LOAD_STATE_OFF_TEMPERATURE, load.state);
@@ -149,7 +149,7 @@ void on_to_off_low_soc_if_error_flag_set()
     load.state = LOAD_STATE_ON;
     load.usb_state = LOAD_STATE_ON;
     port.pos_current_limit = 0;
-    dev_stat.error_flags = 0; 
+    dev_stat.clear_error(ERR_ANY_ERROR); 
     dev_stat.set_error(ERR_BAT_UNDERVOLTAGE);
 
     load.state_machine();
@@ -166,14 +166,14 @@ void on_to_off_bat_temp_if_error_flag_set()
 
     load.state = LOAD_STATE_ON;
     load.usb_state = LOAD_STATE_ON;
-    dev_stat.error_flags = 0; 
+    dev_stat.clear_error(ERR_ANY_ERROR); 
     dev_stat.set_error(ERR_BAT_DIS_OVERTEMP);
     load.state_machine();
     TEST_ASSERT_EQUAL(LOAD_STATE_OFF_TEMPERATURE, load.state);
     TEST_ASSERT_EQUAL(LOAD_STATE_OFF_TEMPERATURE, load.usb_state);
 
     load.state = LOAD_STATE_ON;
-    dev_stat.error_flags = 0;
+    dev_stat.clear_error(ERR_ANY_ERROR);
     dev_stat.set_error(ERR_BAT_DIS_UNDERTEMP);
     load.state_machine();
     TEST_ASSERT_EQUAL(LOAD_STATE_OFF_TEMPERATURE, load.state);
@@ -212,7 +212,7 @@ void control_off_overvoltage()
     port.voltage = 14.7;
     load.state = LOAD_STATE_ON;
     load.voltage_prev = port.voltage;
-    dev_stat.error_flags = 0;
+    dev_stat.clear_error(ERR_ANY_ERROR);
 
     // increase debounce counter to 1 before limit
     for (int i = 0; i < CONTROL_FREQUENCY; i++) {
@@ -222,7 +222,7 @@ void control_off_overvoltage()
     TEST_ASSERT_EQUAL(LOAD_STATE_ON, load.state);
     load.control();     // once more
     TEST_ASSERT_EQUAL(LOAD_STATE_OFF_OVERVOLTAGE, load.state);
-    TEST_ASSERT_EQUAL(1 << ERR_LOAD_OVERVOLTAGE, dev_stat.error_flags);
+    TEST_ASSERT_EQUAL(ERR_LOAD_OVERVOLTAGE, dev_stat.error_flags);
 }
 
 void control_off_overcurrent()
@@ -237,7 +237,7 @@ void control_off_overcurrent()
     load.voltage_prev = port.voltage;
     dev_stat.internal_temp = 25;
     load.junction_temperature = 25;
-    dev_stat.error_flags = 0;
+    dev_stat.clear_error(ERR_ANY_ERROR);
 
     load.control();
     TEST_ASSERT_EQUAL(LOAD_STATE_ON, load.state);
@@ -248,7 +248,7 @@ void control_off_overcurrent()
         load.control();
     }
     TEST_ASSERT_EQUAL(LOAD_STATE_OFF_OVERCURRENT, load.state);
-    TEST_ASSERT_EQUAL(1 << ERR_LOAD_OVERCURRENT, dev_stat.error_flags);
+    TEST_ASSERT_EQUAL(ERR_LOAD_OVERCURRENT, dev_stat.error_flags);
 }
 
 void control_off_voltage_dip()
@@ -260,7 +260,7 @@ void control_off_voltage_dip()
     load.state = LOAD_STATE_ON;
     load.junction_temperature = 25;
     dev_stat.internal_temp = 25;
-    dev_stat.error_flags = 0;
+    dev_stat.clear_error(ERR_ANY_ERROR);
 
     port.voltage = 14;
     load.voltage_prev = port.voltage;
@@ -270,7 +270,7 @@ void control_off_voltage_dip()
     port.voltage = 14 * 0.74;
     load.control();
     TEST_ASSERT_EQUAL(LOAD_STATE_OFF_OVERCURRENT, load.state);
-    TEST_ASSERT_EQUAL(1 << ERR_LOAD_VOLTAGE_DIP, dev_stat.error_flags);
+    TEST_ASSERT_EQUAL(ERR_LOAD_VOLTAGE_DIP, dev_stat.error_flags);
 }
 
 void control_off_temperature()
@@ -283,7 +283,7 @@ void control_off_temperature()
     load.state = LOAD_STATE_ON;
     dev_stat.internal_temp = 25;
     load.junction_temperature = 25;
-    dev_stat.error_flags = 0;
+    dev_stat.clear_error(ERR_ANY_ERROR);
     dev_stat.set_error(ERR_INT_OVERTEMP);
 
     load.control();

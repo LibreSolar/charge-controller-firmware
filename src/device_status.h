@@ -31,23 +31,29 @@
 #include <stdint.h>
 
 /** Error Flags
+ * 
+ * When adding new flags, please make sure to use only up to 32 errors
+ * Each enum must represent a unique power of 2 number
  */
 enum ErrorFlag {
-    ERR_BAT_UNDERVOLTAGE = 0,       ///< Battery voltage too low
-    ERR_BAT_OVERVOLTAGE = 1,        ///< Battery voltage too high
-    ERR_BAT_DIS_OVERCURRENT = 2,    ///< Battery discharge overcurrent
-    ERR_BAT_CHG_OVERCURRENT = 3,    ///< Battery charge overcurrent
-    ERR_BAT_DIS_UNDERTEMP = 4,      ///< Temperature below discharge minimum limit
-    ERR_BAT_DIS_OVERTEMP = 5,       ///< Temperature above discharge maximum limit
-    ERR_BAT_CHG_UNDERTEMP = 6,      ///< Temperature below charge minimum limit
-    ERR_BAT_CHG_OVERTEMP = 7,       ///< Temperature above charge maximum limit
-    ERR_LOAD_OVERVOLTAGE = 8,       ///< To high voltage for load so that it was switched off
-    ERR_LOAD_OVERCURRENT = 9,       ///< Long-term overcurrent of load port
-    ERR_LOAD_SHORT_CIRCUIT = 10,    ///< Short circuit detected at load port
-    ERR_LOAD_VOLTAGE_DIP = 11,      ///< Overcurrent identified via voltage dip (may be because of
+    ERR_BAT_UNDERVOLTAGE = 1U << 0 ,       ///< Battery voltage too low
+    ERR_BAT_OVERVOLTAGE = 1U << 1,        ///< Battery voltage too high
+    ERR_BAT_DIS_OVERCURRENT = 1U << 2,    ///< Battery discharge overcurrent
+    ERR_BAT_CHG_OVERCURRENT = 1U << 3,    ///< Battery charge overcurrent
+    ERR_BAT_DIS_UNDERTEMP = 1U << 4,      ///< Temperature below discharge minimum limit
+    ERR_BAT_DIS_OVERTEMP = 1U << 5,       ///< Temperature above discharge maximum limit
+    ERR_BAT_CHG_UNDERTEMP = 1U << 6,      ///< Temperature below charge minimum limit
+    ERR_BAT_CHG_OVERTEMP = 1U << 7,       ///< Temperature above charge maximum limit
+    ERR_LOAD_OVERVOLTAGE = 1U << 8,       ///< To high voltage for load so that it was switched off
+    ERR_LOAD_OVERCURRENT = 1U << 9,       ///< Long-term overcurrent of load port
+    ERR_LOAD_SHORT_CIRCUIT = 1U << 10,    ///< Short circuit detected at load port
+    ERR_LOAD_VOLTAGE_DIP = 1U << 11,      ///< Overcurrent identified via voltage dip (may be because of
                                     ///< too small battery)
-    ERR_INT_OVERTEMP = 12,          ///< Charge controller internal temperature too high
-    ERR_DCDC_HS_MOSFET_SHORT = 13,  ///< Short-circuit in HS MOSFET
+    ERR_INT_OVERTEMP = 1U << 12,          ///< Charge controller internal temperature too high
+    ERR_DCDC_HS_MOSFET_SHORT = 1U << 13,  ///< Short-circuit in HS MOSFET
+
+    // we use this as mask to catch all error flags (up to 32 errors)
+    ERR_ANY_ERROR = UINT32_MAX,
 };
 
 /** Device Status data
@@ -91,9 +97,24 @@ public:
     uint32_t error_flags;       ///< Currently detected errors
     float internal_temp;        ///< Internal temperature (measured in MCU)
 
-    void set_error(ErrorFlag e) { error_flags |= (1U << e); }
-    void clear_error(ErrorFlag e) { error_flags &= ~(1U << e); }
-    bool has_error(ErrorFlag e) { return (error_flags & (1U << e)) != 0; }
+    /**
+     * @brief sets one or more error flags in device state
+     * @param e a single ErrorFlag or "bitwise ORed" ERR_XXX | ERR_YYY
+     */ 
+    void set_error(uint32_t e) { error_flags |= e; }
+
+    /**
+     * @brief clears one or more error flags in device state
+     * @param e a single ErrorFlag or "bitwise ORed" ERR_XXX | ERR_YYY
+     */ 
+    void clear_error(uint32_t e) { error_flags &= ~e; }
+
+    /**
+     * @brief queries one or more error flags in device state
+     * @param e a single ErrorFlag or "bitwise ORed" ERR_XXX | ERR_YYY
+     * @return true if any of the error flags given in e are set in device state
+     */ 
+    bool has_error(uint32_t e) { return (error_flags & e) != 0; }
 };
 
 #endif /* DEVICE_STATUS_H */
