@@ -70,7 +70,7 @@ void adc_alert_undervoltage_triggering()
 {
     dev_stat.clear_error(ERR_ANY_ERROR);
     battery_conf_init(&bat_conf, BAT_TYPE_LFP, 4, 100);
-    adc_set_alerts();
+    adc_set_lv_alerts(bat_conf.voltage_absolute_max, bat_conf.voltage_absolute_min);
     prepare_adc_filtered();
     adc_update_value(ADC_POS_V_BAT);
 
@@ -81,9 +81,7 @@ void adc_alert_undervoltage_triggering()
     TEST_ASSERT_EQUAL(false, dev_stat.has_error(ERR_BAT_UNDERVOLTAGE));
     adc_update_value(ADC_POS_V_BAT);
     TEST_ASSERT_EQUAL(true, dev_stat.has_error(ERR_BAT_UNDERVOLTAGE));
-    TEST_ASSERT_EQUAL(false, pwm_switch.active());
-    TEST_ASSERT_EQUAL(DCDC_STATE_OFF, dcdc.state);
-    TEST_ASSERT_EQUAL(LOAD_STATE_OFF_SHORT_CIRCUIT, load.state);
+    TEST_ASSERT_EQUAL(LOAD_STATE_OFF_OVERCURRENT, load.state);
 
     // reset values
     adcval.battery_voltage = 13;
@@ -99,9 +97,11 @@ void adc_alert_overvoltage_triggering()
 {
     dev_stat.clear_error(ERR_ANY_ERROR);
     battery_conf_init(&bat_conf, BAT_TYPE_LFP, 4, 100);
-    adc_set_alerts();
+    adc_set_lv_alerts(bat_conf.voltage_absolute_max, bat_conf.voltage_absolute_min);
     prepare_adc_filtered();
     adc_update_value(ADC_POS_V_BAT);
+
+    dcdc.state = DCDC_STATE_MPPT;
 
     // overvoltage test
     adcval.battery_voltage = bat_conf.voltage_absolute_max + 0.1;
@@ -112,7 +112,6 @@ void adc_alert_overvoltage_triggering()
     TEST_ASSERT_EQUAL(true, dev_stat.has_error(ERR_BAT_OVERVOLTAGE));
     TEST_ASSERT_EQUAL(false, pwm_switch.active());
     TEST_ASSERT_EQUAL(DCDC_STATE_OFF, dcdc.state);
-    TEST_ASSERT_EQUAL(LOAD_STATE_OFF_OVERVOLTAGE, load.state);
 
     // reset values
     adcval.battery_voltage = 12;

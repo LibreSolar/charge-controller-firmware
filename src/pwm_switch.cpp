@@ -18,6 +18,8 @@
 #include "config.h"
 #include "pcb.h"
 
+#include "adc_dma.h"
+
 #include <stdio.h>
 #include <time.h>       // for time(NULL) function
 
@@ -203,6 +205,8 @@ void PwmSwitch::control()
             && time(NULL) > (off_timestamp + restart_interval)
             && enabled == true)
         {
+            // turning the PWM switch on creates a short voltage rise, so inhibit alerts by 100 ms
+            adc_alert_inhibit(ADC_POS_V_BAT, 100);
             pwm_signal_start(1);
             printf("PWM charger start.\n");
         }

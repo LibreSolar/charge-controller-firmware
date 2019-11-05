@@ -19,6 +19,7 @@
 #endif
 
 #include "main.h"
+#include "debug.h"
 
 #include "adc_dma.h"
 #include "pcb.h"        // contains defines for pins
@@ -95,29 +96,28 @@ void adc_update_value(unsigned int pos)
         adc_filtered[pos] += (uint32_t)adc_readings[pos] - (adc_filtered[pos] >> ADC_FILTER_CONST);
     }
 
-    // check if limit violation alert callback is set for this ADC channel
-    if (adc_alerts[pos].callback != NULL) {
-
-        uint32_t err_flag = 0;
-        if (adc_readings[pos] > adc_alerts[pos].upper_limit) {
-            err_flag |= adc_alerts[pos].err_flag_upper;
-            adc_alerts[pos].debounce_counter++;
-        }
-        else if (adc_readings[pos] < adc_alerts[pos].lower_limit) {
-            err_flag |= adc_alerts[pos].err_flag_lower;
-            adc_alerts[pos].debounce_counter++;
-        }
-        else {
-            adc_alerts[pos].debounce_counter = 0;
-        }
-
-        // minimum debouncing that a single spike on ADC measurement doesn't trigger the alert
-        if (adc_alerts[pos].debounce_counter > 1) {
-            dev_stat.set_error(err_flag);
+    adc_alerts[pos].debounce_ms++;
+    if (adc_alerts[pos].callback_upper != NULL &&
+        adc_readings[pos] > adc_alerts[pos].upper_limit)
+    {
+        if (adc_alerts[pos].debounce_ms > 1) {
             // create function pointer and call function
-            void (*alert)(void) = reinterpret_cast<void(*)()>(adc_alerts[pos].callback);
+            void (*alert)(void) = reinterpret_cast<void(*)()>(adc_alerts[pos].callback_upper);
             alert();
         }
+    }
+    else if (adc_alerts[pos].callback_lower != NULL &&
+        adc_readings[pos] < adc_alerts[pos].lower_limit)
+    {
+        if (adc_alerts[pos].debounce_ms > 1) {
+            void (*alert)(void) = reinterpret_cast<void(*)()>(adc_alerts[pos].callback_lower);
+            alert();
+        }
+    }
+    else if (adc_alerts[pos].debounce_ms > 0) {
+        // reset debounce ms counter only if already close to triggering to allow setting negative
+        // values to specify a one-time inhibit delay
+        adc_alerts[pos].debounce_ms = 0;
     }
 }
 
@@ -230,7 +230,7 @@ void update_measurements()
     // else: keep previous setting
 }
 
-void lv_voltage_alert()
+void high_voltage_alert()
 {
     // disable any sort of input
 #if FEATURE_DCDC_CONVERTER
@@ -242,39 +242,45 @@ void lv_voltage_alert()
     // do not use enter_state function, as we don't want to wait entire recharge delay
     charger.state = CHG_STATE_IDLE;
 
-    // disable load output
-    if (dev_stat.has_error(ERR_BAT_OVERVOLTAGE)) {
-        load.emergency_stop(LOAD_STATE_OFF_OVERVOLTAGE);
-    }
-    else if (dev_stat.has_error(ERR_BAT_UNDERVOLTAGE)) {
-        load.emergency_stop(LOAD_STATE_OFF_SHORT_CIRCUIT);
-    }
-    else {
-        load.emergency_stop(LOAD_STATE_DISABLED);
-    }
-    charger.port->neg_current_limit = 0;
+    dev_stat.set_error(ERR_BAT_OVERVOLTAGE);
+
+    print_error("High voltage alert, ADC reading: %d limit: %d\n",
+        adc_readings[ADC_POS_V_BAT], adc_alerts[ADC_POS_V_BAT].upper_limit);
 }
 
-void adc_set_alerts()
+void low_voltage_alert()
+{
+    // disable load output
+    load.emergency_stop(LOAD_STATE_OFF_OVERCURRENT);
+    charger.port->neg_current_limit = 0;
+
+    dev_stat.set_error(ERR_BAT_UNDERVOLTAGE);
+
+    print_error("Low voltage alert, ADC reading: %d limit: %d\n",
+        adc_readings[ADC_POS_V_BAT], adc_alerts[ADC_POS_V_BAT].lower_limit);
+}
+
+void adc_alert_inhibit(int adc_pos, int timeout_ms)
+{
+    // set negative value so that we get a final debouncing of this timeout + the original
+    // delay in the alert function (currently only waiting for 2 samples = 2 ms)
+    adc_alerts[adc_pos].debounce_ms = -timeout_ms;
+}
+
+void adc_set_lv_alerts(float upper, float lower)
 {
     int vcc = VREFINT_VALUE * VREFINT_CAL /
         (adc_filtered[ADC_POS_VREF_MCU] >> (4 + ADC_FILTER_CONST));
 
     // LV side (battery) overvoltage alert
     adc_alerts[ADC_POS_V_BAT].upper_limit =
-        (uint16_t)((bat_conf.voltage_absolute_max * 1000 / (ADC_GAIN_V_BAT) * 4096.0 / vcc)) << 4;
-    adc_alerts[ADC_POS_V_BAT].err_flag_upper = ERR_BAT_OVERVOLTAGE;
+        (uint16_t)((upper * 1000 / (ADC_GAIN_V_BAT) * 4096.0 / vcc)) << 4;
+    adc_alerts[ADC_POS_V_BAT].callback_upper = (void *) &high_voltage_alert;
 
     // LV side (battery) undervoltage alert
     adc_alerts[ADC_POS_V_BAT].lower_limit =
-        (uint16_t)((bat_conf.voltage_absolute_min * 1000 / (ADC_GAIN_V_BAT) * 4096.0 / vcc)) << 4;
-    adc_alerts[ADC_POS_V_BAT].err_flag_lower = ERR_BAT_UNDERVOLTAGE;
-
-    adc_alerts[ADC_POS_V_BAT].callback = (void *) &lv_voltage_alert;
-
-//    printf("v_max %.3f v_min %.3f upper: %u lower %u, vcc %d\n", bat_conf.voltage_absolute_max,
-//        bat_conf.voltage_absolute_min, adc_alerts[ADC_POS_V_BAT].upper_limit,
-//        adc_alerts[ADC_POS_V_BAT].lower_limit, vcc);
+        (uint16_t)((lower * 1000 / (ADC_GAIN_V_BAT) * 4096.0 / vcc)) << 4;
+    adc_alerts[ADC_POS_V_BAT].callback_lower = (void *) &low_voltage_alert;
 }
 
 #ifndef UNIT_TEST

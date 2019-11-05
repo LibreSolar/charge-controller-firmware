@@ -165,7 +165,9 @@ int main()
 
             load.state_machine();
 
-            adc_set_alerts();       // update regularly to cover changed configurations
+            // update regularly to cover changed battery configurations
+            adc_set_lv_alerts(bat_conf.voltage_absolute_max * charger.num_batteries,
+                bat_conf.voltage_absolute_min * charger.num_batteries);
 
             eeprom_update();
 

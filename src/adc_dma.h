@@ -31,12 +31,12 @@
 /** Struct to definie upper and lower limit alerts for any ADC channel
  */
 typedef struct {
-    void *callback = NULL;                  ///< Function to be called when limits are exceeded
+    //bool enable = false;                    ///< Can be used to temporarily disable this alert
+    void *callback_upper = NULL;            ///< Function to be called when limits are exceeded
+    void *callback_lower = NULL;            ///< Function to be called when limits are exceeded
     uint16_t upper_limit = UINT16_MAX;      ///< ADC reading for upper limit
     uint16_t lower_limit = 0;               ///< ADC reading for lower limit
-    uint32_t err_flag_upper = 0;            ///< Error flag to raise at upper limit
-    uint32_t err_flag_lower = 0;            ///< Error flag to raise at lower limit
-    int debounce_counter;                   ///< Can be used to prevent triggering at fist occurence
+    int debounce_ms = 0;                    ///< Milliseconds delay for triggering alert
 } AdcAlert;
 
 /** Sets offset to actual measured value, i.e. sets zero current point.
@@ -65,8 +65,18 @@ void dma_setup(void);
  */
 void adc_update_value(unsigned int pos);
 
-/** Set limits where an alert should be triggered after reading the ADC values
+/** Set lv side (battery) voltage limits where an alert should be triggered
+ *
+ * @param upper Upper voltage limit
+ * @param lower Lower voltage limit
  */
-void adc_set_alerts();
+void adc_set_lv_alerts(float upper, float lower);
+
+/** Add an inhibit delay to the alerts to disable it temporarily
+ *
+ * @param adc_pos The position of the ADC measurement channel
+ * @param timeout_ms Timeout in milliseconds
+ */
+void adc_alert_inhibit(int adc_pos, int timeout_ms);
 
 #endif /* ADC_DMA */
