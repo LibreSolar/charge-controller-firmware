@@ -25,6 +25,8 @@ typedef struct {
     float load_current;
     float bat_temperature;
     float internal_temperature;
-} adc_values_t;
+} AdcValues;
 
-void prepare_adc_readings(adc_values_t values);
+void prepare_adc_readings(AdcValues values);
+
+void prepare_adc_filtered();

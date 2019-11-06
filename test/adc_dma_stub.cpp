@@ -22,14 +22,22 @@
 #include <stdint.h>
 #include <stdio.h>
 
+extern uint16_t adc_readings[NUM_ADC_CH];
 extern uint32_t adc_filtered[NUM_ADC_CH];
 
-
-void prepare_adc_readings(adc_values_t values)
+void prepare_adc_readings(AdcValues values)
 {
-    adc_filtered[ADC_POS_VREF_MCU] = (uint32_t)(1.224 / 3.3 * 4096) << (4 + ADC_FILTER_CONST);
-    adc_filtered[ADC_POS_V_SOLAR] = (uint32_t)((values.solar_voltage / (ADC_GAIN_V_SOLAR)) / 3.3 * 4096) << (4 + ADC_FILTER_CONST);
-    adc_filtered[ADC_POS_V_BAT] = (uint32_t)((values.battery_voltage / (ADC_GAIN_V_BAT)) / 3.3 * 4096) << (4 + ADC_FILTER_CONST);
-    adc_filtered[ADC_POS_I_DCDC] = (uint32_t)((values.dcdc_current / (ADC_GAIN_I_DCDC)) / 3.3 * 4096) << (4 + ADC_FILTER_CONST);
-    adc_filtered[ADC_POS_I_LOAD] = (uint32_t)((values.load_current / (ADC_GAIN_I_LOAD)) / 3.3 * 4096) << (4 + ADC_FILTER_CONST);
+    adc_readings[ADC_POS_VREF_MCU] = (uint16_t)(1.224 / 3.3 * 4096) << 4;
+    adc_readings[ADC_POS_V_SOLAR] = (uint16_t)((values.solar_voltage / (ADC_GAIN_V_SOLAR)) / 3.3 * 4096) << 4;
+    adc_readings[ADC_POS_V_BAT] = (uint16_t)((values.battery_voltage / (ADC_GAIN_V_BAT)) / 3.3 * 4096) << 4;
+    adc_readings[ADC_POS_I_DCDC] = (uint16_t)((values.dcdc_current / (ADC_GAIN_I_DCDC)) / 3.3 * 4096) << 4;
+    adc_readings[ADC_POS_I_LOAD] = (uint16_t)((values.load_current / (ADC_GAIN_I_LOAD)) / 3.3 * 4096) << 4;
+}
+
+void prepare_adc_filtered()
+{
+    // initialize also filtered values
+    for (int i = 0; i < NUM_ADC_CH; i++) {
+        adc_filtered[i] = adc_readings[i] << ADC_FILTER_CONST;
+    }
 }

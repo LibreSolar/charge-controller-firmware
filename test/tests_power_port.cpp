@@ -9,7 +9,7 @@
 
 #include "main.h"
 
-static adc_values_t adcval;
+static AdcValues adcval;
 
 const float dcdc_current_sun = 3;
 const float load_current = 1;
@@ -38,6 +38,7 @@ void energy_calculation_init()
 
     // insert values into ADC functions
     prepare_adc_readings(adcval);
+    prepare_adc_filtered();
     update_measurements();
 
     for (int i = 0; i < 60*60*sun_hours; i++) {
@@ -49,6 +50,7 @@ void energy_calculation_init()
     // disable DC/DC = solar charging
     adcval.dcdc_current = 0;
     prepare_adc_readings(adcval);
+    prepare_adc_filtered();
     update_measurements();
 
     for (int i = 0; i < 60*60*night_hours; i++) {

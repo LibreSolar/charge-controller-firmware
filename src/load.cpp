@@ -260,7 +260,9 @@ void LoadOutput::state_machine()
     switch (state) {
         case LOAD_STATE_DISABLED:
             if (enable == true) {
-                if (port->pos_current_limit > 0) {
+                if (port->pos_current_limit > 0 &&
+                    !dev_stat.has_error(ERR_BAT_UNDERVOLTAGE | ERR_BAT_OVERVOLTAGE))
+                {
                     switch_set(true);
                     state = LOAD_STATE_ON;
                 }
@@ -406,4 +408,11 @@ void LoadOutput::control()
     else {
         debounce_counter = 0;
     }
+}
+
+void LoadOutput::emergency_stop(uint16_t next_state)
+{
+    switch_set(false);
+    leds_flicker(LED_LOAD);
+    state = next_state;
 }

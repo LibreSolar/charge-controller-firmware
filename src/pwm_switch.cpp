@@ -18,6 +18,8 @@
 #include "config.h"
 #include "pcb.h"
 
+#include "adc_dma.h"
+
 #include <stdio.h>
 #include <time.h>       // for time(NULL) function
 
@@ -108,6 +110,11 @@ void pwm_signal_stop()
     _pwm_active = false;
 }
 
+bool pwm_signal_high()
+{
+    return (GPIOB->IDR & GPIO_PIN_1);
+}
+
 #else
 
 // dummy functions for unit tests
@@ -117,12 +124,18 @@ void pwm_signal_duty_cycle_step(int delta) {;}
 void pwm_signal_init_registers(int freq_Hz) {;}
 void pwm_signal_start(float pwm_duty) {;}
 void pwm_signal_stop() {;}
+bool pwm_signal_high() { return false; }
 
 #endif
 
 bool PwmSwitch::active()
 {
     return _pwm_active;
+}
+
+bool PwmSwitch::signal_high()
+{
+    return pwm_signal_high();
 }
 
 PwmSwitch::PwmSwitch(PowerPort *pwm_terminal, PowerPort *pwm_port_int)
@@ -192,10 +205,18 @@ void PwmSwitch::control()
             && time(NULL) > (off_timestamp + restart_interval)
             && enabled == true)
         {
+            // turning the PWM switch on creates a short voltage rise, so inhibit alerts by 100 ms
+            adc_alert_inhibit(ADC_POS_V_BAT, 100);
             pwm_signal_start(1);
             printf("PWM charger start.\n");
         }
     }
+}
+
+void PwmSwitch::emergency_stop()
+{
+    pwm_signal_stop();
+    off_timestamp = time(NULL);
 }
 
 float PwmSwitch::get_duty_cycle()

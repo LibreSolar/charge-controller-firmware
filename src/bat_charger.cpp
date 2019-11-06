@@ -351,6 +351,7 @@ void Charger::charge_control(BatConf *bat_conf)
                 full = false;
                 dev_stat.clear_error(ERR_BAT_CHG_OVERTEMP);
                 dev_stat.clear_error(ERR_BAT_CHG_UNDERTEMP);
+                dev_stat.clear_error(ERR_BAT_OVERVOLTAGE);
                 enter_state(CHG_STATE_BULK);
             }
             break;

@@ -88,6 +88,12 @@ public:
      */
     void test();
 
+    /** Fast emergency stop function
+     *
+     * May be called from an ISR which detected overvoltage / overcurrent conditions
+     */
+    void emergency_stop();
+
     /** Prevent overcharging of battery in case of shorted HS MOSFET
      *
      * This function switches the LS MOSFET continuously on to blow the battery input fuse. The

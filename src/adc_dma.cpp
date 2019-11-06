@@ -19,6 +19,7 @@
 #endif
 
 #include "main.h"
+#include "debug.h"
 
 #include "adc_dma.h"
 #include "pcb.h"        // contains defines for pins
@@ -59,7 +60,7 @@ float load_current_offset;
 // for ADC and DMA
 volatile uint16_t adc_readings[NUM_ADC_CH] = {0};
 volatile uint32_t adc_filtered[NUM_ADC_CH] = {0};
-//volatile int num_adc_conversions;
+volatile AdcAlert adc_alerts[NUM_ADC_CH] = {0};
 
 extern DeviceStatus dev_stat;
 
@@ -74,6 +75,50 @@ void calibrate_current_sensors()
     solar_current_offset = -(float)(((adc_filtered[ADC_POS_I_DCDC] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) * ADC_GAIN_I_DCDC / 1000.0;
 #endif
     load_current_offset = -(float)(((adc_filtered[ADC_POS_I_LOAD] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) * ADC_GAIN_I_LOAD / 1000.0;
+}
+
+void adc_update_value(unsigned int pos)
+{
+    // low pass filter with filter constant c = 1/16
+    // y(n) = c * x(n) + (c - 1) * y(n-1)
+
+#if FEATURE_PWM_SWITCH == 1
+    if (pos == ADC_POS_V_SOLAR || pos == ADC_POS_I_SOLAR) {
+        // only read input voltage and current when switch is on or permanently off
+        if (pwm_switch.signal_high() || pwm_switch.active() == false) {
+            adc_filtered[pos] += (uint32_t)adc_readings[pos] - (adc_filtered[pos] >> ADC_FILTER_CONST);
+        }
+    }
+    else
+#endif
+    {
+        // adc_readings: 12-bit ADC values left-aligned in uint16_t
+        adc_filtered[pos] += (uint32_t)adc_readings[pos] - (adc_filtered[pos] >> ADC_FILTER_CONST);
+    }
+
+    adc_alerts[pos].debounce_ms++;
+    if (adc_alerts[pos].callback_upper != NULL &&
+        adc_readings[pos] > adc_alerts[pos].upper_limit)
+    {
+        if (adc_alerts[pos].debounce_ms > 1) {
+            // create function pointer and call function
+            void (*alert)(void) = reinterpret_cast<void(*)()>(adc_alerts[pos].callback_upper);
+            alert();
+        }
+    }
+    else if (adc_alerts[pos].callback_lower != NULL &&
+        adc_readings[pos] < adc_alerts[pos].lower_limit)
+    {
+        if (adc_alerts[pos].debounce_ms > 1) {
+            void (*alert)(void) = reinterpret_cast<void(*)()>(adc_alerts[pos].callback_lower);
+            alert();
+        }
+    }
+    else if (adc_alerts[pos].debounce_ms > 0) {
+        // reset debounce ms counter only if already close to triggering to allow setting negative
+        // values to specify a one-time inhibit delay
+        adc_alerts[pos].debounce_ms = 0;
+    }
 }
 
 //----------------------------------------------------------------------------
@@ -185,6 +230,59 @@ void update_measurements()
     // else: keep previous setting
 }
 
+void high_voltage_alert()
+{
+    // disable any sort of input
+#if FEATURE_DCDC_CONVERTER
+    dcdc.emergency_stop();
+#endif
+#if FEATURE_PWM_SWITCH
+    pwm_switch.emergency_stop();
+#endif
+    // do not use enter_state function, as we don't want to wait entire recharge delay
+    charger.state = CHG_STATE_IDLE;
+
+    dev_stat.set_error(ERR_BAT_OVERVOLTAGE);
+
+    print_error("High voltage alert, ADC reading: %d limit: %d\n",
+        adc_readings[ADC_POS_V_BAT], adc_alerts[ADC_POS_V_BAT].upper_limit);
+}
+
+void low_voltage_alert()
+{
+    // disable load output
+    load.emergency_stop(LOAD_STATE_OFF_OVERCURRENT);
+    charger.port->neg_current_limit = 0;
+
+    dev_stat.set_error(ERR_BAT_UNDERVOLTAGE);
+
+    print_error("Low voltage alert, ADC reading: %d limit: %d\n",
+        adc_readings[ADC_POS_V_BAT], adc_alerts[ADC_POS_V_BAT].lower_limit);
+}
+
+void adc_alert_inhibit(int adc_pos, int timeout_ms)
+{
+    // set negative value so that we get a final debouncing of this timeout + the original
+    // delay in the alert function (currently only waiting for 2 samples = 2 ms)
+    adc_alerts[adc_pos].debounce_ms = -timeout_ms;
+}
+
+void adc_set_lv_alerts(float upper, float lower)
+{
+    int vcc = VREFINT_VALUE * VREFINT_CAL /
+        (adc_filtered[ADC_POS_VREF_MCU] >> (4 + ADC_FILTER_CONST));
+
+    // LV side (battery) overvoltage alert
+    adc_alerts[ADC_POS_V_BAT].upper_limit =
+        (uint16_t)((upper * 1000 / (ADC_GAIN_V_BAT) * 4096.0 / vcc)) << 4;
+    adc_alerts[ADC_POS_V_BAT].callback_upper = (void *) &high_voltage_alert;
+
+    // LV side (battery) undervoltage alert
+    adc_alerts[ADC_POS_V_BAT].lower_limit =
+        (uint16_t)((lower * 1000 / (ADC_GAIN_V_BAT) * 4096.0 / vcc)) << 4;
+    adc_alerts[ADC_POS_V_BAT].callback_lower = (void *) &low_voltage_alert;
+}
+
 #ifndef UNIT_TEST
 
 void dma_setup()
@@ -231,26 +329,9 @@ extern "C" void DMA1_Channel1_IRQHandler(void)
 {
     if ((DMA1->ISR & DMA_ISR_TCIF1) != 0) // Test if transfer completed on DMA channel 1
     {
-        // low pass filter with filter constant c = 1/16
-        // y(n) = c * x(n) + (c - 1) * y(n-1)
-#ifdef CHARGER_TYPE_PWM
         for (unsigned int i = 0; i < NUM_ADC_CH; i++) {
-            if (i == ADC_POS_V_SOLAR || i == ADC_POS_I_SOLAR) {
-                // only read input voltage and current when switch is on or permanently off
-                if (GPIOB->IDR & GPIO_PIN_1 || pwm_switch_enabled() == false) {
-                    adc_filtered[i] += (uint32_t)adc_readings[i] - (adc_filtered[i] >> ADC_FILTER_CONST);
-                }
-            }
-            else {
-                adc_filtered[i] += (uint32_t)adc_readings[i] - (adc_filtered[i] >> ADC_FILTER_CONST);
-            }
+            adc_update_value(i);
         }
-#else
-        for (unsigned int i = 0; i < NUM_ADC_CH; i++) {
-            // adc_readings: 12-bit ADC values left-aligned in uint16_t
-            adc_filtered[i] += (uint32_t)adc_readings[i] - (adc_filtered[i] >> ADC_FILTER_CONST);
-        }
-#endif
     }
     DMA1->IFCR |= 0x0FFFFFFF;       // clear all interrupt registers
 }

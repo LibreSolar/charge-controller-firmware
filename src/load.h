@@ -80,6 +80,14 @@ public:
      */
     void control();
 
+    /** Fast emergency stop function
+     *
+     * May be called from an ISR which detected overvoltage / overcurrent conditions
+     *
+     * @param next_state Select state the load should go to
+     */
+    void emergency_stop(uint16_t next_state = LOAD_STATE_DISABLED);
+
     uint16_t state;             ///< Current state of load output switch
     uint16_t usb_state;         ///< Current state of USB output
 
