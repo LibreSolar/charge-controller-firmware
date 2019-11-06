@@ -19,6 +19,7 @@
 #include "pcb.h"
 
 #include "adc_dma.h"
+#include "debug.h"
 
 #include <stdio.h>
 #include <time.h>       // for time(NULL) function
@@ -164,13 +165,17 @@ void PwmSwitch::control()
         {
             pwm_signal_stop();
             off_timestamp = time(NULL);
-            printf("PWM charger stop.\n");
+            print_info("PWM charger stop.\n");
         }
-        else if (port_int->voltage > (port_int->sink_voltage_max - port_int->pos_droop_res * port_int->current)    // output voltage above target
-            || port_int->current > port_int->pos_current_limit         // output current limit exceeded
-            || terminal->current < terminal->neg_current_limit)    // input current (negative signs) above limit
+        else if (port_int->voltage > (port_int->sink_voltage_max -
+                 port_int->pos_droop_res * port_int->current)       // voltage above target
+            || port_int->current > port_int->pos_current_limit      // port current limit exceeded
+            || port_int->current > PWM_CURRENT_MAX                  // PCB current limit exceeded
+            || terminal->current < terminal->neg_current_limit)     // input current (negative signs) above limit
         {
-            // The gate driver switch-off time is quite high (fall time around 1ms), so very short
+            // decrease power, as limits were reached
+
+            // the gate driver switch-off time is quite high (fall time around 1ms), so very short
             // on or off periods (duty cycle close to 0 and 1) should be avoided
             if (pwm_signal_get_duty_cycle() > 0.95) {
                 // prevent very short off periods
@@ -180,13 +185,15 @@ void PwmSwitch::control()
                 // prevent very short on periods and switch completely off instead
                 pwm_signal_stop();
                 off_timestamp = time(NULL);
-                printf("PWM charger stop, no further derating possible.\n");
+                print_info("PWM charger stop, no further derating possible.\n");
             }
             else {
                 pwm_signal_duty_cycle_step(-1);
             }
         }
         else {
+            // increase power (if not yet at 100% duty cycle)
+
             if (pwm_signal_get_duty_cycle() > 0.95) {
                 // prevent very short off periods and switch completely on instead
                 pwm_signal_set_duty_cycle(1);
@@ -208,7 +215,7 @@ void PwmSwitch::control()
             // turning the PWM switch on creates a short voltage rise, so inhibit alerts by 100 ms
             adc_alert_inhibit(ADC_POS_V_BAT, 100);
             pwm_signal_start(1);
-            printf("PWM charger start.\n");
+            print_info("PWM charger start.\n");
         }
     }
 }

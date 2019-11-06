@@ -29,6 +29,7 @@
 #define PWM_DEADTIME 230    // ns
 #define PWM_TIM        3    // use TIM3 timer
 
+#define PWM_CURRENT_MAX  15  // PCB maximum PWM switch (solar) current
 #define DCDC_CURRENT_MAX 20  // PCB maximum DCDC output current
 #define LOAD_CURRENT_MAX 20  // PCB maximum load switch current
 

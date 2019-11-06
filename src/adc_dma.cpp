@@ -159,11 +159,13 @@ void update_measurements()
 
 #if FEATURE_PWM_SWITCH
     // current multiplied with PWM duty cycle for PWM charger to get avg current for correct power calculation
-    pwm_terminal.current = - pwm_switch.get_duty_cycle() * (
+    pwm_port_int.current = pwm_switch.get_duty_cycle() * (
         (float)(((adc_filtered[ADC_POS_I_SOLAR] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
         ADC_GAIN_I_SOLAR / 1000.0 + solar_current_offset);
-    pwm_port_int.current = pwm_terminal.current;
-    lv_terminal.current = -pwm_port_int.current - load_terminal.current;
+    pwm_terminal.current = -pwm_port_int.current;
+    lv_terminal.current = pwm_port_int.current - load_terminal.current;
+
+    pwm_port_int.power = pwm_port_int.voltage * pwm_port_int.current;
     pwm_terminal.power = pwm_terminal.voltage * pwm_terminal.current;
 #endif
 #if FEATURE_DCDC_CONVERTER
