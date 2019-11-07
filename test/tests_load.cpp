@@ -40,16 +40,17 @@ void disabled_to_off_bat_temp_if_error_flag_set()
     port.pos_current_limit = 0;
 
     // overtemp
+    load.state = LOAD_STATE_DISABLED;
     dev_stat.clear_error(ERR_ANY_ERROR);
-    dev_stat.set_error(ERR_BAT_CHG_OVERTEMP);
+    dev_stat.set_error(ERR_BAT_DIS_OVERTEMP);
     load.state_machine();
     TEST_ASSERT_EQUAL(LOAD_STATE_OFF_TEMPERATURE, load.state);
     TEST_ASSERT_EQUAL(LOAD_STATE_OFF_TEMPERATURE, load.usb_state);
 
     // undertemp
     load.state = LOAD_STATE_DISABLED;
-    dev_stat.clear_error(ERR_ANY_ERROR); 
-    dev_stat.set_error(ERR_BAT_CHG_UNDERTEMP);
+    dev_stat.clear_error(ERR_ANY_ERROR);
+    dev_stat.set_error(ERR_BAT_DIS_UNDERTEMP);
     load.state_machine();
     TEST_ASSERT_EQUAL(LOAD_STATE_OFF_TEMPERATURE, load.state);
     TEST_ASSERT_EQUAL(LOAD_STATE_OFF_TEMPERATURE, load.usb_state);
@@ -63,6 +64,7 @@ void off_low_soc_to_on_after_delay()
     load.state = LOAD_STATE_OFF_LOW_SOC;
     load.usb_state = LOAD_STATE_OFF_LOW_SOC;
     port.pos_current_limit = 10;
+    dev_stat.clear_error(ERR_ANY_ERROR);
 
     load.lvd_timestamp = time(NULL) - load.lvd_recovery_delay + 1;
     load.state_machine();
@@ -84,6 +86,7 @@ void off_overcurrent_to_on_after_delay()
     load.state = LOAD_STATE_OFF_OVERCURRENT;
     load.usb_state = LOAD_STATE_ON;
     port.pos_current_limit = 10;
+    dev_stat.clear_error(ERR_ANY_ERROR);
 
     load.overcurrent_timestamp = time(NULL) - load.overcurrent_recovery_delay + 1;
     load.state_machine();
@@ -106,6 +109,7 @@ void off_overvoltage_to_on_at_lower_voltage()
     load.state = LOAD_STATE_OFF_OVERVOLTAGE;
     load.usb_state = LOAD_STATE_ON;
     port.voltage = port.sink_voltage_max + 0.1;
+    dev_stat.clear_error(ERR_ANY_ERROR);
 
     load.state_machine();
     TEST_ASSERT_EQUAL(LOAD_STATE_OFF_OVERVOLTAGE, load.state);
@@ -149,7 +153,7 @@ void on_to_off_low_soc_if_error_flag_set()
     load.state = LOAD_STATE_ON;
     load.usb_state = LOAD_STATE_ON;
     port.pos_current_limit = 0;
-    dev_stat.clear_error(ERR_ANY_ERROR); 
+    dev_stat.clear_error(ERR_ANY_ERROR);
     dev_stat.set_error(ERR_BAT_UNDERVOLTAGE);
 
     load.state_machine();
@@ -166,7 +170,7 @@ void on_to_off_bat_temp_if_error_flag_set()
 
     load.state = LOAD_STATE_ON;
     load.usb_state = LOAD_STATE_ON;
-    dev_stat.clear_error(ERR_ANY_ERROR); 
+    dev_stat.clear_error(ERR_ANY_ERROR);
     dev_stat.set_error(ERR_BAT_DIS_OVERTEMP);
     load.state_machine();
     TEST_ASSERT_EQUAL(LOAD_STATE_OFF_TEMPERATURE, load.state);

@@ -261,7 +261,8 @@ void LoadOutput::state_machine()
         case LOAD_STATE_DISABLED:
             if (enable == true) {
                 if (port->pos_current_limit > 0 &&
-                    !dev_stat.has_error(ERR_BAT_UNDERVOLTAGE | ERR_BAT_OVERVOLTAGE))
+                    !dev_stat.has_error(ERR_BAT_UNDERVOLTAGE | ERR_BAT_OVERVOLTAGE
+                    | ERR_INT_OVERTEMP | ERR_BAT_DIS_OVERTEMP | ERR_BAT_DIS_UNDERTEMP))
                 {
                     switch_set(true);
                     state = LOAD_STATE_ON;
@@ -270,8 +271,13 @@ void LoadOutput::state_machine()
                     if (dev_stat.has_error(ERR_BAT_UNDERVOLTAGE)) {
                         state = LOAD_STATE_OFF_LOW_SOC;
                     }
-                    else {
-                        // must be battery over/under temperature then
+                    else if (dev_stat.has_error(ERR_BAT_OVERVOLTAGE)) {
+                        state = LOAD_STATE_OFF_OVERVOLTAGE;
+                    }
+                    else if (dev_stat.has_error(ERR_INT_OVERTEMP)
+                        || dev_stat.has_error(ERR_BAT_DIS_OVERTEMP)
+                        || dev_stat.has_error(ERR_BAT_DIS_UNDERTEMP))
+                    {
                         state = LOAD_STATE_OFF_TEMPERATURE;
                     }
                 }
@@ -289,9 +295,18 @@ void LoadOutput::state_machine()
                     lvd_timestamp = time(NULL);
                     state = LOAD_STATE_OFF_LOW_SOC;
                 }
-                else {
-                    // must be battery over/under temperature then
+                else if (dev_stat.has_error(ERR_BAT_OVERVOLTAGE)) {
+                    state = LOAD_STATE_OFF_OVERVOLTAGE;
+                }
+                else if (dev_stat.has_error(ERR_INT_OVERTEMP)
+                    || dev_stat.has_error(ERR_BAT_DIS_OVERTEMP)
+                    || dev_stat.has_error(ERR_BAT_DIS_UNDERTEMP))
+                {
                     state = LOAD_STATE_OFF_TEMPERATURE;
+                }
+                else {
+                    // for safety reasons if other error flags are added in the future
+                    state = LOAD_STATE_DISABLED;
                 }
             }
             break;
@@ -328,8 +343,9 @@ void LoadOutput::state_machine()
             }
             break;
         case LOAD_STATE_OFF_TEMPERATURE:
-            if (!(dev_stat.has_error(ERR_INT_OVERTEMP)) &&
-                port->pos_current_limit > 0)
+            if (!(dev_stat.has_error(ERR_INT_OVERTEMP)
+                || dev_stat.has_error(ERR_BAT_DIS_OVERTEMP)
+                || dev_stat.has_error(ERR_BAT_DIS_UNDERTEMP)))
             {
                 state = LOAD_STATE_DISABLED;
             }
