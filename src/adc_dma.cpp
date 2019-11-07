@@ -349,7 +349,7 @@ void adc_setup()
     solar_en = 1;
 #endif
 
-    ADC_HandleTypeDef hadc;
+    ADC_HandleTypeDef hadc = {0};
     ADC_ChannelConfTypeDef sConfig = {0};
 
     __HAL_RCC_ADC1_CLK_ENABLE();
