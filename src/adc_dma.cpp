@@ -60,7 +60,8 @@ float load_current_offset;
 // for ADC and DMA
 volatile uint16_t adc_readings[NUM_ADC_CH] = {0};
 volatile uint32_t adc_filtered[NUM_ADC_CH] = {0};
-volatile AdcAlert adc_alerts[NUM_ADC_CH] = {0};
+volatile AdcAlert adc_alerts_upper[NUM_ADC_CH] = {0};
+volatile AdcAlert adc_alerts_lower[NUM_ADC_CH] = {0};
 
 extern DeviceStatus dev_stat;
 
@@ -79,8 +80,9 @@ void calibrate_current_sensors()
 
 void adc_update_value(unsigned int pos)
 {
-    // low pass filter with filter constant c = 1/16
+    // low pass filter with filter constant c = 1/(2^ADC_FILTER_CONST)
     // y(n) = c * x(n) + (c - 1) * y(n-1)
+    // see also here: http://techteach.no/simview/lowpass_filter/doc/filter_algorithm.pdf
 
 #if FEATURE_PWM_SWITCH == 1
     if (pos == ADC_POS_V_SOLAR || pos == ADC_POS_I_SOLAR) {
@@ -96,28 +98,35 @@ void adc_update_value(unsigned int pos)
         adc_filtered[pos] += (uint32_t)adc_readings[pos] - (adc_filtered[pos] >> ADC_FILTER_CONST);
     }
 
-    adc_alerts[pos].debounce_ms++;
-    if (adc_alerts[pos].callback_upper != NULL &&
-        adc_readings[pos] > adc_alerts[pos].upper_limit)
+    // check upper alerts
+    adc_alerts_upper[pos].debounce_ms++;
+    if (adc_alerts_upper[pos].callback != NULL &&
+        adc_readings[pos] > adc_alerts_upper[pos].limit)
     {
-        if (adc_alerts[pos].debounce_ms > 1) {
+        if (adc_alerts_upper[pos].debounce_ms > 1) {
             // create function pointer and call function
-            void (*alert)(void) = reinterpret_cast<void(*)()>(adc_alerts[pos].callback_upper);
+            void (*alert)(void) = reinterpret_cast<void(*)()>(adc_alerts_upper[pos].callback);
             alert();
         }
     }
-    else if (adc_alerts[pos].callback_lower != NULL &&
-        adc_readings[pos] < adc_alerts[pos].lower_limit)
-    {
-        if (adc_alerts[pos].debounce_ms > 1) {
-            void (*alert)(void) = reinterpret_cast<void(*)()>(adc_alerts[pos].callback_lower);
-            alert();
-        }
-    }
-    else if (adc_alerts[pos].debounce_ms > 0) {
+    else if (adc_alerts_upper[pos].debounce_ms > 0) {
         // reset debounce ms counter only if already close to triggering to allow setting negative
         // values to specify a one-time inhibit delay
-        adc_alerts[pos].debounce_ms = 0;
+        adc_alerts_upper[pos].debounce_ms = 0;
+    }
+
+    // same for lower alerts
+    adc_alerts_lower[pos].debounce_ms++;
+    if (adc_alerts_lower[pos].callback != NULL &&
+        adc_readings[pos] < adc_alerts_lower[pos].limit)
+    {
+        if (adc_alerts_lower[pos].debounce_ms > 1) {
+            void (*alert)(void) = reinterpret_cast<void(*)()>(adc_alerts_lower[pos].callback);
+            alert();
+        }
+    }
+    else if (adc_alerts_lower[pos].debounce_ms > 0) {
+        adc_alerts_lower[pos].debounce_ms = 0;
     }
 }
 
@@ -247,7 +256,7 @@ void high_voltage_alert()
     dev_stat.set_error(ERR_BAT_OVERVOLTAGE);
 
     print_error("High voltage alert, ADC reading: %d limit: %d\n",
-        adc_readings[ADC_POS_V_BAT], adc_alerts[ADC_POS_V_BAT].upper_limit);
+        adc_readings[ADC_POS_V_BAT], adc_alerts_upper[ADC_POS_V_BAT].limit);
 }
 
 void low_voltage_alert()
@@ -259,14 +268,14 @@ void low_voltage_alert()
     dev_stat.set_error(ERR_BAT_UNDERVOLTAGE);
 
     print_error("Low voltage alert, ADC reading: %d limit: %d\n",
-        adc_readings[ADC_POS_V_BAT], adc_alerts[ADC_POS_V_BAT].lower_limit);
+        adc_readings[ADC_POS_V_BAT], adc_alerts_lower[ADC_POS_V_BAT].limit);
 }
 
-void adc_alert_inhibit(int adc_pos, int timeout_ms)
+void adc_upper_alert_inhibit(int adc_pos, int timeout_ms)
 {
     // set negative value so that we get a final debouncing of this timeout + the original
     // delay in the alert function (currently only waiting for 2 samples = 2 ms)
-    adc_alerts[adc_pos].debounce_ms = -timeout_ms;
+    adc_alerts_upper[adc_pos].debounce_ms = -timeout_ms;
 }
 
 void adc_set_lv_alerts(float upper, float lower)
@@ -275,14 +284,14 @@ void adc_set_lv_alerts(float upper, float lower)
         (adc_filtered[ADC_POS_VREF_MCU] >> (4 + ADC_FILTER_CONST));
 
     // LV side (battery) overvoltage alert
-    adc_alerts[ADC_POS_V_BAT].upper_limit =
+    adc_alerts_upper[ADC_POS_V_BAT].limit =
         (uint16_t)((upper * 1000 / (ADC_GAIN_V_BAT) * 4096.0 / vcc)) << 4;
-    adc_alerts[ADC_POS_V_BAT].callback_upper = (void *) &high_voltage_alert;
+    adc_alerts_upper[ADC_POS_V_BAT].callback = (void *) &high_voltage_alert;
 
     // LV side (battery) undervoltage alert
-    adc_alerts[ADC_POS_V_BAT].lower_limit =
+    adc_alerts_lower[ADC_POS_V_BAT].limit =
         (uint16_t)((lower * 1000 / (ADC_GAIN_V_BAT) * 4096.0 / vcc)) << 4;
-    adc_alerts[ADC_POS_V_BAT].callback_lower = (void *) &low_voltage_alert;
+    adc_alerts_lower[ADC_POS_V_BAT].callback = (void *) &low_voltage_alert;
 }
 
 #ifndef UNIT_TEST

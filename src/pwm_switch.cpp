@@ -58,9 +58,15 @@ void pwm_signal_init_registers(int freq_Hz)
     // CCxP: Active high polarity on OCx (default = 0)
     TIM3->CCER &= ~(TIM_CCER_CC4P);     // PB1 / TIM3_CH4: high-side
 
-    // Control Register 1
-    // TIM_CR1_CEN =  1: Counter enable
-    TIM3->CR1 |= TIM_CR1_CEN;   // edge-aligned mode
+    // Interrupt on timer update
+    TIM3->DIER |= TIM_DIER_UIE;
+
+    // Auto Reload Register sets interrupt frequency
+    TIM3->ARR = 10000 / freq_Hz - 1;
+
+    // 1 = second-highest priority of STM32L0/F0
+    NVIC_SetPriority(TIM3_IRQn, 1);
+    NVIC_EnableIRQ(TIM3_IRQn);
 
     // Force update generation (UG = 1)
     TIM3->EGR |= TIM_EGR_UG;
@@ -71,6 +77,14 @@ void pwm_signal_init_registers(int freq_Hz)
     // Auto Reload Register
     // Period goes from 0 to ARR (including ARR value), so substract 1 clock cycle
     TIM3->ARR = _pwm_resolution - 1;
+}
+
+extern "C" void TIM3_IRQHandler(void)
+{
+    TIM3->SR &= ~TIM_SR_UIF;       // clear update interrupt flag
+
+    // turning the PWM switch on creates a short voltage rise, so inhibit alerts by 10 ms
+    adc_upper_alert_inhibit(ADC_POS_V_BAT, 10);
 }
 
 void pwm_signal_set_duty_cycle(float duty)
@@ -94,6 +108,10 @@ void pwm_signal_start(float pwm_duty)
 {
     pwm_signal_set_duty_cycle(pwm_duty);
 
+    // Control Register 1
+    // TIM_CR1_CEN =  1: Counter enable
+    TIM3->CR1 |= TIM_CR1_CEN;   // edge-aligned mode
+
     // Capture/Compare Enable Register
     // CCxE = 1: Enable the output on OCx
     // CCxP = 0: Active high polarity on OCx (default)
@@ -106,6 +124,7 @@ void pwm_signal_start(float pwm_duty)
 
 void pwm_signal_stop()
 {
+    TIM3->CR1 &= ~(TIM_CR1_CEN);
     TIM3->CCER &= ~(TIM_CCER_CC4E);
     TIM3->CCR4 = 0;
     _pwm_active = false;
@@ -212,8 +231,8 @@ void PwmSwitch::control()
             && time(NULL) > (off_timestamp + restart_interval)
             && enabled == true)
         {
-            // turning the PWM switch on creates a short voltage rise, so inhibit alerts by 100 ms
-            adc_alert_inhibit(ADC_POS_V_BAT, 100);
+            // turning the PWM switch on creates a short voltage rise, so inhibit alerts by 50 ms
+            adc_upper_alert_inhibit(ADC_POS_V_BAT, 50);
             pwm_signal_start(1);
             print_info("PWM charger start.\n");
         }

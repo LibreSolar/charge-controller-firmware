@@ -337,6 +337,12 @@ void Charger::charge_control(BatConf *bat_conf)
         enter_state(CHG_STATE_IDLE);
     }
 
+    if (dev_stat.has_error(ERR_BAT_OVERVOLTAGE) &&
+        port->voltage < (bat_conf->voltage_absolute_max - 0.5) * num_batteries)
+    {
+        dev_stat.clear_error(ERR_BAT_OVERVOLTAGE);
+    }
+
     // state machine
     switch (state) {
         case CHG_STATE_IDLE: {
