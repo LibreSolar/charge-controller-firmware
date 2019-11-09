@@ -77,9 +77,11 @@ void UExtOled::enable() {
     oled.command(0x00);
     oled.command(0x07);
 
+#ifdef OLED_BRIGHTNESS 
     // reduce brightness to minimum 
     oled.command(0x81);
-    oled.command(0x01);
+    oled.command(OLED_BRIGHTNESS);
+#endif    
 }
 
 void UExtOled::process_asap() {}
