@@ -283,11 +283,8 @@ void high_voltage_alert()
 
 void low_voltage_alert()
 {
-    // disable load output
-    load.emergency_stop(LOAD_STATE_OFF_OVERCURRENT);
-    charger.port->neg_current_limit = 0;
-
-    dev_stat.set_error(ERR_BAT_UNDERVOLTAGE);
+    // the battery undervoltage must have been caused by a load current peak
+    load.stop(ERR_LOAD_VOLTAGE_DIP);
 
     print_error("Low voltage alert, ADC reading: %d limit: %d\n",
         adc_readings[ADC_POS_V_BAT], adc_alerts_lower[ADC_POS_V_BAT].limit);
@@ -306,8 +303,8 @@ uint16_t adc_get_alert_limit(float scale, float limit)
     const float limit_scaled = limit * scale;
     // even if we have a higher voltage limit, we must limit it
     // to the max value the ADC will be able to deliver
-    return (limit_scaled > adclimit ? 0x0FFF : (uint16_t)(limit_scaled)) << 4; 
-    // shift 4 bits left to generate left aligned 16bit value 
+    return (limit_scaled > adclimit ? 0x0FFF : (uint16_t)(limit_scaled)) << 4;
+    // shift 4 bits left to generate left aligned 16bit value
 }
 
 void adc_set_lv_alerts(float upper, float lower)

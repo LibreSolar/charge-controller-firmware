@@ -14,25 +14,26 @@
  * limitations under the License.
  */
 
-#ifndef UNIT_TEST
 
 #include "leds.h"
 #include "pcb.h"
 
-#include "mbed.h"
-
-static int led_states[NUM_LEDS];                // must be one of led_state_t
+static int led_states[NUM_LEDS];                // must be one of enum LedState
 static int trigger_timeout[NUM_LEDS];           // seconds until trigger should end
 
 static int blink_state = 1;                     // global state of all blinking LEDs
-static bool flicker_state = 1;                  // global state of all flickering LEDs
 
 static bool charging = false;
+
+#ifndef UNIT_TEST
+
+#include "mbed.h"
 
 static void charlieplexing()
 {
     static int led_count = 0;
     static int flicker_count = 0;
+    static bool flicker_state = 1;
 
     // could be increased to value >NUM_LEDS to reduce on-time
     if (led_count >= NUM_LEDS) {
@@ -156,6 +157,8 @@ void leds_init(bool enabled)
     timer_start(NUM_LEDS * 60);     // 60 Hz
 }
 
+#endif /* UNIT_TEST */
+
 void leds_set_charging(bool enabled)
 {
     charging = enabled;
@@ -263,10 +266,3 @@ void leds_update_soc(int soc, bool load_off_low_soc)
     }
 #endif
 }
-
-#else
-
-// dummy functions
-void leds_flicker(int led, int timeout) {}
-
-#endif /* UNIT_TEST */

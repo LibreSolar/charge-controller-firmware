@@ -32,6 +32,9 @@
 /** Load/USB output states
  *
  * Used for USB or normal load outputs connecting to battery via switch.
+ *
+ * DEPRECATED: These states will be removed in the future and the status will be determined only
+ * by the error flags.
  */
 enum LoadState {
     LOAD_STATE_DISABLED = 0,        ///< Actively disabled
@@ -66,17 +69,13 @@ public:
      */
     void usb_set(bool enabled);
 
-    /** State machine, called every second.
-     */
-    void state_machine();
-
     /** USB state machine, called every second.
      */
     void usb_state_machine();
 
     /** Main load control function, should be called by control timer
      *
-     * Performs time-critical checks like overcurrent and overvoltage
+     * This function includes the load state machine
      */
     void control();
 
@@ -84,21 +83,26 @@ public:
      *
      * May be called from an ISR which detected overvoltage / overcurrent conditions
      *
-     * @param next_state Select state the load should go to
+     * @param error_flag Optional error flag that should be set
      */
-    void emergency_stop(uint16_t next_state = LOAD_STATE_DISABLED);
+    void stop(uint32_t error_flag = 0);
 
-    uint16_t state;             ///< Current state of load output switch
-    uint16_t usb_state;         ///< Current state of USB output
+    int state;             ///< Current state of load output switch (DEPRECATED)
+    int usb_state;         ///< Current state of USB output (DEPRECATED)
 
     PowerPort *port;            ///< Pointer to DC bus containting actual voltage and current
                                 ///< measurement of (external) load output terminal
 
-    float voltage_prev = 0;     ///< voltage from previous call of control function
+    bool enable;                ///< Target on state set via communication port (overruled if
+                                ///< battery is empty or any errors occured)
+    bool usb_enable;            ///< Target on state for USB output
 
-    time_t overcurrent_timestamp;       ///< Time when last overcurrent event occured
-    int overcurrent_recovery_delay;     ///< Seconds before we attempt to re-enable the load
-                                        ///< after an overcurrent event
+    bool pgood = false;         ///< Power good flag that is true if load switch is on
+    bool usb_pgood = false;     ///< Power good flag for USB output
+
+    time_t oc_timestamp;        ///< Time when last overcurrent event occured
+    int oc_recovery_delay;      ///< Seconds before we attempt to re-enable the load
+                                ///< after an overcurrent event
 
     time_t lvd_timestamp;       ///< Time when last low voltage disconnect happened
     int lvd_recovery_delay;     ///< Seconds before we re-enable the load after a low voltage
@@ -107,9 +111,9 @@ public:
     float junction_temperature; ///< calculated using thermal model based on current and ambient
                                 ///< temperature measurement (unit: °C)
 
-    bool enable;                ///< target setting defined via communication port (overruled if
-                                ///< battery is empty)
-    bool usb_enable;            ///< same for USB output
+private:
+    int determine_load_state();
+
 };
 
 #endif /* LOAD_H */

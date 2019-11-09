@@ -177,7 +177,7 @@ void UExtWifi::process_1s() {
     static WifiState state = STATE_WIFI_RESET;
     static int error_counter = 0;
 
-    if (load.usb_state != LOAD_STATE_ON) {
+    if (!load.usb_pgood) {
         wifi_enable = 0;
         state = STATE_WIFI_IDLE;
     }
@@ -255,7 +255,7 @@ void UExtWifi::process_1s() {
                 error_counter++;
                 break;
             case STATE_WIFI_IDLE:
-                if (load.usb_state == LOAD_STATE_ON) {
+                if (load.usb_pgood) {
                     state = STATE_WIFI_RESET;
                 }
                 break;

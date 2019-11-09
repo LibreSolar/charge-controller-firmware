@@ -76,9 +76,11 @@ void adc_alert_undervoltage_triggering()
     adcval.battery_voltage = bat_conf.voltage_absolute_min - 0.1;
     prepare_adc_readings(adcval);
     adc_update_value(ADC_POS_V_BAT);
-    TEST_ASSERT_EQUAL(false, dev_stat.has_error(ERR_BAT_UNDERVOLTAGE));
+    TEST_ASSERT_EQUAL(false, dev_stat.has_error(ERR_LOAD_VOLTAGE_DIP));
     adc_update_value(ADC_POS_V_BAT);
-    TEST_ASSERT_EQUAL(true, dev_stat.has_error(ERR_BAT_UNDERVOLTAGE));
+    load.control();
+    TEST_ASSERT_EQUAL(true, dev_stat.has_error(ERR_LOAD_VOLTAGE_DIP));
+    TEST_ASSERT_EQUAL(false, load.pgood);
     TEST_ASSERT_EQUAL(LOAD_STATE_OFF_OVERCURRENT, load.state);
 
     // reset values

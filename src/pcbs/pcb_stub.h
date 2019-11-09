@@ -48,8 +48,8 @@
 #define PIN_SWD_TX    0
 #define PIN_SWD_RX    0
 
-#define PIN_LOAD_DIS    0
-#define PIN_USB_PWR_DIS 0
+//#define PIN_LOAD_DIS    0
+//#define PIN_USB_PWR_DIS 0
 
 enum pin_state_t { PIN_HIGH, PIN_LOW, PIN_FLOAT };
 

@@ -163,8 +163,6 @@ int main()
             bat_terminal.pass_voltage_targets(&pwm_port_int);
             #endif
 
-            load.state_machine();
-
             // update regularly to cover changed battery configurations
             adc_set_lv_alerts(bat_conf.voltage_absolute_max * charger.num_batteries,
                 bat_conf.voltage_absolute_min * charger.num_batteries);
@@ -172,7 +170,7 @@ int main()
             eeprom_update();
 
             leds_update_1s();
-            leds_update_soc(charger.soc, load.state == LOAD_STATE_OFF_LOW_SOC);
+            leds_update_soc(charger.soc, dev_stat.has_error(ERR_LOAD_LOW_SOC));
 
             uext.process_1s();
             ts_interfaces.process_1s();

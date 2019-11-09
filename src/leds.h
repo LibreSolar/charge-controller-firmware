@@ -25,7 +25,7 @@
 
 /** LED state type
  */
-enum led_state_t {
+enum LedState {
     LED_STATE_OFF = 0,
     LED_STATE_ON,
     LED_STATE_BLINK,

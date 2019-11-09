@@ -36,96 +36,111 @@
  * Each enum must represent a unique power of 2 number
  */
 enum ErrorFlag {
+
     /** Battery voltage too low
      *
      * Set directly in ISR after ADC conversion finished, cleared in Charger::discharge_control()
+     * when voltage reached higher level again.
      */
     ERR_BAT_UNDERVOLTAGE = 1U << 0,
 
     /** Battery voltage too high
      *
-     * Set directly in ISR after ADC conversion finished, cleared in Charger::charge_control()
+     * Set directly in ISR after ADC conversion finished, cleared in Charger::charge_control() when
+     * voltage reached lower level again.
      */
     ERR_BAT_OVERVOLTAGE = 1U << 1,
 
     /** Battery discharge overcurrent
      *
-     * Not used yet
+     * Not used yet, reserved for future.
      */
     ERR_BAT_DIS_OVERCURRENT = 1U << 2,
 
     /** Battery charge overcurrent
      *
-     * Not used yet
+     * Not used yet, reserved for future.
      */
     ERR_BAT_CHG_OVERCURRENT = 1U << 3,
 
     /** Temperature below discharge minimum limit
      *
-     * Set and cleared in Charger::discharge_control
+     * Set and cleared in Charger::discharge_control (with 2°C hysteresis)
      */
     ERR_BAT_DIS_UNDERTEMP = 1U << 4,
 
     /** Temperature above discharge maximum limit
      *
-     * Set and cleared in Charger::discharge_control
+     * Set and cleared in Charger::discharge_control (with 2°C hysteresis)
      */
     ERR_BAT_DIS_OVERTEMP = 1U << 5,
 
     /** Temperature below charge minimum limit
      *
-     * Set and cleared in Charger::discharge_control
+     * Set and cleared in Charger::charge_control (with 2°C hysteresis)
      */
     ERR_BAT_CHG_UNDERTEMP = 1U << 6,
 
     /** Temperature above charge maximum limit
      *
-     * Set and cleared in Charger::discharge_control
+     * Set and cleared in Charger::charge_control (with 2°C hysteresis)
      */
     ERR_BAT_CHG_OVERTEMP = 1U << 7,
 
+    /** SOC too low so that load was switched off
+     *
+     * Set in LoadOutput::control() in case of ERR_BAT_UNDERVOLTAGE, cleared after reconnect
+     * delay passed and undervoltage error is resolved.
+     */
+    ERR_LOAD_LOW_SOC = 1U << 8,
+
     /** To high voltage for load so that it was switched off
      *
-     * Set in LoadOutput::control() and cleared in LoadOutput::state_machine()
+     * Set and cleared in LoadOutput::control()
      */
-    ERR_LOAD_OVERVOLTAGE = 1U << 8,
+    ERR_LOAD_OVERVOLTAGE = 1U << 9,
 
     /** Long-term overcurrent of load port
      *
-     * Set in LoadOutput::control() and cleared in LoadOutput::state_machine()
+     * Set in LoadOutput::control() and cleared after configurable delay.
      */
-    ERR_LOAD_OVERCURRENT = 1U << 9,
+    ERR_LOAD_OVERCURRENT = 1U << 10,
 
     /** Short circuit detected at load port
      *
-     * Set by LoadOutput::control() after overcurrent comparator triggered, cleared in
-     * LoadOutput::state_machine()
+     * Set by LoadOutput::control() after overcurrent comparator triggered, cleared only if
+     * load output is manually disabled and enabled again.
      */
-    ERR_LOAD_SHORT_CIRCUIT = 1U << 10,
+    ERR_LOAD_SHORT_CIRCUIT = 1U << 11,
 
     /** Overcurrent identified via voltage dip (may be caused by too small battery)
      *
-     * Set in LoadOutput::control() and cleared in LoadOutput::state_machine(). Reported as
-     * overcurrent in load state machine.
+     * Set and cleared in LoadOutput::control(). Treated same as load overcurrent.
      */
-    ERR_LOAD_VOLTAGE_DIP = 1U << 11,
+    ERR_LOAD_VOLTAGE_DIP = 1U << 12,
 
     /** Charge controller internal temperature too high
      *
      * Set and cleared by ADC update_measurements()
      */
-    ERR_INT_OVERTEMP = 1U << 12,
+    ERR_INT_OVERTEMP = 1U << 13,
 
     /** Short-circuit in HS MOSFET
      *
      * Set in Dcdc::control() and never cleared
      */
-    ERR_DCDC_HS_MOSFET_SHORT = 1U << 13,
+    ERR_DCDC_HS_MOSFET_SHORT = 1U << 14,
 
     /** Mask to catch all error flags (up to 32 errors)
      */
     ERR_ANY_ERROR = UINT32_MAX,
 };
+
+/** Error flags that require load to be switched off
+ */
+const uint32_t ERR_LOAD_ANY = ERR_BAT_DIS_OVERTEMP | ERR_BAT_DIS_UNDERTEMP |
+    ERR_LOAD_LOW_SOC | ERR_LOAD_OVERVOLTAGE | ERR_LOAD_OVERCURRENT |
+    ERR_LOAD_SHORT_CIRCUIT | ERR_LOAD_VOLTAGE_DIP | ERR_INT_OVERTEMP;
 
 /** Device Status data
  *
