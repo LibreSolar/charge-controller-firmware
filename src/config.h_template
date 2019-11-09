@@ -47,6 +47,9 @@
 
 // OLED display at UEXT port
 //#define OLED_ENABLED
+// OLED Brightness (value 0x01-0xff or 1-255)
+// leave undefined to use default
+//#define OLED_BRIGHTNESS 0x1
 
 // UART serial at SWD connector
 #define UART_SERIAL_ENABLED
