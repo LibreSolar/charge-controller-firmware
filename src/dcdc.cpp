@@ -106,7 +106,7 @@ int Dcdc::duty_cycle_delta()
     }
     else if (fabs(lvs->current) > ls_current_max    // current above hardware maximum
         || temp_mosfets > 80                        // temperature limits exceeded
-        || (in->voltage < (in->src_voltage_start - in->neg_droop_res * in->current)
+        || (in->voltage < (in->src_voltage_stop - in->neg_droop_res * in->current)
             && out->current > 0.1)                  // input voltage below limit
         || in->current < in->neg_current_limit)     // input current (negative signs) limit exceeded
     {
