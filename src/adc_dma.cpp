@@ -20,6 +20,7 @@
 
 #include "main.h"
 #include "debug.h"
+#include <assert.h>
 
 #include "adc_dma.h"
 #include "pcb.h"        // contains defines for pins
@@ -54,28 +55,75 @@
 AnalogOut ref_i_dcdc(PIN_REF_I_DCDC);
 #endif
 
-float solar_current_offset;
-float load_current_offset;
+
+static float solar_current_offset;
+static float load_current_offset;
 
 // for ADC and DMA
-volatile uint16_t adc_readings[NUM_ADC_CH] = {0};
-volatile uint32_t adc_filtered[NUM_ADC_CH] = {0};
-volatile AdcAlert adc_alerts_upper[NUM_ADC_CH] = {0};
-volatile AdcAlert adc_alerts_lower[NUM_ADC_CH] = {0};
+static volatile uint16_t adc_readings[NUM_ADC_CH] = {0};
+static volatile uint32_t adc_filtered[NUM_ADC_CH] = {0};
+static volatile AdcAlert adc_alerts_upper[NUM_ADC_CH] = {0};
+static volatile AdcAlert adc_alerts_lower[NUM_ADC_CH] = {0};
 
 extern DeviceStatus dev_stat;
 
+/**
+ * Average value for ADC channel
+ * @param channel valid ADC channel pos ADC_POS_..., see adc_h.c
+ */
+static inline uint32_t adc_value(uint32_t channel)
+{
+    assert(channel < NUM_ADC_CH);
+    return adc_filtered[channel] >> (4 + ADC_FILTER_CONST);
+}
+
+/**
+ * Measured voltage for ADC channel after average
+ * @param channel valid ADC channel pos ADC_POS_..., see adc_h.c
+ * @param vcc reference voltage in millivolts
+ * 
+ * @return voltage in millivolts 
+ */
+static inline float adc_voltage(uint32_t channel, int32_t vcc)
+{
+    return (adc_value(channel) * vcc) / 4096;
+}
+/**
+ * Measured current/voltage for ADC channel after average and scaling
+ * @param channel valid ADC channel pos ADC_POS_..., see adc_h.c
+ * @param vcc reference voltage in millivolts
+ * 
+ * @return scaled final value 
+ */
+static inline float adc_scaled(uint32_t channel, int32_t vcc, const float gain)
+{
+    return adc_voltage(channel,vcc) * (gain/1000.0);
+}
+
+static inline float ntc_temp(uint32_t channel, int32_t vcc)
+{
+    /** \todo Improved (faster) temperature calculation:
+       https://www.embeddedrelated.com/showarticle/91.php
+    */
+
+    float v_temp = adc_voltage(channel, vcc);  // voltage read by ADC (mV)
+    float rts = NTC_SERIES_RESISTOR * v_temp / (vcc - v_temp); // resistance of NTC (Ohm)
+    
+    return 1.0/(1.0/(273.15+25) + 1.0/NTC_BETA_VALUE*log(rts/10000.0)) - 273.15; // °C
+
+}
+
+
 void calibrate_current_sensors()
 {
-    int vcc = VREFINT_VALUE * VREFINT_CAL /
-        (adc_filtered[ADC_POS_VREF_MCU] >> (4 + ADC_FILTER_CONST));
+    int vcc = VREFINT_VALUE * VREFINT_CAL / adc_value(ADC_POS_VREF_MCU);
 #if FEATURE_PWM_SWITCH
-    solar_current_offset = -(float)(((adc_filtered[ADC_POS_I_SOLAR] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) * ADC_GAIN_I_SOLAR / 1000.0;
+    solar_current_offset = -adc_scaled(ADC_POS_I_SOLAR, vcc, ADC_GAIN_I_SOLAR);
 #endif
 #if FEATURE_DCDC_CONVERTER
-    solar_current_offset = -(float)(((adc_filtered[ADC_POS_I_DCDC] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) * ADC_GAIN_I_DCDC / 1000.0;
+    solar_current_offset = -adc_scaled(ADC_POS_I_DCDC, vcc, ADC_GAIN_I_DCDC);
 #endif
-    load_current_offset = -(float)(((adc_filtered[ADC_POS_I_LOAD] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) * ADC_GAIN_I_LOAD / 1000.0;
+    load_current_offset = -adc_scaled(ADC_POS_I_LOAD, vcc, ADC_GAIN_I_LOAD);
 }
 
 void adc_update_value(unsigned int pos)
@@ -105,8 +153,7 @@ void adc_update_value(unsigned int pos)
     {
         if (adc_alerts_upper[pos].debounce_ms > 1) {
             // create function pointer and call function
-            void (*alert)(void) = reinterpret_cast<void(*)()>(adc_alerts_upper[pos].callback);
-            alert();
+            adc_alerts_upper[pos].callback();
         }
     }
     else if (adc_alerts_upper[pos].debounce_ms > 0) {
@@ -121,8 +168,7 @@ void adc_update_value(unsigned int pos)
         adc_readings[pos] < adc_alerts_lower[pos].limit)
     {
         if (adc_alerts_lower[pos].debounce_ms > 1) {
-            void (*alert)(void) = reinterpret_cast<void(*)()>(adc_alerts_lower[pos].callback);
-            alert();
+            adc_alerts_lower[pos].callback();
         }
     }
     else if (adc_alerts_lower[pos].debounce_ms > 0) {
@@ -137,40 +183,32 @@ void update_measurements()
     //int vcc = 2500 * 4096 / (adc_filtered[ADC_POS_V_REF] >> (4 + ADC_FILTER_CONST));
 
     // internal STM reference voltage
-    int vcc = VREFINT_VALUE * VREFINT_CAL /
-        (adc_filtered[ADC_POS_VREF_MCU] >> (4 + ADC_FILTER_CONST));
+    int vcc = VREFINT_VALUE * VREFINT_CAL / adc_value(ADC_POS_VREF_MCU);
 
     // rely on LDO accuracy
     //int vcc = 3300;
 
     // calculate lower voltage first, as it is needed for PWM terminal voltage calculation
-    lv_terminal.voltage =
-        (float)(((adc_filtered[ADC_POS_V_BAT] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
-        ADC_GAIN_V_BAT / 1000.0;
+    lv_terminal.voltage = adc_scaled(ADC_POS_V_BAT, vcc, ADC_GAIN_V_BAT);
     load_terminal.voltage = lv_terminal.voltage;
 
 #if FEATURE_DCDC_CONVERTER
-    hv_terminal.voltage =
-        (float)(((adc_filtered[ADC_POS_V_SOLAR] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
-        ADC_GAIN_V_SOLAR / 1000.0;
+    hv_terminal.voltage = adc_scaled(ADC_POS_V_SOLAR, vcc, ADC_GAIN_V_SOLAR);
     dcdc_lv_port.voltage = lv_terminal.voltage;
 #endif
 #if FEATURE_PWM_SWITCH
-    pwm_terminal.voltage = lv_terminal.voltage - vcc * ADC_OFFSET_V_SOLAR / 1000.0 -
-        (float)(((adc_filtered[ADC_POS_V_SOLAR] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
-        ADC_GAIN_V_SOLAR / 1000.0;
+    pwm_terminal.voltage = lv_terminal.voltage - vcc * (ADC_OFFSET_V_SOLAR / 1000.0) -
+        adc_scaled(ADC_POS_V_SOLAR, vcc, ADC_GAIN_V_SOLAR);
     pwm_port_int.voltage = lv_terminal.voltage;
 #endif
 
     load_terminal.current =
-        (float)(((adc_filtered[ADC_POS_I_LOAD] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
-        ADC_GAIN_I_LOAD / 1000.0 + load_current_offset;
+        adc_scaled(ADC_POS_I_LOAD, vcc, ADC_GAIN_I_LOAD) + load_current_offset;
 
 #if FEATURE_PWM_SWITCH
     // current multiplied with PWM duty cycle for PWM charger to get avg current for correct power calculation
     pwm_port_int.current = pwm_switch.get_duty_cycle() * (
-        (float)(((adc_filtered[ADC_POS_I_SOLAR] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
-        ADC_GAIN_I_SOLAR / 1000.0 + solar_current_offset);
+        adc_scaled(ADC_POS_I_SOLAR, vcc, ADC_GAIN_I_SOLAR) + solar_current_offset);
     pwm_terminal.current = -pwm_port_int.current;
     lv_terminal.current = pwm_port_int.current - load_terminal.current;
 
@@ -179,8 +217,7 @@ void update_measurements()
 #endif
 #if FEATURE_DCDC_CONVERTER
     dcdc_lv_port.current =
-        (float)(((adc_filtered[ADC_POS_I_DCDC] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096) *
-        ADC_GAIN_I_DCDC / 1000.0 + solar_current_offset;
+        adc_scaled(ADC_POS_I_DCDC, vcc, ADC_GAIN_I_DCDC) + solar_current_offset;
     lv_terminal.current = dcdc_lv_port.current - load_terminal.current;
     hv_terminal.current = -dcdc_lv_port.current * lv_terminal.voltage / hv_terminal.voltage;
 
@@ -190,23 +227,10 @@ void update_measurements()
     lv_terminal.power   = lv_terminal.voltage * lv_terminal.current;
     load_terminal.power = load_terminal.voltage * load_terminal.current;
 
-    /** \todo Improved (faster) temperature calculation:
-       https://www.embeddedrelated.com/showarticle/91.php
-    */
-
-#if defined PIN_ADC_TEMP_BAT || defined PIN_ADC_TEMP_FETS
-    float v_temp, rts;
-#endif
-
 #ifdef PIN_ADC_TEMP_BAT
     // battery temperature calculation
-    v_temp = ((adc_filtered[ADC_POS_TEMP_BAT] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096;  // voltage read by ADC (mV)
-    rts = NTC_SERIES_RESISTOR * v_temp / (vcc - v_temp); // resistance of NTC (Ohm)
-
-    // Temperature calculation using Beta equation for 10k thermistor
-    // (25°C reference temperature for Beta equation assumed)
-    float bat_temp = 1.0/(1.0/(273.15+25) + 1.0/NTC_BETA_VALUE*log(rts/10000.0)) - 273.15; // °C
-
+    float bat_temp = ntc_temp(ADC_POS_TEMP_BAT, vcc);
+    
     if (bat_temp > -50) {
         // external sensor connected: take measured value
         charger.bat_temperature = bat_temp;
@@ -221,13 +245,11 @@ void update_measurements()
 
 #ifdef PIN_ADC_TEMP_FETS
     // MOSFET temperature calculation
-    v_temp = ((adc_filtered[ADC_POS_TEMP_FETS] >> (4 + ADC_FILTER_CONST)) * vcc) / 4096;  // voltage read by ADC (mV)
-    rts = 10000 * v_temp / (vcc - v_temp); // resistance of NTC (Ohm)
-    dcdc.temp_mosfets = 1.0/(1.0/(273.15+25) + 1.0/NTC_BETA_VALUE*log(rts/10000.0)) - 273.15; // °C
+    dcdc.temp_mosfets = ntc_temp(ADC_POS_TEMP_FETS, vcc);
 #endif
 
     // internal MCU temperature
-    uint16_t adcval = (adc_filtered[ADC_POS_TEMP_MCU] >> (4 + ADC_FILTER_CONST)) * vcc / VREFINT_VALUE;
+    uint16_t adcval = adc_value(ADC_POS_TEMP_MCU) * vcc / VREFINT_VALUE;
     dev_stat.internal_temp = (TSENSE_CAL2_VALUE - TSENSE_CAL1_VALUE) /
         (TSENSE_CAL2 - TSENSE_CAL1) * (adcval - TSENSE_CAL1) + TSENSE_CAL1_VALUE;
 
@@ -281,17 +303,18 @@ void adc_upper_alert_inhibit(int adc_pos, int timeout_ms)
 void adc_set_lv_alerts(float upper, float lower)
 {
     int vcc = VREFINT_VALUE * VREFINT_CAL /
-        (adc_filtered[ADC_POS_VREF_MCU] >> (4 + ADC_FILTER_CONST));
+        adc_value(ADC_POS_VREF_MCU);
+    float scale =  ((4096* 1000) / (ADC_GAIN_V_BAT)) / vcc;    
 
     // LV side (battery) overvoltage alert
     adc_alerts_upper[ADC_POS_V_BAT].limit =
-        (uint16_t)((upper * 1000 / (ADC_GAIN_V_BAT) * 4096.0 / vcc)) << 4;
-    adc_alerts_upper[ADC_POS_V_BAT].callback = (void *) &high_voltage_alert;
+        (uint16_t)(upper * scale) << 4;
+    adc_alerts_upper[ADC_POS_V_BAT].callback = high_voltage_alert;
 
     // LV side (battery) undervoltage alert
     adc_alerts_lower[ADC_POS_V_BAT].limit =
-        (uint16_t)((lower * 1000 / (ADC_GAIN_V_BAT) * 4096.0 / vcc)) << 4;
-    adc_alerts_lower[ADC_POS_V_BAT].callback = (void *) &low_voltage_alert;
+        (uint16_t)(lower * scale) << 4;
+    adc_alerts_lower[ADC_POS_V_BAT].callback = low_voltage_alert;
 }
 
 #ifndef UNIT_TEST
@@ -490,6 +513,38 @@ extern "C" void TIM6_IRQHandler(void)
 {
     TIM6->SR &= ~(1 << 0);
     ADC1->CR |= ADC_CR_ADSTART;
+}
+#else
+
+#include "../test/adc_dma_stub.h"
+
+void prepare_adc_readings(AdcValues values)
+{
+    adc_readings[ADC_POS_VREF_MCU] = (uint16_t)(1.224 / 3.3 * 4096) << 4;
+    adc_readings[ADC_POS_V_SOLAR] = (uint16_t)((values.solar_voltage / (ADC_GAIN_V_SOLAR)) / 3.3 * 4096) << 4;
+    adc_readings[ADC_POS_V_BAT] = (uint16_t)((values.battery_voltage / (ADC_GAIN_V_BAT)) / 3.3 * 4096) << 4;
+    adc_readings[ADC_POS_I_DCDC] = (uint16_t)((values.dcdc_current / (ADC_GAIN_I_DCDC)) / 3.3 * 4096) << 4;
+    adc_readings[ADC_POS_I_LOAD] = (uint16_t)((values.load_current / (ADC_GAIN_I_LOAD)) / 3.3 * 4096) << 4;
+}
+
+void prepare_adc_filtered()
+{
+    // initialize also filtered values
+    for (int i = 0; i < NUM_ADC_CH; i++) {
+        adc_filtered[i] = adc_readings[i] << ADC_FILTER_CONST;
+    }
+}
+
+void clear_adc_filtered()
+{
+        // initialize also filtered values
+    for (int i = 0; i < NUM_ADC_CH; i++) {
+        adc_filtered[i] = 0;
+    }  
+}
+uint32_t get_adc_filtered(uint32_t channel)
+{
+    return adc_value(channel);
 }
 
 #endif

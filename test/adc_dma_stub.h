@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#ifndef ADC_DMA_STUB_H
+#define ADC_DMA_STUB_H
 
 #include "config.h"
 
@@ -30,3 +32,6 @@ typedef struct {
 void prepare_adc_readings(AdcValues values);
 
 void prepare_adc_filtered();
+void clear_adc_filtered();
+uint32_t get_adc_filtered(uint32_t channel);
+#endif
