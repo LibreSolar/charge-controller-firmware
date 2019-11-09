@@ -14,8 +14,7 @@ extern AdcAlert adc_alerts[NUM_ADC_CH];
 void check_filtering()
 {
     // reset values
-    adc_filtered[ADC_POS_VREF_MCU] = 0;
-    adc_filtered[ADC_POS_V_SOLAR] = 0;
+    clear_adc_filtered();
 
     // collect 1000 samples to update filtered values
     for (int s = 0; s < 1000; s++) {
@@ -25,14 +24,14 @@ void check_filtering()
     }
 
     uint32_t adc_filtered_bak[NUM_ADC_CH];
-    adc_filtered_bak[ADC_POS_VREF_MCU] = adc_filtered[ADC_POS_VREF_MCU];
-    adc_filtered_bak[ADC_POS_V_SOLAR] = adc_filtered[ADC_POS_V_SOLAR];
+    adc_filtered_bak[ADC_POS_VREF_MCU] = get_adc_filtered(ADC_POS_VREF_MCU);
+    adc_filtered_bak[ADC_POS_V_SOLAR] = get_adc_filtered(ADC_POS_V_SOLAR);
 
     // overwrite filtered values
     prepare_adc_filtered();
 
-    TEST_ASSERT_EQUAL(adc_filtered[ADC_POS_VREF_MCU], adc_filtered_bak[ADC_POS_VREF_MCU]);
-    TEST_ASSERT_EQUAL(adc_filtered[ADC_POS_V_SOLAR], adc_filtered_bak[ADC_POS_V_SOLAR]);
+    TEST_ASSERT_EQUAL(get_adc_filtered(ADC_POS_VREF_MCU), adc_filtered_bak[ADC_POS_VREF_MCU]);
+    TEST_ASSERT_EQUAL(get_adc_filtered(ADC_POS_V_SOLAR), adc_filtered_bak[ADC_POS_V_SOLAR]);
 }
 
 void check_solar_terminal_readings()

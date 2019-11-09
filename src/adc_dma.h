@@ -31,7 +31,7 @@
 /** Struct to definie upper and lower limit alerts for any ADC channel
  */
 typedef struct {
-    void *callback = NULL;          ///< Function to be called when limits are exceeded
+    void (*callback)() = NULL;      ///< Function to be called when limits are exceeded
     uint16_t limit = 0;             ///< ADC reading for lower limit
     int debounce_ms = 0;            ///< Milliseconds delay for triggering alert
 } AdcAlert;
