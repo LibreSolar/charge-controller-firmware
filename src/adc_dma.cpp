@@ -81,8 +81,8 @@ static inline uint32_t adc_value(uint32_t channel)
  * Measured voltage for ADC channel after average
  * @param channel valid ADC channel pos ADC_POS_..., see adc_h.c
  * @param vcc reference voltage in millivolts
- * 
- * @return voltage in millivolts 
+ *
+ * @return voltage in millivolts
  */
 static inline float adc_voltage(uint32_t channel, int32_t vcc)
 {
@@ -92,8 +92,8 @@ static inline float adc_voltage(uint32_t channel, int32_t vcc)
  * Measured current/voltage for ADC channel after average and scaling
  * @param channel valid ADC channel pos ADC_POS_..., see adc_h.c
  * @param vcc reference voltage in millivolts
- * 
- * @return scaled final value 
+ *
+ * @return scaled final value
  */
 static inline float adc_scaled(uint32_t channel, int32_t vcc, const float gain)
 {
@@ -108,7 +108,7 @@ static inline float ntc_temp(uint32_t channel, int32_t vcc)
 
     float v_temp = adc_voltage(channel, vcc);  // voltage read by ADC (mV)
     float rts = NTC_SERIES_RESISTOR * v_temp / (vcc - v_temp); // resistance of NTC (Ohm)
-    
+
     return 1.0/(1.0/(273.15+25) + 1.0/NTC_BETA_VALUE*log(rts/10000.0)) - 273.15; // °C
 
 }
@@ -149,7 +149,7 @@ void adc_update_value(unsigned int pos)
     // check upper alerts
     adc_alerts_upper[pos].debounce_ms++;
     if (adc_alerts_upper[pos].callback != NULL &&
-        adc_readings[pos] > adc_alerts_upper[pos].limit)
+        adc_readings[pos] >= adc_alerts_upper[pos].limit)
     {
         if (adc_alerts_upper[pos].debounce_ms > 1) {
             // create function pointer and call function
@@ -165,7 +165,7 @@ void adc_update_value(unsigned int pos)
     // same for lower alerts
     adc_alerts_lower[pos].debounce_ms++;
     if (adc_alerts_lower[pos].callback != NULL &&
-        adc_readings[pos] < adc_alerts_lower[pos].limit)
+        adc_readings[pos] <= adc_alerts_lower[pos].limit)
     {
         if (adc_alerts_lower[pos].debounce_ms > 1) {
             adc_alerts_lower[pos].callback();
@@ -230,7 +230,7 @@ void update_measurements()
 #ifdef PIN_ADC_TEMP_BAT
     // battery temperature calculation
     float bat_temp = ntc_temp(ADC_POS_TEMP_BAT, vcc);
-    
+
     if (bat_temp > -50) {
         // external sensor connected: take measured value
         charger.bat_temperature = bat_temp;
@@ -300,20 +300,27 @@ void adc_upper_alert_inhibit(int adc_pos, int timeout_ms)
     adc_alerts_upper[adc_pos].debounce_ms = -timeout_ms;
 }
 
+uint16_t adc_get_alert_limit(float scale, float limit)
+{
+    const float adclimit = (UINT16_MAX >> 4); // 12 bits ADC resolution
+    const float limit_scaled = limit * scale;
+    // even if we have a higher voltage limit, we must limit it
+    // to the max value the ADC will be able to deliver
+    return (limit_scaled > adclimit ? 0x0FFF : (uint16_t)(limit_scaled)) << 4; 
+    // shift 4 bits left to generate left aligned 16bit value 
+}
+
 void adc_set_lv_alerts(float upper, float lower)
 {
-    int vcc = VREFINT_VALUE * VREFINT_CAL /
-        adc_value(ADC_POS_VREF_MCU);
-    float scale =  ((4096* 1000) / (ADC_GAIN_V_BAT)) / vcc;    
+    int vcc = VREFINT_VALUE * VREFINT_CAL / adc_value(ADC_POS_VREF_MCU);
+    float scale =  ((4096* 1000) / (ADC_GAIN_V_BAT)) / vcc;
 
     // LV side (battery) overvoltage alert
-    adc_alerts_upper[ADC_POS_V_BAT].limit =
-        (uint16_t)(upper * scale) << 4;
+    adc_alerts_upper[ADC_POS_V_BAT].limit = adc_get_alert_limit(scale, upper);
     adc_alerts_upper[ADC_POS_V_BAT].callback = high_voltage_alert;
 
     // LV side (battery) undervoltage alert
-    adc_alerts_lower[ADC_POS_V_BAT].limit =
-        (uint16_t)(lower * scale) << 4;
+    adc_alerts_lower[ADC_POS_V_BAT].limit = adc_get_alert_limit(scale, lower);
     adc_alerts_lower[ADC_POS_V_BAT].callback = low_voltage_alert;
 }
 
@@ -540,7 +547,7 @@ void clear_adc_filtered()
         // initialize also filtered values
     for (int i = 0; i < NUM_ADC_CH; i++) {
         adc_filtered[i] = 0;
-    }  
+    }
 }
 uint32_t get_adc_filtered(uint32_t channel)
 {
