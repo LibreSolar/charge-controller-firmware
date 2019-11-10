@@ -300,20 +300,27 @@ void adc_upper_alert_inhibit(int adc_pos, int timeout_ms)
     adc_alerts_upper[adc_pos].debounce_ms = -timeout_ms;
 }
 
+static uint16_t adc_get_alert_limit(float scale, float limit)
+{
+    const float adclimit = 0x0FFF; // 12 bits ADC resolution
+    const float limit_scaled = limit * scale; 
+    // even if we have a higher voltage limit, we must limit it
+    // to the max value the ADC will be able to deliver
+    return (limit_scaled > adclimit ? 0x0FFF : (uint16_t)(limit_scaled)) << 4; 
+    // shift 4 bits left to generate left aligned 16bit value 
+}
+
 void adc_set_lv_alerts(float upper, float lower)
 {
-    int vcc = VREFINT_VALUE * VREFINT_CAL /
-        adc_value(ADC_POS_VREF_MCU);
+    int vcc = VREFINT_VALUE * VREFINT_CAL / adc_value(ADC_POS_VREF_MCU);
     float scale =  ((4096* 1000) / (ADC_GAIN_V_BAT)) / vcc;    
 
     // LV side (battery) overvoltage alert
-    adc_alerts_upper[ADC_POS_V_BAT].limit =
-        (uint16_t)(upper * scale) << 4;
+    adc_alerts_upper[ADC_POS_V_BAT].limit = adc_get_alert_limit(scale, upper);
     adc_alerts_upper[ADC_POS_V_BAT].callback = high_voltage_alert;
 
     // LV side (battery) undervoltage alert
-    adc_alerts_lower[ADC_POS_V_BAT].limit =
-        (uint16_t)(lower * scale) << 4;
+    adc_alerts_lower[ADC_POS_V_BAT].limit = adc_get_alert_limit(scale, lower);
     adc_alerts_lower[ADC_POS_V_BAT].callback = low_voltage_alert;
 }
 

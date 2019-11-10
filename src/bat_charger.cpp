@@ -111,7 +111,7 @@ void battery_conf_init(BatConf *bat, BatType type, int num_cells, float nominal_
         case BAT_TYPE_NMC:
         case BAT_TYPE_NMC_HV:
             bat->topping_voltage = num_cells * ((type == BAT_TYPE_NMC_HV) ? 4.35 : 4.20);
-            bat->voltage_absolute_max = num_cells * (bat->topping_voltage + 0.05);
+            bat->voltage_absolute_max = bat->topping_voltage + num_cells * 0.05;
             bat->voltage_recharge = num_cells * 3.9;
 
             bat->voltage_load_disconnect = num_cells * 3.3;
@@ -191,7 +191,7 @@ void battery_conf_overwrite(BatConf *source, BatConf *destination, Charger *char
     destination->voltage_absolute_min           = source->voltage_absolute_min;
     destination->charge_current_max             = source->charge_current_max;
     destination->topping_current_cutoff         = source->topping_current_cutoff;
-    destination->topping_duration             = source->topping_duration;
+    destination->topping_duration               = source->topping_duration;
     destination->trickle_enabled                = source->trickle_enabled;
     destination->trickle_voltage                = source->trickle_voltage;
     destination->trickle_recharge_time          = source->trickle_recharge_time;
