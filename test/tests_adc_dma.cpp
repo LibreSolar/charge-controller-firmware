@@ -5,10 +5,9 @@
 
 #include "main.h"
 
-static AdcValues adcval;
+#include <stdint.h>
 
-extern uint32_t adc_filtered[NUM_ADC_CH];
-extern AdcAlert adc_alerts[NUM_ADC_CH];
+static AdcValues adcval;
 
 // testing only for 2 values
 void check_filtering()
@@ -123,6 +122,13 @@ void adc_alert_overvoltage_triggering()
     TEST_ASSERT_EQUAL(false, dev_stat.has_error(ERR_BAT_OVERVOLTAGE));
 }
 
+void adc_alert_overflow_prevention()
+{
+    // try to set an alert that overflows the 12-bit ADC resolution
+    uint16_t limit = adc_get_alert_limit(1, 4097);
+    TEST_ASSERT_EQUAL_HEX((uint16_t)(UINT16_MAX << 4), limit);
+}
+
 /** ADC conversion test
  *
  * Purpose: Check if raw data from 2 voltage and 2 current measurements are converted
@@ -154,6 +160,7 @@ void adc_tests()
 
     RUN_TEST(adc_alert_undervoltage_triggering);
     RUN_TEST(adc_alert_overvoltage_triggering);
+    RUN_TEST(adc_alert_overflow_prevention);
 
     UNITY_END();
 }
