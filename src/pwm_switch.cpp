@@ -83,8 +83,11 @@ extern "C" void TIM3_IRQHandler(void)
 {
     TIM3->SR &= ~TIM_SR_UIF;       // clear update interrupt flag
 
-    // turning the PWM switch on creates a short voltage rise, so inhibit alerts by 10 ms
-    adc_upper_alert_inhibit(ADC_POS_V_BAT, 10);
+    if ((int)TIM3->CCR4 < _pwm_resolution) {
+        // turning the PWM switch on creates a short voltage rise, so inhibit alerts by 10 ms
+        // at each rising edge if switch is not continuously on
+        adc_upper_alert_inhibit(ADC_POS_V_BAT, 10);
+    }
 }
 
 void pwm_signal_set_duty_cycle(float duty)
@@ -180,6 +183,7 @@ void PwmSwitch::control()
     if (_pwm_active) {
         if (port_int->pos_current_limit == 0 || terminal->neg_current_limit == 0
             || terminal->current > 0           // discharging battery into solar panel --> stop
+            || port_int->voltage < 9.0         // not enough voltage for MOSFET drivers anymore
             || enabled == false)
         {
             pwm_signal_stop();

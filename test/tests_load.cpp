@@ -37,7 +37,7 @@ void control_pgood_to_off_overvoltage()
     load_init(&load);
     load.state = LOAD_STATE_ON;
     dev_stat.clear_error(ERR_ANY_ERROR);
-    port.voltage = 14.8;
+    port.voltage = port.sink_voltage_max + 0.6;
 
     // increase debounce counter to 1 before limit
     for (int i = 0; i < CONTROL_FREQUENCY; i++) {
@@ -252,7 +252,7 @@ void control_off_overvoltage_to_on_at_lower_voltage()
     TEST_ASSERT_EQUAL(ERR_LOAD_OVERVOLTAGE, dev_stat.error_flags);
     TEST_ASSERT_EQUAL(LOAD_STATE_OFF_OVERVOLTAGE, load.state);
 
-    port.voltage = port.sink_voltage_max - 0.6;
+    port.voltage = port.sink_voltage_max - load.ov_hysteresis - 0.1;
     load.control();
     TEST_ASSERT_EQUAL(0, dev_stat.error_flags);
     TEST_ASSERT_EQUAL(LOAD_STATE_ON, load.state);       // deprecated

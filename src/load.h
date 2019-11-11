@@ -111,6 +111,7 @@ public:
     float junction_temperature; ///< calculated using thermal model based on current and ambient
                                 ///< temperature measurement (unit: °C)
 
+    float ov_hysteresis;        ///< Hysteresis to switch back on after an overvoltage event
 private:
     int determine_load_state();
 

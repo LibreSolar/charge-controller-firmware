@@ -28,7 +28,7 @@
 #include "config.h"             // user-specific configuration
 
 #include "half_bridge.h"        // PWM generation for DC/DC converter
-#include "hardware.h"           // hardware-related functions like load switch, LED control, watchdog, etc.
+#include "hardware.h"           // hardware-related functions like watchdog, etc.
 #include "dcdc.h"               // DC/DC converter control (hardware independent)
 #include "pwm_switch.h"         // PWM charge controller
 #include "bat_charger.h"        // battery settings and charger state machine
@@ -133,13 +133,9 @@ int main()
     control_timer_start(CONTROL_FREQUENCY);
     wait(0.1);  // necessary to prevent MCU from randomly getting stuck here if PV panel is connected before battery
 
-
-    sleep_manager_lock_deep_sleep(); // required to have sleep returning.
-    /*
-        The mBed Serial class calls this internal during "attach", this is why it work with ThingSet Serial enabled even
-        without this statement. Might be an issue of the particular STM32F072 mBed code or may affect
-        also STM32L073 platforms on mBed
-    */
+    // The Mbed Serial class calls sleep_manager_lock_deep_sleep() internally during attach. If no
+    // Serial is enabled, sleep does not always return in STM32F072, so we lock deep sleep manually
+    sleep_manager_lock_deep_sleep();
 
     // the main loop is suitable for slow tasks like communication (even blocking wait allowed)
     time_t last_call = timestamp;
@@ -149,9 +145,8 @@ int main()
         uext.process_asap();
 
         time_t now = timestamp;
-        if (now >= last_call + 1 || now < last_call) {   // called once per second (or slower if blocking wait occured somewhere)
-
-            //printf("Still alive... time: %d, mode: %d\n", (int)time(NULL), dcdc.mode);
+        if (now >= last_call + 1 || now < last_call) {
+            // called once per second (or slower if blocking wait occured somewhere)
 
             charger.discharge_control(&bat_conf);
             charger.charge_control(&bat_conf);
@@ -162,10 +157,6 @@ int main()
             #if FEATURE_PWM_SWITCH
             bat_terminal.pass_voltage_targets(&pwm_port_int);
             #endif
-
-            // update regularly to cover changed battery configurations
-            adc_set_lv_alerts(bat_conf.voltage_absolute_max * charger.num_batteries,
-                bat_conf.voltage_absolute_min * charger.num_batteries);
 
             eeprom_update();
 
@@ -192,6 +183,9 @@ void system_control()
 
     // convert ADC readings to meaningful measurement values
     update_measurements();
+
+    // alerts should trigger only for transients, so update based on actual voltage
+    adc_set_lv_alerts(lv_terminal.voltage * 1.2, lv_terminal.voltage * 0.8);
 
     #if FEATURE_PWM_SWITCH
     ports_update_current_limits(&pwm_port_int, &bat_terminal, &load_terminal);

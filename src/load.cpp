@@ -200,6 +200,7 @@ LoadOutput::LoadOutput(PowerPort *pwr_port) :
     junction_temperature = 25;              // starting point: 25°C
     oc_recovery_delay = 5*60;               // default: 5 minutes
     lvd_recovery_delay = 60*60;             // default: 1 hour
+    ov_hysteresis = 0.3;
 
     // analog comparator to detect short circuits and trigger immediate load switch-off
     short_circuit_comp_init();
@@ -341,8 +342,8 @@ void LoadOutput::control()
         }
 
         if (dev_stat.has_error(ERR_LOAD_OVERVOLTAGE) &&
-            port->voltage < (port->sink_voltage_max - 0.5) &&
-            port->voltage < (LOW_SIDE_VOLTAGE_MAX - 0.5))
+            port->voltage < (port->sink_voltage_max - ov_hysteresis) &&
+            port->voltage < (LOW_SIDE_VOLTAGE_MAX - ov_hysteresis))
         {
             dev_stat.clear_error(ERR_LOAD_OVERVOLTAGE);
         }
