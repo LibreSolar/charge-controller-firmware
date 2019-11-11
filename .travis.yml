@@ -1,6 +1,4 @@
 language: python
-python:
-    - "2.7"
 
 # Cache PlatformIO packages using Travis CI container-based infrastructure
 sudo: false
@@ -15,13 +13,6 @@ install:
     - pip install -U platformio
     - platformio update
 
-    #
-    # Libraries from PlatformIO Library Registry:
-    #
-    # https://platformio.org/lib/show/4ee/
-    # https://platformio.org/lib/show/c23/
-    # - platformio lib -g install 4ee c23
-
 addons:
     apt:
         packages:
@@ -29,9 +20,9 @@ addons:
 
 script:
     - cp src/config.h_template src/config.h
-    # - platformio ci --lib="lib/Adafruit_GFX" --lib="lib/ThingSet" --project-conf=platformio.ini -e libresolar_0_10,libresolar_0_05
-    - platformio run -e mppt-2420-lc-v0.10 -e mppt-1210-hus-v0.2 -e mppt-1210-hus-v0.4 -e pwm-2420-lus-v0.2
+    - platformio run -e mppt-2420-lc-v0.10 -e mppt-1210-hus-v0.7 -e pwm-2420-lus-v0.3
     - platformio test -e unit-test-native
+    - platformio check -e mppt-1210-hus-v0.7 -e pwm-2420-lus-v0.3
     - doxygen Doxyfile
 
 deploy:
