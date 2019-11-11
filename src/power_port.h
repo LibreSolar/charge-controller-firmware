@@ -109,8 +109,12 @@ public:
     void pass_voltage_targets(PowerPort *port);
 };
 
-/** Sets current limits of DC/DC and load according to battery status
+/** Sets current limits of DC/DC or PWM switch according to load and battery status
+ *
+ * @param internal DC/DC or PWM switch internal port that can be controlled
+ * @param p_bat Battery terminal port whose current limits have to be respected
+ * @param p_load Load output port with current determined by external consumers
  */
-void ports_update_current_limits(PowerPort *p_dcdc, PowerPort *p_bat, PowerPort *p_load);
+void ports_update_current_limits(PowerPort *internal, PowerPort *p_bat, PowerPort *p_load);
 
 #endif /* POWER_PORT_H */

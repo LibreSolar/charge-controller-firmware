@@ -54,7 +54,7 @@ void PowerPort::init_load(float max_load_voltage)
 void PowerPort::energy_balance()
 {
     // remark: timespan = 1s, so no multiplication with time necessary for energy calculation
-    if (current >= 0) {
+    if (current >= 0.0F) {
         pos_energy_Wh += voltage * current / 3600.0;
     }
     else {
@@ -71,15 +71,15 @@ void PowerPort::pass_voltage_targets(PowerPort *port)
     port->src_voltage_stop = src_voltage_stop + pos_droop_res * current;
 }
 
-void ports_update_current_limits(PowerPort *p_dcdc, PowerPort *p_bat, PowerPort *p_load)
+void ports_update_current_limits(PowerPort *internal, PowerPort *p_bat, PowerPort *p_load)
 {
-    p_dcdc->pos_current_limit = p_bat->pos_current_limit - p_bat->current + p_load->current;
+    // charging direction of battery
+    internal->pos_current_limit = p_bat->pos_current_limit + p_load->current;
 
-    // this is a bit tricky... in theory, we could add the available DC/DC current to keep the
-    // load switched on as long as solar power is available, even if the battery is empty. This
-    // needs a fast point-of-load (PoL) control of the DC/DC, which is not possible (yet).
-    p_dcdc->neg_current_limit = p_bat->neg_current_limit - p_bat->current;
+    // discharging direction of battery
+    internal->neg_current_limit = p_bat->neg_current_limit;
 
-    // this statement enables or disables the load output
+    // load output current = max. negative (discharging) battery current.
+    // this statement enables or disables the load output if discharging is not allowed
     p_load->pos_current_limit = -p_bat->neg_current_limit;
 }
