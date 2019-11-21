@@ -14,17 +14,19 @@
  * limitations under the License.
  */
 
-#ifndef UNIT_TEST
+#include "adc_dma.h"
+
+#include <math.h>       // log for thermistor calculation
+#include <assert.h>
+
+#ifdef __MBED__
 #include "mbed.h"
 #endif
 
+#include "mcu.h"
 #include "main.h"
 #include "debug.h"
-#include <assert.h>
-
-#include "adc_dma.h"
 #include "pcb.h"        // contains defines for pins
-#include <math.h>       // log for thermistor calculation
 
 // factory calibration values for internal voltage reference and temperature sensor
 // (see MCU datasheet, not RM)
@@ -51,7 +53,7 @@
     #define TSENSE_CAL2_VALUE 130.0  // temperature of second calibration point
 #endif
 
-#ifdef PIN_REF_I_DCDC
+#if defined(__MBED__) && defined(PIN_REF_I_DCDC)
 AnalogOut ref_i_dcdc(PIN_REF_I_DCDC);
 #endif
 
@@ -60,10 +62,10 @@ static float solar_current_offset;
 static float load_current_offset;
 
 // for ADC and DMA
-static volatile uint16_t adc_readings[NUM_ADC_CH] = {0};
-static volatile uint32_t adc_filtered[NUM_ADC_CH] = {0};
-static volatile AdcAlert adc_alerts_upper[NUM_ADC_CH] = {0};
-static volatile AdcAlert adc_alerts_lower[NUM_ADC_CH] = {0};
+static volatile uint16_t adc_readings[NUM_ADC_CH] = {};
+static volatile uint32_t adc_filtered[NUM_ADC_CH] = {};
+static volatile AdcAlert adc_alerts_upper[NUM_ADC_CH] = {};
+static volatile AdcAlert adc_alerts_lower[NUM_ADC_CH] = {};
 
 extern DeviceStatus dev_stat;
 
@@ -321,7 +323,7 @@ void adc_set_lv_alerts(float upper, float lower)
     adc_alerts_lower[ADC_POS_V_BAT].callback = low_voltage_alert;
 }
 
-#ifndef UNIT_TEST
+#if defined(__MBED__) && !defined(UNIT_TEST)
 
 void dma_setup()
 {

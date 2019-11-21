@@ -25,7 +25,7 @@ static int blink_state = 1;                     // global state of all blinking 
 
 static bool charging = false;
 
-#ifndef UNIT_TEST
+#ifdef __MBED__
 
 #include "mbed.h"
 

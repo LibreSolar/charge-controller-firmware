@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-#ifndef UNIT_TEST
+#ifdef __MBED__
+
+#include "thingset_serial.h"
 
 #include "config.h"
-#include "mbed.h"
 #include "thingset.h"
-#include "thingset_serial.h"
 
 char ThingSetStream::buf_resp[1000];
 
@@ -90,4 +90,4 @@ void ThingSetStream::process_input()
         }
     }
 }
-#endif /* UNIT_TEST */
+#endif /* __MBED__ */

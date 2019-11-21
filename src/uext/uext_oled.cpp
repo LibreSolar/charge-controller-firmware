@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#ifndef UNIT_TEST
+#ifdef __MBED__
 
 #include "main.h"
 
@@ -187,4 +187,4 @@ void UExtOled::process_1s() {
 
 #endif /* OLED_ENABLED */
 
-#endif /* UNIT_TEST */
+#endif /* __MBED__ */

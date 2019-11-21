@@ -14,11 +14,14 @@
  * limitations under the License.
  */
 
+#include "eeprom.h"
+
+#include <time.h>
+#include <stdio.h>
+
+#include "mcu.h"
 #include "pcb.h"
 #include "thingset.h"
-#include "eeprom.h"
-#include <inttypes.h>
-#include <time.h>
 
 // versioning of EEPROM layout (2 bytes)
 // change the version number each time the data object array below is changed!
@@ -154,7 +157,7 @@ int eeprom_read (unsigned int addr, uint8_t* ret, int len)
 	return i2c_eeprom.read(device, (char*)ret, len);
 }
 
-#elif defined(STM32L0)  // internal EEPROM
+#elif defined(STM32L0) && defined(__MBED__) // internal EEPROM
 
 int eeprom_write (unsigned int addr, const uint8_t* data, int len)
 {
@@ -200,6 +203,12 @@ int eeprom_read (unsigned int addr, uint8_t* ret, int len)
     return 0;
 }
 
+#else
+
+// ToDo for Zephyr
+int eeprom_write (unsigned int addr, const uint8_t* data, int len) { return 1; }
+int eeprom_read (unsigned int addr, uint8_t* ret, int len) { return 1; }
+
 #endif // STM32L0
 
 
@@ -216,7 +225,7 @@ void eeprom_restore_data()
     uint8_t buf_req[300];  // ThingSet request buffer
 
     // EEPROM header
-    uint8_t buf_header[EEPROM_HEADER_SIZE];
+    uint8_t buf_header[EEPROM_HEADER_SIZE] = {};    // initialize to avoid compiler warning
     if (eeprom_read(0, buf_header, EEPROM_HEADER_SIZE) < 0) {
         printf("EEPROM: read error!\n");
         return;
