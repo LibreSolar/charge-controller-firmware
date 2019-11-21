@@ -20,7 +20,9 @@
 #define DEVICE_TYPE "MPPT-1210-HUS"
 #define HARDWARE_VERSION "v0.4"
 
+#ifdef __MBED__
 #include "mbed.h"
+#endif
 
 // specify features of charge controller
 #define FEATURE_DCDC_CONVERTER  1
@@ -66,6 +68,7 @@ enum pin_state_t { PIN_HIGH, PIN_LOW, PIN_FLOAT };
 #define LED_RXTX  3     // LED4, used to indicate when sending data
 #define LED_LOAD  4     // LED5
 
+#ifdef __MBED__
 // LED pins and pin state configuration to switch above LEDs on
 #define NUM_LED_PINS 5
 static const PinName led_pins[NUM_LED_PINS] = {
@@ -79,6 +82,7 @@ static const pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
     { PIN_LOW,  PIN_LOW,  PIN_LOW,  PIN_HIGH, PIN_LOW  }, // LED4
     { PIN_LOW,  PIN_LOW,  PIN_LOW,  PIN_LOW,  PIN_HIGH }  // LED5
 };
+#endif // __MBED__
 
 // pin definition only needed in adc_dma.cpp to detect if they are present on the PCB
 #define PIN_ADC_TEMP_FETS   PA_5

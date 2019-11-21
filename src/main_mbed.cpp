@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#ifndef UNIT_TEST
+#ifdef __MBED__
 
 /** @file
  *
@@ -217,4 +217,4 @@ void system_control()
     counter++;
 }
 
-#endif
+#endif // __MBED__

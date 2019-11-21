@@ -1,4 +1,4 @@
-#ifndef UNIT_TEST
+#if defined(__MBED__) && !defined(UNIT_TEST)
 
 #include "mbed.h"
 #ifdef STM32F0  // STM32L0 does not have CAN

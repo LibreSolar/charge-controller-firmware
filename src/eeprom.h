@@ -17,6 +17,8 @@
 #ifndef EEPROM_H
 #define EEPROM_H
 
+#include <inttypes.h>
+
 /** @file
  *
  * @brief Handling of internal or external EEPROM to store device configuration

@@ -15,6 +15,7 @@
  */
 
 #include "load.h"
+
 #include "pcb.h"
 #include "config.h"
 #include "hardware.h"
@@ -145,7 +146,7 @@ void LoadOutput::switch_set(bool status)
     pgood = status;
     leds_set(LED_LOAD, status);
 
-#ifdef PIN_LOAD_EN
+#if defined(__MBED__) && defined(PIN_LOAD_EN)
     DigitalOut load_enable(PIN_LOAD_EN);
     if (status == true) {
         load_enable = 1;
@@ -155,7 +156,7 @@ void LoadOutput::switch_set(bool status)
     }
 #endif
 
-#ifdef PIN_LOAD_DIS
+#if defined(__MBED__) && defined(PIN_LOAD_DIS)
     DigitalOut load_disable(PIN_LOAD_DIS);
     if (status == true) {
         #ifdef PIN_I_LOAD_COMP
@@ -175,12 +176,12 @@ void LoadOutput::usb_set(bool status)
 {
     usb_pgood = status;
 
-#ifdef PIN_USB_PWR_EN
+#if defined(__MBED__) && defined(PIN_USB_PWR_EN)
     DigitalOut usb_pwr_en(PIN_USB_PWR_EN);
     if (status == true) usb_pwr_en = 1;
     else usb_pwr_en = 0;
 #endif
-#ifdef PIN_USB_PWR_DIS
+#if defined(__MBED__) && defined(PIN_USB_PWR_DIS)
     DigitalOut usb_pwr_dis(PIN_USB_PWR_DIS);
     if (status == true) usb_pwr_dis = 0;
     else usb_pwr_dis = 1;

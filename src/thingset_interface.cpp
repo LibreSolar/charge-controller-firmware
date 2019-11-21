@@ -16,10 +16,16 @@
 
 #ifndef UNIT_TEST
 
-#include "config.h"
-#include "mbed.h"
-#include "thingset.h"
 #include "thingset_interface.h"
+
+#include <algorithm>        // for for_each loop
+
+#ifdef __MBED__
+#include "mbed.h"
+#endif
+
+#include "config.h"
+#include "thingset.h"
 
 /*
  * Construct all global ThingSetInterfaces here.

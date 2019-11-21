@@ -192,7 +192,7 @@ const data_object_t data_objects[] = {
 #endif
 
     // FUNCTION CALLS (EXEC) //////////////////////////////////////////////////
-#ifndef UNIT_TEST
+#if defined(__MBED__) && !defined(UNIT_TEST)
     {0xE0, TS_EXEC, TS_EXEC_ALL, TS_T_BOOL, 0, (void*) &NVIC_SystemReset,           "Reset"},
 #endif
     {0xE1, TS_EXEC, TS_EXEC_ALL, TS_T_BOOL, 0, (void*) &start_stm32_bootloader,     "BootloaderSTM"},

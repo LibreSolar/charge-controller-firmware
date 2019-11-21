@@ -24,6 +24,7 @@
  */
 
 #include "mbed.h"
+
 #include "thingset_interface.h"
 
 class ThingSetStream: public ThingSetInterface
@@ -71,4 +72,5 @@ template<typename T> class ThingSetSerial: public ThingSetStream
     private:
         T& ser;
 };
+
 #endif /* THINGSET_SERIAL_H */
