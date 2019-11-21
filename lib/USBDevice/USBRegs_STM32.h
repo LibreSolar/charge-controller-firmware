@@ -146,4 +146,3 @@ USB_OTG_CORE_REGS;
 #endif //__USB_OTG_REGS_H__
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
-

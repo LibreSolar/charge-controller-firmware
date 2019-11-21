@@ -45,7 +45,7 @@ const uint16_t eeprom_data_objects[] = {
 
 #ifndef UNIT_TEST
 
-uint32_t _calc_crc(uint8_t *buf, size_t len)
+uint32_t _calc_crc(const uint8_t *buf, size_t len)
 {
     RCC->AHBENR |= RCC_AHBENR_CRCEN;
 
@@ -134,9 +134,9 @@ int eeprom_read (unsigned int addr, uint8_t* ret, int len)
     int err = 0;
 
     if (EEPROM_ADDRESS_SIZE == 1) {
-    	// write the address we want to read
+        // write the address we want to read
         buf[0] = addr & 0xFF;
-    	// send memory address without stop (repeated = true)
+        // send memory address without stop (repeated = true)
         err = i2c_eeprom.write(device, (char*)buf, 1, true);
     }
     else {
@@ -156,7 +156,7 @@ int eeprom_read (unsigned int addr, uint8_t* ret, int len)
 
 #elif defined(STM32L0)  // internal EEPROM
 
-int eeprom_write (unsigned int addr, uint8_t* data, int len)
+int eeprom_write (unsigned int addr, const uint8_t* data, int len)
 {
     int timeout = 0;
 
@@ -171,8 +171,9 @@ int eeprom_write (unsigned int addr, uint8_t* data, int len)
         FLASH->PEKEYR = FLASH_PEKEY2;
     }
 
-    if (addr + len > DATA_EEPROM_BANK1_END - DATA_EEPROM_BASE)
+    if (addr + len > DATA_EEPROM_BANK1_END - DATA_EEPROM_BASE) {
         return -1;
+    }
 
     // write data byte-wise to EEPROM
 	for (int i = 0; i < len; i++) {
@@ -191,8 +192,9 @@ int eeprom_write (unsigned int addr, uint8_t* data, int len)
 
 int eeprom_read (unsigned int addr, uint8_t* ret, int len)
 {
-    if (addr + len > DATA_EEPROM_BANK1_END - DATA_EEPROM_BASE)
+    if (addr + len > DATA_EEPROM_BANK1_END - DATA_EEPROM_BASE) {
         return -1;
+    }
 
     memcpy(ret, ((uint8_t*)addr) + DATA_EEPROM_BASE, len);
     return 0;

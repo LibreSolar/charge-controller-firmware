@@ -193,17 +193,17 @@ bool USBDevice::controlOut(void)
         /*
          * We seem to have a pending device-to-host transfer.  The host must have
          * sent a new control request without waiting for us to finish processing
-         * the previous one.  This appears to happen when we're connected to certain 
+         * the previous one.  This appears to happen when we're connected to certain
          * USB 3.0 host chip set. Do a zeor-length send to tell the host we're not
          * ready for the new request - that'll make it resend - and then just
          * pretend we were successful here so that the pending transfer can finish.
          */
          uint8_t buf[1] = { 0 };
          EP0write(buf, 0);
-         
+
          /* execute our pending ttransfer */
          controlIn();
-         
+
          /* indicate success */
          return true;
  #else
@@ -740,7 +740,7 @@ void USBDevice::disconnect(void)
 {
     /* Disconnect device */
     USBHAL::disconnect();
-    
+
     /* Set initial device state */
     device.state = POWERED;
     device.configuration = 0;

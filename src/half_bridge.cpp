@@ -135,7 +135,7 @@ class PWM_TIM1
 
         GPIOA->MODER = (GPIOA->MODER & ~(GPIO_MODER_MODER8)) | GPIO_MODER_MODER8_1;
         GPIOB->MODER = (GPIOB->MODER & ~(GPIO_MODER_MODER13)) | GPIO_MODER_MODER13_1;
-        
+
         // Select AF2 on PA8 (TIM1_CH1) and PB13 (TIM1_CH1N)
         GPIOA->AFR[1] |= 0x2 << GPIO_AFRH_AFSEL8_Pos;
         GPIOB->AFR[1] |= 0x2 << GPIO_AFRH_AFSEL13_Pos;
@@ -263,12 +263,12 @@ void half_bridge_init(int freq_kHz, int deadtime_ns, float min_duty, float max_d
 {
     // timers are counting at system clock
     // we are using a mode which counts up and down in each period
-    // so we need half the impluses as resolution for the given frequency. 
-    _pwm_resolution = SystemCoreClock / (freq_kHz * 1000) / 2; 
-     
+    // so we need half the impluses as resolution for the given frequency.
+    _pwm_resolution = SystemCoreClock / (freq_kHz * 1000) / 2;
+
     // (clocks per ms * deadtime in ns) / 1000 == (clocks per ms * deadtime in ms)
-    // although the C operator precedence does the "right thing" to allow deadtime_ns < 1000 to 
-    // be handled nicely, parentheses make this more explicit 
+    // although the C operator precedence does the "right thing" to allow deadtime_ns < 1000 to
+    // be handled nicely, parentheses make this more explicit
     _deadtime_clocks = ((SystemCoreClock / (1000000)) * deadtime_ns) / 1000;
 
     PWM_TIM_HW::_init_registers(_pwm_resolution);
@@ -329,4 +329,3 @@ bool half_bridge_enabled()
 {
     return _enabled;
 }
-

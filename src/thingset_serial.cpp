@@ -78,7 +78,7 @@ void ThingSetStream::process_input()
 
         // backspace
         // can be done always unless there is nothing in the buffer
-        else if (req_pos > 0 && c == '\b') { 
+        else if (req_pos > 0 && c == '\b') {
             req_pos--;
         }
         // we fill the buffer up to all but 1 character

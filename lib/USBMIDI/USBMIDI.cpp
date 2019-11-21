@@ -83,7 +83,7 @@ bool USBMIDI::EPBULK_OUT_callback() {
     readEP(EPBULK_OUT, buf, &len, 64);
 
     if (midi_evt != NULL) {
-        for (uint32_t i=0; i<len; i+=4) {   
+        for (uint32_t i=0; i<len; i+=4) {
             uint8_t data_read;
             data_end=true;
             switch(buf[i]) {
@@ -111,25 +111,25 @@ bool USBMIDI::EPBULK_OUT_callback() {
             case 0xD:
                 // Channel pressure
                 data_read=2;
-                break;      
+                break;
             case 0xF:
                 // Single byte
                 data_read=1;
-                break;    
+                break;
             default:
                 // Others three-bytes messages
                 data_read=3;
-                break;      
-            } 
-        
+                break;
+            }
+
             for(uint8_t j=1;j<data_read+1;j++) {
                 data[cur_data]=buf[i+j];
                 cur_data++;
             }
-        
+
             if(data_end) {
                  midi_evt(MIDIMessage(data,cur_data));
-                 cur_data=0;            
+                 cur_data=0;
             }
        }
     }

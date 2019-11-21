@@ -33,7 +33,7 @@ void HAL_PCDEx_SetConnectionState(PCD_HandleTypeDef *hpcd, uint8_t state) {
         __HAL_SYSCFG_USBPULLUP_ENABLE();
     } else {
         __HAL_SYSCFG_USBPULLUP_DISABLE();
-    } 
+    }
 }
 
 #elif defined(TARGET_STM32L0)||defined(TARGET_STM32F0)
@@ -43,7 +43,7 @@ void HAL_PCDEx_SetConnectionState(PCD_HandleTypeDef *hpcd, uint8_t state) {
         SET_BIT(USB->BCDR, USB_BCDR_DPPU); // DP Pull-up
     } else {
         CLEAR_BIT(USB->BCDR, USB_BCDR_DPPU);
-    } 
+    }
 }
 
 #elif defined(TARGET_STM32F3)
@@ -112,9 +112,9 @@ public:
     PacketBufferAreaManager(int bufsize_):bufsize(bufsize_) {
         reset();
     }
-    void reset() { 
-        head = 0; 
-        tail = bufsize; 
+    void reset() {
+        head = 0;
+        tail = bufsize;
     }
     int allocBuf(int maxPacketSize) {
         head += 4;
@@ -317,7 +317,7 @@ void USBHAL::DataInStageCallback(uint8_t epnum) {
         case 0: // EP0IN
             EP0in();
             break;
-        case 1: 
+        case 1:
             epComplete |= (1<<EP1IN);
             if (EP1_IN_callback()) {
                 epComplete &= ~(1<<EP1IN);
@@ -329,7 +329,7 @@ void USBHAL::DataInStageCallback(uint8_t epnum) {
                 epComplete &= ~(1<<EP2IN);
             }
             break;
-        case 3: 
+        case 3:
             epComplete |= (1<<EP3IN);
             if (EP3_IN_callback()) {
                 epComplete &= ~(1<<EP3IN);

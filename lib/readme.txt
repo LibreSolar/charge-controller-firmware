@@ -35,4 +35,3 @@ include paths and build them.
 See additional options for PlatformIO Library Dependency Finder `lib_*`:
 
 http://docs.platformio.org/en/latest/projectconf.html#lib-install
-

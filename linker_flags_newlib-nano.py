@@ -6,7 +6,7 @@
 # We are setting the required linker flags for use of newlib-nano
 
 
-Import("env") 
+Import("env")
 
 env.Append(
             LINKFLAGS=[

@@ -20,7 +20,7 @@ Here is a quick summary how contributions work on GitHub:
 2. Clone the repository to your local computer using `git clone https://github.com/your-github-username/repository-name.git`
 3. Create a new branch where you will later add your changes using `git switch -c branch-name`
 4. Update the files to fix the issue or add new features
-5. Use `git add your-changed-files` to add the file contents of the changed files to the so-called staging area (means 
+5. Use `git add your-changed-files` to add the file contents of the changed files to the so-called staging area (means
    they are prepared to be committed)
 6. Run `git commit -m "Short message to describe the changes"` to add the staged files to the respository
 7. Upload the changes to the remote repository on GitHub using `git push origin branch-name`
@@ -28,10 +28,10 @@ Here is a quick summary how contributions work on GitHub:
 
 ### Important remarks:
 
-- Better make several small [atomic commits](https://en.wikipedia.org/wiki/Atomic_commit#Atomic_commit_convention) than 
+- Better make several small [atomic commits](https://en.wikipedia.org/wiki/Atomic_commit#Atomic_commit_convention) than
   a single big one
-- Use meaningful commit messages and pull request topics. Tell *what* was changed and not that *something* was changed. 
-  "ADC measurements: Improved performance of temperature sensor reading" is much better than "Updates". You can also 
+- Use meaningful commit messages and pull request topics. Tell *what* was changed and not that *something* was changed.
+  "ADC measurements: Improved performance of temperature sensor reading" is much better than "Updates". You can also
   reference an issue with its numer (e.g. #123) in the commit message
 - Use the [Libre Solar coding style](https://libre.solar/docs/coding_style/)
 

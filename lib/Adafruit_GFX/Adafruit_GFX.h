@@ -1,14 +1,14 @@
 /***********************************
-This is a our graphics core library, for all our displays. 
+This is a our graphics core library, for all our displays.
 We'll be adapting all the
-existing libaries to use this core to make updating, support 
+existing libaries to use this core to make updating, support
 and upgrading easier!
 
-Adafruit invests time and resources providing this open source code, 
-please support Adafruit and open-source hardware by purchasing 
+Adafruit invests time and resources providing this open source code,
+please support Adafruit and open-source hardware by purchasing
 products from Adafruit!
 
-Written by Limor Fried/Ladyada  for Adafruit Industries.  
+Written by Limor Fried/Ladyada  for Adafruit Industries.
 BSD license, check license.txt for more information
 All text above must be included in any redistribution
 ****************************************/
@@ -25,7 +25,7 @@ All text above must be included in any redistribution
 static inline void swap(int16_t &a, int16_t &b)
 {
     int16_t t = a;
-    
+
     a = b;
     b = t;
 }
@@ -68,7 +68,7 @@ class Adafruit_GFX : public Stream
     virtual void drawPixel(int16_t x, int16_t y, uint16_t color) = 0;
     // this is optional
     virtual void invertDisplay(bool i) {};
-    
+
     // Stream implementation - provides printf() interface
     // You would otherwise be forced to use writeChar()
     virtual int _putc(int value) { return writeChar(value); };
@@ -76,7 +76,7 @@ class Adafruit_GFX : public Stream
 
 #ifdef GFX_WANT_ABSTRACTS
     // these are 'generic' drawing functions, so we can share them!
-    
+
     /** Draw a Horizontal Line
      * @note GFX_WANT_ABSTRACTS must be defined in Adafruit_GFX_config.h
      */
@@ -95,7 +95,7 @@ class Adafruit_GFX : public Stream
      */
     void drawCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color);
     void drawCircleHelper(int16_t x0, int16_t y0, int16_t r, uint8_t cornername, uint16_t color);
-    
+
     /** Draw and fill a circle
      * @note GFX_WANT_ABSTRACTS must be defined in Adafruit_GFX_config.h
      */
@@ -110,7 +110,7 @@ class Adafruit_GFX : public Stream
      * @note GFX_WANT_ABSTRACTS must be defined in Adafruit_GFX_config.h
      */
     void fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color);
-    
+
     /** Draw a rounded rectangle
      * @note GFX_WANT_ABSTRACTS must be defined in Adafruit_GFX_config.h
      */
