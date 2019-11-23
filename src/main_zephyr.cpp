@@ -29,14 +29,13 @@
 #include "pwm_switch.h"         // PWM charge controller
 #include "bat_charger.h"        // battery settings and charger state machine
 #include "adc_dma.h"            // ADC using DMA and conversion to measurement values
-#include "uext.h"               // communication interfaces, displays, etc. in UEXT connector
+#include "ext/uext.h"           // communication interfaces, displays, etc. in UEXT connector
 #include "eeprom.h"             // external I2C EEPROM
 #include "load.h"               // load and USB output management
 #include "leds.h"               // LED switching using charlieplexing
 #include "device_status.h"                // log data (error memory, min/max measurements, etc.)
 #include "data_objects.h"       // for access to internal data via ThingSet
 //#include "thingset_serial.h"    // UART or USB serial communication
-#include "thingset_can.h"       // CAN bus communication
 
 PowerPort lv_terminal;          // low voltage terminal (battery for typical MPPT)
 
