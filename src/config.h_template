@@ -42,9 +42,6 @@
 // can be used to configure custom data objects in separate file instead (e.g. data_objects_custom.cpp)
 //#define CUSTOM_DATA_OBJECTS_FILE
 
-// Empty UEXT port
-#define UEXT_DUMMY_ENABLED
-
 // OLED display at UEXT port
 //#define OLED_ENABLED
 // OLED Brightness (value 0x01-0xff or 1-255)
@@ -53,9 +50,6 @@
 
 // UART serial at SWD connector
 #define UART_SERIAL_ENABLED
-
-// USB serial
-//#define USB_SERIAL_ENABLED
 
 // CAN bus drivers (not supported by all charge controllers)
 //#define CAN_ENABLED

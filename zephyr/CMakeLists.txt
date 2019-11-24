@@ -10,7 +10,7 @@ project(libre_solar_charge_controller)
 
 add_definitions(-DMPPT_1210_HUS_0V4 -D__ZEPHYR__ -DDEBUG_PRINT_FLAGS=7)
 include_directories(../src)
-include_directories(../.pio/libdeps/mppt-1210-hus-v0.7/ThingSet/src)
+#include_directories(../.pio/libdeps/mppt-1210-hus-v0.7/ThingSet/src)
 
 #target_sources(app PRIVATE ../src/adc_dma.cpp)
 target_sources(app PRIVATE ../src/bat_charger.cpp)

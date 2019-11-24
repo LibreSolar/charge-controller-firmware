@@ -81,15 +81,7 @@ template<typename T> class ThingSetSerial: public ThingSetStream
     ThingSetSerial ts_uart(serial, pub_channel_serial);
 #endif /* UART_SERIAL_ENABLED */
 
-
-#ifdef USB_SERIAL_ENABLED
-    #include "USBSerial.h"
-    extern const int pub_channel_serial;
-
-    USBSerial ser_usb(0x1f00, 0x2012, 0x0001,  false);    // connection is not blocked when USB is not plugged in
-
-    ThingSetSerial ts_usb(ser_usb, pub_channel_serial);
-#endif /* USB_SERIAL_ENABLED */
+// ToDo: Add USB serial again (previous library was broken with recent mbed releases)
 
 char ThingSetStream::buf_resp[1000];
 
