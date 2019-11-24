@@ -14,54 +14,54 @@
  * limitations under the License.
  */
 
-#include "uext.h"
+#include "ext.h"
 #include <algorithm>
 
 // we use code to self register objects at construction time.
 // It relies on the fact that initially this pointer will be initialized
 // with NULL ! This is only true for global variables or static members of classes
 // so this must remain a static class member
-std::vector<UExtInterface*>* UExtInterfaceManager::interfaces;
+std::vector<ExtInterface*>* ExtManager::interfaces;
 
 // run the respective function on all objects in the "devices" list
 // use the c++11 lambda expressions here for the for_each loop, keeps things compact
 
-void UExtInterfaceManager::process_asap() {
-    for_each(std::begin(*interfaces),std::end(*interfaces), [](UExtInterface* tsif) {
+void ExtManager::process_asap() {
+    for_each(std::begin(*interfaces),std::end(*interfaces), [](ExtInterface* tsif) {
         tsif->process_asap();
     });
 }
 
-void UExtInterfaceManager::enable() {
-    for_each(std::begin(*interfaces),std::end(*interfaces), [](UExtInterface* tsif) {
+void ExtManager::enable_all() {
+    for_each(std::begin(*interfaces),std::end(*interfaces), [](ExtInterface* tsif) {
         tsif->enable();
     });
 }
 
-void UExtInterfaceManager::process_1s() {
-    for_each(std::begin(*interfaces),std::end(*interfaces), [](UExtInterface* tsif) {
+void ExtManager::process_1s() {
+    for_each(std::begin(*interfaces),std::end(*interfaces), [](ExtInterface* tsif) {
         tsif->process_1s();
     });
 }
 
-void UExtInterfaceManager::check_list() {
-    if (UExtInterfaceManager::interfaces == NULL)
+void ExtManager::check_list() {
+    if (ExtManager::interfaces == NULL)
     {
-        UExtInterfaceManager::interfaces = new std::vector<UExtInterface*>;
+        ExtManager::interfaces = new std::vector<ExtInterface*>;
     }
 }
 
-void UExtInterfaceManager::add_ext(UExtInterface* member) {
+void ExtManager::add_ext(ExtInterface* member) {
     check_list();
     interfaces->push_back(member);
 }
 
-UExtInterfaceManager::UExtInterfaceManager() {
+ExtManager::ExtManager() {
     check_list();
 }
 
-UExtInterface::UExtInterface() {
-    uext.add_ext(this);
+ExtInterface::ExtInterface() {
+    ext_mgr.add_ext(this);
 }
 
-UExtInterfaceManager uext;
+ExtManager ext_mgr;

@@ -33,7 +33,7 @@
 #include "pwm_switch.h"         // PWM charge controller
 #include "bat_charger.h"        // battery settings and charger state machine
 #include "adc_dma.h"            // ADC using DMA and conversion to measurement values
-#include "ext/uext.h"           // communication interfaces, displays, etc. in UEXT connector
+#include "ext/ext.h"           // communication interfaces, displays, etc. in UEXT connector
 #include "eeprom.h"             // external I2C EEPROM
 #include "load.h"               // load and USB output management
 #include "leds.h"               // LED switching using charlieplexing
@@ -116,7 +116,7 @@ int main()
     // Communication interfaces
     ts_interfaces.enable();
 
-    uext.enable();
+    ext_mgr.enable_all();
     init_watchdog(10);      // 10s should be enough for communication ports
 
     solar_terminal.init_solar();
@@ -142,7 +142,7 @@ int main()
     while (1) {
 
         ts_interfaces.process_asap();
-        uext.process_asap();
+        ext_mgr.process_asap();
 
         time_t now = timestamp;
         if (now >= last_call + 1 || now < last_call) {
@@ -163,7 +163,7 @@ int main()
             leds_update_1s();
             leds_update_soc(charger.soc, dev_stat.has_error(ERR_LOAD_LOW_SOC));
 
-            uext.process_1s();
+            ext_mgr.process_1s();
             ts_interfaces.process_1s();
 
             last_call = now;
