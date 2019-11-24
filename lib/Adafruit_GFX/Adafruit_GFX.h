@@ -14,18 +14,23 @@ All text above must be included in any redistribution
 ****************************************/
 
 /*
- *  Modified by Neal Horman 7/14/2012 for use in mbed
+ * Modified by Neal Horman 7/14/2012 for use in mbed
+ *
+ * Further modified by Martin Jäger (11/2019) to make it independent of mbed and useable in Zephyr
  */
 
-#ifndef _ADAFRUIT_GFX_H_
-#define _ADAFRUIT_GFX_H_
+#ifndef ADAFRUIT_GFX_H_
+#define ADAFRUIT_GFX_H_
 
-#include "Adafruit_GFX_Config.h"
+#include <stdint.h>
+#include <string.h>
+
+// Uncomment this to enable all functionality
+#define GFX_WANT_ABSTRACTS
 
 static inline void swap(int16_t &a, int16_t &b)
 {
     int16_t t = a;
-
     a = b;
     b = t;
 }
@@ -46,33 +51,29 @@ static inline void swap(int16_t &a, int16_t &b)
  * hardware based on application control.
  *
  */
-class Adafruit_GFX : public Stream
+class Adafruit_GFX
 {
- public:
-    Adafruit_GFX(int16_t w, int16_t h)
-        : _rawWidth(w)
-        , _rawHeight(h)
-        , _width(w)
-        , _height(h)
-        , cursor_x(0)
-        , cursor_y(0)
-        , textcolor(WHITE)
-        , textbgcolor(BLACK)
-        , textsize(1)
-        , rotation(0)
-        , wrap(true)
-        {};
+public:
+    Adafruit_GFX(int16_t w, int16_t h) :
+        _rawWidth(w),
+        _rawHeight(h),
+        _width(w),
+        _height(h),
+        cursor_x(0),
+        cursor_y(0),
+        textcolor(WHITE),
+        textbgcolor(BLACK),
+        textsize(1),
+        rotation(0),
+        wrap(true)
+    {};
 
     /// Paint one BLACK or WHITE pixel in the display buffer
     // this must be defined by the subclass
     virtual void drawPixel(int16_t x, int16_t y, uint16_t color) = 0;
-    // this is optional
-    virtual void invertDisplay(bool i) {};
 
-    // Stream implementation - provides printf() interface
-    // You would otherwise be forced to use writeChar()
-    virtual int _putc(int value) { return writeChar(value); };
-    virtual int _getc() { return -1; };
+    // this is optional
+    virtual void invert(bool i) {};
 
 #ifdef GFX_WANT_ABSTRACTS
     // these are 'generic' drawing functions, so we can share them!
@@ -81,10 +82,12 @@ class Adafruit_GFX : public Stream
      * @note GFX_WANT_ABSTRACTS must be defined in Adafruit_GFX_config.h
      */
     virtual void drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color);
+
     /** Draw a rectangle
      * @note GFX_WANT_ABSTRACTS must be defined in Adafruit_GFX_config.h
      */
     virtual void drawRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
+
     /** Fill the entire display
      * @note GFX_WANT_ABSTRACTS must be defined in Adafruit_GFX_config.h
      */
@@ -106,6 +109,7 @@ class Adafruit_GFX : public Stream
      * @note GFX_WANT_ABSTRACTS must be defined in Adafruit_GFX_config.h
      */
     void drawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color);
+
     /** Draw and fill a triangle
      * @note GFX_WANT_ABSTRACTS must be defined in Adafruit_GFX_config.h
      */
@@ -115,10 +119,12 @@ class Adafruit_GFX : public Stream
      * @note GFX_WANT_ABSTRACTS must be defined in Adafruit_GFX_config.h
      */
     void drawRoundRect(int16_t x0, int16_t y0, int16_t w, int16_t h, int16_t radius, uint16_t color);
+
     /** Draw and fill a rounded rectangle
      * @note GFX_WANT_ABSTRACTS must be defined in Adafruit_GFX_config.h
      */
     void fillRoundRect(int16_t x0, int16_t y0, int16_t w, int16_t h, int16_t radius, uint16_t color);
+
     /** Draw a bitmap
      * @note GFX_WANT_ABSTRACTS must be defined in Adafruit_GFX_config.h
      */
@@ -130,10 +136,12 @@ class Adafruit_GFX : public Stream
      * @note GFX_WANT_ABSTRACTS or GFX_SIZEABLE_TEXT must be defined in Adafruit_GFX_config.h
      */
     virtual void drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color);
+
     /** Draw a vertical line
      * @note GFX_WANT_ABSTRACTS or GFX_SIZEABLE_TEXT must be defined in Adafruit_GFX_config.h
      */
     virtual void drawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color);
+
     /** Draw and fill a rectangle
      * @note GFX_WANT_ABSTRACTS or GFX_SIZEABLE_TEXT must be defined in Adafruit_GFX_config.h
      */
@@ -142,31 +150,41 @@ class Adafruit_GFX : public Stream
 
     /// Draw a text character at a specified pixel location
     void drawChar(int16_t x, int16_t y, unsigned char c, uint16_t color, uint16_t bg, uint8_t size);
+
     /// Draw a text character at the text cursor location
-    size_t writeChar(uint8_t);
+    void writeChar(uint8_t);
+
+    /// Draw a string at the text cursor location
+    void writeString(const char *buf, size_t len);
 
     /// Get the width of the display in pixels
     inline int16_t width(void) { return _width; };
+
     /// Get the height of the display in pixels
     inline int16_t height(void) { return _height; };
 
     /// Set the text cursor location, based on the size of the text
     inline void setTextCursor(int16_t x, int16_t y) { cursor_x = x; cursor_y = y; };
+
 #if defined(GFX_WANT_ABSTRACTS) || defined(GFX_SIZEABLE_TEXT)
     /** Set the size of the text to be drawn
      * @note Make sure to enable either GFX_SIZEABLE_TEXT or GFX_WANT_ABSTRACTS
      */
     inline void setTextSize(uint8_t s) { textsize = (s > 0) ? s : 1; };
 #endif
+
     /// Set the text foreground and background colors to be the same
     inline void setTextColor(uint16_t c) { textcolor = c; textbgcolor = c; }
+
     /// Set the text foreground and background colors independantly
     inline void setTextColor(uint16_t c, uint16_t b) { textcolor = c; textbgcolor = b; };
+
     /// Set text wraping mode true or false
     inline void setTextWrap(bool w) { wrap = w; };
 
     /// Set the display rotation, 1, 2, 3, or 4
     void setRotation(uint8_t r);
+
     /// Get the current rotation
     inline uint8_t getRotation(void) { rotation %= 4; return rotation; };
 

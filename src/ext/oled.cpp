@@ -24,7 +24,7 @@
 
 #include "main.h"
 #include "pcb.h"
-#include "Adafruit_SSD1306.h"
+#include "OledSSD1306.h"
 
 // implement specific extension inherited from ExtInterface
 class ExtOled: public ExtInterface
@@ -57,7 +57,12 @@ const unsigned char bmp_disconnected [] = {
 };
 
 I2C i2c(PIN_UEXT_SDA, PIN_UEXT_SCL);
-Adafruit_SSD1306_I2c oled(i2c, PIN_UEXT_SSEL, 0x78, 64, 128);
+
+#ifdef OLED_BRIGHTNESS
+OledSSD1306 oled(i2c, 0x78, OLED_BRIGHTNESS);
+#else
+OledSSD1306 oled(i2c, 0x78);        // use default (lowest brightness)
+#endif
 
 void ExtOled::enable()
 {
@@ -65,37 +70,14 @@ void ExtOled::enable()
     DigitalOut uext_dis(PIN_UEXT_DIS);
     uext_dis = 0;
 #endif
-/**
- * 1.Display is OFF
- * 2.128 x 64 Display Mode
- * 3.Normal segment and display data column address and row address mapping
- *   (SEG0 mapped to address 00h and COM0 mapped to address 00h)
- *
- * 4.Shift register data clear in serial interface
- * 5.Display start line is set at display RAM address 0
- * 6.Column address counter is set at 0
- * 7.Normal scan direction of the COM outputs
- * 8.Contrast control register is set at 7Fh
- * 9.Normal display mode (Equivalent to A4h command)
- */
-
-    // make sure that
-    // display has not shift
-    // even without power on reset
-    oled.command(0x22);
-    oled.command(0x00);
-    oled.command(0x07);
-
-#ifdef OLED_BRIGHTNESS
-    // reduce brightness to minimum
-    oled.command(0x81);
-    oled.command(OLED_BRIGHTNESS);
-#endif
 }
 
 void ExtOled::process_1s()
 {
-    oled.clearDisplay();
+    char buf[30];
+    unsigned int len;
+
+    oled.clear();
 
     oled.drawBitmap(6, 0, bmp_pv_panel, 16, 16, 1);
     oled.drawBitmap(104, 0, bmp_load, 16, 16, 1);
@@ -140,35 +122,50 @@ void ExtOled::process_1s()
     if (half_bridge_enabled()) {
 #endif
         oled.setTextCursor(0, 18);
-        oled.printf("%4.0fW", (abs(solar_terminal.power) < 1) ? 0 : -solar_terminal.power);     // remove negative zeros
+        len = snprintf(buf, sizeof(buf), "%4.0fW",
+            (abs(solar_terminal.power) < 1) ? 0 : -solar_terminal.power);  // remove negative zeros
+        oled.writeString(buf, len);
     }
     else {
         oled.setTextCursor(8, 18);
-        oled.printf("n/a");
+        len = snprintf(buf, sizeof(buf), "n/a");
+        oled.writeString(buf, len);
     }
 #ifndef CHARGER_TYPE_PWM
     if (solar_terminal.voltage > bat_terminal.voltage)
 #endif
     {
         oled.setTextCursor(0, 26);
-        oled.printf("%4.1fV", solar_terminal.voltage);
+        len = snprintf(buf, sizeof(buf), "%4.1fV", solar_terminal.voltage);
+        oled.writeString(buf, len);
     }
 
     // battery data
     oled.setTextCursor(42, 18);
-    oled.printf("%5.1fW", (abs(bat_terminal.power) < 0.1) ? 0 : bat_terminal.power);    // remove negative zeros
+    len = snprintf(buf, sizeof(buf), "%5.1fW",
+        (abs(bat_terminal.power) < 0.1) ? 0 : bat_terminal.power);    // remove negative zeros
+    oled.writeString(buf, len);
     oled.setTextCursor(42, 26);
-    oled.printf("%5.1fV", bat_terminal.voltage);
+    len = snprintf(buf, sizeof(buf), "%5.1fV", bat_terminal.voltage);
+    oled.writeString(buf, len);
 
     // load data
     oled.setTextCursor(90, 18);
-    oled.printf("%5.1fW", (abs(load_terminal.power) < 0.1) ? 0 : load_terminal.power);    // remove negative zeros
+    len = snprintf(buf, sizeof(buf), "%5.1fW",
+        (abs(load_terminal.power) < 0.1) ? 0 : load_terminal.power);    // remove negative zeros
+    oled.writeString(buf, len);
     oled.setTextCursor(90, 26);
-    oled.printf("%5.1fA\n", (abs(load_terminal.current) < 0.1) ? 0 : load_terminal.current);
+    len = snprintf(buf, sizeof(buf), "%5.1fA\n",
+        (abs(load_terminal.current) < 0.1) ? 0 : load_terminal.current);
+    oled.writeString(buf, len);
 
     oled.setTextCursor(0, 36);
-    oled.printf("Day +%5.0fWh -%5.0fWh", solar_terminal.neg_energy_Wh, fabs(load_terminal.pos_energy_Wh));
-    oled.printf("Tot +%4.1fkWh -%4.1fkWh", dev_stat.solar_in_total_Wh / 1000.0, fabs(dev_stat.load_out_total_Wh) / 1000.0);
+    len = snprintf(buf, sizeof(buf), "Day +%5.0fWh -%5.0fWh",
+        solar_terminal.neg_energy_Wh, fabs(load_terminal.pos_energy_Wh));
+    oled.writeString(buf, len);
+    len = snprintf(buf, sizeof(buf), "Tot +%4.1fkWh -%4.1fkWh",
+        dev_stat.solar_in_total_Wh / 1000.0, fabs(dev_stat.load_out_total_Wh) / 1000.0);
+    oled.writeString(buf, len);
 
     oled.setTextCursor(0, 56);
 
@@ -184,10 +181,13 @@ void ExtOled::process_1s()
     char tC = charger.ext_temp_sensor ? 'T' : 't';
 
     if (pwm_enabled == true) {
-        oled.printf("%c %.0fC PWM %.0f%% SOC %d%%", tC, temp, duty_cycle * 100.0, charger.soc);
+        len = snprintf(buf, sizeof(buf), "%c %.0fC PWM %.0f%% SOC %d%%",
+            tC, temp, duty_cycle * 100.0, charger.soc);
+        oled.writeString(buf, len);
     }
     else {
-        oled.printf("%c %.0fC PWM OFF SOC %d%%", tC, temp, charger.soc);
+        len = snprintf(buf, sizeof(buf), "%c %.0fC PWM OFF SOC %d%%", tC, temp, charger.soc);
+        oled.writeString(buf, len);
     }
 
     oled.display();
