@@ -1,14 +1,14 @@
 # SPDX-License-Identifier: Apache-2.0
 
-#set(BOARD nucleo_l073rz)
+#set(BOARD mppt1210hus_0v4)
 set(BOARD_ROOT ${CMAKE_SOURCE_DIR}/..)
 
 cmake_minimum_required(VERSION 3.13.1)
 include($ENV{ZEPHYR_BASE}/cmake/app/boilerplate.cmake NO_POLICY_SCOPE)
 
-project(libre_solar_bms)
+project(libre_solar_charge_controller)
 
-add_definitions(-DMPPT_1210_HUS_0V7 -D__ZEPHYR__ -DDEBUG_PRINT_FLAGS=7)
+add_definitions(-DMPPT_1210_HUS_0V4 -D__ZEPHYR__ -DDEBUG_PRINT_FLAGS=7)
 include_directories(../src)
 include_directories(../.pio/libdeps/mppt-1210-hus-v0.7/ThingSet/src)
 
@@ -28,8 +28,8 @@ target_sources(app PRIVATE ../src/power_port.cpp)
 target_sources(app PRIVATE ../src/pwm_switch.cpp)
 #target_sources(app PRIVATE ../src/thingset_serial.cpp)
 
-target_sources(app PRIVATE ../.pio/libdeps/mppt-1210-hus-v0.7/ThingSet/src/thingset.cpp)
-target_sources(app PRIVATE ../.pio/libdeps/mppt-1210-hus-v0.7/ThingSet/src/thingset_cbor.cpp)
-target_sources(app PRIVATE ../.pio/libdeps/mppt-1210-hus-v0.7/ThingSet/src/cbor.c)
-target_sources(app PRIVATE ../.pio/libdeps/mppt-1210-hus-v0.7/ThingSet/src/thingset_json.cpp)
-target_sources(app PRIVATE ../.pio/libdeps/mppt-1210-hus-v0.7/ThingSet/src/jsmn.c)
+#target_sources(app PRIVATE ../.pio/libdeps/mppt-1210-hus-v0.7/ThingSet/src/thingset.cpp)
+#target_sources(app PRIVATE ../.pio/libdeps/mppt-1210-hus-v0.7/ThingSet/src/thingset_cbor.cpp)
+#target_sources(app PRIVATE ../.pio/libdeps/mppt-1210-hus-v0.7/ThingSet/src/cbor.c)
+#target_sources(app PRIVATE ../.pio/libdeps/mppt-1210-hus-v0.7/ThingSet/src/thingset_json.cpp)
+#target_sources(app PRIVATE ../.pio/libdeps/mppt-1210-hus-v0.7/ThingSet/src/jsmn.c)

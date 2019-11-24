@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Ilya Tagunov <tagunil@gmail.com>
+ * Copyright (c) 2019 Martin Jäger (Libre Solar)
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -12,7 +12,7 @@
 
 #include <pinmux/stm32/pinmux_stm32.h>
 
-/* pin assignments for NUCLEO-L073RZ board */
+/* pin assignments for Libre Solar MPPT board */
 static const struct pin_config pinconf[] = {
 #ifdef CONFIG_UART_1
 	{STM32_PIN_PA9, STM32L0_PINMUX_FUNC_PA9_USART1_TX},

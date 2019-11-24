@@ -1,10 +1,10 @@
-# Kconfig - STM32 Nucleo-64 development board with STM32L073RZ MCU configuration
+# Kconfig - Libre Solar MPPT 1210 HUS v0.4
 #
-# Copyright (c) 2018 Ilya Tagunov <tagunil@gmail.com>
+# Copyright (c) 2019 Martin Jäger (Libre Solar)
 #
 # SPDX-License-Identifier: Apache-2.0
 #
 
-config BOARD_NUCLEO_L073RZ
-	bool "NUCLEO-64 L073RZ Development Board"
+config BOARD_MPPT1210HUS_0V4
+	bool "Libre Solar MPPT 1210 HUS v0.4"
 	depends on SOC_STM32L073XX

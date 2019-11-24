@@ -17,12 +17,14 @@
 #ifndef MPPT_1210_HUS_0V4_H
 #define MPPT_1210_HUS_0V4_H
 
-#define DEVICE_TYPE "MPPT-1210-HUS"
-#define HARDWARE_VERSION "v0.4"
-
 #ifdef __MBED__
 #include "mbed.h"
+#elif defined(__ZEPHYR__)
+#include <zephyr.h>
 #endif
+
+#define DEVICE_TYPE "MPPT-1210-HUS"
+#define HARDWARE_VERSION "v0.4"
 
 // specify features of charge controller
 #define FEATURE_DCDC_CONVERTER  1
@@ -68,13 +70,31 @@ enum pin_state_t { PIN_HIGH, PIN_LOW, PIN_FLOAT };
 #define LED_RXTX  3     // LED4, used to indicate when sending data
 #define LED_LOAD  4     // LED5
 
-#ifdef __MBED__
 // LED pins and pin state configuration to switch above LEDs on
 #define NUM_LED_PINS 5
+
+#ifdef __MBED__
 static const PinName led_pins[NUM_LED_PINS] = {
     //  GND      SOC12     SOC3      RXTX      LOAD
        PB_14,    PB_13,    PB_2,     PB_11,    PB_10
 };
+#elif defined(__ZEPHYR__)
+static const char *led_ports[NUM_LED_PINS] = {
+    DT_ALIAS_LED_A_GPIOS_CONTROLLER,
+    DT_ALIAS_LED_B_GPIOS_CONTROLLER,
+    DT_ALIAS_LED_C_GPIOS_CONTROLLER,
+    DT_ALIAS_LED_D_GPIOS_CONTROLLER,
+    DT_ALIAS_LED_E_GPIOS_CONTROLLER
+};
+static const int led_pins[NUM_LED_PINS] = {
+    DT_ALIAS_LED_A_GPIOS_PIN,   // GND
+    DT_ALIAS_LED_B_GPIOS_PIN,   // SOC12
+    DT_ALIAS_LED_C_GPIOS_PIN,   // SOC3
+    DT_ALIAS_LED_D_GPIOS_PIN,   // RXTX
+    DT_ALIAS_LED_E_GPIOS_PIN    // LOAD
+};
+#endif // MBED or ZEPHYR
+
 static const pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
     { PIN_HIGH, PIN_LOW,  PIN_LOW,  PIN_LOW,  PIN_LOW  }, // LED1
     { PIN_LOW,  PIN_HIGH, PIN_LOW,  PIN_LOW,  PIN_LOW  }, // LED2
@@ -82,7 +102,6 @@ static const pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
     { PIN_LOW,  PIN_LOW,  PIN_LOW,  PIN_HIGH, PIN_LOW  }, // LED4
     { PIN_LOW,  PIN_LOW,  PIN_LOW,  PIN_LOW,  PIN_HIGH }  // LED5
 };
-#endif // __MBED__
 
 // pin definition only needed in adc_dma.cpp to detect if they are present on the PCB
 #define PIN_ADC_TEMP_FETS   PA_5
