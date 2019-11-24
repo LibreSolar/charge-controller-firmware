@@ -39,8 +39,6 @@
 #include "leds.h"               // LED switching using charlieplexing
 #include "device_status.h"                // log data (error memory, min/max measurements, etc.)
 #include "data_objects.h"       // for access to internal data via ThingSet
-#include "ext/thingset_serial.h"   // UART or USB serial communication
-#include "ext/thingset_can.h"      // CAN bus communication
 
 #ifdef BOOTLOADER_ENABLED
 #include "bl_support.h"         // Bootloader support from the application side
@@ -113,10 +111,9 @@ int main()
     update_measurements();
     calibrate_current_sensors();
 
-    // Communication interfaces
-    ts_interfaces.enable();
-
+    // initialize all extensions and external communication interfaces
     ext_mgr.enable_all();
+
     init_watchdog(10);      // 10s should be enough for communication ports
 
     solar_terminal.init_solar();
@@ -141,7 +138,6 @@ int main()
     time_t last_call = timestamp;
     while (1) {
 
-        ts_interfaces.process_asap();
         ext_mgr.process_asap();
 
         time_t now = timestamp;
@@ -164,7 +160,6 @@ int main()
             leds_update_soc(charger.soc, dev_stat.has_error(ERR_LOAD_LOW_SOC));
 
             ext_mgr.process_1s();
-            ts_interfaces.process_1s();
 
             last_call = now;
         }

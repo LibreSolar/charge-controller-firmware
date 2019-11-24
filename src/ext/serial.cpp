@@ -16,10 +16,80 @@
 
 #ifdef __MBED__
 
-#include "thingset_serial.h"
-
+#include "mbed.h"
 #include "config.h"
 #include "thingset.h"
+#include "ext.h"
+
+class ThingSetStream: public ExtInterface
+{
+    public:
+        ThingSetStream(Stream& s, const unsigned int c): channel(c), stream(&s) {};
+
+        virtual void process_asap();
+        virtual void process_1s();
+
+    protected:
+        virtual void process_input(); // this is called from the ISR typically
+        const unsigned int channel;
+
+        virtual bool readable()
+        {
+            return stream->readable();
+        }
+
+    private:
+        Stream* stream;
+
+        static char buf_resp[1000];           // only one response buffer needed for all objects
+        char buf_req[500];
+        size_t req_pos = 0;
+        bool command_flag = false;
+};
+
+template<typename T> class ThingSetSerial: public ThingSetStream
+{
+    public:
+        ThingSetSerial(T& s, const unsigned int c): ThingSetStream(s,c), ser(s) {}
+
+        void enable() {
+            Callback<void()>  cb([this]() -> void { this->process_input();});
+            ser.attach(cb);
+        }
+
+    private:
+        bool readable()
+        {
+            return ser.readable();
+        }
+
+    private:
+        T& ser;
+};
+
+
+/*
+ * Construct all global ExtInterfaces here.
+ * All of these are added to the list of devices
+ * for later processing in the normal operation
+ */
+
+#ifdef UART_SERIAL_ENABLED
+    extern const int pub_channel_serial;
+    extern Serial serial;
+
+    ThingSetSerial ts_uart(serial, pub_channel_serial);
+#endif /* UART_SERIAL_ENABLED */
+
+
+#ifdef USB_SERIAL_ENABLED
+    #include "USBSerial.h"
+    extern const int pub_channel_serial;
+
+    USBSerial ser_usb(0x1f00, 0x2012, 0x0001,  false);    // connection is not blocked when USB is not plugged in
+
+    ThingSetSerial ts_usb(ser_usb, pub_channel_serial);
+#endif /* USB_SERIAL_ENABLED */
 
 char ThingSetStream::buf_resp[1000];
 
