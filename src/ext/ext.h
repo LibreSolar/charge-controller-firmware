@@ -14,31 +14,30 @@
  * limitations under the License.
  */
 
-#ifndef UEXT_H
-#define UEXT_H
+#ifndef EXT_H_
+#define EXT_H_
 
 #include <vector>
 
 /** @file
  *
- * @brief
- * Communication interfaces connected to UEXT port
+ * @brief Classes to handle EXTensions and EXTernal communication interfaces
  */
 
-class UExtInterface
+class ExtInterface
 {
     public:
-        virtual void process_asap()  {};
+        ExtInterface();
+        virtual void process_asap() {};
         virtual void process_1s() {};
         virtual void enable() {};
-
-        UExtInterface();
-    private:
 };
 
-class UExtInterfaceManager
+class ExtManager
 {
     public:
+        ExtManager();
+
         /** UEXT interface process function
          *
          * This function is called in each main loop, as soon as all other tasks finished.
@@ -56,21 +55,19 @@ class UExtInterfaceManager
         *
         * This function is called only once at startup.
         */
-        virtual void enable();
+        virtual void enable_all();
 
         /**
-         * Adds an UExtInterface object to the list of managed extensions,
-         * automatically called by UExtInterface objects during construction
+         * Adds an ExtInterface object to the list of managed extensions,
+         * automatically called by ExtInterface objects during construction
          */
-        static void add_ext(UExtInterface*);
-
-        UExtInterfaceManager();
+        static void add_ext(ExtInterface*);
 
     private:
         /**
-         * Stores list of all UExtInterface objects
+         * Stores list of all ExtInterface objects
          */
-        static std::vector<UExtInterface*>* interfaces;
+        static std::vector<ExtInterface*>* interfaces;
 
         /**
          * Makes sure there is an internal interfacts vector created, does nothing if it exists
@@ -78,6 +75,6 @@ class UExtInterfaceManager
         static void check_list();
 };
 
-extern UExtInterfaceManager uext;
+extern ExtManager ext_mgr;
 
-#endif /* UEXT_H */
+#endif /* EXT_H_ */

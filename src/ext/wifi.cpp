@@ -5,8 +5,6 @@
 
 #ifdef WIFI_ENABLED
 
-#include "uext/uext_wifi.h"
-
 #include "load.h"
 #include "thingset.h"
 #include <inttypes.h>
@@ -160,20 +158,27 @@ int wifi_reset(void)
     return res;
 }
 
-static UExtWifi uext_wifi; // local instance, will self register itself
+// implement specific extension inherited from ExtInterface
+class ExtWifi: public ExtInterface
+{
+    public:
+        ExtWifi() {};
+        void enable();
+        void process_1s();
+};
 
-UExtWifi::UExtWifi() {}
+static ExtWifi ext_wifi; // local instance, will self register itself
 
-void UExtWifi::enable() {
+void ExtWifi::enable()
+{
 #ifdef PIN_UEXT_DIS
     DigitalOut uext_dis(PIN_UEXT_DIS);
     uext_dis = 0;
 #endif
 }
 
-void UExtWifi::process_asap(void) {}
-
-void UExtWifi::process_1s() {
+void ExtWifi::process_1s()
+{
     static WifiState state = STATE_WIFI_RESET;
     static int error_counter = 0;
 
