@@ -5,10 +5,10 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-if BOARD_NUCLEO_L073RZ
+if BOARD_MPPT1210HUS_0V4
 
 config BOARD
-	default "nucleo_l073rz"
+	default "mppt1210hus_0v4"
 
 if UART_CONSOLE
 
@@ -34,4 +34,4 @@ config SPI_STM32_INTERRUPT
 
 endif # SPI
 
-endif # BOARD_NUCLEO_L073RZ
+endif # BOARD_MPPT1210HUS_0V4

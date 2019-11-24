@@ -18,6 +18,8 @@
 
 #include <zephyr.h>
 #include <stdio.h>
+#include <device.h>
+#include <drivers/gpio.h>
 
 #include "thingset.h"           // handles access to internal data via communication interfaces
 #include "pcb.h"                // hardware-specific settings
@@ -75,19 +77,30 @@ extern ThingSet ts;             // defined in data_objects.cpp
 
 time_t timestamp;    // current unix timestamp (independent of time(NULL), as it is user-configurable)
 
+#define USB_PWR_EN_PORT    DT_ALIAS_USB_PWR_EN_GPIOS_CONTROLLER
+#define USB_PWR_EN_PIN         DT_ALIAS_USB_PWR_EN_GPIOS_PIN
+
 void main(void)
 {
+	u32_t cnt = 0;
+	struct device *dev_usb_en;
+
+	dev_usb_en = device_get_binding(USB_PWR_EN_PORT);
+	gpio_pin_configure(dev_usb_en, USB_PWR_EN_PIN, GPIO_DIR_OUT);
+    gpio_pin_write(dev_usb_en, USB_PWR_EN_PIN, 1);
+
     printf("Booting Libre Solar Charge Controller: %s\n", CONFIG_BOARD);
 
     while (1) {
-
-        k_sleep(1000);
+        gpio_pin_write(dev_usb_en, USB_PWR_EN_PIN, cnt % 2);
+		cnt++;
+        k_sleep(5000);
     }
 }
 
 //K_THREAD_DEFINE(ts_serial_id, 4096, thingset_serial_thread, NULL, NULL, NULL, 5, 0, K_NO_WAIT);
 
-//K_THREAD_DEFINE(leds_id, 256, leds_update_thread, NULL, NULL, NULL,	4, 0, K_NO_WAIT);
+K_THREAD_DEFINE(leds_id, 256, leds_update_thread, NULL, NULL, NULL,	4, 0, K_NO_WAIT);
 
 //K_THREAD_DEFINE(uext_thread, 1024, uext_process_1s, NULL, NULL, NULL, 6, 0, K_NO_WAIT);
 

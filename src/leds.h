@@ -32,9 +32,17 @@ enum LedState {
     LED_STATE_FLICKER
 };
 
-/** Initialize LEDs and start timer for charlieplexing
+/**
+ * Initialize LEDs and start timer for charlieplexing. This function only needs to be called if
+ * used in a single-thread application (mbed)
  */
 void leds_init(bool enabled = true);
+
+#ifdef __ZEPHYR__
+/** Main thread for LED control in Zephyr, performs pin initializations and charlieplexing at 60 Hz
+ */
+void leds_update_thread();
+#endif
 
 /** Enables/disables dedicated charging LED if existing or
  *  blinks SOC LED when solar power is coming in.
