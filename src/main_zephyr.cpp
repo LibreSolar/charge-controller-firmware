@@ -37,7 +37,6 @@
 #include "leds.h"               // LED switching using charlieplexing
 #include "device_status.h"                // log data (error memory, min/max measurements, etc.)
 #include "data_objects.h"       // for access to internal data via ThingSet
-//#include "thingset_serial.h"    // UART or USB serial communication
 
 PowerPort lv_terminal;          // low voltage terminal (battery for typical MPPT)
 
@@ -82,26 +81,50 @@ time_t timestamp;    // current unix timestamp (independent of time(NULL), as it
 
 void main(void)
 {
-	u32_t cnt = 0;
-	struct device *dev_usb_en;
+    u32_t cnt = 0;
+    struct device *dev_usb_en;
 
-	dev_usb_en = device_get_binding(USB_PWR_EN_PORT);
-	gpio_pin_configure(dev_usb_en, USB_PWR_EN_PIN, GPIO_DIR_OUT);
+    dev_usb_en = device_get_binding(USB_PWR_EN_PORT);
+    gpio_pin_configure(dev_usb_en, USB_PWR_EN_PIN, GPIO_DIR_OUT);
     gpio_pin_write(dev_usb_en, USB_PWR_EN_PIN, 1);
 
     printf("Booting Libre Solar Charge Controller: %s\n", CONFIG_BOARD);
 
+    // initialize all extensions and external communication interfaces
+    ext_mgr.enable_all();
+
+    k_sleep(2000);      // safety feature: be able to re-flash before starting
+
     while (1) {
-        gpio_pin_write(dev_usb_en, USB_PWR_EN_PIN, cnt % 2);
-		cnt++;
-        k_sleep(5000);
+        //gpio_pin_write(dev_usb_en, USB_PWR_EN_PIN, cnt % 2);
+
+        leds_update_1s();
+        leds_update_soc(charger.soc, dev_stat.has_error(ERR_LOAD_LOW_SOC));
+
+        cnt++;
+        k_sleep(1000);
     }
 }
 
-//K_THREAD_DEFINE(ts_serial_id, 4096, thingset_serial_thread, NULL, NULL, NULL, 5, 0, K_NO_WAIT);
+void ext_mgr_thread()
+{
+    u32_t cnt = 0;
+    uint32_t last_call = 0;
+    while (1) {
+        uint32_t now = k_uptime_get() / 1000;
+        ext_mgr.process_asap();     // approx. every millisecond
+        if (now >= last_call + 1) {
+            last_call = now;
+            ext_mgr.process_1s();
+            printf("%d\n", now);
+        }
+        cnt++;
+        k_sleep(1);
+    }
+}
 
 K_THREAD_DEFINE(leds_id, 256, leds_update_thread, NULL, NULL, NULL,	4, 0, K_NO_WAIT);
 
-//K_THREAD_DEFINE(uext_thread, 1024, uext_process_1s, NULL, NULL, NULL, 6, 0, K_NO_WAIT);
+K_THREAD_DEFINE(ext_thread, 1024, ext_mgr_thread, NULL, NULL, NULL, 6, 0, 1000);
 
 #endif // __ZEPHYR__

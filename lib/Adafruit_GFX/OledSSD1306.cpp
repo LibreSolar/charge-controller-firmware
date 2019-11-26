@@ -9,7 +9,6 @@
  * Significant modifications were done by Martin Jäger (11/2019) to use it also in Zephyr
  */
 
-#include "mbed.h"
 #include "OledSSD1306.h"
 #include "logo.h"
 
@@ -35,10 +34,31 @@
 #define SSD1306_SEGREMAP 0xA0
 #define SSD1306_CHARGEPUMP 0x8D
 
-OledSSD1306::OledSSD1306(I2C &i2c, uint8_t i2cAddress, uint8_t brightness) :
+#if defined(__MBED__)
+
+OledSSD1306::OledSSD1306(I2C &i2c, uint8_t i2cAddress) :
     Adafruit_GFX(SSD1306_WIDTH, SSD1306_HEIGHT),
-    mi2c(i2c),
-    mi2cAddress(i2cAddress)
+    _i2c(i2c),
+    _i2cAddress(i2cAddress)
+{
+    ;
+}
+
+#elif defined(__ZEPHYR__)
+
+OledSSD1306::OledSSD1306(const char *i2c_name, uint8_t i2cAddress) :
+    Adafruit_GFX(SSD1306_WIDTH, SSD1306_HEIGHT),
+    _i2cAddress(i2cAddress)
+{
+    _i2c = device_get_binding(i2c_name);
+	if (!_i2c) {
+		printk("I2C: Device driver not found.\n");
+	}
+}
+
+#endif
+
+void OledSSD1306::init(uint8_t brightness)
 {
     command(SSD1306_DISPLAYOFF);
     command(SSD1306_SETDISPLAYCLOCKDIV);
@@ -146,9 +166,33 @@ void OledSSD1306::splash(void)
     std::copy(&logo[0], &logo[0] + sizeof(logo), buffer.begin());
 }
 
+void OledSSD1306::command(uint8_t c)
+{
+    uint8_t buf[2];
+    buf[0] = 0; // Command Mode
+    buf[1] = c;
+#if defined(__MBED__)
+    _i2c.write(_i2cAddress, (char *)buf, sizeof(buf));
+#elif defined(__ZEPHYR__)
+    i2c_write(_i2c, buf, sizeof(buf), _i2cAddress);
+#endif
+}
+
+void OledSSD1306::data(uint8_t c)
+{
+    uint8_t buf[2];
+    buf[0] = 0x40; // Data Mode
+    buf[1] = c;
+#if defined(__MBED__)
+    _i2c.write(_i2cAddress, (char *)buf, sizeof(buf));
+#elif defined(__ZEPHYR__)
+    i2c_write(_i2c, buf, sizeof(buf), _i2cAddress);
+#endif
+};
+
 void OledSSD1306::sendBuffer()
 {
-    char buf[17];
+    uint8_t buf[17];
     buf[0] = 0x40; // Data Mode
 
     // send display buffer in 16 byte chunks
@@ -160,6 +204,10 @@ void OledSSD1306::sendBuffer()
                 buf[x] = buffer[pos];
             }
         }
-        mi2c.write(mi2cAddress, buf, sizeof(buf));
+#if defined(__MBED__)
+        _i2c.write(_i2cAddress, (char *)buf, sizeof(buf));
+#elif defined(__ZEPHYR__)
+        i2c_write(_i2c, buf, sizeof(buf), _i2cAddress);
+#endif
     }
 };

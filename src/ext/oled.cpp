@@ -14,11 +14,13 @@
  * limitations under the License.
  */
 
-#ifdef __MBED__
+#ifndef UNIT_TEST
 
 #include "config.h"
 
 #ifdef OLED_ENABLED     // otherwise don't compile code to reduce firmware size
+
+#include <math.h>
 
 #include "ext/ext.h"
 
@@ -56,12 +58,12 @@ const unsigned char bmp_disconnected [] = {
     0x08, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
-I2C i2c(PIN_UEXT_SDA, PIN_UEXT_SCL);
-
-#ifdef OLED_BRIGHTNESS
-OledSSD1306 oled(i2c, 0x78, OLED_BRIGHTNESS);
-#else
-OledSSD1306 oled(i2c, 0x78);        // use default (lowest brightness)
+#if defined(__MBED__)
+I2C i2c_dev(PIN_UEXT_SDA, PIN_UEXT_SCL);
+OledSSD1306 oled(i2c_dev);
+#elif defined(__ZEPHYR__)
+const char i2c_dev[] = "I2C_1";
+OledSSD1306 oled(i2c_dev);
 #endif
 
 void ExtOled::enable()
@@ -69,6 +71,12 @@ void ExtOled::enable()
 #ifdef PIN_UEXT_DIS
     DigitalOut uext_dis(PIN_UEXT_DIS);
     uext_dis = 0;
+#endif
+
+#ifdef OLED_BRIGHTNESS
+    oled.init(OLED_BRIGHTNESS);
+#else
+    oled.init();        // use default (lowest brightness)
 #endif
 }
 
@@ -195,4 +203,4 @@ void ExtOled::process_1s()
 
 #endif /* OLED_ENABLED */
 
-#endif /* __MBED__ */
+#endif /* UNIT_TEST */
