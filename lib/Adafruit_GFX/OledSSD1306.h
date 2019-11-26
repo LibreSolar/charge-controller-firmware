@@ -9,16 +9,22 @@
  * Significant modifications were done by Martin Jäger (11/2019) to use it also in Zephyr
  */
 
-#ifndef _OledSSD1306_H_
-#define _OledSSD1306_H_
+#ifndef OLEDSSD1306_H_
+#define OLEDSSD1306_H_
 
+#if defined(__MBED__)
 #include "mbed.h"
+#elif defined(__ZEPHYR__)
+#include <zephyr.h>
+#include <drivers/i2c.h>
+#endif
+
 #include "Adafruit_GFX.h"
 
 #include <array>
 #include <algorithm>
 
-#define SSD1306_I2C_ADDRESS 0x78
+#define SSD1306_I2C_ADDRESS 0x3c    // needs to be left-shifted by 1 for mbed (=0x78)
 
 #define SSD1306_WIDTH	128
 #define SSD1306_HEIGHT	64
@@ -37,7 +43,13 @@ public:
      * @param i2cAddress The i2c address of the display
      * @param brightness Sets contrast between 0x01-0xFF or 1-255
      */
-    OledSSD1306(I2C &i2c, uint8_t i2cAddress = SSD1306_I2C_ADDRESS, uint8_t brightness = 0x01);
+#if defined(__MBED__)
+    OledSSD1306(I2C &i2c, uint8_t i2cAddress = (SSD1306_I2C_ADDRESS << 1));
+#elif defined(__ZEPHYR__)
+    OledSSD1306(const char *i2c_name, uint8_t i2cAddress = SSD1306_I2C_ADDRESS);
+#endif
+
+    void init(uint8_t brightness = 0x01);
 
     void drawPixel(int16_t x, int16_t y, uint16_t color);
 
@@ -51,29 +63,22 @@ public:
     /// Fill the buffer with the logo splash screen.
     void splash();
 
-    void command(uint8_t c)
-    {
-        char buff[2];
-        buff[0] = 0; // Command Mode
-        buff[1] = c;
-        mi2c.write(mi2cAddress, buff, sizeof(buff));
-    }
+    void command(uint8_t c);
 
-    void data(uint8_t c)
-    {
-        char buff[2];
-        buff[0] = 0x40; // Data Mode
-        buff[1] = c;
-        mi2c.write(mi2cAddress, buff, sizeof(buff));
-    };
+    void data(uint8_t c);
 
 protected:
     void sendBuffer();
 
     std::array<uint8_t, SSD1306_HEIGHT * SSD1306_WIDTH / 8> buffer;
 
-    I2C &mi2c;
-    uint8_t mi2cAddress;
+#if defined(__MBED__)
+    I2C &_i2c;
+#elif defined(__ZEPHYR__)
+    struct device *_i2c;
+#endif
+
+    uint8_t _i2cAddress;
 };
 
-#endif
+#endif // OLEDSSD1306_H_
