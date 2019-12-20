@@ -115,7 +115,9 @@ const data_object_t data_objects[] = {
 
     // battery related data objects
     {0x70, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(bat_terminal.voltage),                    "Bat_V"},
+#ifdef SOLAR_TERMINAL
     {0x71, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(solar_terminal.voltage),                  "Solar_V"},
+#endif
     {0x72, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(bat_terminal.current),                    "Bat_A"},
     {0x73, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(load_terminal.current),                   "Load_A"},
     {0x74, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 1, (void*) &(charger.bat_temperature),                 "Bat_degC"},
@@ -128,11 +130,15 @@ const data_object_t data_objects[] = {
 #if FEATURE_DCDC_CONVERTER
     {0x79, TS_OUTPUT, TS_READ_ALL, TS_T_UINT16,  0, (void*) &(dcdc.state),                              "DCDCState"},
 #endif
+#ifdef SOLAR_TERMINAL
     {0x7A, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(solar_terminal.current),                  "Solar_A"},
+#endif
     {0x7B, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(bat_terminal.sink_voltage_max),           "BatTarget_V"},
     {0x7C, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(bat_terminal.pos_current_limit),          "BatTarget_A"},
     {0x7D, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(bat_terminal.power),                      "Bat_W"},
+#ifdef SOLAR_TERMINAL
     {0x7E, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(solar_terminal.power),                    "Solar_W"},
+#endif
     {0x7F, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(load_terminal.power),                     "Load_W"},
 
     {0x90, TS_OUTPUT, TS_READ_ALL, TS_T_UINT32,  0, (void*) &(dev_stat.error_flags),                    "ErrorFlags"},
@@ -151,7 +157,9 @@ const data_object_t data_objects[] = {
     {0x10, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_UINT16,  0, (void*) &(dev_stat.load_power_max_day),           "LoadMaxDay_W"},
 
     // accumulated data
+#ifdef SOLAR_TERMINAL
     {0xA0, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 2, (void*) &(solar_terminal.neg_energy_Wh),          "SolarInDay_Wh"},
+#endif
     {0xA1, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 2, (void*) &(load_terminal.pos_energy_Wh),           "LoadOutDay_Wh"},
     {0xA2, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 2, (void*) &(bat_terminal.pos_energy_Wh),            "BatChgDay_Wh"},
     {0xA3, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 2, (void*) &(bat_terminal.neg_energy_Wh),            "BatDisDay_Wh"},

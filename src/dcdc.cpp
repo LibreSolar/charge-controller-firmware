@@ -77,19 +77,16 @@ int Dcdc::duty_cycle_delta()
         out->sink_voltage_max, out->pos_current_limit, half_bridge_get_duty_cycle() * 100.0,
         state);
 
-    if (time(NULL) - power_good_timestamp > 10 ||      // more than 10s low power
-         out->power < -1.0)           // or already generating negative power
-    {
-        pwr_inc_goal = 0;     // switch off
+    if ((time(NULL) - power_good_timestamp > 10 || out->power < -1.0) && mode != MODE_NANOGRID) {
+        // swith off after 10s low power or negative power (if not in nanogrid mode)
+        pwr_inc_goal = 0;
     }
-    else if (out->voltage > (out->sink_voltage_max - out->pos_droop_res * out->current))
-    {
-       // output voltage target reached
+    else if (out->voltage > (out->sink_voltage_max - out->pos_droop_res * out->current)) {
+        // output voltage target reached
         state = DCDC_STATE_CV;
         pwr_inc_goal = -1;  // decrease output power
     }
-    else if (out->current > out->pos_current_limit)
-    {
+    else if (out->current > out->pos_current_limit) {
         // output charge current limit reached
         state = DCDC_STATE_CC;
         pwr_inc_goal = -1;  // decrease output power
@@ -103,8 +100,7 @@ int Dcdc::duty_cycle_delta()
         state = DCDC_STATE_DERATING;
         pwr_inc_goal = -1;  // decrease output power
     }
-    else if (out->power < output_power_min && out->voltage < out->src_voltage_start)
-    {
+    else if (out->power < output_power_min && out->voltage < out->src_voltage_start) {
         // no load condition (e.g. start-up of nanogrid) --> raise voltage
         pwr_inc_goal = 1;   // increase output power
     }

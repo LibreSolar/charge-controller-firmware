@@ -7,16 +7,27 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+#include "pcb.h"
+
 /** @file
  *
  * @brief
  * Used to define personal settings, e.g. which type of interface at the UEXT port should be used.
  */
 
+// typical MPPT buck mode / PWM charge controller
 #define DCDC_MODE_INIT      MODE_MPPT_BUCK
-//#define DCDC_MODE_INIT      MODE_NANOGRID
-
+#if FEATURE_PWM_SWITCH
+#define SOLAR_TERMINAL      pwm_terminal
+#else
 #define SOLAR_TERMINAL      hv_terminal
+#endif
+
+// Nanogrid mode
+//#define DCDC_MODE_INIT      MODE_NANOGRID
+//#define GRID_TERMINAL       hv_terminal
+
+// battery always assumed to be at low-voltage terminal (might need to be changed for boost mode)
 #define BATTERY_TERMINAL    lv_terminal
 
 // basic battery configuration

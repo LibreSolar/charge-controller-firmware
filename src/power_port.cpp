@@ -26,7 +26,7 @@ void PowerPort::init_nanogrid()
 
     // also initialize the connected bus
     src_voltage_start = 30.0;       // starting buck mode above this point
-    src_voltage_stop = 20.0;        // stopping buck mode below this point
+    src_voltage_stop = 30.0;        // stopping buck mode below this point
 
     sink_voltage_max = 28.0;     // starting idle mode above this point
     sink_voltage_min = 10.0;

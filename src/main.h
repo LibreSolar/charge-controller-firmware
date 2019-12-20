@@ -33,6 +33,7 @@ extern PwmSwitch pwm_switch;
 
 extern PowerPort &bat_terminal;
 extern PowerPort &solar_terminal;
+extern PowerPort &grid_terminal;
 
 extern DeviceStatus dev_stat;
 extern Charger charger;

@@ -75,6 +75,12 @@ void ExtOled::process_1s()
     char buf[30];
     unsigned int len;
 
+#ifdef SOLAR_TERMINAL
+    PowerPort &in_terminal = solar_terminal;
+#elif defined(GRID_TERMINAL)
+    PowerPort &in_terminal = grid_terminal;
+#endif
+
     oled.clear();
 
     oled.drawBitmap(6, 0, bmp_pv_panel, 16, 16, 1);
@@ -121,7 +127,7 @@ void ExtOled::process_1s()
 #endif
         oled.setTextCursor(0, 18);
         len = snprintf(buf, sizeof(buf), "%4.0fW",
-            (abs(solar_terminal.power) < 1) ? 0 : -solar_terminal.power);  // remove negative zeros
+            (abs(in_terminal.power) < 1) ? 0 : -in_terminal.power);  // remove negative zeros
         oled.writeString(buf, len);
     }
     else {
@@ -130,11 +136,11 @@ void ExtOled::process_1s()
         oled.writeString(buf, len);
     }
 #ifndef CHARGER_TYPE_PWM
-    if (solar_terminal.voltage > bat_terminal.voltage)
+    if (in_terminal.voltage > bat_terminal.voltage)
 #endif
     {
         oled.setTextCursor(0, 26);
-        len = snprintf(buf, sizeof(buf), "%4.1fV", solar_terminal.voltage);
+        len = snprintf(buf, sizeof(buf), "%4.1fV", in_terminal.voltage);
         oled.writeString(buf, len);
     }
 
@@ -159,7 +165,7 @@ void ExtOled::process_1s()
 
     oled.setTextCursor(0, 36);
     len = snprintf(buf, sizeof(buf), "Day +%5.0fWh -%5.0fWh",
-        solar_terminal.neg_energy_Wh, fabs(load_terminal.pos_energy_Wh));
+        in_terminal.neg_energy_Wh, fabs(load_terminal.pos_energy_Wh));
     oled.writeString(buf, len);
     len = snprintf(buf, sizeof(buf), "Tot +%4.1fkWh -%4.1fkWh",
         dev_stat.solar_in_total_Wh / 1000.0, fabs(dev_stat.load_out_total_Wh) / 1000.0);

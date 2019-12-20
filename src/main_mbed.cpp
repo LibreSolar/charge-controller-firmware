@@ -46,9 +46,6 @@ Dcdc dcdc(&hv_terminal, &dcdc_lv_port, DCDC_MODE_INIT);
 PowerPort pwm_terminal;         // external terminal of PWM switch port (normally solar)
 PowerPort pwm_port_int;         // internal side of PWM switch
 PwmSwitch pwm_switch(&pwm_terminal, &pwm_port_int);
-PowerPort &solar_terminal = pwm_terminal;
-#else
-PowerPort &solar_terminal = SOLAR_TERMINAL;     // defined in config.h
 #endif
 
 #if FEATURE_LOAD_OUTPUT
@@ -56,9 +53,14 @@ PowerPort load_terminal;        // load terminal (also connected to lv_bus)
 LoadOutput load(&load_terminal);
 #endif
 
+#ifdef SOLAR_TERMINAL
+PowerPort &solar_terminal = SOLAR_TERMINAL;     // defined in config.h
+#endif
+
 PowerPort &bat_terminal = BATTERY_TERMINAL;     // defined in config.h
+
 #ifdef GRID_TERMINAL
-PowerPort &grid_terminal = GRID_TERMINAL;
+PowerPort &grid_terminal = GRID_TERMINAL;       // defined in config.h
 #endif
 
 Charger charger(&bat_terminal);
@@ -106,7 +108,9 @@ int main()
 
     init_watchdog(10);      // 10s should be enough for communication ports
 
+    #ifdef SOLAR_TERMINAL
     solar_terminal.init_solar();
+    #endif
 
     #ifdef GRID_TERMINAL
     grid_terminal.init_nanogrid();
@@ -191,8 +195,16 @@ void system_control()
         // see also here: https://github.com/ARMmbed/mbed-os/issues/9065
         timestamp++;
         counter = 0;
+
         // energy + soc calculation must be called exactly once per second
+        #ifdef SOLAR_TERMINAL
         solar_terminal.energy_balance();
+        #endif
+
+        #ifdef GRID_TERMINAL
+        grid_terminal.energy_balance();
+        #endif
+
         bat_terminal.energy_balance();
         load_terminal.energy_balance();
         dev_stat.update_energy();
