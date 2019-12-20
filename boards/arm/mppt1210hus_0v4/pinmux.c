@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Martin Jäger (Libre Solar)
+ * Copyright (c) 2019 Martin Jäger / Libre Solar
  *
  * SPDX-License-Identifier: Apache-2.0
  */

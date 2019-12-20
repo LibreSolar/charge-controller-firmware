@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2018 Martin Jäger / Libre Solar
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 #include "thingset.h"           // handles access to internal data via communication interfaces
 #include "pcb.h"                // hardware-specific settings
 #include "config.h"             // user-specific configuration

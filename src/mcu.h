@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2019 Martin Jäger / Libre Solar
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 #ifndef MCU_H_
 #define MCU_H_

@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2017 Martin Jäger / Libre Solar
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 #ifndef CAN_MSG_QUEUE_H
 #define CAN_MSG_QUEUE_H

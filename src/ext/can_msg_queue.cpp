@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2017 Martin Jäger / Libre Solar
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 #if defined(__MBED__) && !defined(UNIT_TEST)
 
 #include "mbed.h"

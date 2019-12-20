@@ -19,7 +19,7 @@ Here is a quick summary how contributions work on GitHub:
 1. Fork the repository to your local GitHub account
 2. Clone the repository to your local computer using `git clone https://github.com/your-github-username/repository-name.git`
 3. Create a new branch where you will later add your changes using `git switch -c branch-name`
-4. Update the files to fix the issue or add new features
+4. Update the files to fix the issue or add new features. Please add your copyright notice in a new line if you made significant changes to the file.
 5. Use `git add your-changed-files` to add the file contents of the changed files to the so-called staging area (means
    they are prepared to be committed)
 6. Run `git commit -m "Short message to describe the changes"` to add the staged files to the respository
