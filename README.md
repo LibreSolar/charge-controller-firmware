@@ -2,7 +2,7 @@
 
 ![build badge](https://travis-ci.com/LibreSolar/charge-controller-firmware.svg?branch=master)
 
-Firmware based on ARM mbed framework for the Libre Solar MPPT/PWM solar charge controllers.
+This repository contains the firmware for the different Libre Solar Charge Controllers. Originally, the firmware was based on [ARM Mbed OS](https://www.mbed.com). The current version also supports using [Zephyr RTOS](https://www.zephyrproject.org/) for some boards.
 
 Coding style is described [here](https://libre.solar/docs/coding_style/).
 
@@ -16,9 +16,9 @@ The software is configurable to support different charge controller PCBs with ei
 
 ## Building and flashing the firmware
 
-This firmware is developed using the [ARM mbed OS](https://developer.mbed.org/) embedded framework which has easy-to-understand C++ syntax (similar to Arduino) and thus enhances community based software development.
+### ARM Mbed OS
 
-If used together with Visual Studio Code and PlatformIO, starting firmware development is only a matter of a few clicks:
+It is suggested to use Visual Studio Code and PlatformIO for firmware development, as it simplifies compiling and uploading the code a lot:
 
 1. Install Visual Studio Code and [PlatformIO](https://platformio.org/platformio-ide) to build the firmware.
 
@@ -29,6 +29,19 @@ If used together with Visual Studio Code and PlatformIO, starting firmware devel
 4. Connect the board via a programmer. See the Libre Solar website for [further project-agnostic instructions](http://libre.solar/docs/flashing).
 
 5. Press the upload button at the bottom left corner in VS Code.
+
+### Zephyr
+
+Support for Zephyr was recently [included in PlatformIO](https://github.com/platformio/platformio-core/issues/1613) and is currently in beta status. In order to try it out, install the developer version of PlatformIO and run update to get also the development version of the `ststm32` package:
+
+```
+platformio upgrade --dev
+platformio update
+```
+
+Now you should be able to compile and flash Zephyr for supported boards (-zephyr suffix in platformio.ini) in the same way as explained above for Mbed.
+
+As the build system in PlatformIO is not the same as the native Zephyr build system, there might still be some issues. Generally, also `west build` should work if called from within the zephyr subdirectory.
 
 ### Troubleshooting
 
