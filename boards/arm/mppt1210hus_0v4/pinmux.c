@@ -1,7 +1,7 @@
 /*
- * Copyright (c) 2019 Martin Jäger / Libre Solar
- *
  * SPDX-License-Identifier: Apache-2.0
+ *
+ * Copyright (c) 2019 Martin Jäger / Libre Solar
  */
 
 #include <kernel.h>
@@ -58,3 +58,18 @@ static int pinmux_stm32_init(struct device *port)
 
 SYS_INIT(pinmux_stm32_init, PRE_KERNEL_1,
 	 CONFIG_PINMUX_STM32_DEVICE_INITIALIZATION_PRIORITY);
+
+const char *led_ports[CONFIG_NUM_LED_PINS] = {
+    DT_ALIAS_LED_A_GPIOS_CONTROLLER,
+    DT_ALIAS_LED_B_GPIOS_CONTROLLER,
+    DT_ALIAS_LED_C_GPIOS_CONTROLLER,
+    DT_ALIAS_LED_D_GPIOS_CONTROLLER,
+    DT_ALIAS_LED_E_GPIOS_CONTROLLER
+};
+const int led_pins[CONFIG_NUM_LED_PINS] = {
+    DT_ALIAS_LED_A_GPIOS_PIN,   // GND
+    DT_ALIAS_LED_B_GPIOS_PIN,   // SOC12
+    DT_ALIAS_LED_C_GPIOS_PIN,   // SOC3
+    DT_ALIAS_LED_D_GPIOS_PIN,   // RXTX
+    DT_ALIAS_LED_E_GPIOS_PIN    // LOAD
+};

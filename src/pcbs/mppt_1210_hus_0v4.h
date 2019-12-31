@@ -69,23 +69,12 @@ static const PinName led_pins[NUM_LED_PINS] = {
        PB_14,    PB_13,    PB_2,     PB_11,    PB_10
 };
 #elif defined(__ZEPHYR__)
-static const char *led_ports[NUM_LED_PINS] = {
-    DT_ALIAS_LED_A_GPIOS_CONTROLLER,
-    DT_ALIAS_LED_B_GPIOS_CONTROLLER,
-    DT_ALIAS_LED_C_GPIOS_CONTROLLER,
-    DT_ALIAS_LED_D_GPIOS_CONTROLLER,
-    DT_ALIAS_LED_E_GPIOS_CONTROLLER
-};
-static const int led_pins[NUM_LED_PINS] = {
-    DT_ALIAS_LED_A_GPIOS_PIN,   // GND
-    DT_ALIAS_LED_B_GPIOS_PIN,   // SOC12
-    DT_ALIAS_LED_C_GPIOS_PIN,   // SOC3
-    DT_ALIAS_LED_D_GPIOS_PIN,   // RXTX
-    DT_ALIAS_LED_E_GPIOS_PIN    // LOAD
-};
+// defined in boar definition pinmux.c
+extern const char *led_ports[CONFIG_NUM_LED_PINS];
+extern const int led_pins[CONFIG_NUM_LED_PINS];
 #endif // MBED or ZEPHYR
 
-static const pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
+const pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
     { PIN_HIGH, PIN_LOW,  PIN_LOW,  PIN_LOW,  PIN_LOW  }, // LED1
     { PIN_LOW,  PIN_HIGH, PIN_LOW,  PIN_LOW,  PIN_LOW  }, // LED2
     { PIN_LOW,  PIN_LOW,  PIN_HIGH, PIN_LOW,  PIN_LOW  }, // LED3

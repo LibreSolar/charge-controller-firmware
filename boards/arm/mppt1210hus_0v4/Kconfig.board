@@ -1,9 +1,5 @@
-# Kconfig - Libre Solar MPPT 1210 HUS v0.4
-#
-# Copyright (c) 2019 Martin Jäger (Libre Solar)
-#
 # SPDX-License-Identifier: Apache-2.0
-#
+# Copyright (c) 2019 Martin Jäger / Libre Solar
 
 config BOARD_MPPT1210HUS_0V4
 	bool "Libre Solar MPPT 1210 HUS v0.4"
