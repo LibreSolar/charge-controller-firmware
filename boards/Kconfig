@@ -1,32 +1,9 @@
 # SPDX-License-Identifier: Apache-2.0
-# Copyright (c) 2019 Martin Jaeger (Libre Solar)
+# Copyright (c) 2019 Martin Jäger (Libre Solar)
 #
 # Generic Libre Solar Charge Controller configuration
 #
 
-# Invisible (hardware-specific) Kconfig symbols
+source "$(BOARD_DIR)/../../Kconfig.hidden"
 
-config HAS_DCDC_CONVERTER
-	bool
-	help
-		"Board has a DC/DC converter"
-
-config HAS_PWM_SWITCH
-	bool
-	help
-		"PCB has PWM power switch"
-
-config HAS_LOAD_OUTPUT
-	bool
-	help
-		"PCB has a load output"
-
-config NUM_LED_PINS
-	int
-	help
-		"Number of LED pins for charlieplexing"
-
-# Visible (user-configurable) Kconfig symbols
-
-config OLED_DISPLAY
-	bool "OLED display connected via UEXT"
+source "$(BOARD_DIR)/../../Kconfig.user"
