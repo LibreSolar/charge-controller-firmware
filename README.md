@@ -6,6 +6,8 @@ This repository contains the firmware for the different Libre Solar Charge Contr
 
 Coding style is described [here](https://libre.solar/docs/coding_style/).
 
+**Warning:** This firmware is under active development. Even though we try our best not to break any features that worked before, not every commit is fully tested on every board before including it to the master branch. For stable and tested versions consider using the latest [release](https://github.com/LibreSolar/charge-controller-firmware/releases).
+
 ## Supported devices
 
 The software is configurable to support different charge controller PCBs with either STM32F072 (including CAN support) or low-power STM32L072/3 MCUs.
@@ -32,16 +34,11 @@ It is suggested to use Visual Studio Code and PlatformIO for firmware developmen
 
 ### Zephyr
 
-Support for Zephyr was recently [included in PlatformIO](https://github.com/platformio/platformio-core/issues/1613) and is currently in beta status. In order to try it out, install the developer version of PlatformIO and run update to get also the development version of the `ststm32` package:
+Support for Zephyr was recently added to PlatformIO. You may need to run `pio upgrade` and `pio update` to get the most recent version.
 
-```
-platformio upgrade --dev
-platformio update
-```
+After that, you should be able to compile and flash Zephyr for supported boards (-zephyr suffix in platformio.ini) in the same way as explained above for Mbed.
 
-Now you should be able to compile and flash Zephyr for supported boards (-zephyr suffix in platformio.ini) in the same way as explained above for Mbed.
-
-As the build system in PlatformIO is not the same as the native Zephyr build system, there might still be some issues. Generally, also `west build` should work if called from within the zephyr subdirectory.
+As the build system in PlatformIO is not the same as the native Zephyr build system, there might still be some issues. Generally, also `west build` and `west flash` should work if called from within the zephyr subdirectory.
 
 ### Troubleshooting
 
