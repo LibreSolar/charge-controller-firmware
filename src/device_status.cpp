@@ -27,7 +27,7 @@ void DeviceStatus::update_energy()
     static uint32_t bat_chg_total_Wh_prev = bat_chg_total_Wh;
     static uint32_t bat_dis_total_Wh_prev = bat_dis_total_Wh;
 
-#ifdef SOLAR_TERMINAL
+#if CONFIG_HV_TERMINAL_SOLAR || CONFIG_LV_TERMINAL_SOLAR || CONFIG_PWM_TERMINAL_SOLAR
     if (solar_terminal.voltage < bat_terminal.voltage) {
         seconds_zero_solar += 1;
     }
@@ -54,7 +54,7 @@ void DeviceStatus::update_energy()
         (bat_terminal.pos_energy_Wh > 0 ? bat_terminal.pos_energy_Wh : 0);
     bat_dis_total_Wh = bat_dis_total_Wh_prev +
         (bat_terminal.neg_energy_Wh > 0 ? bat_terminal.neg_energy_Wh : 0);
-#ifdef SOLAR_TERMINAL
+#if CONFIG_HV_TERMINAL_SOLAR || CONFIG_LV_TERMINAL_SOLAR || CONFIG_PWM_TERMINAL_SOLAR
     solar_in_total_Wh = solar_in_total_Wh_prev +
         (solar_terminal.neg_energy_Wh > 0 ? solar_terminal.neg_energy_Wh : 0);
 #endif
@@ -68,13 +68,13 @@ void DeviceStatus::update_min_max_values()
         battery_voltage_max = bat_terminal.voltage;
     }
 
-#ifdef SOLAR_TERMINAL
+#if CONFIG_HV_TERMINAL_SOLAR || CONFIG_LV_TERMINAL_SOLAR || CONFIG_PWM_TERMINAL_SOLAR
     if (solar_terminal.voltage > solar_voltage_max) {
         solar_voltage_max = solar_terminal.voltage;
     }
 #endif
 
-#if FEATURE_DCDC_CONVERTER
+#if CONFIG_HAS_DCDC_CONVERTER
     if (dcdc.lvs->current > dcdc_current_max) {
         dcdc_current_max = dcdc.lvs->current;
     }
@@ -88,7 +88,7 @@ void DeviceStatus::update_min_max_values()
         load_current_max = load_terminal.current;
     }
 
-#ifdef SOLAR_TERMINAL
+#if CONFIG_HV_TERMINAL_SOLAR || CONFIG_LV_TERMINAL_SOLAR || CONFIG_PWM_TERMINAL_SOLAR
     if (-solar_terminal.power > solar_power_max_day) {
         solar_power_max_day = -solar_terminal.power;
         if (solar_power_max_day > solar_power_max_total) {

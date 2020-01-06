@@ -24,29 +24,45 @@
 
 PowerPort lv_terminal;          // low voltage terminal (battery for typical MPPT)
 
-#if FEATURE_DCDC_CONVERTER
+#if CONFIG_HAS_DCDC_CONVERTER
 PowerPort hv_terminal;          // high voltage terminal (solar for typical MPPT)
 PowerPort dcdc_lv_port;         // internal low voltage side of DC/DC converter
-Dcdc dcdc(&hv_terminal, &dcdc_lv_port, DCDC_MODE_INIT);
+#if CONFIG_HV_TERMINAL_NANOGRID
+Dcdc dcdc(&hv_terminal, &dcdc_lv_port, MODE_NANOGRID);
+#elif CONFIG_HV_TERMINAL_BATTERY
+Dcdc dcdc(&hv_terminal, &dcdc_lv_port, MODE_MPPT_BOOST);
+#else
+Dcdc dcdc(&hv_terminal, &dcdc_lv_port, MODE_MPPT_BUCK);
+#endif // CONFIG_HV_TERMINAL
 #endif
 
-#if FEATURE_PWM_SWITCH
+#if CONFIG_HAS_PWM_SWITCH
 PowerPort pwm_terminal;         // external terminal of PWM switch port (normally solar)
 PowerPort pwm_port_int;         // internal side of PWM switch
 PwmSwitch pwm_switch(&pwm_terminal, &pwm_port_int);
-PowerPort &solar_terminal = pwm_terminal;
-#else
-PowerPort &solar_terminal = SOLAR_TERMINAL;     // defined in config.h
 #endif
 
-#if FEATURE_LOAD_OUTPUT
+#if CONFIG_HAS_LOAD_OUTPUT
 PowerPort load_terminal;        // load terminal (also connected to lv_bus)
 LoadOutput load(&load_terminal);
 #endif
 
-PowerPort &bat_terminal = BATTERY_TERMINAL;     // defined in config.h
-#ifdef GRID_TERMINAL
-PowerPort &grid_terminal = GRID_TERMINAL;
+#if CONFIG_HV_TERMINAL_SOLAR
+PowerPort &solar_terminal = hv_terminal;
+#elif CONFIG_LV_TERMINAL_SOLAR
+PowerPort &solar_terminal = lv_terminal;
+#elif CONFIG_PWM_TERMINAL_SOLAR
+PowerPort &solar_terminal = pwm_terminal;
+#endif
+
+#if CONFIG_HV_TERMINAL_NANOGRID
+PowerPort &grid_terminal = hv_terminal;
+#endif
+
+#if CONFIG_LV_TERMINAL_BATTERY
+PowerPort &bat_terminal = lv_terminal;
+#elif CONFIG_HV_TERMINAL_BATTERY
+PowerPort &bat_terminal = hv_terminal;
 #endif
 
 Charger charger(&lv_terminal);

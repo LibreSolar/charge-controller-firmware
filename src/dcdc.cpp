@@ -18,7 +18,7 @@
 
 extern DeviceStatus dev_stat;
 
-#if FEATURE_DCDC_CONVERTER == 0
+#if CONFIG_HAS_DCDC_CONVERTER == 0
 
 Dcdc::Dcdc(PowerPort *hv_side, PowerPort *lv_side, DcdcOperationMode op_mode) {}
 

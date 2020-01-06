@@ -15,9 +15,9 @@
 #endif
 
 // specify features of charge controller
-#define FEATURE_DCDC_CONVERTER  1
-#define FEATURE_PWM_SWITCH      0
-#define FEATURE_LOAD_OUTPUT     1
+#define CONFIG_HAS_DCDC_CONVERTER  1
+#define CONFIG_HAS_PWM_SWITCH      0
+#define CONFIG_HAS_LOAD_OUTPUT     1
 
 // DC/DC converter settings
 #define PWM_FREQUENCY 50 // kHz  50 = better for cloud solar to increase efficiency

@@ -15,6 +15,7 @@
 
 #include "thingset.h"
 #include "hardware.h"
+#include "dcdc.h"
 #include "eeprom.h"
 #include <stdio.h>
 
@@ -23,7 +24,7 @@ const char* const device_type = DEVICE_TYPE;
 const char* const hardware_version = HARDWARE_VERSION;
 const char* const firmware_version = "0.1";
 const char* const firmware_commit = COMMIT_HASH;
-uint32_t device_id = DEVICE_ID;      // from config.h
+uint32_t device_id = CONFIG_DEVICE_ID;
 
 extern uint32_t timestamp;
 
@@ -98,11 +99,16 @@ const data_object_t data_objects[] = {
 
     {0x60, TS_INPUT, TS_READ_ALL | TS_WRITE_ALL,   TS_T_BOOL,   0, (void*) &(load.enable),                              "LoadEn"},   // change w/o store setting in NVM
     {0x61, TS_INPUT, TS_READ_ALL | TS_WRITE_ALL,   TS_T_BOOL,   0, (void*) &(load.usb_enable),                          "UsbEn"},
-#if FEATURE_PWM_SWITCH
-    {0x62, TS_INPUT, TS_READ_ALL | TS_WRITE_ALL,   TS_T_BOOL,   0, (void*) &(pwm_switch.enabled),                       "PwmEn"},
-#endif
-#if FEATURE_DCDC_CONVERTER
+#if CONFIG_HAS_DCDC_CONVERTER
     {0x62, TS_INPUT, TS_READ_ALL | TS_WRITE_ALL,   TS_T_BOOL,   0, (void*) &(dcdc.enabled),                             "DcdcEn"},
+#endif
+#if CONFIG_HAS_PWM_SWITCH
+    {0x63, TS_INPUT, TS_READ_ALL | TS_WRITE_ALL,   TS_T_BOOL,   0, (void*) &(pwm_switch.enabled),                       "PwmEn"},
+#endif
+#if CONFIG_HV_TERMINAL_NANOGRID
+    {0x64, TS_INPUT, TS_READ_ALL | TS_WRITE_ALL,   TS_T_BOOL,   0, (void*) &(grid_terminal.sink_voltage_max),           "GridSink_V"},
+    {0x64, TS_INPUT, TS_READ_ALL | TS_WRITE_ALL,   TS_T_BOOL,   0, (void*) &(grid_terminal.src_voltage_start),          "GridSrcStart_V"},
+    {0x64, TS_INPUT, TS_READ_ALL | TS_WRITE_ALL,   TS_T_BOOL,   0, (void*) &(grid_terminal.src_voltage_stop),           "GridSrcStop_V"},
 #endif
 
     // OUTPUT DATA ////////////////////////////////////////////////////////////
@@ -115,7 +121,7 @@ const data_object_t data_objects[] = {
 
     // battery related data objects
     {0x70, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(bat_terminal.voltage),                    "Bat_V"},
-#ifdef SOLAR_TERMINAL
+#if CONFIG_HV_TERMINAL_SOLAR || CONFIG_LV_TERMINAL_SOLAR || CONFIG_PWM_TERMINAL_SOLAR
     {0x71, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(solar_terminal.voltage),                  "Solar_V"},
 #endif
     {0x72, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(bat_terminal.current),                    "Bat_A"},
@@ -123,20 +129,20 @@ const data_object_t data_objects[] = {
     {0x74, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 1, (void*) &(charger.bat_temperature),                 "Bat_degC"},
     {0x75, TS_OUTPUT, TS_READ_ALL, TS_T_BOOL,    0, (void*) &(charger.ext_temp_sensor),                 "BatTempExt"},
     {0x76, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 1, (void*) &(dev_stat.internal_temp),                  "Int_degC"},
-#if defined(PIN_ADC_TEMP_FETS) && FEATURE_DCDC_CONVERTER
+#if defined(PIN_ADC_TEMP_FETS) && CONFIG_HAS_DCDC_CONVERTER
     {0x77, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 1, (void*) &(dcdc.temp_mosfets),                       "Mosfet_degC"},
 #endif
     {0x78, TS_OUTPUT, TS_READ_ALL, TS_T_UINT16,  0, (void*) &(charger.state),                           "ChgState"},
-#if FEATURE_DCDC_CONVERTER
+#if CONFIG_HAS_DCDC_CONVERTER
     {0x79, TS_OUTPUT, TS_READ_ALL, TS_T_UINT16,  0, (void*) &(dcdc.state),                              "DCDCState"},
 #endif
-#ifdef SOLAR_TERMINAL
+#if CONFIG_HV_TERMINAL_SOLAR || CONFIG_LV_TERMINAL_SOLAR || CONFIG_PWM_TERMINAL_SOLAR
     {0x7A, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(solar_terminal.current),                  "Solar_A"},
 #endif
     {0x7B, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(bat_terminal.sink_voltage_max),           "BatTarget_V"},
     {0x7C, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(bat_terminal.pos_current_limit),          "BatTarget_A"},
     {0x7D, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(bat_terminal.power),                      "Bat_W"},
-#ifdef SOLAR_TERMINAL
+#if CONFIG_HV_TERMINAL_SOLAR || CONFIG_LV_TERMINAL_SOLAR || CONFIG_PWM_TERMINAL_SOLAR
     {0x7E, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(solar_terminal.power),                    "Solar_W"},
 #endif
     {0x7F, TS_OUTPUT, TS_READ_ALL, TS_T_FLOAT32, 2, (void*) &(load_terminal.power),                     "Load_W"},
@@ -157,7 +163,7 @@ const data_object_t data_objects[] = {
     {0x10, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_UINT16,  0, (void*) &(dev_stat.load_power_max_day),           "LoadMaxDay_W"},
 
     // accumulated data
-#ifdef SOLAR_TERMINAL
+#if CONFIG_HV_TERMINAL_SOLAR || CONFIG_LV_TERMINAL_SOLAR || CONFIG_PWM_TERMINAL_SOLAR
     {0xA0, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 2, (void*) &(solar_terminal.neg_energy_Wh),          "SolarInDay_Wh"},
 #endif
     {0xA1, TS_REC, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 2, (void*) &(load_terminal.pos_energy_Wh),           "LoadOutDay_Wh"},
@@ -181,7 +187,7 @@ const data_object_t data_objects[] = {
     // CALIBRATION DATA ///////////////////////////////////////////////////////
     // using IDs >= 0xD0
 
-#if FEATURE_DCDC_CONVERTER
+#if CONFIG_HAS_DCDC_CONVERTER
     {0xD0, TS_CAL, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 1, (void*) &(dcdc.output_power_min),                 "DcdcMin_W"},
     {0xD1, TS_CAL, TS_READ_ALL | TS_WRITE_MAKER, TS_T_FLOAT32, 1, (void*) &(dcdc.hs_voltage_max),                   "SolarAbsMax_V"},
     {0xD2, TS_CAL, TS_READ_ALL | TS_WRITE_MAKER, TS_T_INT32,   0, (void*) &(dcdc.restart_interval),                 "DcdcRestart_s"},
@@ -237,7 +243,6 @@ const uint16_t pub_can_ids[] = {
     0x06, 0xA4,  // SOC, coulomb counter
     0x7D, 0x7E, 0x7F,
 };
-
 
 ts_pub_channel_t pub_channels[] = {
     { "Serial_1s",      pub_serial_ids,     sizeof(pub_serial_ids)/sizeof(uint16_t) },

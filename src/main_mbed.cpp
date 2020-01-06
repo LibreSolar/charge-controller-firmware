@@ -29,38 +29,49 @@
 #include "leds.h"               // LED switching using charlieplexing
 #include "device_status.h"                // log data (error memory, min/max measurements, etc.)
 #include "data_objects.h"       // for access to internal data via ThingSet
-
-#ifdef BOOTLOADER_ENABLED
 #include "bl_support.h"         // Bootloader support from the application side
-#endif
 
 PowerPort lv_terminal;          // low voltage terminal (battery for typical MPPT)
 
-#if FEATURE_DCDC_CONVERTER
+#if CONFIG_HAS_DCDC_CONVERTER
 PowerPort hv_terminal;          // high voltage terminal (solar for typical MPPT)
 PowerPort dcdc_lv_port;         // internal low voltage side of DC/DC converter
-Dcdc dcdc(&hv_terminal, &dcdc_lv_port, DCDC_MODE_INIT);
+#if CONFIG_HV_TERMINAL_NANOGRID
+Dcdc dcdc(&hv_terminal, &dcdc_lv_port, MODE_NANOGRID);
+#elif CONFIG_HV_TERMINAL_BATTERY
+Dcdc dcdc(&hv_terminal, &dcdc_lv_port, MODE_MPPT_BOOST);
+#else
+Dcdc dcdc(&hv_terminal, &dcdc_lv_port, MODE_MPPT_BUCK);
+#endif // CONFIG_HV_TERMINAL
 #endif
 
-#if FEATURE_PWM_SWITCH
+#if CONFIG_HAS_PWM_SWITCH
 PowerPort pwm_terminal;         // external terminal of PWM switch port (normally solar)
 PowerPort pwm_port_int;         // internal side of PWM switch
 PwmSwitch pwm_switch(&pwm_terminal, &pwm_port_int);
 #endif
 
-#if FEATURE_LOAD_OUTPUT
+#if CONFIG_HAS_LOAD_OUTPUT
 PowerPort load_terminal;        // load terminal (also connected to lv_bus)
 LoadOutput load(&load_terminal);
 #endif
 
-#ifdef SOLAR_TERMINAL
-PowerPort &solar_terminal = SOLAR_TERMINAL;     // defined in config.h
+#if CONFIG_HV_TERMINAL_SOLAR
+PowerPort &solar_terminal = hv_terminal;
+#elif CONFIG_LV_TERMINAL_SOLAR
+PowerPort &solar_terminal = lv_terminal;
+#elif CONFIG_PWM_TERMINAL_SOLAR
+PowerPort &solar_terminal = pwm_terminal;
 #endif
 
-PowerPort &bat_terminal = BATTERY_TERMINAL;     // defined in config.h
+#if CONFIG_HV_TERMINAL_NANOGRID
+PowerPort &grid_terminal = hv_terminal;
+#endif
 
-#ifdef GRID_TERMINAL
-PowerPort &grid_terminal = GRID_TERMINAL;       // defined in config.h
+#if CONFIG_LV_TERMINAL_BATTERY
+PowerPort &bat_terminal = lv_terminal;
+#elif CONFIG_HV_TERMINAL_BATTERY
+PowerPort &bat_terminal = hv_terminal;
 #endif
 
 Charger charger(&bat_terminal);
@@ -108,11 +119,11 @@ int main()
 
     init_watchdog(10);      // 10s should be enough for communication ports
 
-    #ifdef SOLAR_TERMINAL
+    #if CONFIG_HV_TERMINAL_SOLAR || CONFIG_LV_TERMINAL_SOLAR || CONFIG_PWM_TERMINAL_SOLAR
     solar_terminal.init_solar();
     #endif
 
-    #ifdef GRID_TERMINAL
+    #if CONFIG_HV_TERMINAL_NANOGRID
     grid_terminal.init_nanogrid();
     #endif
 
@@ -141,10 +152,10 @@ int main()
             charger.discharge_control(&bat_conf);
             charger.charge_control(&bat_conf);
 
-            #if FEATURE_DCDC_CONVERTER
+            #if CONFIG_HAS_DCDC_CONVERTER
             bat_terminal.pass_voltage_targets(&dcdc_lv_port);
             #endif
-            #if FEATURE_PWM_SWITCH
+            #if CONFIG_HAS_PWM_SWITCH
             bat_terminal.pass_voltage_targets(&pwm_port_int);
             #endif
 
@@ -176,13 +187,13 @@ void system_control()
     // alerts should trigger only for transients, so update based on actual voltage
     adc_set_lv_alerts(lv_terminal.voltage * 1.2, lv_terminal.voltage * 0.8);
 
-    #if FEATURE_PWM_SWITCH
+    #if CONFIG_HAS_PWM_SWITCH
     ports_update_current_limits(&pwm_port_int, &bat_terminal, &load_terminal);
     pwm_switch.control();
     leds_set_charging(pwm_switch.active());
     #endif
 
-    #if FEATURE_DCDC_CONVERTER
+    #if CONFIG_HAS_DCDC_CONVERTER
     ports_update_current_limits(&dcdc_lv_port, &bat_terminal, &load_terminal);
     dcdc.control();     // control of DC/DC including MPPT algorithm
     leds_set_charging(half_bridge_enabled());
@@ -197,15 +208,15 @@ void system_control()
         counter = 0;
 
         // energy + soc calculation must be called exactly once per second
-        #ifdef SOLAR_TERMINAL
-        solar_terminal.energy_balance();
+        #if CONFIG_HAS_DCDC_CONVERTER
+        hv_terminal.energy_balance();
         #endif
 
-        #ifdef GRID_TERMINAL
-        grid_terminal.energy_balance();
+        #if CONFIG_HAS_PWM_SWITCH
+        pwm_terminal.energy_balance();
         #endif
 
-        bat_terminal.energy_balance();
+        lv_terminal.energy_balance();
         load_terminal.energy_balance();
         dev_stat.update_energy();
         dev_stat.update_min_max_values();

@@ -11,6 +11,7 @@
 #ifdef OLED_ENABLED     // otherwise don't compile code to reduce firmware size
 
 #include <math.h>
+#include <stdio.h>
 
 #include "ext/ext.h"
 
@@ -75,9 +76,9 @@ void ExtOled::process_1s()
     char buf[30];
     unsigned int len;
 
-#ifdef SOLAR_TERMINAL
+#if CONFIG_HV_TERMINAL_SOLAR || CONFIG_PWM_TERMINAL_SOLAR
     PowerPort &in_terminal = solar_terminal;
-#elif defined(GRID_TERMINAL)
+#elif CONFIG_HV_TERMINAL_NANOGRID
     PowerPort &in_terminal = grid_terminal;
 #endif
 

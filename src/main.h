@@ -19,13 +19,13 @@
 extern PowerPort lv_terminal;
 extern PowerPort load_terminal;
 
-#if FEATURE_DCDC_CONVERTER
+#if CONFIG_HAS_DCDC_CONVERTER
 extern PowerPort hv_terminal;
 extern PowerPort dcdc_lv_port;
 extern Dcdc dcdc;
 #endif
 
-#if FEATURE_PWM_SWITCH
+#if CONFIG_HAS_PWM_SWITCH
 extern PowerPort pwm_terminal;
 extern PowerPort pwm_port_int;
 extern PwmSwitch pwm_switch;

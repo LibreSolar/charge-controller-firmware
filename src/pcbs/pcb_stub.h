@@ -11,9 +11,9 @@
 #define HARDWARE_VERSION "v0.1"
 
 // specify features of charge controller
-#define FEATURE_DCDC_CONVERTER  1
-#define FEATURE_PWM_SWITCH      1
-#define FEATURE_LOAD_OUTPUT     1
+#define CONFIG_HAS_DCDC_CONVERTER  1
+#define CONFIG_HAS_PWM_SWITCH      1
+#define CONFIG_HAS_LOAD_OUTPUT     1
 
 #define PWM_FREQUENCY 50    // kHz
 #define PWM_DEADTIME 230    // ns

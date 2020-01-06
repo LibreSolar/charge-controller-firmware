@@ -81,10 +81,10 @@ static inline float ntc_temp(uint32_t channel, int32_t vcc)
 void calibrate_current_sensors()
 {
     int vcc = VREFINT_VALUE * VREFINT_CAL / adc_value(ADC_POS_VREF_MCU);
-#if FEATURE_PWM_SWITCH
+#if CONFIG_HAS_PWM_SWITCH
     solar_current_offset = -adc_scaled(ADC_POS_I_SOLAR, vcc, ADC_GAIN_I_SOLAR);
 #endif
-#if FEATURE_DCDC_CONVERTER
+#if CONFIG_HAS_DCDC_CONVERTER
     solar_current_offset = -adc_scaled(ADC_POS_I_DCDC, vcc, ADC_GAIN_I_DCDC);
 #endif
     load_current_offset = -adc_scaled(ADC_POS_I_LOAD, vcc, ADC_GAIN_I_LOAD);
@@ -96,7 +96,7 @@ void adc_update_value(unsigned int pos)
     // y(n) = c * x(n) + (c - 1) * y(n-1)
     // see also here: http://techteach.no/simview/lowpass_filter/doc/filter_algorithm.pdf
 
-#if FEATURE_PWM_SWITCH == 1
+#if CONFIG_HAS_PWM_SWITCH == 1
     if (pos == ADC_POS_V_SOLAR || pos == ADC_POS_I_SOLAR) {
         // only read input voltage and current when switch is on or permanently off
         if (pwm_switch.signal_high() || pwm_switch.active() == false) {
@@ -156,11 +156,11 @@ void update_measurements()
     lv_terminal.voltage = adc_scaled(ADC_POS_V_BAT, vcc, ADC_GAIN_V_BAT);
     load_terminal.voltage = lv_terminal.voltage;
 
-#if FEATURE_DCDC_CONVERTER
+#if CONFIG_HAS_DCDC_CONVERTER
     hv_terminal.voltage = adc_scaled(ADC_POS_V_SOLAR, vcc, ADC_GAIN_V_SOLAR);
     dcdc_lv_port.voltage = lv_terminal.voltage;
 #endif
-#if FEATURE_PWM_SWITCH
+#if CONFIG_HAS_PWM_SWITCH
     pwm_terminal.voltage = lv_terminal.voltage - vcc * (ADC_OFFSET_V_SOLAR / 1000.0) -
         adc_scaled(ADC_POS_V_SOLAR, vcc, ADC_GAIN_V_SOLAR);
     pwm_port_int.voltage = lv_terminal.voltage;
@@ -169,7 +169,7 @@ void update_measurements()
     load_terminal.current =
         adc_scaled(ADC_POS_I_LOAD, vcc, ADC_GAIN_I_LOAD) + load_current_offset;
 
-#if FEATURE_PWM_SWITCH
+#if CONFIG_HAS_PWM_SWITCH
     // current multiplied with PWM duty cycle for PWM charger to get avg current for correct power calculation
     pwm_port_int.current = pwm_switch.get_duty_cycle() * (
         adc_scaled(ADC_POS_I_SOLAR, vcc, ADC_GAIN_I_SOLAR) + solar_current_offset);
@@ -179,7 +179,7 @@ void update_measurements()
     pwm_port_int.power = pwm_port_int.voltage * pwm_port_int.current;
     pwm_terminal.power = pwm_terminal.voltage * pwm_terminal.current;
 #endif
-#if FEATURE_DCDC_CONVERTER
+#if CONFIG_HAS_DCDC_CONVERTER
     dcdc_lv_port.current =
         adc_scaled(ADC_POS_I_DCDC, vcc, ADC_GAIN_I_DCDC) + solar_current_offset;
     lv_terminal.current = dcdc_lv_port.current - load_terminal.current;
@@ -230,10 +230,10 @@ void update_measurements()
 void high_voltage_alert()
 {
     // disable any sort of input
-#if FEATURE_DCDC_CONVERTER
+#if CONFIG_HAS_DCDC_CONVERTER
     dcdc.emergency_stop();
 #endif
-#if FEATURE_PWM_SWITCH
+#if CONFIG_HAS_PWM_SWITCH
     pwm_switch.emergency_stop();
 #endif
     // do not use enter_state function, as we don't want to wait entire recharge delay

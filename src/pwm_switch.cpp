@@ -14,7 +14,7 @@
 #include <stdio.h>
 #include <time.h>       // for time(NULL) function
 
-#if FEATURE_PWM_SWITCH
+#if CONFIG_HAS_PWM_SWITCH
 
 static bool _pwm_active;
 
@@ -244,4 +244,4 @@ float PwmSwitch::get_duty_cycle()
     return pwm_signal_get_duty_cycle();
 }
 
-#endif /* FEATURE_PWM_SWITCH */
+#endif /* CONFIG_HAS_PWM_SWITCH */
