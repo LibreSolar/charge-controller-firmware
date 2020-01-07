@@ -18,6 +18,14 @@ The software is configurable to support different charge controller PCBs with ei
 
 ## Building and flashing the firmware
 
+This repository contains git submodules, so you need to clone (download) it by calling:
+
+```
+git clone --recursive https://github.com/LibreSolar/charge-controller-firmware
+```
+
+Unfortunately, the green GitHub "Clone or download" button does not include submodules. If you cloned the repository already and want to pull the submodules, run `git submodule update --init --recursive`.
+
 ### ARM Mbed OS
 
 It is suggested to use Visual Studio Code and PlatformIO for firmware development, as it simplifies compiling and uploading the code a lot:

@@ -17,7 +17,7 @@
 
 #include "main.h"
 #include "pcb.h"
-#include "OledSSD1306.h"
+#include "oled_ssd1306.h"
 
 // implement specific extension inherited from ExtInterface
 class ExtOled: public ExtInterface
