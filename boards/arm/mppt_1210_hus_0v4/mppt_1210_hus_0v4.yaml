@@ -1,4 +1,4 @@
-identifier: mppt1210hus_0v4
+identifier: mppt_1210_hus_0v4
 name: MPPT-1210-HUS-0V4
 type: mcu
 arch: arm

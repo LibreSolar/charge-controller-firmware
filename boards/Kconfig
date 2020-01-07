@@ -4,6 +4,6 @@
 # Generic Libre Solar Charge Controller configuration
 #
 
-source "$(BOARD_DIR)/../../Kconfig.hidden"
+rsource "Kconfig.hidden"
 
-source "$(BOARD_DIR)/../../Kconfig.user"
+rsource "Kconfig.user"

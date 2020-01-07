@@ -9,9 +9,9 @@
 
 #define DEVICE_TYPE "PWM-2420-LUS"
 
-#ifdef PWM_2420_LUS_0V2
+#ifdef CONFIG_BOARD_PWM_2420_LUS_0V2
 #define HARDWARE_VERSION "v0.2"
-#elif defined(PWM_2420_LUS_0V3)
+#elif defined(CONFIG_BOARD_PWM_2420_LUS_0V3)
 #define HARDWARE_VERSION "v0.3"
 #endif
 
@@ -110,10 +110,10 @@ static const pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
 #define ADC_GAIN_V_BAT (132 / 12)
 #define ADC_GAIN_V_SOLAR (1 + 120/12 + 120/8.2)
 
-#ifdef PWM_2420_LUS_0V2
+#ifdef CONFIG_BOARD_PWM_2420_LUS_0V2
 // op amp gain: 68/2.2, resistor: 2 mOhm
 #define ADC_GAIN_I_LOAD (1000 / 2 / (68/2.2))
-#elif defined(PWM_2420_LUS_0V3)
+#elif defined(CONFIG_BOARD_PWM_2420_LUS_0V3)
 // fix for hardware bug in overcurrent comparator voltage divider wiring
 #define ADC_GAIN_I_LOAD (1000 / 2 / (68/2.2) * (39+12+8.2) / (12+8.2))
 #endif

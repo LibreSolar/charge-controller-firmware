@@ -1,6 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
 
-set(BOARD mppt1210hus_0v4)
 set(BOARD_ROOT ${CMAKE_SOURCE_DIR}/..)
 
 cmake_minimum_required(VERSION 3.13.1)
@@ -8,7 +7,7 @@ include($ENV{ZEPHYR_BASE}/cmake/app/boilerplate.cmake NO_POLICY_SCOPE)
 
 project(libre_solar_charge_controller)
 
-add_definitions(-DMPPT_1210_HUS_0V4 -D__ZEPHYR__ -DDEBUG_PRINT_FLAGS=7)
+add_definitions(-D__ZEPHYR__ -DDEBUG_PRINT_FLAGS=7)
 
 include_directories(../src)
 

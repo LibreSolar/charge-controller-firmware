@@ -16,15 +16,15 @@
 // specific board settings
 ///////////////////////////////////////////////////////////////////////////////
 
-#if defined(MPPT_2420_LC_0V10)
+#if defined(CONFIG_BOARD_MPPT_2420_LC_0V10)
     #include "pcbs/mppt_2420_lc_0v10.h"
-#elif defined(MPPT_1210_HUS_0V2)
+#elif defined(CONFIG_BOARD_MPPT_1210_HUS_0V2)
     #include "pcbs/mppt_1210_hus_0v2.h"
-#elif defined(MPPT_1210_HUS_0V4)
+#elif defined(CONFIG_BOARD_MPPT_1210_HUS_0V4)
     #include "pcbs/mppt_1210_hus_0v4.h"
-#elif defined(MPPT_1210_HUS_0V7)
+#elif defined(CONFIG_BOARD_MPPT_1210_HUS_0V7)
     #include "pcbs/mppt_1210_hus_0v7.h"
-#elif defined(PWM_2420_LUS_0V2) || defined(PWM_2420_LUS_0V3)
+#elif defined(CONFIG_BOARD_PWM_2420_LUS_0V2) || defined(CONFIG_BOARD_PWM_2420_LUS_0V3)
     #include "pcbs/pwm_2420_lus.h"
 #elif defined(UNIT_TEST)
     #include "pcbs/pcb_stub.h"
