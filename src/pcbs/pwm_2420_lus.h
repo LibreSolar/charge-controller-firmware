@@ -7,6 +7,12 @@
 #ifndef PWM_2420_LUS_H
 #define PWM_2420_LUS_H
 
+#ifdef __MBED__
+#include "mbed.h"
+#elif defined(__ZEPHYR__)
+#include <zephyr.h>
+#endif
+
 #define DEVICE_TYPE "PWM-2420-LUS"
 
 #ifdef CONFIG_BOARD_PWM_2420_LUS_0V2
@@ -14,8 +20,6 @@
 #elif defined(CONFIG_BOARD_PWM_2420_LUS_0V3)
 #define HARDWARE_VERSION "v0.3"
 #endif
-
-#include "mbed.h"
 
 // specify features of charge controller
 #define CONFIG_HAS_DCDC_CONVERTER  0
@@ -76,10 +80,17 @@ enum pin_state_t { PIN_HIGH, PIN_LOW, PIN_FLOAT };
 
 // LED pins and pin state configuration to switch above LEDs on
 #define NUM_LED_PINS 3
+
+#ifdef __MBED__
 static const PinName led_pins[NUM_LED_PINS] = {
     //  A         B         C
        PB_13,    PB_14,    PB_15
 };
+#elif defined(__ZEPHYR__)
+// defined in board definition pinmux.c
+extern const char *led_ports[CONFIG_NUM_LED_PINS];
+extern const int led_pins[CONFIG_NUM_LED_PINS];
+#endif // MBED or ZEPHYR
 
 #ifndef LEDS_WRONG_POLARITY
 static const pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {

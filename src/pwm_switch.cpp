@@ -18,7 +18,7 @@
 
 static bool _pwm_active;
 
-#ifndef UNIT_TEST
+#if defined(__MBED__) && !defined(UNIT_TEST)
 
 static int _pwm_resolution;
 

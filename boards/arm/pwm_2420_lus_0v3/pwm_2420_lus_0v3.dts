@@ -1,0 +1,84 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Copyright (c) 2019 Martin Jäger / Libre Solar
+ */
+
+/dts-v1/;
+#include <st/l0/stm32l073Xz.dtsi>
+
+/ {
+	model = "Libre Solar PWM 2420 LUS v0.3";
+	compatible = "st,stm32l073";
+
+	chosen {
+		zephyr,console = &usart1;
+		zephyr,shell-uart = &usart1;
+		zephyr,sram = &sram0;
+		zephyr,flash = &flash0;
+	};
+
+	leds {
+		compatible = "gpio-leds";
+		led_pin_a: led_pin_a {
+			gpios = <&gpiob 13 GPIO_INT_ACTIVE_HIGH>;
+			label = "LED pin A";
+		};
+		led_pin_b: led_pin_b {
+			gpios = <&gpiob 14 GPIO_INT_ACTIVE_HIGH>;
+			label = "LED pin B";
+		};
+		led_pin_c: led_pin_c {
+			gpios = <&gpiob 15 GPIO_INT_ACTIVE_HIGH>;
+			label = "LED pin C";
+		};
+		// normal GPIO pins also configured as LEDs to be
+		// able to assign aliases
+		pin_load_dis: pin_load_dis {
+			gpios = <&gpiob 2 GPIO_INT_ACTIVE_HIGH>;
+			label = "Load disable";
+		};
+		pin_usb_pwr_dis: pin_usb_pwr_dis {
+			gpios = <&gpiob 5 GPIO_INT_ACTIVE_HIGH>;
+			label = "USB power disable";
+		};
+	};
+
+	aliases {
+		led-a = &led_pin_a;
+		led-b = &led_pin_b;
+		led-c = &led_pin_c;
+
+		/* WARNING: this one is DISable and not ENable... change name
+		   and implement proper handling! */
+		load-en = &pin_load_dis;
+		usb-pwr-en = &pin_usb_pwr_dis;
+	};
+};
+
+&usart1 {
+	current-speed = <115200>;
+	status = "okay";
+};
+
+&usart2 {
+	current-speed = <115200>;
+	status = "okay";
+};
+
+&i2c1 {
+	status = "okay";
+	clock-frequency = <I2C_BITRATE_FAST>;
+};
+
+&spi1 {
+	status = "okay";
+};
+
+&iwdg {
+	status = "okay";
+};
+
+&adc1 {
+	status = "okay";
+};

@@ -69,7 +69,7 @@ static const PinName led_pins[NUM_LED_PINS] = {
        PB_14,    PB_13,    PB_2,     PB_11,    PB_10
 };
 #elif defined(__ZEPHYR__)
-// defined in boar definition pinmux.c
+// defined in board definition pinmux.c
 extern const char *led_ports[CONFIG_NUM_LED_PINS];
 extern const int led_pins[CONFIG_NUM_LED_PINS];
 #endif // MBED or ZEPHYR

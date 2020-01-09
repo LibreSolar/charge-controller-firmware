@@ -1,0 +1,17 @@
+identifier: pwm_2420_lus_0v3
+name: PWM-2420-LUS-0V3
+type: mcu
+arch: arm
+toolchain:
+  - zephyr
+  - gnuarmemb
+  - xtools
+ram: 20
+flash: 192
+supported:
+  - arduino_i2c
+  - gpio
+  - i2c
+  - spi
+  - watchdog
+  - adc

@@ -13,11 +13,15 @@
 #include "device_status.h"
 #include "debug.h"
 
+#ifdef __ZEPHYR__
+#include <stm32l0xx_ll_system.h>
+#endif
+
 extern DeviceStatus dev_stat;
 
 extern LoadOutput load;     // necessary to call emergency stop function
 
-#if defined(PIN_I_LOAD_COMP) && PIN_LOAD_DIS == PB_2
+#if defined(__MBED__) && defined(PIN_I_LOAD_COMP) && PIN_LOAD_DIS == PB_2
 static void lptim_init()
 {
     // Enable peripheral clock of GPIOB
@@ -69,7 +73,7 @@ static void lptim_init()
 
 static void short_circuit_comp_init()
 {
-#ifdef PIN_I_LOAD_COMP
+#if defined(__MBED__) && defined(PIN_I_LOAD_COMP)
     MBED_ASSERT(PIN_I_LOAD_COMP == PB_4);
 
     // set GPIO pin to analog
