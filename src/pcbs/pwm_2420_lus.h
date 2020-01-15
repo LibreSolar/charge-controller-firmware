@@ -93,7 +93,7 @@ extern const int led_pins[CONFIG_NUM_LED_PINS];
 #endif // MBED or ZEPHYR
 
 #ifndef LEDS_WRONG_POLARITY
-static const pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
+static const enum pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
     { PIN_HIGH,  PIN_LOW,   PIN_FLOAT }, // LED1
     { PIN_LOW,   PIN_HIGH,  PIN_FLOAT }, // LED2
     { PIN_HIGH,  PIN_FLOAT, PIN_LOW   }, // LED3
@@ -102,7 +102,7 @@ static const pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
 };
 #else
 // LEDs with wrong polarity
-static const pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
+static const enum pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
     { PIN_LOW,   PIN_HIGH,  PIN_FLOAT }, // LED1
     { PIN_HIGH,  PIN_LOW,   PIN_FLOAT }, // LED2
     { PIN_LOW,   PIN_FLOAT, PIN_HIGH  }, // LED3

@@ -27,6 +27,7 @@
 #include "leds.h"               // LED switching using charlieplexing
 #include "device_status.h"                // log data (error memory, min/max measurements, etc.)
 #include "data_objects.h"       // for access to internal data via ThingSet
+#include <stm32l0xx_ll_system.h>
 
 PowerPort lv_terminal;          // low voltage terminal (battery for typical MPPT)
 
@@ -96,6 +97,18 @@ void main(void)
 
     printf("Booting Libre Solar Charge Controller: %s\n", CONFIG_BOARD);
 
+    // ADC, DMA and sensor calibration
+    adc_setup();
+    dma_setup();
+
+    struct k_timer adc_trigger_timer;
+    k_timer_init(&adc_trigger_timer, adc_trigger_conversion, NULL);
+    k_timer_start(&adc_trigger_timer, K_MSEC(1), K_MSEC(1));        // 1 kHz
+
+    k_sleep(500);      // wait for ADC to collect some measurement values
+    update_measurements();
+    calibrate_current_sensors();
+
     // initialize all extensions and external communication interfaces
     ext_mgr.enable_all();
 
@@ -106,6 +119,9 @@ void main(void)
 
         leds_update_1s();
         leds_update_soc(charger.soc, dev_stat.has_error(ERR_LOAD_LOW_SOC));
+
+        update_measurements();
+        printf("Vbat: %f\n", bat_terminal.voltage);
 
         cnt++;
         k_sleep(1000);
@@ -122,7 +138,6 @@ void ext_mgr_thread()
         if (now >= last_call + 1) {
             last_call = now;
             ext_mgr.process_1s();
-            printf("%d\n", now);
         }
         cnt++;
         k_sleep(1);
