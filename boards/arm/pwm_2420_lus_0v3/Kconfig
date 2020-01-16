@@ -3,13 +3,3 @@
 
 # include generic charge controller Kconfig
 rsource "../../Kconfig"
-
-# include STM32 Cube HAL (temporary solution)
-
-mainmenu "STM32_HAL_ADC"
-
-config STM32_HAL_ADC
-  default y
-  bool
-  select USE_STM32_HAL_ADC
-  select USE_STM32_HAL_ADC_EX

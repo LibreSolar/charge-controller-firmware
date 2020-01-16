@@ -9,6 +9,7 @@
 #ifdef __ZEPHYR__
 
 #include <zephyr.h>
+#include <drivers/adc.h>
 
 #include "pcb.h"
 #include "debug.h"
@@ -18,6 +19,7 @@
 
 #if defined(CONFIG_SOC_SERIES_STM32L0X)
 #include <stm32l0xx_ll_system.h>
+#include <stm32l0xx_ll_adc.h>
 #elif defined(CONFIG_SOC_SERIES_STM32G4X)
 #include <stm32g4xx_ll_system.h>
 #endif
@@ -40,8 +42,6 @@ void DMA1_Channel1_IRQHandler(void *args)
 
 void dma_setup()
 {
-    //__HAL_RCC_DMA1_CLK_ENABLE();
-
     /* Enable the peripheral clock on DMA */
     RCC->AHBENR |= RCC_AHBENR_DMA1EN;
 
@@ -78,7 +78,6 @@ void dma_setup()
     ADC1->CR |= ADC_CR_ADSTART;
 }
 
-
 void adc_setup()
 {
 #ifdef PIN_REF_I_DCDC
@@ -90,79 +89,43 @@ void adc_setup()
     //solar_en = 1;
 #endif
 
-    ADC_HandleTypeDef hadc = {0};
-    ADC_ChannelConfTypeDef sConfig = {0};
-
-    __HAL_RCC_ADC1_CLK_ENABLE();
-
-    // Configure ADC object structures
-    hadc.Instance                   = ADC1;
-    hadc.State                      = HAL_ADC_STATE_RESET;
-    hadc.Init.ClockPrescaler        = ADC_CLOCK_SYNC_PCLK_DIV4;
-    hadc.Init.Resolution            = ADC_RESOLUTION_12B;
-    hadc.Init.DataAlign             = ADC_DATAALIGN_LEFT;       // for exponential moving average filter
-    hadc.Init.ScanConvMode          = ADC_SCAN_DIRECTION_FORWARD;
-    hadc.Init.EOCSelection          = ADC_EOC_SINGLE_CONV;
-    hadc.Init.LowPowerAutoWait      = DISABLE;
-    hadc.Init.LowPowerAutoPowerOff  = DISABLE;
-    hadc.Init.ContinuousConvMode    = DISABLE;
-    hadc.Init.DiscontinuousConvMode = DISABLE;
-    hadc.Init.ExternalTrigConv      = ADC_SOFTWARE_START;
-    hadc.Init.ExternalTrigConvEdge  = ADC_EXTERNALTRIGCONVEDGE_NONE;
-    hadc.Init.DMAContinuousRequests = ENABLE; //DISABLE;
-    hadc.Init.Overrun               = ADC_OVR_DATA_OVERWRITTEN;
-
-    if (HAL_ADC_Init(&hadc) != HAL_OK) {
-        print_error("Cannot initialize ADC");
+    struct device *dev_adc = device_get_binding(DT_ADC_1_NAME);
+    if (dev_adc == 0) {
+        printf("ADC device not found\n");
+        return;
     }
 
-#if defined(STM32L0)
-    HAL_ADCEx_Calibration_Start(&hadc, ADC_SINGLE_ENDED);
+    struct adc_channel_cfg channel_cfg = {
+        .gain = ADC_GAIN_1,
+        .reference = ADC_REF_INTERNAL,
+        .acquisition_time = ADC_ACQ_TIME(ADC_ACQ_TIME_TICKS, 161),
+        .channel_id = LL_ADC_CHANNEL_0,
+        .differential = 0
+    };
+    adc_channel_setup(dev_adc, &channel_cfg);
+
+    ADC_TypeDef *adc = ADC1;
+
+    // enable internal reference voltage and temperature
+    LL_ADC_SetCommonPathInternalCh(__LL_ADC_COMMON_INSTANCE(adc),
+        LL_ADC_PATH_INTERNAL_VREFINT | LL_ADC_PATH_INTERNAL_TEMPSENSOR);
+
+#if defined(CONFIG_SOC_SERIES_STM32F0X) || defined(CONFIG_SOC_SERIES_STM32L0X)
+	LL_ADC_REG_SetSequencerChannels(adc, ADC_CHSEL);
 #else
-    HAL_ADCEx_Calibration_Start(&hadc);
+	LL_ADC_REG_SetSequencerRanks(adc, ADC_RANK_CHANNEL_NUMBER, ADC_CHSEL);
+    LL_ADC_REG_SetSequencerLength(adc, LL_ADC_REG_SEQ_SCAN_DISABLE);
+	//LL_ADC_REG_SetSequencerLength(adc, LL_ADC_REG_SEQ_SCAN_ENABLE_1RANKS);
 #endif
 
-    // Configure ADC channel
-    sConfig.Channel     = ADC_CHANNEL_0;            // can be any channel for initialization
-    sConfig.Rank        = ADC_RANK_CHANNEL_NUMBER;
-
-    // Clear all channels as it is not done in HAL_ADC_ConfigChannel()
-    hadc.Instance->CHSELR = 0;
-
-    if (HAL_ADC_ConfigChannel(&hadc, &sConfig) != HAL_OK) {
-        print_error("Cannot initialize ADC");
-    }
-
-    HAL_ADC_Start(&hadc); // Start conversion
-
-    // Read out value one time to finish ADC configuration
-    if (HAL_ADC_PollForConversion(&hadc, 10) == HAL_OK) {
-        HAL_ADC_GetValue(&hadc);
-    }
-
-    // ADC sampling time register
-    // 000: 1.5 ADC clock cycles
-    // 001: 7.5 ADC clock cycles
-    // 010: 13.5 ADC clock cycles
-    // 011: 28.5 ADC clock cycles
-    // 100: 41.5 ADC clock cycles
-    // 101: 55.5 ADC clock cycles
-    // 110: 71.5 ADC clock cycles
-    // 111: 239.5 ADC clock cycles
-    //ADC1->SMPR = ADC_SMPR_SMP_1;      // for normal ADC OK
-    ADC1->SMPR |= ADC_SMPR_SMP_0 | ADC_SMPR_SMP_1 | ADC_SMPR_SMP_2;      // necessary for internal reference and temperature
-
-    // Select ADC channels based on setup in config.h
-    ADC1->CHSELR = ADC_CHSEL;
-
-    // Enable internal voltage reference and temperature sensor
-    // ToDo check sample rate
-    ADC->CCR |= ADC_CCR_TSEN | ADC_CCR_VREFEN;
+    LL_ADC_SetDataAlignment(adc, LL_ADC_DATA_ALIGN_LEFT);
+	LL_ADC_SetResolution(adc, LL_ADC_RESOLUTION_12B);
+    LL_ADC_REG_SetOverrun(adc, LL_ADC_REG_OVR_DATA_OVERWRITTEN);
 }
 
 void adc_trigger_conversion(struct k_timer *timer_id)
 {
-    ADC1->CR |= ADC_CR_ADSTART;
+    LL_ADC_REG_StartConversion(ADC1);
 }
 
 #endif // __ZEPHYR__
