@@ -9,6 +9,7 @@
 #include "pcb.h"
 
 #include "main.h"
+#include "helper.h"
 
 #include <math.h>       // for fabs function
 #include <stdio.h>
@@ -22,10 +23,20 @@ void DeviceStatus::update_energy()
 
     // stores the input/output energy status of previous day and to add
     // xxx_day_Wh only once per day and increase accuracy
-    static uint32_t solar_in_total_Wh_prev = solar_in_total_Wh;
-    static uint32_t load_out_total_Wh_prev = load_out_total_Wh;
-    static uint32_t bat_chg_total_Wh_prev = bat_chg_total_Wh;
-    static uint32_t bat_dis_total_Wh_prev = bat_dis_total_Wh;
+    static uint32_t solar_in_total_Wh_prev;
+    static uint32_t load_out_total_Wh_prev;
+    static uint32_t bat_chg_total_Wh_prev;
+    static uint32_t bat_dis_total_Wh_prev;
+
+    static bool first_call = true;
+    if (first_call) {
+        // initialize values with values we got from EEPROM
+        solar_in_total_Wh_prev = solar_in_total_Wh;
+        load_out_total_Wh_prev = load_out_total_Wh;
+        bat_chg_total_Wh_prev = bat_chg_total_Wh;
+        bat_dis_total_Wh_prev = bat_dis_total_Wh;
+        first_call = false;
+    }
 
 #if CONFIG_HV_TERMINAL_SOLAR || CONFIG_LV_TERMINAL_SOLAR || CONFIG_PWM_TERMINAL_SOLAR
     if (solar_terminal.voltage < bat_terminal.voltage) {
