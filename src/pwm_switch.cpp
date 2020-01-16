@@ -10,9 +10,10 @@
 
 #include "adc_dma.h"
 #include "debug.h"
+#include "helper.h"
 
 #include <stdio.h>
-#include <time.h>       // for time(NULL) function
+#include <time.h>
 
 #if CONFIG_HAS_PWM_SWITCH
 
@@ -177,7 +178,7 @@ void PwmSwitch::control()
             || enabled == false)
         {
             pwm_signal_stop();
-            off_timestamp = time(NULL);
+            off_timestamp = uptime();
             print_info("PWM charger stop.\n");
         }
         else if (port_int->voltage > (port_int->sink_voltage_max -
@@ -197,7 +198,7 @@ void PwmSwitch::control()
             else if (pwm_signal_get_duty_cycle() < 0.05) {
                 // prevent very short on periods and switch completely off instead
                 pwm_signal_stop();
-                off_timestamp = time(NULL);
+                off_timestamp = uptime();
                 print_info("PWM charger stop, no further derating possible.\n");
             }
             else {
@@ -222,7 +223,7 @@ void PwmSwitch::control()
             && port_int->voltage > port_int->sink_voltage_min
             && terminal->neg_current_limit < 0     // discharging allowed
             && terminal->voltage > port_int->voltage + offset_voltage_start
-            && time(NULL) > (off_timestamp + restart_interval)
+            && uptime() > (off_timestamp + restart_interval)
             && enabled == true)
         {
             // turning the PWM switch on creates a short voltage rise, so inhibit alerts by 50 ms
@@ -236,7 +237,7 @@ void PwmSwitch::control()
 void PwmSwitch::emergency_stop()
 {
     pwm_signal_stop();
-    off_timestamp = time(NULL);
+    off_timestamp = uptime();
 }
 
 float PwmSwitch::get_duty_cycle()

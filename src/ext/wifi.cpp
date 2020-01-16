@@ -192,7 +192,7 @@ void ExtWifi::process_1s()
         state = STATE_WIFI_IDLE;
     }
 
-    if (time(NULL) % 10 == 0) {
+    if (uptime() % 10 == 0) {
 
         printf("WiFi state: %d, error counter: %d\n", state, error_counter);
 

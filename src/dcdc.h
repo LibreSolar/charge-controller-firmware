@@ -115,8 +115,8 @@ public:
     float output_power_min;     ///< Minimum output power (if lower, DC/DC is switched off)
 
     // calibration parameters
-    int restart_interval;       ///< Restart interval (s): When should we retry to start charging
-                                ///< after low output power cut-off?
+    unsigned int restart_interval;  ///< Restart interval (s): When should we retry to start
+                                    ///< charging after low output power cut-off?
 
 private:
     /** Calculates the duty cycle change depending on operating mode and actual measurements

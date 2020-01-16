@@ -13,6 +13,7 @@
  */
 
 #include <stdbool.h>
+#include <time.h>
 
 #include "power_port.h"
 
@@ -61,7 +62,7 @@ public:
     bool enabled;                   ///< Can be used to disable the PWM power stage
     float offset_voltage_start;     ///< Offset voltage of solar panel vs. battery to start charging (V)
     int restart_interval;           ///< Interval to wait before retrying charging after low solar power cut-off (s)
-    int off_timestamp;              ///< Time when charger was switched off last time
+    time_t off_timestamp;           ///< Time when charger was switched off last time
 };
 
 #endif /* PWM_SWITCH_H */

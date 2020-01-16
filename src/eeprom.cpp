@@ -6,12 +6,12 @@
 
 #include "eeprom.h"
 
-#include <time.h>
 #include <stdio.h>
 
 #include "mcu.h"
 #include "pcb.h"
 #include "thingset.h"
+#include "helper.h"
 
 // versioning of EEPROM layout (2 bytes)
 // change the version number each time the data object array below is changed!
@@ -286,7 +286,7 @@ void eeprom_restore_data() {;}
 
 void eeprom_update()
 {
-    if (time(NULL) % EEPROM_UPDATE_INTERVAL == 0 && time(NULL) > 0) {
+    if (uptime() % EEPROM_UPDATE_INTERVAL == 0 && uptime() > 0) {
         eeprom_store_data();
     }
 }

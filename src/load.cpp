@@ -12,6 +12,7 @@
 #include "leds.h"
 #include "device_status.h"
 #include "debug.h"
+#include "helper.h"
 
 #ifdef __ZEPHYR__
 #include <stm32l0xx_ll_system.h>
@@ -288,12 +289,12 @@ void LoadOutput::control()
             || port->current > LOAD_CURRENT_MAX * 2)
         {
             dev_stat.set_error(ERR_LOAD_OVERCURRENT);
-            oc_timestamp = time(NULL);
+            oc_timestamp = uptime();
         }
 
         if (dev_stat.has_error(ERR_BAT_UNDERVOLTAGE)) {
             dev_stat.set_error(ERR_LOAD_LOW_SOC);
-            lvd_timestamp = time(NULL);
+            lvd_timestamp = uptime();
         }
 
         // long-term overvoltage (overvoltage transients are detected as an ADC alert and switch
@@ -324,13 +325,13 @@ void LoadOutput::control()
 
         if (dev_stat.has_error(ERR_LOAD_LOW_SOC) &&
             !dev_stat.has_error(ERR_BAT_UNDERVOLTAGE) &&
-            time(NULL) - lvd_timestamp > lvd_recovery_delay)
+            uptime() - lvd_timestamp > lvd_recovery_delay)
         {
             dev_stat.clear_error(ERR_LOAD_LOW_SOC);
         }
 
         if (dev_stat.has_error(ERR_LOAD_OVERCURRENT | ERR_LOAD_VOLTAGE_DIP) &&
-            time(NULL) - oc_timestamp > oc_recovery_delay)
+            uptime() - oc_timestamp > oc_recovery_delay)
         {
             dev_stat.clear_error(ERR_LOAD_OVERCURRENT);
             dev_stat.clear_error(ERR_LOAD_VOLTAGE_DIP);
@@ -368,6 +369,6 @@ void LoadOutput::stop(uint32_t error_flag)
     // flicker the load LED if failure was most probably caused by the user
     if (error_flag & (ERR_LOAD_OVERCURRENT | ERR_LOAD_VOLTAGE_DIP | ERR_LOAD_SHORT_CIRCUIT)) {
         leds_flicker(LED_LOAD);
-        oc_timestamp = time(NULL);
+        oc_timestamp = uptime();
     }
 }

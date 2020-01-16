@@ -15,6 +15,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <time.h>
 
 #include "power_port.h"
 
@@ -249,10 +250,10 @@ public:
     uint16_t soc = 100;             ///< State of Charge (%)
     uint16_t soh = 100;             ///< State of Health (%)
 
-    int time_state_changed;         ///< Timestamp of last state change
-    int time_voltage_limit_reached; ///< Last time the CV limit was reached
+    time_t time_state_changed;         ///< Timestamp of last state change
+    time_t time_voltage_limit_reached; ///< Last time the CV limit was reached
 
-    int time_last_equalization;     ///< Timestamp after finish of last equalization charge
+    time_t time_last_equalization;  ///< Timestamp after finish of last equalization charge
     int deep_dis_last_equalization; ///< Deep discharge counter value after last equalization
 
     bool full;                      ///< Flag to indicate if battery was fully charged

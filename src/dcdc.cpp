@@ -8,10 +8,10 @@
 #include "pcb.h"
 #include "device_status.h"
 #include "debug.h"
+#include "helper.h"
 
 #include "half_bridge.h"
 
-#include <time.h>       // for time(NULL) function
 #include <math.h>       // for fabs function
 #include <stdlib.h>     // for min/max function
 #include <stdio.h>
@@ -66,7 +66,7 @@ int Dcdc::duty_cycle_delta()
     }
 
     if (out->power >= output_power_min) {
-        power_good_timestamp = time(NULL);     // reset the time
+        power_good_timestamp = uptime();     // reset the time
     }
 
     int pwr_inc_goal = 0;     // stores if we want to increase (+1) or decrease (-1) power
@@ -77,7 +77,7 @@ int Dcdc::duty_cycle_delta()
         out->sink_voltage_max, out->pos_current_limit, half_bridge_get_duty_cycle() * 100.0,
         state);
 
-    if ((time(NULL) - power_good_timestamp > 10 || out->power < -1.0) && mode != MODE_NANOGRID) {
+    if ((uptime() - power_good_timestamp > 10 || out->power < -1.0) && mode != MODE_NANOGRID) {
         // swith off after 10s low power or negative power (if not in nanogrid mode)
         pwr_inc_goal = 0;
     }
@@ -124,7 +124,7 @@ int Dcdc::check_start_conditions()
         lvs->voltage > ls_voltage_max ||
         lvs->voltage < ls_voltage_min ||
         dev_stat.has_error(ERR_BAT_UNDERVOLTAGE | ERR_BAT_OVERVOLTAGE) ||
-        time(NULL) < (off_timestamp + restart_interval))
+        uptime() < (off_timestamp + restart_interval))
     {
         return 0;       // no energy transfer allowed
     }
@@ -173,7 +173,7 @@ void Dcdc::control()
         if (stop_reason != NULL) {
             half_bridge_stop();
             state = DCDC_STATE_OFF;
-            off_timestamp = time(NULL);
+            off_timestamp = uptime();
             print_info("DC/DC Stop: %s.\n",stop_reason);
         }
     }
@@ -219,7 +219,7 @@ void Dcdc::control()
                         // nanogrid not yet started up (zero voltage)
                         half_bridge_start(lvs->voltage / (hvs->voltage + 1));
                     }
-                    power_good_timestamp = time(NULL);
+                    power_good_timestamp = uptime();
                     print_info("DC/DC %s mode start (HV: %.2fV, LV: %.2fV, PWM: %.1f).\n", mode_name,
                         hvs->voltage, lvs->voltage, half_bridge_get_duty_cycle() * 100);
                     startup_delay_counter = 0; // ensure we will have a delay before next start
@@ -260,7 +260,7 @@ void Dcdc::emergency_stop()
 {
     half_bridge_stop();
     state = DCDC_STATE_OFF;
-    off_timestamp = time(NULL);
+    off_timestamp = uptime();
 }
 
 void Dcdc::self_destruction()

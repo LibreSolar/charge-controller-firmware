@@ -7,13 +7,13 @@
 #include "bat_charger.h"
 #include "config.h"
 #include "pcb.h"
+#include "helper.h"
 
 #include "device_status.h"
 extern DeviceStatus dev_stat;
 
 #include <math.h>       // for fabs function
 #include <stdio.h>
-#include <time.h>
 
 void battery_conf_init(BatConf *bat, BatType type, int num_cells, float nominal_capacity)
 {
@@ -252,7 +252,7 @@ void Charger::update_soc(BatConf *bat_conf)
 void Charger::enter_state(int next_state)
 {
     //printf("Enter State: %d\n", next_state);
-    time_state_changed = time(NULL);
+    time_state_changed = uptime();
     state = next_state;
 }
 
@@ -337,7 +337,7 @@ void Charger::charge_control(BatConf *bat_conf)
     switch (state) {
         case CHG_STATE_IDLE: {
             if  (port->voltage < bat_conf->voltage_recharge * num_batteries
-                && (time(NULL) - time_state_changed) > bat_conf->time_limit_recharge
+                && (uptime() - time_state_changed) > bat_conf->time_limit_recharge
                 && bat_temperature < bat_conf->charge_temp_max - 1
                 && bat_temperature > bat_conf->charge_temp_min + 1)
             {
@@ -372,14 +372,14 @@ void Charger::charge_control(BatConf *bat_conf)
             if (port->voltage >= num_batteries *
                 (port->sink_voltage_max - port->current * port->pos_droop_res))
             {
-                time_voltage_limit_reached = time(NULL);
+                time_voltage_limit_reached = uptime();
             }
 
             // cut-off limit reached because battery full (i.e. CV limit still
             // reached by available solar power within last 2s) or CV period long enough?
             if ((port->current < bat_conf->topping_current_cutoff &&
-                (time(NULL) - time_voltage_limit_reached) < 2)
-                || (time(NULL) - time_state_changed) > bat_conf->topping_duration)
+                (uptime() - time_voltage_limit_reached) < 2)
+                || (uptime() - time_state_changed) > bat_conf->topping_duration)
             {
                 full = true;
                 num_full_charges++;
@@ -387,7 +387,7 @@ void Charger::charge_control(BatConf *bat_conf)
                 first_full_charge_reached = true;
 
                 if (bat_conf->equalization_enabled && (
-                    (time(NULL) - time_last_equalization) / (24*60*60)
+                    (uptime() - time_last_equalization) / (24*60*60)
                     >= bat_conf->equalization_trigger_days ||
                     num_deep_discharges - deep_dis_last_equalization
                     >= bat_conf->equalization_trigger_deep_cycles))
@@ -416,10 +416,10 @@ void Charger::charge_control(BatConf *bat_conf)
             if (port->voltage >= num_batteries *
                 (port->sink_voltage_max - port->current * port->pos_droop_res))
             {
-                time_voltage_limit_reached = time(NULL);
+                time_voltage_limit_reached = uptime();
             }
 
-            if (time(NULL) - time_voltage_limit_reached > bat_conf->trickle_recharge_time)
+            if (uptime() - time_voltage_limit_reached > bat_conf->trickle_recharge_time)
             {
                 port->pos_current_limit = bat_conf->charge_current_max;
                 full = false;
@@ -435,10 +435,10 @@ void Charger::charge_control(BatConf *bat_conf)
                 bat_conf->temperature_compensation * (bat_temperature - 25));
 
             // current or time limit for equalization reached
-            if (time(NULL) - time_state_changed > bat_conf->equalization_duration)
+            if (uptime() - time_state_changed > bat_conf->equalization_duration)
             {
                 // reset triggers
-                time_last_equalization = time(NULL);
+                time_last_equalization = uptime();
                 deep_dis_last_equalization = num_deep_discharges;
 
                 discharged_Ah = 0;         // reset coulomb counter again
