@@ -53,7 +53,7 @@ const unsigned char bmp_disconnected [] = {
 I2C i2c_dev(PIN_UEXT_SDA, PIN_UEXT_SCL);
 OledSSD1306 oled(i2c_dev);
 #elif defined(__ZEPHYR__)
-const char i2c_dev[] = "I2C_1";
+const char i2c_dev[] = DT_ALIAS_I2C_UEXT_LABEL;
 OledSSD1306 oled(i2c_dev);
 #endif
 

@@ -9,7 +9,7 @@
 
 / {
 	model = "Libre Solar MPPT 1210 HUS v0.4";
-	compatible = "st,stm32l073rz-nucleo", "st,stm32l073";
+	compatible = "st,stm32l073";
 
 	chosen {
 		zephyr,console = &usart1;
@@ -20,39 +20,45 @@
 
 	leds {
 		compatible = "gpio-leds";
-		led_pin_gnd: led_gnd {
+		gnd {
 			gpios = <&gpiob 14 GPIO_INT_ACTIVE_LOW>;
 			label = "LED GND";
 		};
-		led_pin_soc12: led_soc12 {
+		soc12 {
 			gpios = <&gpiob 13 GPIO_INT_ACTIVE_HIGH>;
 			label = "LED SOC12";
 		};
-		led_pin_soc3: led_soc3 {
+		soc3 {
 			gpios = <&gpiob 2 GPIO_INT_ACTIVE_HIGH>;
 			label = "LED SOC3";
 		};
-		led_pin_rxtx: led_rxtx {
+		rxtx {
 			gpios = <&gpiob 11 GPIO_INT_ACTIVE_HIGH>;
 			label = "LED RXTX";
 		};
-		led_pin_load: led_load {
+		load {
 			gpios = <&gpiob 10 GPIO_INT_ACTIVE_HIGH>;
 			label = "LED Load";
 		};
-		pin_usb_pwr_en: tmp_usb_pwr_en {
-			gpios = <&gpiob 12 GPIO_INT_ACTIVE_HIGH>;
-			label = "USB power enable";
+	};
+
+	switches {
+		compatible = "switch";
+		load-en {
+			gpios = <&gpiob 12 GPIO_DIR_IN>;
+			label = "Load enable";
+		};
+		usb-en {
+			gpios = <&gpiob 12 GPIO_DIR_IN>;
+			label = "USB charging port enable";
 		};
 	};
 
 	aliases {
-		led-a = &led_pin_gnd;
-		led-b = &led_pin_soc12;
-		led-c = &led_pin_soc3;
-		led-d = &led_pin_rxtx;
-		led-e = &led_pin_load;
-		usb-pwr-en = &pin_usb_pwr_en;
+		uart-dbg = &usart1;
+		uext-uart = &usart2;
+		spi-uext = &spi1;
+		i2c-uext = &i2c1;
 	};
 };
 

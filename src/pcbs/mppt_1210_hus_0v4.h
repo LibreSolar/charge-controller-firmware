@@ -74,7 +74,7 @@ extern const char *led_ports[CONFIG_NUM_LED_PINS];
 extern const int led_pins[CONFIG_NUM_LED_PINS];
 #endif // MBED or ZEPHYR
 
-const pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
+const enum pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
     { PIN_HIGH, PIN_LOW,  PIN_LOW,  PIN_LOW,  PIN_LOW  }, // LED1
     { PIN_LOW,  PIN_HIGH, PIN_LOW,  PIN_LOW,  PIN_LOW  }, // LED2
     { PIN_LOW,  PIN_LOW,  PIN_HIGH, PIN_LOW,  PIN_LOW  }, // LED3
@@ -101,10 +101,10 @@ enum {
     ADC_POS_TEMP_FETS,  // ADC 5 (PA_5)
     ADC_POS_I_LOAD,     // ADC 6 (PA_6)
     ADC_POS_I_DCDC,     // ADC 7 (PA_7)
-#if defined(STM32F0)
+#if defined(STM32F0) || defined(CONFIG_SOC_SERIES_STM32F0X)
     ADC_POS_TEMP_MCU,   // ADC 16
     ADC_POS_VREF_MCU,   // ADC 17
-#elif defined(STM32L0)
+#elif defined(STM32L0) || defined(CONFIG_SOC_SERIES_STM32L0X)
     ADC_POS_VREF_MCU,   // ADC 17
     ADC_POS_TEMP_MCU,   // ADC 18
 #endif
@@ -112,7 +112,7 @@ enum {
 };
 
 // selected ADC channels (has to match with above enum)
-#if defined(STM32F0)
+#if defined(STM32F0) || defined(CONFIG_SOC_SERIES_STM32F0X)
 #define ADC_CHSEL ( \
     ADC_CHSELR_CHSEL0 | \
     ADC_CHSELR_CHSEL1 | \
@@ -122,7 +122,7 @@ enum {
     ADC_CHSELR_CHSEL16 | \
     ADC_CHSELR_CHSEL17 \
 )
-#elif defined(STM32L0)
+#elif defined(STM32L0) || defined(CONFIG_SOC_SERIES_STM32L0X)
 #define ADC_CHSEL ( \
     ADC_CHSELR_CHSEL0 | \
     ADC_CHSELR_CHSEL1 | \

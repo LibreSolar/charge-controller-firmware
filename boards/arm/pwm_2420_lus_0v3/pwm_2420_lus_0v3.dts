@@ -20,39 +20,37 @@
 
 	leds {
 		compatible = "gpio-leds";
-		led_pin_a: led_pin_a {
+		a {
 			gpios = <&gpiob 13 GPIO_INT_ACTIVE_HIGH>;
 			label = "LED pin A";
 		};
-		led_pin_b: led_pin_b {
+		b {
 			gpios = <&gpiob 14 GPIO_INT_ACTIVE_HIGH>;
 			label = "LED pin B";
 		};
-		led_pin_c: led_pin_c {
+		c {
 			gpios = <&gpiob 15 GPIO_INT_ACTIVE_HIGH>;
 			label = "LED pin C";
 		};
-		// normal GPIO pins also configured as LEDs to be
-		// able to assign aliases
-		pin_load_dis: pin_load_dis {
-			gpios = <&gpiob 2 GPIO_INT_ACTIVE_HIGH>;
+	};
+
+	switches {
+		compatible = "switch";
+		load-dis {
+			gpios = <&gpiob 2 GPIO_DIR_IN>;
 			label = "Load disable";
 		};
-		pin_usb_pwr_dis: pin_usb_pwr_dis {
-			gpios = <&gpiob 5 GPIO_INT_ACTIVE_HIGH>;
-			label = "USB power disable";
+		usb-dis {
+			gpios = <&gpiob 5 GPIO_DIR_IN>;
+			label = "USB charging port disable";
 		};
 	};
 
 	aliases {
-		led-a = &led_pin_a;
-		led-b = &led_pin_b;
-		led-c = &led_pin_c;
-
-		/* WARNING: this one is DISable and not ENable... change name
-		   and implement proper handling! */
-		load-en = &pin_load_dis;
-		usb-pwr-en = &pin_usb_pwr_dis;
+		uart-dbg = &usart1;
+		uext-uart = &usart2;
+		spi-uext = &spi1;
+		i2c-uext = &i2c1;
 	};
 };
 

@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 set(BOARD_ROOT ${CMAKE_SOURCE_DIR}/..)
+set(DTS_ROOT ${CMAKE_SOURCE_DIR})
 
 cmake_minimum_required(VERSION 3.13.1)
 include($ENV{ZEPHYR_BASE}/cmake/app/boilerplate.cmake NO_POLICY_SCOPE)
@@ -23,6 +24,7 @@ target_sources(app PRIVATE ../src/hardware.cpp)
 target_sources(app PRIVATE ../src/helper.cpp)
 target_sources(app PRIVATE ../src/leds.cpp)
 target_sources(app PRIVATE ../src/load.cpp)
+target_sources(app PRIVATE ../src/load_drv.cpp)
 target_sources(app PRIVATE ../src/main_zephyr.cpp)
 target_sources(app PRIVATE ../src/power_port.cpp)
 target_sources(app PRIVATE ../src/pwm_switch.cpp)
