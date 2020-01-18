@@ -27,7 +27,6 @@
 #include "leds.h"               // LED switching using charlieplexing
 #include "device_status.h"                // log data (error memory, min/max measurements, etc.)
 #include "data_objects.h"       // for access to internal data via ThingSet
-#include <stm32l0xx_ll_system.h>
 
 PowerPort lv_terminal;          // low voltage terminal (battery for typical MPPT)
 
@@ -83,19 +82,23 @@ extern ThingSet ts;             // defined in data_objects.cpp
 
 time_t timestamp;    // current unix timestamp (independent of time(NULL), as it is user-configurable)
 
-#define USB_PWR_EN_PORT    DT_ALIAS_USB_PWR_EN_GPIOS_CONTROLLER
-#define USB_PWR_EN_PIN         DT_ALIAS_USB_PWR_EN_GPIOS_PIN
-
 void main(void)
 {
     u32_t cnt = 0;
-    struct device *dev_usb_en;
-
-    dev_usb_en = device_get_binding(USB_PWR_EN_PORT);
-    gpio_pin_configure(dev_usb_en, USB_PWR_EN_PIN, GPIO_DIR_OUT);
-    gpio_pin_write(dev_usb_en, USB_PWR_EN_PIN, 1);
 
     printf("Booting Libre Solar Charge Controller: %s\n", CONFIG_BOARD);
+
+    battery_conf_init(&bat_conf,
+        BAT_TYPE_GEL,                   // temporary!!
+        CONFIG_BAT_DEFAULT_NUM_CELLS,
+        CONFIG_BAT_DEFAULT_CAPACITY_AH);
+    battery_conf_overwrite(&bat_conf, &bat_conf_user);  // initialize conf_user with same values
+
+    // Configuration from EEPROM
+    data_objects_read_eeprom();
+    ts.set_conf_callback(data_objects_update_conf);     // after each configuration change, data should be written back to EEPROM
+    //ts.set_user_password(THINGSET_USER_PASSWORD);       // passwords defined in config.h (see template)
+    //ts.set_maker_password(THINGSET_MAKER_PASSWORD);
 
     // ADC, DMA and sensor calibration
     adc_setup();
@@ -112,19 +115,79 @@ void main(void)
     // initialize all extensions and external communication interfaces
     ext_mgr.enable_all();
 
+    #if CONFIG_HV_TERMINAL_SOLAR || CONFIG_LV_TERMINAL_SOLAR || CONFIG_PWM_TERMINAL_SOLAR
+    solar_terminal.init_solar();
+    #endif
+
+    #if CONFIG_HV_TERMINAL_NANOGRID
+    grid_terminal.init_nanogrid();
+    #endif
+
+    charger.detect_num_batteries(&bat_conf);     // check if we have 24V instead of 12V system
+    battery_init_dc_bus(&bat_terminal, &bat_conf, charger.num_batteries);
+    load_terminal.init_load(bat_conf.voltage_absolute_max * charger.num_batteries);
+
     k_sleep(2000);      // safety feature: be able to re-flash before starting
 
     while (1) {
-        //gpio_pin_write(dev_usb_en, USB_PWR_EN_PIN, cnt % 2);
-
         leds_update_1s();
         leds_update_soc(charger.soc, dev_stat.has_error(ERR_LOAD_LOW_SOC));
 
-        update_measurements();
-        printf("Vbat: %f\n", bat_terminal.voltage);
-
         cnt++;
         k_sleep(1000);
+    }
+}
+
+
+void control_thread()
+{
+    int counter = 0;
+    while (1) {
+
+        // convert ADC readings to meaningful measurement values
+        update_measurements();
+
+        // alerts should trigger only for transients, so update based on actual voltage
+        adc_set_lv_alerts(lv_terminal.voltage * 1.2, lv_terminal.voltage * 0.8);
+
+        #if CONFIG_HAS_PWM_SWITCH
+        ports_update_current_limits(&pwm_port_int, &bat_terminal, &load_terminal);
+        //pwm_switch.control();
+        leds_set_charging(pwm_switch.active());
+        #endif
+
+        #if CONFIG_HAS_DCDC_CONVERTER
+        ports_update_current_limits(&dcdc_lv_port, &bat_terminal, &load_terminal);
+        dcdc.control();     // control of DC/DC including MPPT algorithm
+        leds_set_charging(half_bridge_enabled());
+        #endif
+
+        load.control();
+
+        if (counter % CONTROL_FREQUENCY == 0) {
+            // called once per second (this timer is much more accurate than time(NULL) based on LSI)
+            // see also here: https://github.com/ARMmbed/mbed-os/issues/9065
+            timestamp++;
+            counter = 0;
+
+            // energy + soc calculation must be called exactly once per second
+            #if CONFIG_HAS_DCDC_CONVERTER
+            hv_terminal.energy_balance();
+            #endif
+
+            #if CONFIG_HAS_PWM_SWITCH
+            pwm_terminal.energy_balance();
+            #endif
+
+            lv_terminal.energy_balance();
+            load_terminal.energy_balance();
+            dev_stat.update_energy();
+            dev_stat.update_min_max_values();
+            charger.update_soc(&bat_conf);
+        }
+
+        counter++;
+        k_sleep(100);
     }
 }
 
@@ -144,7 +207,9 @@ void ext_mgr_thread()
     }
 }
 
-K_THREAD_DEFINE(leds_id, 256, leds_update_thread, NULL, NULL, NULL,	4, 0, K_NO_WAIT);
+K_THREAD_DEFINE(control_thread_id, 1024, control_thread, NULL, NULL, NULL, 2, 0, 2000);
+
+K_THREAD_DEFINE(leds_thread, 256, leds_update_thread, NULL, NULL, NULL,	4, 0, K_NO_WAIT);
 
 K_THREAD_DEFINE(ext_thread, 1024, ext_mgr_thread, NULL, NULL, NULL, 6, 0, 1000);
 

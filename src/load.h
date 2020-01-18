@@ -102,9 +102,17 @@ public:
                                 ///< temperature measurement (unit: °C)
 
     float ov_hysteresis;        ///< Hysteresis to switch back on after an overvoltage event
+
 private:
     int determine_load_state();
+    void short_circuit_comp_init();
 
+#ifdef __ZEPHYR__
+    void get_bindings();
+
+    struct device *dev_load;
+    struct device *dev_usb;
+#endif
 };
 
 #endif /* LOAD_H */
