@@ -152,12 +152,13 @@ void control_pgood_to_off_low_soc()
 {
     PowerPort port = {};
     LoadOutput load(&port);
-    load.state = LOAD_STATE_ON;
-    dev_stat.internal_temp = 25;
-    dev_stat.clear_error(ERR_ANY_ERROR);
+    load_init(&load);
 
+    dev_stat.clear_error(ERR_ANY_ERROR);
+    load.state = LOAD_STATE_ON;
     load.control();
     TEST_ASSERT_EQUAL(true, load.pgood);
+
     dev_stat.set_error(ERR_BAT_UNDERVOLTAGE);
     load.control();
     TEST_ASSERT_EQUAL(false, load.pgood);
