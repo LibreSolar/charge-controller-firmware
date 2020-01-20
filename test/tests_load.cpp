@@ -150,7 +150,7 @@ void control_pgood_to_off_bat_temp()
 
 void control_pgood_to_off_low_soc()
 {
-    PowerPort port;
+    PowerPort port = {};
     LoadOutput load(&port);
     load.state = LOAD_STATE_ON;
     dev_stat.internal_temp = 25;
