@@ -6,7 +6,7 @@
 
 #include "adc_dma.h"
 
-#ifdef __ZEPHYR__
+#if defined(__ZEPHYR__)// && defined(CONFIG_SOC_SERIES_STM32L0X)
 
 #include <zephyr.h>
 #include <drivers/adc.h>
@@ -20,9 +20,59 @@
 #if defined(CONFIG_SOC_SERIES_STM32L0X)
 #include <stm32l0xx_ll_system.h>
 #include <stm32l0xx_ll_adc.h>
+#include <stm32l0xx_ll_dac.h>
+#include <stm32l0xx_ll_dma.h>
+#include <stm32l0xx_ll_bus.h>
 #elif defined(CONFIG_SOC_SERIES_STM32G4X)
 #include <stm32g4xx_ll_system.h>
+#include <stm32g4xx_ll_dac.h>
+#include <stm32g4xx_ll_dma.h>
 #endif
+
+
+#if !defined(CONFIG_SOC_SERIES_STM32F0X) && !defined(CONFIG_SOC_SERIES_STM32L0X)
+// Rank and sequence definitions for STM32G4 from adc_stm32.c Zephyr driver
+
+#define RANK(n)		LL_ADC_REG_RANK_##n
+static const u32_t table_rank[] = {
+	RANK(1),
+	RANK(2),
+	RANK(3),
+	RANK(4),
+	RANK(5),
+	RANK(6),
+	RANK(7),
+	RANK(8),
+	RANK(9),
+	RANK(10),
+	RANK(11),
+	RANK(12),
+	RANK(13),
+	RANK(14),
+	RANK(15),
+	RANK(16),
+};
+
+#define SEQ_LEN(n)	LL_ADC_REG_SEQ_SCAN_ENABLE_##n##RANKS
+static const u32_t table_seq_len[] = {
+	LL_ADC_REG_SEQ_SCAN_DISABLE,
+	SEQ_LEN(2),
+	SEQ_LEN(3),
+	SEQ_LEN(4),
+	SEQ_LEN(5),
+	SEQ_LEN(6),
+	SEQ_LEN(7),
+	SEQ_LEN(8),
+	SEQ_LEN(9),
+	SEQ_LEN(10),
+	SEQ_LEN(11),
+	SEQ_LEN(12),
+	SEQ_LEN(13),
+	SEQ_LEN(14),
+	SEQ_LEN(15),
+	SEQ_LEN(16),
+};
+#endif /* !STM32F0X && !STM32L0X */
 
 // for ADC and DMA
 extern uint16_t adc_readings[];
@@ -42,40 +92,30 @@ void DMA1_Channel1_IRQHandler(void *args)
 
 void dma_setup()
 {
-    /* Enable the peripheral clock on DMA */
-    RCC->AHBENR |= RCC_AHBENR_DMA1EN;
+    LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_DMA1);
 
-    /* Enable DMA transfer on ADC and circular mode */
-    ADC1->CFGR1 |= ADC_CFGR1_DMAEN | ADC_CFGR1_DMACFG;
+    LL_DMA_ConfigAddresses(DMA1, LL_DMA_CHANNEL_1,
+        LL_ADC_DMA_GetRegAddr(ADC1, LL_ADC_DMA_REG_REGULAR_DATA),   // source address
+        (uint32_t)(&(adc_readings[0])),     // destination address
+        LL_DMA_DIRECTION_PERIPH_TO_MEMORY);
 
-    /* Configure the peripheral data register address */
-    DMA1_Channel1->CPAR = (uint32_t)(&(ADC1->DR));
+    // Configure the number of DMA transfers (data length in multiples of size per transfer)
+    LL_DMA_SetDataLength(DMA1, LL_DMA_CHANNEL_1, NUM_ADC_CH * 2);
 
-    /* Configure the memory address */
-    DMA1_Channel1->CMAR = (uint32_t)(&(adc_readings[0]));
+    LL_DMA_SetMemoryIncMode(DMA1, LL_DMA_CHANNEL_1, LL_DMA_MEMORY_INCREMENT);
+    LL_DMA_SetMemorySize(DMA1, LL_DMA_CHANNEL_1, LL_DMA_MDATAALIGN_HALFWORD);
+    LL_DMA_SetPeriphSize(DMA1, LL_DMA_CHANNEL_1, LL_DMA_PDATAALIGN_HALFWORD);
+    LL_DMA_EnableIT_TE(DMA1, LL_DMA_CHANNEL_1);     // transfer error interrupt
+    LL_DMA_EnableIT_TC(DMA1, LL_DMA_CHANNEL_1);     // transfer complete interrupt
+    LL_DMA_SetMode(DMA1, LL_DMA_CHANNEL_1, LL_DMA_MODE_CIRCULAR);
 
-    /* Configure the number of DMA tranfer to be performed on DMA channel 1 */
-    DMA1_Channel1->CNDTR = NUM_ADC_CH;
+    LL_DMA_EnableChannel(DMA1, LL_DMA_CHANNEL_1);
 
-    /* Configure increment, size, interrupts and circular mode */
-    DMA1_Channel1->CCR =
-        DMA_CCR_MINC |          /* memory increment mode enabled */
-        DMA_CCR_MSIZE_0 |       /* memory size 16-bit */
-        DMA_CCR_PSIZE_0 |       /* peripheral size 16-bit */
-        DMA_CCR_TEIE |          /* transfer error interrupt enable */
-        DMA_CCR_TCIE |          /* transfer complete interrupt enable */
-        DMA_CCR_CIRC;           /* circular mode enable */
-                                /* DIR = 0: read from peripheral */
-
-    /* Enable DMA Channel 1 */
-    DMA1_Channel1->CCR |= DMA_CCR_EN;
-
-    /* Configure NVIC for DMA (priority 2: second-lowest value for STM32L0/F0) */
+    // Configure NVIC for DMA (priority 2: second-lowest value for STM32L0/F0)
     IRQ_CONNECT(DMA1_Channel1_IRQn, 2, DMA1_Channel1_IRQHandler, 0, 0);
     irq_enable(DMA1_Channel1_IRQn);
 
-    // Trigger ADC conversions
-    ADC1->CR |= ADC_CR_ADSTART;
+    LL_ADC_REG_StartConversion(ADC1);
 }
 
 void adc_setup()
@@ -98,29 +138,40 @@ void adc_setup()
     struct adc_channel_cfg channel_cfg = {
         .gain = ADC_GAIN_1,
         .reference = ADC_REF_INTERNAL,
+#if defined(CONFIG_SOC_SERIES_STM32F0X) || defined(CONFIG_SOC_SERIES_STM32L0X)
         .acquisition_time = ADC_ACQ_TIME(ADC_ACQ_TIME_TICKS, 161),
+#elif defined(CONFIG_SOC_SERIES_STM32G4X)
+        // ToDo: channel-specific acquisition time. Only internal reference voltage
+        //       and temperature need very long sampling time.
+        .acquisition_time = ADC_ACQ_TIME(ADC_ACQ_TIME_TICKS, 248),
+#endif
         .channel_id = LL_ADC_CHANNEL_0,
         .differential = 0
     };
     adc_channel_setup(dev_adc, &channel_cfg);
 
-    ADC_TypeDef *adc = ADC1;
+    // The following configuration necessary for DMA is not yet possible with Zephyr driver,
+    // so we need to use STM LL interface directly
 
     // enable internal reference voltage and temperature
-    LL_ADC_SetCommonPathInternalCh(__LL_ADC_COMMON_INSTANCE(adc),
+    LL_ADC_SetCommonPathInternalCh(__LL_ADC_COMMON_INSTANCE(ADC1),
         LL_ADC_PATH_INTERNAL_VREFINT | LL_ADC_PATH_INTERNAL_TEMPSENSOR);
 
 #if defined(CONFIG_SOC_SERIES_STM32F0X) || defined(CONFIG_SOC_SERIES_STM32L0X)
-	LL_ADC_REG_SetSequencerChannels(adc, ADC_CHSEL);
+	LL_ADC_REG_SetSequencerChannels(ADC1, ADC_CHSEL);
 #else
-	LL_ADC_REG_SetSequencerRanks(adc, ADC_RANK_CHANNEL_NUMBER, ADC_CHSEL);
-    LL_ADC_REG_SetSequencerLength(adc, LL_ADC_REG_SEQ_SCAN_DISABLE);
-	//LL_ADC_REG_SetSequencerLength(adc, LL_ADC_REG_SEQ_SCAN_ENABLE_1RANKS);
+    for (int i = 0; i < NUM_ADC_1_CH; i++) {
+        LL_ADC_REG_SetSequencerRanks(ADC1, table_rank[i], adc_1_sequence[i]);
+    }
+    LL_ADC_REG_SetSequencerLength(ADC1, table_seq_len[NUM_ADC_1_CH]);
 #endif
 
-    LL_ADC_SetDataAlignment(adc, LL_ADC_DATA_ALIGN_LEFT);
-	LL_ADC_SetResolution(adc, LL_ADC_RESOLUTION_12B);
-    LL_ADC_REG_SetOverrun(adc, LL_ADC_REG_OVR_DATA_OVERWRITTEN);
+    LL_ADC_SetDataAlignment(ADC1, LL_ADC_DATA_ALIGN_LEFT);
+	LL_ADC_SetResolution(ADC1, LL_ADC_RESOLUTION_12B);
+    LL_ADC_REG_SetOverrun(ADC1, LL_ADC_REG_OVR_DATA_OVERWRITTEN);
+
+    // Enable DMA transfer on ADC and circular mode
+    LL_ADC_REG_SetDMATransfer(ADC1, LL_ADC_REG_DMA_TRANSFER_UNLIMITED);
 }
 
 void adc_trigger_conversion(struct k_timer *timer_id)
