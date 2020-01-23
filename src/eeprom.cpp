@@ -36,7 +36,7 @@ const uint16_t eeprom_data_objects[] = {
     0xA6 // day count
 };
 
-#ifndef UNIT_TEST
+#if !defined(UNIT_TEST) && (defined(STM32F0) || defined(STM32L0))
 
 uint32_t _calc_crc(const uint8_t *buf, size_t len)
 {

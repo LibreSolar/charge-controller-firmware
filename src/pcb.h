@@ -24,6 +24,8 @@
     #include "pcbs/mppt_1210_hus_0v4.h"
 #elif defined(CONFIG_BOARD_MPPT_1210_HUS_0V7)
     #include "pcbs/mppt_1210_hus_0v7.h"
+#elif defined(CONFIG_BOARD_MPPT_2420_HPX)
+    #include "pcbs/mppt_2420_hpx_0v1.h"
 #elif defined(CONFIG_BOARD_PWM_2420_LUS_0V2) || defined(CONFIG_BOARD_PWM_2420_LUS_0V3)
     #include "pcbs/pwm_2420_lus.h"
 #elif defined(UNIT_TEST)

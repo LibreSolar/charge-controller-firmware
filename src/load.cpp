@@ -208,7 +208,9 @@ void LoadOutput::stop(uint32_t error_flag)
 
     // flicker the load LED if failure was most probably caused by the user
     if (error_flag & (ERR_LOAD_OVERCURRENT | ERR_LOAD_VOLTAGE_DIP | ERR_LOAD_SHORT_CIRCUIT)) {
+#ifdef LED_LOAD
         leds_flicker(LED_LOAD);
+#endif
         oc_timestamp = uptime();
     }
 }

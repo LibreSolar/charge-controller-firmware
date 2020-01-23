@@ -1,0 +1,58 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2019 Martin Jäger / Libre Solar
+
+if BOARD_MPPT_2420_HPX
+
+config BOARD
+	default "mppt_2420_hpx"
+
+config HAS_DCDC_CONVERTER
+	default y
+
+config DCDC_PWM_FREQUENCY_KHZ
+	default 50
+
+config DCDC_PWM_DEADTIME_NS
+	default 230
+
+config HAS_LOAD_OUTPUT
+	default y
+
+#config HAS_PWM_SWITCH
+#	default y
+
+config NUM_LED_PINS
+	default 1
+
+if UART_CONSOLE
+
+config UART_1
+	default y
+
+endif # UART_CONSOLE
+
+if I2C
+
+config I2C_1
+	default y
+
+endif # I2C
+
+if PWM
+
+config PWM_STM32_2
+	default y
+
+endif # PWM
+
+if SPI
+
+config SPI_1
+	default y
+
+config SPI_STM32_INTERRUPT
+	default y
+
+endif # SPI
+
+endif # BOARD_MPPT_2420_HPX

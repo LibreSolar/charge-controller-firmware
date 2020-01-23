@@ -1,0 +1,131 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Copyright (c) 2020 Martin Jäger / Libre Solar
+ */
+
+/dts-v1/;
+#include <st/g4/stm32g431Xb.dtsi>
+
+/ {
+	model = "Libre Solar MPPT 2420 HPX v0.1";
+	compatible = "st,stm32g431";
+
+	soc {
+		adc1: adc@50000000 {
+			compatible = "st,stm32-adc";
+			reg = <0x50000000 0x400>;
+			clocks = <&rcc STM32_CLOCK_BUS_AHB2 0x00002000>;
+			interrupts = <18 0>;
+			status = "disabled";
+			label = "ADC_1";
+			#io-channel-cells = <1>;
+		};
+
+		adc2: adc@50000100 {
+			compatible = "st,stm32-adc";
+			reg = <0x50000100 0x400>;
+			clocks = <&rcc STM32_CLOCK_BUS_AHB2 0x00002000>;
+			interrupts = <18 0>;
+			status = "disabled";
+			label = "ADC_2";
+			#io-channel-cells = <1>;
+		};
+
+		dac1: dac@50000800 {
+			compatible = "st,stm32-dac";
+			reg = <0x50000800 0x400>;
+			clocks = <&rcc STM32_CLOCK_BUS_AHB2 0x00010000>;
+			status = "disabled";
+			label = "DAC_1";
+			#io-channel-cells = <1>;
+		};
+	};
+
+	chosen {
+		zephyr,console = &usart1;
+		zephyr,shell-uart = &usart1;
+		zephyr,sram = &sram0;
+		zephyr,flash = &flash0;
+	};
+
+	leds {
+		compatible = "gpio-leds";
+		pwr {
+			gpios = <&gpioc 15 GPIO_INT_ACTIVE_HIGH>;
+			label = "Power LED";
+		};
+	};
+
+	switches {
+		compatible = "switch";
+		load-dis {
+			gpios = <&gpiob 15 GPIO_DIR_IN>;
+			label = "Load disable";
+		};
+	};
+
+	aliases {
+		uart-dbg = &usart1;
+		uext-uart = &usart2;
+		spi-uext = &spi1;
+		i2c-uext = &i2c1;
+	};
+};
+
+&usart1 {
+	current-speed = <115200>;
+	status = "okay";
+};
+
+&usart2 {
+	current-speed = <115200>;
+	status = "okay";
+};
+
+&lpuart1 {
+	current-speed = <115200>;
+	status = "okay";
+};
+
+&i2c1 {
+	status = "okay";
+};
+
+&spi1 {
+	status = "okay";
+};
+
+&usb {
+	status = "okay";
+};
+
+&rtc {
+	status = "okay";
+};
+
+&flash0 {
+	/*
+	 * For more information, see:
+	 * http://docs.zephyrproject.org/latest/guides/dts/index.html#flash-partitions
+	 */
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		/* Set 4Kb of storage at the end of the 128Kb of flash */
+		storage_partition: partition@1f000 {
+			label = "storage";
+			reg = <0x0001f000 0x00001000>;
+		};
+	};
+};
+
+&iwdg {
+	status = "okay";
+};
+
+&adc1 {
+	status = "okay";
+};

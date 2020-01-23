@@ -155,7 +155,9 @@ extern "C" void ADC1_COMP_IRQHandler(void)
 void LoadOutput::switch_set(bool status)
 {
     pgood = status;
+#ifdef LED_LOAD
     leds_set(LED_LOAD, status);
+#endif
 
 #if defined(__MBED__) && defined(PIN_LOAD_EN)
     DigitalOut load_enable(PIN_LOAD_EN);

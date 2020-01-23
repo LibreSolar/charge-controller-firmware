@@ -10,15 +10,16 @@
 #include "pcb.h"
 #include "config.h"
 
+#include <stdio.h>
+
 static int _pwm_resolution;
 static float _min_duty;
 static float _max_duty;
 static uint8_t _deadtime_clocks;
 
-
 static bool _enabled;
 
-#ifndef UNIT_TEST
+#if defined(STM32L0)
 
 class PWM_TIM3
 {
@@ -27,23 +28,14 @@ class PWM_TIM3
     static void _init_registers(uint32_t pwm_resolution)
     {
         // Enable peripheral clock of GPIOB
-#if defined(STM32F0)
-        RCC->AHBENR |= RCC_AHBENR_GPIOBEN;
-#elif defined(STM32L0)
         RCC->IOPENR |= RCC_IOPENR_IOPBEN;
-#endif
 
         // Enable TIM3 clock
         RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;
 
         // Select alternate function mode on PB0 and PB1 (first bit _1 = 1, second bit _0 = 0)
-#if defined(STM32F0)
-        GPIOB->MODER = (GPIOB->MODER & ~(GPIO_MODER_MODER0)) | GPIO_MODER_MODER0_1;
-        GPIOB->MODER = (GPIOB->MODER & ~(GPIO_MODER_MODER1)) | GPIO_MODER_MODER1_1;
-#elif defined(STM32L0)
         GPIOB->MODER = (GPIOB->MODER & ~(GPIO_MODER_MODE0)) | GPIO_MODER_MODE0_1;
         GPIOB->MODER = (GPIOB->MODER & ~(GPIO_MODER_MODE1)) | GPIO_MODER_MODE1_1;
-#endif
 
         // Select AF2 on PB0 and PB1
 #ifdef __MBED__
@@ -114,7 +106,8 @@ class PWM_TIM3
     }
 };
 
-#if defined(STM32F0)
+#elif defined(STM32F0)
+
 class PWM_TIM1
 {
     public:
@@ -200,17 +193,12 @@ class PWM_TIM1
         TIM1->CCR1 = val;
     }
 };
-#endif
 
-#if (PWM_TIM == 1)
-typedef PWM_TIM1 PWM_TIM_HW;
-#elif (PWM_TIM == 3)
-typedef PWM_TIM3 PWM_TIM_HW;
-#endif
+#else /* UNIT_TEST */
 
-#else /* #ifndef UNIT_TEST */
-
+#ifdef UNIT_TEST
 const uint32_t SystemCoreClock = 24000000;
+#endif
 
 class PWM_UT
 {
@@ -249,9 +237,15 @@ uint32_t PWM_UT::m_pwm_resolution = 0;
 bool     PWM_UT::m_started = false;
 uint32_t PWM_UT::m_ccr = 0;
 
-typedef PWM_UT PWM_TIM_HW;
-
 #endif /* UNIT_TEST */
+
+#if (PWM_TIM == 1)
+typedef PWM_TIM1 PWM_TIM_HW;
+#elif (PWM_TIM == 3)
+typedef PWM_TIM3 PWM_TIM_HW;
+#else
+typedef PWM_UT PWM_TIM_HW;
+#endif
 
 void half_bridge_init(int freq_kHz, int deadtime_ns, float min_duty, float max_duty)
 {
@@ -265,9 +259,8 @@ void half_bridge_init(int freq_kHz, int deadtime_ns, float min_duty, float max_d
     // be handled nicely, parentheses make this more explicit
     _deadtime_clocks = ((SystemCoreClock / (1000000)) * deadtime_ns) / 1000;
 
+    // set PWM frequency and resolution (in fact half the resolution)
     PWM_TIM_HW::_init_registers(_pwm_resolution);
-   // set PWM frequency and resolution (in fact half the resolution)
-
 
     _min_duty = min_duty * _pwm_resolution;
     _max_duty = max_duty * _pwm_resolution;
@@ -294,7 +287,7 @@ void half_bridge_set_duty_cycle(float duty)
 {
     _half_bridge_set_duty_cycle(_pwm_resolution * duty);
 }
-#include <stdio.h>
+
 void half_bridge_duty_cycle_step(int delta)
 {
     _half_bridge_set_duty_cycle(PWM_TIM_HW::get_ccr() + delta);
