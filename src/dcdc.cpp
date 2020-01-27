@@ -124,7 +124,7 @@ int Dcdc::check_start_conditions()
         lvs->voltage > ls_voltage_max ||
         lvs->voltage < ls_voltage_min ||
         dev_stat.has_error(ERR_BAT_UNDERVOLTAGE | ERR_BAT_OVERVOLTAGE) ||
-        uptime() < (off_timestamp + restart_interval))
+        (int)uptime() < (off_timestamp + (int)restart_interval))
     {
         return 0;       // no energy transfer allowed
     }
