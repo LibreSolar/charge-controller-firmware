@@ -5,8 +5,8 @@
  */
 
 #include "tests.h"
-#include "adc_dma_stub.h"
-#include "adc_dma.h"
+#include "daq_stub.h"
+#include "daq.h"
 
 #include <time.h>
 #include <stdio.h>
@@ -44,7 +44,7 @@ void energy_calculation_init()
     // insert values into ADC functions
     prepare_adc_readings(adcval);
     prepare_adc_filtered();
-    update_measurements();
+    daq_update();
 
     for (int i = 0; i < 60*60*sun_hours; i++) {
         hv_terminal.energy_balance();
@@ -56,7 +56,7 @@ void energy_calculation_init()
     adcval.dcdc_current = 0;
     prepare_adc_readings(adcval);
     prepare_adc_filtered();
-    update_measurements();
+    daq_update();
 
     for (int i = 0; i < 60*60*night_hours; i++) {
         hv_terminal.energy_balance();

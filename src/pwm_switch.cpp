@@ -8,7 +8,7 @@
 #include "config.h"
 #include "pcb.h"
 
-#include "adc_dma.h"
+#include "daq.h"
 #include "debug.h"
 #include "helper.h"
 

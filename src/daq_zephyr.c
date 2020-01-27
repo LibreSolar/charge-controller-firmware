@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "adc_dma.h"
+#include "daq.h"
 
-#if defined(__ZEPHYR__)// && defined(CONFIG_SOC_SERIES_STM32L0X)
+#if defined(__ZEPHYR__)
 
 #include <zephyr.h>
 #include <drivers/adc.h>
@@ -79,51 +79,13 @@ extern uint16_t adc_readings[];
 
 void adc_update_value(unsigned int pos);
 
-void DMA1_Channel1_IRQHandler(void *args)
+static void dac_setup()
 {
-    if ((DMA1->ISR & DMA_ISR_TCIF1) != 0) // Test if transfer completed on DMA channel 1
-    {
-        for (unsigned int i = 0; i < NUM_ADC_CH; i++) {
-            adc_update_value(i);
-        }
-    }
-    DMA1->IFCR |= 0x0FFFFFFF;       // clear all interrupt registers
+    /* TODO */
 }
 
-void dma_setup()
+static void adc_setup()
 {
-    LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_DMA1);
-
-    LL_DMA_ConfigAddresses(DMA1, LL_DMA_CHANNEL_1,
-        LL_ADC_DMA_GetRegAddr(ADC1, LL_ADC_DMA_REG_REGULAR_DATA),   // source address
-        (uint32_t)(&(adc_readings[0])),     // destination address
-        LL_DMA_DIRECTION_PERIPH_TO_MEMORY);
-
-    // Configure the number of DMA transfers (data length in multiples of size per transfer)
-    LL_DMA_SetDataLength(DMA1, LL_DMA_CHANNEL_1, NUM_ADC_CH * 2);
-
-    LL_DMA_SetMemoryIncMode(DMA1, LL_DMA_CHANNEL_1, LL_DMA_MEMORY_INCREMENT);
-    LL_DMA_SetMemorySize(DMA1, LL_DMA_CHANNEL_1, LL_DMA_MDATAALIGN_HALFWORD);
-    LL_DMA_SetPeriphSize(DMA1, LL_DMA_CHANNEL_1, LL_DMA_PDATAALIGN_HALFWORD);
-    LL_DMA_EnableIT_TE(DMA1, LL_DMA_CHANNEL_1);     // transfer error interrupt
-    LL_DMA_EnableIT_TC(DMA1, LL_DMA_CHANNEL_1);     // transfer complete interrupt
-    LL_DMA_SetMode(DMA1, LL_DMA_CHANNEL_1, LL_DMA_MODE_CIRCULAR);
-
-    LL_DMA_EnableChannel(DMA1, LL_DMA_CHANNEL_1);
-
-    // Configure NVIC for DMA (priority 2: second-lowest value for STM32L0/F0)
-    IRQ_CONNECT(DMA1_Channel1_IRQn, 2, DMA1_Channel1_IRQHandler, 0, 0);
-    irq_enable(DMA1_Channel1_IRQn);
-
-    LL_ADC_REG_StartConversion(ADC1);
-}
-
-void adc_setup()
-{
-#ifdef PIN_REF_I_DCDC
-    //ref_i_dcdc = 0.1;    // reference voltage for zero current (0.1 for buck, 0.9 for boost, 0.5 for bi-directional)
-#endif
-
 #ifdef PIN_V_SOLAR_EN
     //DigitalOut solar_en(PIN_V_SOLAR_EN);
     //solar_en = 1;
@@ -174,9 +136,64 @@ void adc_setup()
     LL_ADC_REG_SetDMATransfer(ADC1, LL_ADC_REG_DMA_TRANSFER_UNLIMITED);
 }
 
-void adc_trigger_conversion(struct k_timer *timer_id)
+static inline void adc_trigger_conversion(struct k_timer *timer_id)
 {
     LL_ADC_REG_StartConversion(ADC1);
+}
+
+static void DMA1_Channel1_IRQHandler(void *args)
+{
+    if ((DMA1->ISR & DMA_ISR_TCIF1) != 0) // Test if transfer completed on DMA channel 1
+    {
+        for (unsigned int i = 0; i < NUM_ADC_CH; i++) {
+            adc_update_value(i);
+        }
+    }
+    DMA1->IFCR |= 0x0FFFFFFF;       // clear all interrupt registers
+}
+
+static void dma_setup()
+{
+    LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_DMA1);
+
+    LL_DMA_ConfigAddresses(DMA1, LL_DMA_CHANNEL_1,
+        LL_ADC_DMA_GetRegAddr(ADC1, LL_ADC_DMA_REG_REGULAR_DATA),   // source address
+        (uint32_t)(&(adc_readings[0])),     // destination address
+        LL_DMA_DIRECTION_PERIPH_TO_MEMORY);
+
+    // Configure the number of DMA transfers (data length in multiples of size per transfer)
+    LL_DMA_SetDataLength(DMA1, LL_DMA_CHANNEL_1, NUM_ADC_CH * 2);
+
+    LL_DMA_SetMemoryIncMode(DMA1, LL_DMA_CHANNEL_1, LL_DMA_MEMORY_INCREMENT);
+    LL_DMA_SetMemorySize(DMA1, LL_DMA_CHANNEL_1, LL_DMA_MDATAALIGN_HALFWORD);
+    LL_DMA_SetPeriphSize(DMA1, LL_DMA_CHANNEL_1, LL_DMA_PDATAALIGN_HALFWORD);
+    LL_DMA_EnableIT_TE(DMA1, LL_DMA_CHANNEL_1);     // transfer error interrupt
+    LL_DMA_EnableIT_TC(DMA1, LL_DMA_CHANNEL_1);     // transfer complete interrupt
+    LL_DMA_SetMode(DMA1, LL_DMA_CHANNEL_1, LL_DMA_MODE_CIRCULAR);
+
+    LL_DMA_EnableChannel(DMA1, LL_DMA_CHANNEL_1);
+
+    // Configure NVIC for DMA (priority 2: second-lowest value for STM32L0/F0)
+    IRQ_CONNECT(DMA1_Channel1_IRQn, 2, DMA1_Channel1_IRQHandler, 0, 0);
+    irq_enable(DMA1_Channel1_IRQn);
+
+    LL_ADC_REG_StartConversion(ADC1);
+}
+
+void daq_setup()
+{
+    static struct k_timer adc_trigger_timer;
+
+    dac_setup();
+    adc_setup();
+    dma_setup();
+
+    k_timer_init(&adc_trigger_timer, adc_trigger_conversion, NULL);
+    k_timer_start(&adc_trigger_timer, K_MSEC(1), K_MSEC(1));        // 1 kHz
+
+    k_sleep(500);      // wait for ADC to collect some measurement values
+    daq_update();
+    calibrate_current_sensors();
 }
 
 #endif // __ZEPHYR__

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "adc_dma.h"
+#include "daq.h"
 
 #include <math.h>       // log for thermistor calculation
 #include <assert.h>
@@ -142,7 +142,7 @@ void adc_update_value(unsigned int pos)
     }
 }
 
-void update_measurements()
+void daq_update()
 {
     // reference voltage of 2.5 V at PIN_V_REF
     //int vcc = 2500 * 4096 / (adc_filtered[ADC_POS_V_REF] >> (4 + ADC_FILTER_CONST));
@@ -272,7 +272,7 @@ uint16_t adc_get_alert_limit(float scale, float limit)
     // shift 4 bits left to generate left aligned 16bit value
 }
 
-void adc_set_lv_alerts(float upper, float lower)
+void daq_set_lv_alerts(float upper, float lower)
 {
     int vcc = VREFINT_VALUE * VREFINT_CAL / adc_value(ADC_POS_VREF_MCU);
     float scale =  ((4096* 1000) / (ADC_GAIN_V_BAT)) / vcc;
@@ -288,7 +288,7 @@ void adc_set_lv_alerts(float upper, float lower)
 
 #if defined(UNIT_TEST)
 
-#include "../test/adc_dma_stub.h"
+#include "../test/daq_stub.h"
 
 void prepare_adc_readings(AdcValues values)
 {

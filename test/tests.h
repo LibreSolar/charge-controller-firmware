@@ -9,7 +9,7 @@
 
 void bat_charger_tests();
 
-void adc_tests();
+void daq_tests();
 
 void power_port_tests();
 

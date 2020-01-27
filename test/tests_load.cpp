@@ -5,8 +5,8 @@
  */
 
 #include "tests.h"
-#include "adc_dma_stub.h"
-#include "adc_dma.h"
+#include "daq_stub.h"
+#include "daq.h"
 
 #include <time.h>
 #include <stdio.h>

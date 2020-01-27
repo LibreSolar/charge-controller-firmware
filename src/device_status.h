@@ -111,7 +111,7 @@ enum ErrorFlag {
 
     /** Charge controller internal temperature too high
      *
-     * Set and cleared by ADC update_measurements()
+     * Set and cleared by daq_update()
      */
     ERR_INT_OVERTEMP = 1U << 13,
 

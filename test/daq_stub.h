@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef ADC_DMA_STUB_H
-#define ADC_DMA_STUB_H
+#ifndef DAQ_STUB_H_
+#define DAQ_STUB_H_
 
 #include "config.h"
 

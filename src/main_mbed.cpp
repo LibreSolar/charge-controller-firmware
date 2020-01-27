@@ -22,12 +22,12 @@
 #include "dcdc.h"               // DC/DC converter control (hardware independent)
 #include "pwm_switch.h"         // PWM charge controller
 #include "bat_charger.h"        // battery settings and charger state machine
-#include "adc_dma.h"            // ADC using DMA and conversion to measurement values
-#include "ext/ext.h"           // communication interfaces, displays, etc. in UEXT connector
+#include "daq.h"                // ADC using DMA and conversion to measurement values
+#include "ext/ext.h"            // communication interfaces, displays, etc. in UEXT connector
 #include "eeprom.h"             // external I2C EEPROM
 #include "load.h"               // load and USB output management
 #include "leds.h"               // LED switching using charlieplexing
-#include "device_status.h"                // log data (error memory, min/max measurements, etc.)
+#include "device_status.h"      // log data (error memory, min/max measurements, etc.)
 #include "data_objects.h"       // for access to internal data via ThingSet
 #include "bl_support.h"         // Bootloader support from the application side
 
@@ -106,13 +106,8 @@ int main()
     ts.set_user_password(THINGSET_USER_PASSWORD);       // passwords defined in config.h (see template)
     ts.set_maker_password(THINGSET_MAKER_PASSWORD);
 
-    // ADC, DMA and sensor calibration
-    adc_setup();
-    dma_setup();
-    adc_timer_start(1000);  // 1 kHz
-    wait(0.5);      // wait for ADC to collect some measurement values
-    update_measurements();
-    calibrate_current_sensors();
+    // Data Acquisition (DAQ) setup
+    daq_setup();
 
     // initialize all extensions and external communication interfaces
     ext_mgr.enable_all();
@@ -189,10 +184,10 @@ void system_control()
     static int counter = 0;
 
     // convert ADC readings to meaningful measurement values
-    update_measurements();
+    daq_update();
 
     // alerts should trigger only for transients, so update based on actual voltage
-    adc_set_lv_alerts(lv_terminal.voltage * 1.2, lv_terminal.voltage * 0.8);
+    daq_set_lv_alerts(lv_terminal.voltage * 1.2, lv_terminal.voltage * 0.8);
 
     #if CONFIG_HAS_PWM_SWITCH
     ports_update_current_limits(&pwm_port_int, &bat_terminal, &load_terminal);

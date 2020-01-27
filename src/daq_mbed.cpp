@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "adc_dma.h"
+#include "daq.h"
 
 #if defined(__MBED__)
 
@@ -73,12 +73,15 @@ extern "C" void DMA1_Channel1_IRQHandler(void)
     DMA1->IFCR |= 0x0FFFFFFF;       // clear all interrupt registers
 }
 
-void adc_setup()
+void dac_setup()
 {
 #ifdef PIN_REF_I_DCDC
     ref_i_dcdc = 0.1;    // reference voltage for zero current (0.1 for buck, 0.9 for boost, 0.5 for bi-directional)
 #endif
+}
 
+void adc_setup()
+{
 #ifdef PIN_V_SOLAR_EN
     DigitalOut solar_en(PIN_V_SOLAR_EN);
     solar_en = 1;
@@ -217,5 +220,16 @@ extern "C" void TIM6_IRQHandler(void)
 }
 
 #endif
+
+void daq_setup()
+{
+    dac_setup();        // for current sensor references
+    adc_setup();
+    dma_setup();
+    adc_timer_start(1000);  // 1 kHz
+    wait(0.5);      // wait for ADC to collect some measurement values
+    daq_update();
+    calibrate_current_sensors();
+}
 
 #endif /* __MBED__ */

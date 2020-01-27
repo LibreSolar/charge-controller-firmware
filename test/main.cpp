@@ -13,7 +13,7 @@
 #include "dcdc.h"               // DC/DC converter control (hardware independent)
 #include "pwm_switch.h"         // PWM charge controller
 #include "bat_charger.h"        // battery settings and charger state machine
-#include "adc_dma.h"            // ADC using DMA and conversion to measurement values
+#include "daq.h"            // ADC using DMA and conversion to measurement values
 #include "eeprom.h"             // external I2C EEPROM
 #include "load.h"               // load and USB output management
 #include "leds.h"               // LED switching using charlieplexing
@@ -78,7 +78,7 @@ time_t timestamp;    // current unix timestamp (independent of time(NULL), as it
 
 int main()
 {
-    adc_tests();
+    daq_tests();
     bat_charger_tests();
     power_port_tests();
     half_brigde_tests();

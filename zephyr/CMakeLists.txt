@@ -12,10 +12,10 @@ add_definitions(-D__ZEPHYR__ -DDEBUG_PRINT_FLAGS=7)
 
 include_directories(../src)
 
-target_sources(app PRIVATE ../src/adc_dma.cpp)
-target_sources(app PRIVATE ../src/adc_dma_zephyr.c)
 target_sources(app PRIVATE ../src/bat_charger.cpp)
 target_sources(app PRIVATE ../src/data_objects.cpp)
+target_sources(app PRIVATE ../src/daq.cpp)
+target_sources(app PRIVATE ../src/daq_zephyr.c)
 target_sources(app PRIVATE ../src/device_status.cpp)
 target_sources(app PRIVATE ../src/dcdc.cpp)
 target_sources(app PRIVATE ../src/eeprom.cpp)

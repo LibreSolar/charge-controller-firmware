@@ -5,8 +5,8 @@
  */
 
 #include "tests.h"
-#include "adc_dma.h"
-#include "adc_dma_stub.h"
+#include "daq.h"
+#include "daq_stub.h"
 
 #include "main.h"
 
@@ -73,7 +73,7 @@ void adc_alert_undervoltage_triggering()
 {
     dev_stat.clear_error(ERR_ANY_ERROR);
     battery_conf_init(&bat_conf, BAT_TYPE_LFP, 4, 100);
-    adc_set_lv_alerts(bat_conf.voltage_absolute_max, bat_conf.voltage_absolute_min);
+    daq_set_lv_alerts(bat_conf.voltage_absolute_max, bat_conf.voltage_absolute_min);
     prepare_adc_filtered();
     adc_update_value(ADC_POS_V_BAT);
 
@@ -92,7 +92,7 @@ void adc_alert_undervoltage_triggering()
     adcval.battery_voltage = 13;
     prepare_adc_readings(adcval);
     prepare_adc_filtered();
-    update_measurements();
+    daq_update();
 
     charger.discharge_control(&bat_conf);
     TEST_ASSERT_EQUAL(false, dev_stat.has_error(ERR_BAT_UNDERVOLTAGE));
@@ -102,7 +102,7 @@ void adc_alert_overvoltage_triggering()
 {
     dev_stat.clear_error(ERR_ANY_ERROR);
     battery_conf_init(&bat_conf, BAT_TYPE_LFP, 4, 100);
-    adc_set_lv_alerts(bat_conf.voltage_absolute_max, bat_conf.voltage_absolute_min);
+    daq_set_lv_alerts(bat_conf.voltage_absolute_max, bat_conf.voltage_absolute_min);
     prepare_adc_filtered();
     adc_update_value(ADC_POS_V_BAT);
 
@@ -122,7 +122,7 @@ void adc_alert_overvoltage_triggering()
     adcval.battery_voltage = 12;
     prepare_adc_readings(adcval);
     prepare_adc_filtered();
-    update_measurements();
+    daq_update();
 
     charger.time_state_changed = time(NULL) - bat_conf.time_limit_recharge - 1;
     charger.charge_control(&bat_conf);
@@ -136,12 +136,12 @@ void adc_alert_overflow_prevention()
     TEST_ASSERT_EQUAL_HEX((uint16_t)(UINT16_MAX << 4), limit);
 }
 
-/** ADC conversion test
+/** Data acquisition tests
  *
  * Purpose: Check if raw data from 2 voltage and 2 current measurements are converted
  * to calculated voltage/current measurements of different DC buses
  */
-void adc_tests()
+void daq_tests()
 {
     adcval.bat_temperature = 25;
     adcval.battery_voltage = 12;
@@ -155,8 +155,8 @@ void adc_tests()
 
     RUN_TEST(check_filtering);
 
-    // call original update_measurements function
-    update_measurements();
+    // call original daq_update function
+    daq_update();
 
     RUN_TEST(check_solar_terminal_readings);
     RUN_TEST(check_bat_terminal_readings);
