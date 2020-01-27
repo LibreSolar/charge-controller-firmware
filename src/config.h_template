@@ -32,6 +32,11 @@
 
 #define CONFIG_DEVICE_ID 12345678
 
+// This enables a safety-feature for the MPPT charge controllers to blow the fuse and disable
+// charging in case the HS MOSFET was shorted (e.g. by someone connecting a solar panel with
+// too high voltage).
+#define CONFIG_HS_MOSFET_FAIL_SAFE_PROTECTION 1
+
 #define THINGSET_USER_PASSWORD   "user123"
 #define THINGSET_MAKER_PASSWORD  "maker456"
 

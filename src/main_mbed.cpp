@@ -155,6 +155,7 @@ int main()
             #if CONFIG_HAS_DCDC_CONVERTER
             bat_terminal.pass_voltage_targets(&dcdc_lv_port);
             #endif
+
             #if CONFIG_HAS_PWM_SWITCH
             bat_terminal.pass_voltage_targets(&pwm_port_int);
             #endif
@@ -165,6 +166,12 @@ int main()
             leds_update_soc(charger.soc, dev_stat.has_error(ERR_LOAD_LOW_SOC));
 
             ext_mgr.process_1s();
+
+            #if CONFIG_HS_MOSFET_FAIL_SAFE_PROTECTION && CONFIG_HAS_DCDC_CONVERTER
+            if (dev_stat.has_error(ERR_DCDC_HS_MOSFET_SHORT)) {
+                dcdc.fuse_destruction();
+            }
+            #endif
 
             last_call = now;
         }

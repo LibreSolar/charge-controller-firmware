@@ -11,6 +11,7 @@
 #include "helper.h"
 
 #include "half_bridge.h"
+#include "eeprom.h"
 
 #include <math.h>       // for fabs function
 #include <stdlib.h>     // for min/max function
@@ -263,13 +264,19 @@ void Dcdc::emergency_stop()
     off_timestamp = uptime();
 }
 
-void Dcdc::self_destruction()
+void Dcdc::fuse_destruction()
 {
-    print_error("Charge controller self-destruction called!\n");
-    //half_bridge_stop();
-    //half_bridge_init(50, 0, 0, 0.98);   // reset safety limits to allow 0% duty cycle
-    //half_bridge_start(0);
-    // now the fuse should be triggered and we disappear
+    static int counter = 0;
+
+    if (counter > 20) {     // wait 20s to be able to send out data
+        print_error("Charge controller fuse destruction called!\n");
+        eeprom_store_data();
+        half_bridge_stop();
+        half_bridge_init(50, 0, 0, 0.98);   // reset safety limits to allow 0% duty cycle
+        half_bridge_start(0);
+        // now the fuse should be triggered and we disappear
+    }
+    counter++;
 }
 
-#endif /* CHARGER_TYPE_PWM */
+#endif /* CONFIG_HAS_DCDC_CONVERTER */

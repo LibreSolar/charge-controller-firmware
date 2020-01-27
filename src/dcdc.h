@@ -90,7 +90,7 @@ public:
      * reason for self destruction should be logged and stored to EEPROM prior to calling this
      * function, as the charge controller power supply will be cut after the fuse is destroyed.
      */
-    void self_destruction();
+    void fuse_destruction();
 
     DcdcOperationMode mode;     ///< DC/DC mode (buck, boost or nanogrid)
     bool enabled;               ///< Can be used to disable the DC/DC power stage
