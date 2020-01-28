@@ -30,6 +30,7 @@ target_sources(app PRIVATE ../src/power_port.cpp)
 target_sources(app PRIVATE ../src/pwm_switch.cpp)
 target_sources(app PRIVATE ../src/ext/ext.cpp)
 target_sources(app PRIVATE ../src/ext/oled.cpp)
+target_sources(app PRIVATE ../src/ext/serial.cpp)
 
 add_subdirectory(../lib/thingset build/thingset)
 add_subdirectory(../lib/oled-display build/oled-display)

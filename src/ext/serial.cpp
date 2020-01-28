@@ -7,10 +7,19 @@
 #ifndef UNIT_TEST
 
 #include "config.h"
+
+#if CONFIG_EXT_THINGSET_SERIAL   // otherwise don't compile code to reduce firmware size
+
 #include "thingset.h"
 #include "ext.h"
 
-#define SIZE_BUF_REQ 500
+#ifdef __ZEPHYR__
+#define TX_BUF_SIZE CONFIG_EXT_THINGSET_SERIAL_TX_BUF_SIZE
+#define RX_BUF_SIZE CONFIG_EXT_THINGSET_SERIAL_RX_BUF_SIZE
+#else
+#define TX_BUF_SIZE 1000
+#define RX_BUF_SIZE 500
+#endif
 
 #ifdef __MBED__
 
@@ -26,8 +35,6 @@
 
 #define UART_DEVICE_NAME DT_ALIAS_UART_DBG_LABEL
 struct device *uart_dev = device_get_binding(UART_DEVICE_NAME);
-
-static unsigned char new_line[] = "\n";
 
 #endif /* MBED or ZEPHYR */
 
@@ -89,8 +96,8 @@ class ThingSetStream: public ExtInterface
         Stream* stream;
         #endif /* MBED */
 
-        char buf_resp[1000];
-        char buf_req[SIZE_BUF_REQ];
+        char buf_resp[TX_BUF_SIZE];
+        char buf_req[RX_BUF_SIZE];
         size_t req_pos = 0;
         bool command_flag = false;
 };
@@ -141,7 +148,7 @@ class ThingSetSerial: public ThingSetStream
  * for later processing in the normal operation
  */
 
-#ifdef UART_SERIAL_ENABLED
+#ifdef CONFIG_EXT_THINGSET_SERIAL
     extern const int pub_channel_serial;
     #ifdef __MBED__
         extern Serial serial;
@@ -151,9 +158,7 @@ class ThingSetSerial: public ThingSetStream
         ThingSetSerial ts_uart(pub_channel_serial);
     #endif /* MBED or ZEPHYR */
 
-#endif /* UART_SERIAL_ENABLED */
-
-// ToDo: Add USB serial again (previous library was broken with recent mbed releases)
+#endif /* CONFIG_EXT_THINGSET_SERIAL */
 
 extern ThingSet ts;
 
@@ -170,7 +175,7 @@ void ThingSetStream::process_1s()
         for (int i = 0; i < len; i++) {
             uart_poll_out(uart_dev, buf_resp[i]);
         }
-        uart_poll_out(uart_dev, new_line[0]);
+        uart_poll_out(uart_dev, '\n');
 
         #endif /* MBED or ZREPHYR */
     }
@@ -194,7 +199,7 @@ void ThingSetStream::process_asap()
             for (int i = 0; i < len; i++) {
                 uart_poll_out(uart_dev, buf_resp[i]);
             }
-            uart_poll_out(uart_dev, new_line[0]);
+            uart_poll_out(uart_dev, '\n');
             #endif /* MBED or ZEPHYR */
         }
 
@@ -252,7 +257,7 @@ void ThingSetStream::process_input(void* user_data)
         // more read characters are simply dropped, unless it is \n
         // which ends the command input and triggers processing
         // else if (req_pos < (sizeof(buf_req)-1)) {
-        else if (req_pos < (SIZE_BUF_REQ-1)) {
+        else if (req_pos < (RX_BUF_SIZE-1)) {
             buf_req[req_pos++] = c;
         }
 
@@ -262,4 +267,7 @@ void ThingSetStream::process_input(void* user_data)
         #endif
     }
 }
+
+#endif /* CONFIG_EXT_THINGSET_SERIAL */
+
 #endif /* UNIT_TEST */

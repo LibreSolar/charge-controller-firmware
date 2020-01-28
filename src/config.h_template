@@ -44,13 +44,13 @@
 //#define CUSTOM_DATA_OBJECTS_FILE
 
 // OLED display at UEXT port
-//#define OLED_ENABLED
+#define CONFIG_EXT_OLED_DISPLAY 1
 // OLED Brightness (value 0x01-0xff or 1-255)
 // leave undefined to use default
-//#define OLED_BRIGHTNESS 0x1
+#define OLED_BRIGHTNESS 0x1
 
 // UART serial at SWD connector
-#define UART_SERIAL_ENABLED
+#define CONFIG_EXT_THINGSET_SERIAL 1
 
 // CAN bus drivers (not supported by all charge controllers)
 //#define CAN_ENABLED

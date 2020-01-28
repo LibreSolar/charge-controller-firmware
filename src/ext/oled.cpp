@@ -8,7 +8,7 @@
 
 #include "config.h"
 
-#ifdef OLED_ENABLED     // otherwise don't compile code to reduce firmware size
+#if CONFIG_EXT_OLED_DISPLAY     // otherwise don't compile code to reduce firmware size
 
 #include <math.h>
 #include <stdio.h>
@@ -198,6 +198,6 @@ void ExtOled::process_1s()
     oled.display();
 }
 
-#endif /* OLED_ENABLED */
+#endif /* CONFIG_EXT_OLED_DISPLAY */
 
 #endif /* UNIT_TEST */
