@@ -161,7 +161,7 @@ static void dma_setup()
         LL_DMA_DIRECTION_PERIPH_TO_MEMORY);
 
     // Configure the number of DMA transfers (data length in multiples of size per transfer)
-    LL_DMA_SetDataLength(DMA1, LL_DMA_CHANNEL_1, NUM_ADC_CH * 2);
+    LL_DMA_SetDataLength(DMA1, LL_DMA_CHANNEL_1, NUM_ADC_CH);
 
     LL_DMA_SetMemoryIncMode(DMA1, LL_DMA_CHANNEL_1, LL_DMA_MEMORY_INCREMENT);
     LL_DMA_SetMemorySize(DMA1, LL_DMA_CHANNEL_1, LL_DMA_MDATAALIGN_HALFWORD);
