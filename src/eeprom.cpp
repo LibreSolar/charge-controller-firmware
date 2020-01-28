@@ -147,7 +147,7 @@ int eeprom_read (unsigned int addr, uint8_t* ret, int len)
 	return i2c_eeprom.read(device, (char*)ret, len);
 }
 
-#elif defined(STM32L0) && defined(__MBED__) // internal EEPROM
+#elif defined(STM32L0) // internal EEPROM
 
 int eeprom_write (unsigned int addr, const uint8_t* data, int len)
 {
@@ -160,8 +160,8 @@ int eeprom_write (unsigned int addr, const uint8_t* data, int len)
 
     // Perform unlock sequence if EEPROM is locked
     if ((FLASH->PECR & FLASH_PECR_PELOCK) != 0) {
-        FLASH->PEKEYR = FLASH_PEKEY1;
-        FLASH->PEKEYR = FLASH_PEKEY2;
+        FLASH->PEKEYR = 0x89ABCDEFU;   // FLASH_PEKEY1
+        FLASH->PEKEYR = 0x02030405U;   // FLASH_PEKEY2
     }
 
     if (addr + len > DATA_EEPROM_BANK1_END - DATA_EEPROM_BASE) {

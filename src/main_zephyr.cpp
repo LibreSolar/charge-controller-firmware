@@ -124,6 +124,8 @@ void main(void)
         leds_update_1s();
         leds_update_soc(charger.soc, dev_stat.has_error(ERR_LOAD_LOW_SOC));
 
+        eeprom_update();
+
         cnt++;
         k_sleep(1000);
     }
