@@ -8,14 +8,11 @@
 
 #if defined(__ZEPHYR__)
 
-#include <zephyr.h>
-#include <drivers/adc.h>
-
-#include "pcb.h"
-#include "debug.h"
-
 #include <stdint.h>
 #include <inttypes.h>
+
+#include <zephyr.h>
+#include <drivers/adc.h>
 
 #if defined(CONFIG_SOC_SERIES_STM32L0X)
 #include <stm32l0xx_ll_system.h>
@@ -29,6 +26,8 @@
 #include <stm32g4xx_ll_dma.h>
 #endif
 
+#include "pcb.h"
+#include "debug.h"
 
 #if !defined(CONFIG_SOC_SERIES_STM32F0X) && !defined(CONFIG_SOC_SERIES_STM32L0X)
 // Rank and sequence definitions for STM32G4 from adc_stm32.c Zephyr driver

@@ -10,10 +10,10 @@
 
 #if CONFIG_EXT_OLED_DISPLAY     // otherwise don't compile code to reduce firmware size
 
+#include "ext/ext.h"
+
 #include <math.h>
 #include <stdio.h>
-
-#include "ext/ext.h"
 
 #include "main.h"
 #include "pcb.h"
@@ -22,10 +22,10 @@
 // implement specific extension inherited from ExtInterface
 class ExtOled: public ExtInterface
 {
-    public:
-        ExtOled() {};
-        void enable();
-        void process_1s();
+public:
+    ExtOled() {};
+    void enable();
+    void process_1s();
 };
 
 static ExtOled ext_oled;    // local instance, will self register itself

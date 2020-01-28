@@ -11,9 +11,9 @@
 
 #ifdef BOOTLOADER_ENABLED
 
-#include <cstdint>
-
 #include "config.h"
+
+#include <cstdint>
 
 /** Length of the bootloader name string (including \0 termination) */
 const uint8_t BOOTLADER_NAME_LENGTH = 18;

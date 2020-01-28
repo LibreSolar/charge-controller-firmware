@@ -5,14 +5,14 @@
  */
 
 #include "device_status.h"
-#include "config.h"
-#include "pcb.h"
-
-#include "main.h"
-#include "helper.h"
 
 #include <math.h>       // for fabs function
 #include <stdio.h>
+
+#include "config.h"
+#include "pcb.h"
+#include "main.h"
+#include "helper.h"
 
 //----------------------------------------------------------------------------
 // must be called exactly once per second, otherwise energy calculation gets wrong

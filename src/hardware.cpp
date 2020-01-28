@@ -14,7 +14,6 @@
 #include "pcb.h"
 #include "load.h"
 #include "half_bridge.h"
-//#include "us_ticker_data.h"
 #include "leds.h"
 
 extern LoadOutput load;

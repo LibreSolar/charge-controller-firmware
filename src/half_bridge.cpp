@@ -6,11 +6,11 @@
 
 #include "half_bridge.h"
 
+#include <stdio.h>
+
 #include "mcu.h"
 #include "pcb.h"
 #include "config.h"
-
-#include <stdio.h>
 
 static int _pwm_resolution;
 static float _min_duty;

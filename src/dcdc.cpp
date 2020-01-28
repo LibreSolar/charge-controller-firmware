@@ -5,17 +5,17 @@
  */
 
 #include "dcdc.h"
-#include "pcb.h"
-#include "device_status.h"
-#include "debug.h"
-#include "helper.h"
-
-#include "half_bridge.h"
-#include "eeprom.h"
 
 #include <math.h>       // for fabs function
 #include <stdlib.h>     // for min/max function
 #include <stdio.h>
+
+#include "pcb.h"
+#include "device_status.h"
+#include "debug.h"
+#include "helper.h"
+#include "half_bridge.h"
+#include "eeprom.h"
 
 extern DeviceStatus dev_stat;
 

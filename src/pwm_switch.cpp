@@ -5,15 +5,15 @@
  */
 
 #include "pwm_switch.h"
-#include "config.h"
-#include "pcb.h"
-
-#include "daq.h"
-#include "debug.h"
-#include "helper.h"
 
 #include <stdio.h>
 #include <time.h>
+
+#include "config.h"
+#include "pcb.h"
+#include "daq.h"
+#include "debug.h"
+#include "helper.h"
 
 #if CONFIG_HAS_PWM_SWITCH
 

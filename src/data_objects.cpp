@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <stdio.h>
+
 #include "main.h"
 
 #include "pcb.h"
@@ -17,7 +19,6 @@
 #include "hardware.h"
 #include "dcdc.h"
 #include "eeprom.h"
-#include <stdio.h>
 
 const char* const manufacturer = "Libre Solar";
 const char* const device_type = DEVICE_TYPE;

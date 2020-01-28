@@ -6,66 +6,63 @@
 
 #ifdef __MBED__
 
-#include "mbed.h"
-
 #include "config.h"
 
 #ifdef CAN_ENABLED
+
+#include "ext.h"
+
+#include "mbed.h"
+
 #include "pcb.h"
+#include "thingset.h"
+#include "data_objects.h"
+#include "can_msg_queue.h"
 
 #ifndef HAS_CAN
 #error The hardware does not support CAN, please undefine CAN_ENABLED
 #endif
 
-#include "can_msg_queue.h"
-//#include "can_iso_tp.h"
-
-#include "thingset.h"
-
 #ifndef CAN_SPEED
 #define CAN_SPEED 250000    // 250 kHz
 #endif
 
-#include "data_objects.h"
-#include "can_msg_queue.h"
-#include "ext.h"
-
 class ThingSetCAN: public ExtInterface
 {
-    public:
-        ThingSetCAN(uint8_t can_node_id, const unsigned int c);
+public:
+    ThingSetCAN(uint8_t can_node_id, const unsigned int c);
 
-        void process_asap();
-        void process_1s();
+    void process_asap();
+    void process_1s();
 
-        void enable();
+    void enable();
 
-    private:
-        bool pub_object(const data_object_t& data_obj);
-        int  pub();
-        void process_outbox();
+private:
+    bool pub_object(const data_object_t& data_obj);
+    int  pub();
+    void process_outbox();
 
-    #if defined(CAN_RECEIVE)
-        void process_inbox();
-        void process_input();
-        void send_object_name(int data_obj_id, uint8_t can_dest_id);
-        CANMsgQueue rx_queue;
-    #endif
+#if defined(CAN_RECEIVE)
+    void process_inbox();
+    void process_input();
+    void send_object_name(int data_obj_id, uint8_t can_dest_id);
+    CANMsgQueue rx_queue;
+#endif
 
-        CANMsgQueue tx_queue;
-        uint8_t node_id;
-        const unsigned int channel;
-        CAN can;
-        DigitalOut can_disable;
+    CANMsgQueue tx_queue;
+    uint8_t node_id;
+    const unsigned int channel;
+    CAN can;
+    DigitalOut can_disable;
 };
 
-
 extern const unsigned int PUB_CHANNEL_CAN;
+
 #ifndef CAN_NODE_ID
     #define CAN_NODE_ID 10
 #endif
-ThingSetCAN ts_can(CAN_NODE_ID, PUB_CHANNEL_CAN);
 
+ThingSetCAN ts_can(CAN_NODE_ID, PUB_CHANNEL_CAN);
 
 class ThingSetCAN_Device
 {
@@ -292,6 +289,7 @@ void ThingSetCAN::process_input()
     }
 }
 #endif /* CAN_RECEIVE */
+
 #endif /* CAN_ENABLED */
 
 #endif /* __MBED__ */

@@ -10,12 +10,11 @@
 
 #ifdef WIFI_ENABLED
 
-#include "load.h"
-#include "thingset.h"
 #include <inttypes.h>
 
+#include "load.h"
+#include "thingset.h"
 #include "pcb.h"
-
 #include "ESP32.h"
 
 UARTSerial uext_serial(PIN_UEXT_TX, PIN_UEXT_RX, 115200);

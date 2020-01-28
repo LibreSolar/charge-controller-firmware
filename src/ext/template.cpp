@@ -15,16 +15,16 @@
  */
 
 // Only compile if this EXT interface is enabled in config.h
-#ifdef EXT_TEMPLATE_ENABLED
+#ifdef CONFIG_EXT_TEMPLATE_ENABLED
 
 // implement specific extension inherited from ExtInterface
 class ExtTemplate: public ExtInterface
 {
-    public:
-        ExtTemplate();
-        void enable();
-        void process_asap();
-        void process_1s();
+public:
+    ExtTemplate();
+    void enable();
+    void process_asap();
+    void process_1s();
 };
 
 static ExtTemplate ext_template;    // local instance, will self register itself

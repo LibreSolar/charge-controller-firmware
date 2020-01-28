@@ -6,13 +6,6 @@
 
 #include "load.h"
 
-#include "pcb.h"
-#include "config.h"
-#include "hardware.h"
-#include "leds.h"
-#include "device_status.h"
-#include "debug.h"
-
 #if defined(__ZEPHYR__)
 
 #include <zephyr.h>
@@ -26,6 +19,13 @@
 #endif
 
 #endif // __ZEPHYR__
+
+#include "pcb.h"
+#include "config.h"
+#include "hardware.h"
+#include "leds.h"
+#include "device_status.h"
+#include "debug.h"
 
 extern LoadOutput load;     // necessary to call emergency stop function
 

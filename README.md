@@ -4,7 +4,7 @@
 
 This repository contains the firmware for the different Libre Solar Charge Controllers. Originally, the firmware was based on [ARM Mbed OS](https://www.mbed.com). The current version also supports using [Zephyr RTOS](https://www.zephyrproject.org/) for some boards.
 
-Coding style is described [here](https://libre.solar/docs/coding_style/).
+Coding style is described [here](https://github.com/LibreSolar/coding-style).
 
 **Warning:** This firmware is under active development. Even though we try our best not to break any features that worked before, not every commit is fully tested on every board before including it to the master branch. For stable and tested versions consider using the latest [release](https://github.com/LibreSolar/charge-controller-firmware/releases).
 

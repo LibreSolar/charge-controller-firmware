@@ -6,13 +6,13 @@
 
 #include "helper.h"
 
+#include <time.h>
+
 #ifdef __MBED__
 #include "mbed.h"
 #elif defined(__ZEPHYR__)
 #include <zephyr.h>
 #endif
-
-#include <time.h>
 
 uint32_t uptime()
 {

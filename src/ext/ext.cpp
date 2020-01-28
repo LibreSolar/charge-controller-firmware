@@ -5,6 +5,7 @@
  */
 
 #include "ext.h"
+
 #include <algorithm>
 
 // we use code to self register objects at construction time.
@@ -16,41 +17,47 @@ std::vector<ExtInterface*>* ExtManager::interfaces;
 // run the respective function on all objects in the "devices" list
 // use the c++11 lambda expressions here for the for_each loop, keeps things compact
 
-void ExtManager::process_asap() {
+void ExtManager::process_asap()
+{
     for_each(std::begin(*interfaces),std::end(*interfaces), [](ExtInterface* tsif) {
         tsif->process_asap();
     });
 }
 
-void ExtManager::enable_all() {
+void ExtManager::enable_all()
+{
     for_each(std::begin(*interfaces),std::end(*interfaces), [](ExtInterface* tsif) {
         tsif->enable();
     });
 }
 
-void ExtManager::process_1s() {
+void ExtManager::process_1s()
+{
     for_each(std::begin(*interfaces),std::end(*interfaces), [](ExtInterface* tsif) {
         tsif->process_1s();
     });
 }
 
-void ExtManager::check_list() {
-    if (ExtManager::interfaces == NULL)
-    {
+void ExtManager::check_list()
+{
+    if (ExtManager::interfaces == NULL) {
         ExtManager::interfaces = new std::vector<ExtInterface*>;
     }
 }
 
-void ExtManager::add_ext(ExtInterface* member) {
+void ExtManager::add_ext(ExtInterface* member)
+{
     check_list();
     interfaces->push_back(member);
 }
 
-ExtManager::ExtManager() {
+ExtManager::ExtManager()
+{
     check_list();
 }
 
-ExtInterface::ExtInterface() {
+ExtInterface::ExtInterface()
+{
     ext_mgr.add_ext(this);
 }
 

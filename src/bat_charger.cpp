@@ -5,15 +5,16 @@
  */
 
 #include "bat_charger.h"
-#include "config.h"
-#include "pcb.h"
-#include "helper.h"
-
-#include "device_status.h"
-extern DeviceStatus dev_stat;
 
 #include <math.h>       // for fabs function
 #include <stdio.h>
+
+#include "config.h"
+#include "pcb.h"
+#include "helper.h"
+#include "device_status.h"
+
+extern DeviceStatus dev_stat;
 
 void battery_conf_init(BatConf *bat, BatType type, int num_cells, float nominal_capacity)
 {
