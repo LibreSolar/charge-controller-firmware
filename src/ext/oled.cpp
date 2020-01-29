@@ -15,6 +15,12 @@
 #include <math.h>
 #include <stdio.h>
 
+#if defined(__ZEPHYR__)
+#include <zephyr.h>
+#include <device.h>
+#include <drivers/gpio.h>
+#endif
+
 #include "main.h"
 #include "pcb.h"
 #include "oled_ssd1306.h"
@@ -59,9 +65,16 @@ OledSSD1306 oled(i2c_dev);
 
 void ExtOled::enable()
 {
-#ifdef PIN_UEXT_DIS
+#if defined(PIN_UEXT_DIS) && defined(__MBED__)
     DigitalOut uext_dis(PIN_UEXT_DIS);
     uext_dis = 0;
+#endif
+
+#if defined(DT_SWITCH_UEXT_DIS_GPIOS_CONTROLLER) && defined(__ZEPHYR__)
+    struct device *dev_uext_dis =
+        device_get_binding(DT_SWITCH_UEXT_DIS_GPIOS_CONTROLLER);
+    gpio_pin_configure(dev_uext_dis, DT_SWITCH_UEXT_DIS_GPIOS_PIN, GPIO_DIR_OUT);
+    gpio_pin_write(dev_uext_dis, DT_SWITCH_UEXT_DIS_GPIOS_PIN, 0);
 #endif
 
 #ifdef OLED_BRIGHTNESS

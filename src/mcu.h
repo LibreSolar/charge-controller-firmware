@@ -14,7 +14,7 @@
 #define STM32L073
 #endif
 
-#ifdef CONFIG_SOC_STM32F072XX
+#ifdef CONFIG_SOC_STM32F072XB
 #define STM32F0
 #define STM32F072
 #endif
@@ -29,7 +29,7 @@
 #endif
 
 #ifdef STM32F072
-#include "stm32f072xx.h"
+#include "stm32f072xb.h"
 #endif
 
 #ifdef STM32G431

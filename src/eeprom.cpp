@@ -63,7 +63,7 @@ uint32_t _calc_crc(const uint8_t *buf, size_t len)
 
 #endif // UNIT_TEST
 
-#if defined(EEPROM_24AA01) || defined(EEPROM_24AA32)
+#if (defined(EEPROM_24AA01) || defined(EEPROM_24AA32)) && defined(__MBED__)
 
 #ifdef EEPROM_24AA01
 #define EEPROM_PAGE_SIZE 8      // see datasheet of 24AA01

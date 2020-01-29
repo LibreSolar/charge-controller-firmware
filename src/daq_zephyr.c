@@ -20,6 +20,12 @@
 #include <stm32l0xx_ll_dac.h>
 #include <stm32l0xx_ll_dma.h>
 #include <stm32l0xx_ll_bus.h>
+#elif defined(CONFIG_SOC_SERIES_STM32F0X)
+#include <stm32f0xx_ll_system.h>
+#include <stm32f0xx_ll_adc.h>
+#include <stm32f0xx_ll_dac.h>
+#include <stm32f0xx_ll_dma.h>
+#include <stm32f0xx_ll_bus.h>
 #elif defined(CONFIG_SOC_SERIES_STM32G4X)
 #include <stm32g4xx_ll_system.h>
 #include <stm32g4xx_ll_dac.h>
@@ -99,7 +105,9 @@ static void adc_setup()
     struct adc_channel_cfg channel_cfg = {
         .gain = ADC_GAIN_1,
         .reference = ADC_REF_INTERNAL,
-#if defined(CONFIG_SOC_SERIES_STM32F0X) || defined(CONFIG_SOC_SERIES_STM32L0X)
+#if defined(CONFIG_SOC_SERIES_STM32F0X)
+        .acquisition_time = ADC_ACQ_TIME(ADC_ACQ_TIME_TICKS, 240),
+#elif defined(CONFIG_SOC_SERIES_STM32L0X)
         .acquisition_time = ADC_ACQ_TIME(ADC_ACQ_TIME_TICKS, 161),
 #elif defined(CONFIG_SOC_SERIES_STM32G4X)
         // ToDo: channel-specific acquisition time. Only internal reference voltage

@@ -1,0 +1,78 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Copyright (c) 2020 Martin Jäger / Libre Solar
+ */
+
+/dts-v1/;
+#include <st/f0/stm32f072Xb.dtsi>
+
+/ {
+	model = "Libre Solar MPPT 2420 LC v0.10";
+	compatible = "st,stm32f072";
+
+	chosen {
+		zephyr,console = &usart1;
+		zephyr,shell-uart = &usart1;
+		zephyr,sram = &sram0;
+		zephyr,flash = &flash0;
+	};
+
+	leds {
+		compatible = "gpio-leds";
+		pwr {
+			gpios = <&gpiob 14 GPIO_INT_ACTIVE_LOW>;
+			label = "LED GND";
+		};
+		load {
+			gpios = <&gpiob 15 GPIO_INT_ACTIVE_HIGH>;
+			label = "LED Load";
+		};
+	};
+
+	switches {
+		compatible = "switch";
+		load-dis {
+			gpios = <&gpiob 2 GPIO_DIR_IN>;
+			label = "Load disable";
+		};
+		uext-dis {
+			gpios = <&gpioc 14 GPIO_DIR_IN>;
+			label = "UEXT disable";
+		};
+	};
+
+	aliases {
+		uart-dbg = &usart1;
+		uext-uart = &usart2;
+		spi-uext = &spi1;
+		i2c-uext = &i2c1;
+	};
+};
+
+&usart1 {
+	current-speed = <115200>;
+	status = "okay";
+};
+
+&usart2 {
+	current-speed = <115200>;
+	status = "okay";
+};
+
+&i2c1 {
+	status = "okay";
+	clock-frequency = <I2C_BITRATE_FAST>;
+};
+
+&spi1 {
+	status = "okay";
+};
+
+&iwdg {
+	status = "okay";
+};
+
+&adc1 {
+	status = "okay";
+};
