@@ -53,7 +53,7 @@
 #define CONFIG_EXT_THINGSET_SERIAL 1
 
 // CAN bus drivers (not supported by all charge controllers)
-//#define CAN_ENABLED
+#define CONFIG_EXT_THINGSET_CAN 0
 
 // LoRa board RFM9x connected to UEXT port
 // https://github.com/LibreSolar/UEXT_LoRa

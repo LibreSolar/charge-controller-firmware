@@ -7,28 +7,31 @@
 #ifndef CAN_MSG_QUEUE_H
 #define CAN_MSG_QUEUE_H
 
+#ifdef __MBED__
 #include "mbed.h"
-
-#ifdef STM32F0  // STM32L0 does not have CAN
+#define CanFrame CANMessage
+#elif defined(__ZEPHYR__)
+#include <zephyr.h>
+#include <drivers/can.h>
+#define CanFrame struct zcan_frame
+#endif
 
 #define CAN_QUEUE_SIZE 30
 
-class CANMsgQueue
+class CanMsgQueue
 {
 public:
     bool full();
     bool empty();
-    void enqueue(CANMessage msg);
-    int dequeue(CANMessage& msg);
+    void enqueue(CanFrame frame);
+    int dequeue(CanFrame &frame);
     int dequeue();
-    int first(CANMessage& msg);
+    int first(CanFrame& frame);
 
 private:
-    CANMessage _queue[CAN_QUEUE_SIZE];
+    CanFrame _queue[CAN_QUEUE_SIZE];
     int _first;
     int _length;
 };
-
-#endif /* STM32F0 */
 
 #endif /* CAN_MSG_QUEUE_H */

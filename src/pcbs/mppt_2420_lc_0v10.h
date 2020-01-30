@@ -63,7 +63,7 @@
 #define PIN_EEPROM_SDA PB_11
 
 #define EEPROM_24AA32
-#define HAS_CAN 1
+#define CONFIG_CAN 1
 
 enum pin_state_t { PIN_HIGH, PIN_LOW, PIN_FLOAT };
 

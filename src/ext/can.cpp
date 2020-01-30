@@ -4,23 +4,31 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifdef __MBED__
+#ifndef UNIT_TEST
 
 #include "config.h"
 
-#ifdef CAN_ENABLED
+#if CONFIG_EXT_THINGSET_CAN
 
 #include "ext.h"
 
+#if defined(__ZEPHYR__)
+#include <zephyr.h>
+#include <device.h>
+#include <drivers/gpio.h>
+#include <drivers/can.h>
+#include <stm32f0xx_ll_system.h>        // needed for debug printing of register contents
+#elif defined(__MBED__)
 #include "mbed.h"
+#endif
 
 #include "pcb.h"
 #include "thingset.h"
 #include "data_objects.h"
 #include "can_msg_queue.h"
 
-#ifndef HAS_CAN
-#error The hardware does not support CAN, please undefine CAN_ENABLED
+#ifndef CONFIG_CAN
+#error The hardware does not support CAN, please disable CONFIG_EXT_THINGSET_CAN
 #endif
 
 #ifndef CAN_SPEED
@@ -38,40 +46,50 @@ public:
     void enable();
 
 private:
+    /**
+     * Generate CAN frame for data object and put it into TX queue
+     */
     bool pub_object(const data_object_t& data_obj);
-    int  pub();
+
+    /**
+     * Retrieves all data objects of configured channel and calls pub_object to enqueue them
+     *
+     * \returns number of can objects added to queue
+     */
+    int pub();
+
+    /**
+     * Try to send out all data in TX queue
+     */
     void process_outbox();
 
-#if defined(CAN_RECEIVE)
+#if defined(CAN_RECEIVE) && defined(__MBED__)
     void process_inbox();
     void process_input();
     void send_object_name(int data_obj_id, uint8_t can_dest_id);
-    CANMsgQueue rx_queue;
+    CanMsgQueue rx_queue;
 #endif
 
-    CANMsgQueue tx_queue;
+    CanMsgQueue tx_queue;
     uint8_t node_id;
     const unsigned int channel;
+
+#ifdef __MBED__
     CAN can;
     DigitalOut can_disable;
+#elif defined(__ZEPHYR__)
+    struct device *can_dev;
+    struct device *gpio_stb_dev;
+#endif
 };
 
 extern const unsigned int PUB_CHANNEL_CAN;
 
 #ifndef CAN_NODE_ID
-    #define CAN_NODE_ID 10
+#define CAN_NODE_ID 10
 #endif
 
 ThingSetCAN ts_can(CAN_NODE_ID, PUB_CHANNEL_CAN);
-
-class ThingSetCAN_Device
-{
-    CAN can;
-    DigitalOut can_disable;
-
-    ThingSetCAN_Device(PinName rd, PinName td, int hz);
-};
-
 
 //----------------------------------------------------------------------------
 // preliminary simple CAN functions to send data to the bus for logging
@@ -82,6 +100,8 @@ class ThingSetCAN_Device
 // https://github.com/LibreSolar/ThingSet/blob/master/can.md
 
 extern ThingSet ts;
+
+#ifdef __MBED__
 
 ThingSetCAN::ThingSetCAN(uint8_t can_node_id, const unsigned int c):
     node_id(can_node_id),
@@ -104,11 +124,34 @@ void ThingSetCAN::enable()
     #endif
 }
 
+#elif defined(__ZEPHYR__)
+
+ThingSetCAN::ThingSetCAN(uint8_t can_node_id, const unsigned int c):
+    node_id(can_node_id),
+    channel(c)
+{
+    gpio_stb_dev = device_get_binding(DT_SWITCH_CAN_DIS_GPIOS_CONTROLLER);
+    gpio_pin_configure(gpio_stb_dev, DT_SWITCH_CAN_DIS_GPIOS_PIN, GPIO_DIR_OUT);
+    gpio_pin_write(gpio_stb_dev, DT_SWITCH_CAN_DIS_GPIOS_PIN, 1);
+
+    can_dev = device_get_binding("CAN_1");
+}
+
+void ThingSetCAN::enable()
+{
+    // enable the transceiver (set STB pin low)
+    gpio_pin_write(gpio_stb_dev, DT_SWITCH_CAN_DIS_GPIOS_PIN, 0);
+}
+
+#endif
+
 void ThingSetCAN::process_1s()
 {
     pub();
     process_asap();
 }
+
+#ifdef __MBED__
 
 bool ThingSetCAN::pub_object(const data_object_t& data_obj)
 {
@@ -126,10 +169,32 @@ bool ThingSetCAN::pub_object(const data_object_t& data_obj)
     return (encode_len >= 0);
 }
 
+#elif defined(__ZEPHYR__)
 
-/**
- * returns number of can objects added to queue
- */
+bool ThingSetCAN::pub_object(const data_object_t& data_obj)
+{
+    unsigned int can_id;
+    uint8_t data[8];
+
+    struct zcan_frame frame = {
+        .id_type = CAN_EXTENDED_IDENTIFIER,
+        .rtr = CAN_DATAFRAME
+    };
+
+    int encode_len = ts.encode_msg_can(data_obj, node_id, can_id, data);
+    frame.ext_id = can_id;
+    memcpy(frame.data, data, 8);
+
+    if (encode_len >= 0)
+    {
+        frame.dlc = encode_len;
+        tx_queue.enqueue(frame);
+    }
+    return (encode_len >= 0);
+}
+
+#endif
+
 int ThingSetCAN::pub()
 {
     int retval = 0;
@@ -155,34 +220,43 @@ int ThingSetCAN::pub()
 void ThingSetCAN::process_asap()
 {
     process_outbox();
-    #if defined(CAN_RECEIVE)
+#if defined(CAN_RECEIVE)
     process_inbox();
-    #endif
+#endif
 }
 
 void ThingSetCAN::process_outbox()
 {
     int max_attempts = 15;
     while (!tx_queue.empty() && max_attempts > 0) {
-        CANMessage msg;
+        CanFrame msg;
         tx_queue.first(msg);
-        if(can.write(msg)) {
+#ifdef __MBED__
+        if (can.write(msg)) {
+#elif defined(__ZEPHYR__)
+        if (can_send(can_dev, &msg, K_MSEC(100), NULL, NULL) == CAN_TX_OK) {
+#endif
             tx_queue.dequeue();
         }
         else {
-            //serial.printf("Sending CAN message failed, err: %u, MCR: %u, MSR: %u, TSR: %u, id: %u\n", can.tderror(), (uint32_t)CAN1->MCR, (uint32_t)CAN1->MSR, (uint32_t)CAN1->TSR, msg.id);
+            //printk("Sending CAN message failed, MCR: %x, MSR: %x, TSR: %x\n", (uint32_t)CAN->MCR, (uint32_t)CAN->MSR, (uint32_t)CAN->TSR);
+            //printf("Sending CAN message failed, MCR: %x, MSR: %x, TSR: %x\n", (uint32_t)CAN1->MCR, (uint32_t)CAN1->MSR, (uint32_t)CAN1->TSR);
         }
         max_attempts--;
     }
 }
 
-#if defined(CAN_RECEIVE)
+/**
+ * CAN receive currently only working with mbed
+ */
+#if defined(CAN_RECEIVE) && defined(__MBED__)
+
 // TODO: Move encoding to ThingSet class
 void ThingSetCAN::send_object_name(int data_obj_id, uint8_t can_dest_id)
 {
     uint8_t msg_priority = 7;   // low priority service message
     uint8_t function_id = 0x84;
-    CANMessage msg;
+    CanFrame msg;
     msg.format = CANExtended;
     msg.type = CANData;
     msg.id = msg_priority << 26 | function_id << 16 |(can_dest_id << 8)| node_id;      // TODO: add destination node ID
@@ -214,7 +288,7 @@ void ThingSetCAN::process_inbox()
 {
     int max_attempts = 15;
     while (!rx_queue.empty() && max_attempts >0) {
-        CANMessage msg;
+        CanFrame msg;
         rx_queue.dequeue(msg);
 
         if (!(msg.id & (0x1U<<25))) {
@@ -278,7 +352,7 @@ void ThingSetCAN::process_inbox()
 
 void ThingSetCAN::process_input()
 {
-    CANMessage msg;
+    CanFrame msg;
     while (can.read(msg)) {
         if (!rx_queue.full()) {
             rx_queue.enqueue(msg);
@@ -288,8 +362,9 @@ void ThingSetCAN::process_input()
         }
     }
 }
+
 #endif /* CAN_RECEIVE */
 
-#endif /* CAN_ENABLED */
+#endif /* CONFIG_EXT_THINGSET_CAN */
 
-#endif /* __MBED__ */
+#endif /* UNIT_TEST */
