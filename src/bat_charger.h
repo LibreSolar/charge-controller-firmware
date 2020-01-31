@@ -55,7 +55,7 @@ typedef struct
      *
      * Start charging of previously fully charged battery earliest after this period of time.
      */
-    int time_limit_recharge;
+    int32_t time_limit_recharge;
 
     /** Absolute maximum voltage (V)
      *
@@ -97,7 +97,7 @@ typedef struct
      *
      * After this time, CV charging is stopped independent of current.
      */
-    int topping_duration;
+    int32_t topping_duration;
 
     /** Enable float/trickle charging
      *
@@ -117,7 +117,7 @@ typedef struct
      * input power) for this period of time, the charger state machine goes back
      * into CC/bulk charging mode.
      */
-    int trickle_recharge_time;
+    int32_t trickle_recharge_time;
 
     /** Enable equalization charging
      *
@@ -135,7 +135,7 @@ typedef struct
      *
      * After this time, equalization charging is stopped.
      */
-    int equalization_duration;
+    int32_t equalization_duration;
 
     /** Equalization phase maximum current (A)
      *
@@ -147,13 +147,13 @@ typedef struct
      *
      * After passing specified amount of days, an equalization charge is triggered.
      */
-    int equalization_trigger_days;
+    int32_t equalization_trigger_days;
 
     /** Equalization trigger deep-discharge cycles
      *
      * After specified number of deep discharges, an equalization charge is triggered.
      */
-    int equalization_trigger_deep_cycles;
+    int32_t equalization_trigger_deep_cycles;
 
     /** Load disconnect open circuit voltage (V)
      *
@@ -231,9 +231,9 @@ public:
 
     PowerPort *port;
 
-    unsigned int state;             ///< Current charger state (see enum ChargerState)
+    uint32_t state;             ///< Current charger state (see enum ChargerState)
 
-    int num_batteries = 1;          ///< Used for automatic 12V/24V battery detection at
+    int32_t num_batteries = 1;          ///< Used for automatic 12V/24V battery detection at
                                     ///< start-up (can be 1 or 2 only)
 
     float bat_temperature = 25;     ///< Battery temperature in °C from ext. temperature sensor

@@ -163,11 +163,11 @@ public:
     float solar_voltage_max;
     float dcdc_current_max;
     float load_current_max;
-    int bat_temp_max;         // °C
-    int int_temp_max;         // °C
-    int mosfet_temp_max;
+    int16_t bat_temp_max;         // °C
+    int16_t int_temp_max;         // °C
+    int16_t mosfet_temp_max;
 
-    int day_counter;
+    uint32_t day_counter;
 
     // instantaneous device-level data
     uint32_t error_flags;       ///< Currently detected errors

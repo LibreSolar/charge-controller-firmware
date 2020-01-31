@@ -77,8 +77,8 @@ public:
      */
     void stop(uint32_t error_flag = 0);
 
-    int state;             ///< Current state of load output switch (DEPRECATED)
-    int usb_state;         ///< Current state of USB output (DEPRECATED)
+    uint32_t state;             ///< Current state of load output switch (DEPRECATED)
+    uint32_t usb_state;         ///< Current state of USB output (DEPRECATED)
 
     PowerPort *port;            ///< Pointer to DC bus containting actual voltage and current
                                 ///< measurement of (external) load output terminal
@@ -91,11 +91,11 @@ public:
     bool usb_pgood = false;     ///< Power good flag for USB output
 
     time_t oc_timestamp;        ///< Time when last overcurrent event occured
-    int oc_recovery_delay;      ///< Seconds before we attempt to re-enable the load
+    int32_t oc_recovery_delay;  ///< Seconds before we attempt to re-enable the load
                                 ///< after an overcurrent event
 
     time_t lvd_timestamp;       ///< Time when last low voltage disconnect happened
-    int lvd_recovery_delay;     ///< Seconds before we re-enable the load after a low voltage
+    int32_t lvd_recovery_delay; ///< Seconds before we re-enable the load after a low voltage
                                 ///< disconnect
 
     float junction_temperature; ///< calculated using thermal model based on current and ambient

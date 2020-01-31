@@ -103,9 +103,9 @@ public:
 
     // current state
     float power_prev;           ///< Stores previous conversion power (set via dcdc_control)
-    int pwm_delta;              ///< Direction of PWM change for MPPT
-    int off_timestamp;          ///< Last time the DC/DC was switched off
-    int power_good_timestamp;   ///< Last time the DC/DC reached above minimum output power
+    int32_t pwm_delta;          ///< Direction of PWM change for MPPT
+    int32_t off_timestamp;      ///< Last time the DC/DC was switched off
+    int32_t power_good_timestamp;   ///< Last time the DC/DC reached above minimum output power
 
     // maximum allowed values
     float ls_current_max;       ///< Maximum low-side (inductor) current
@@ -115,8 +115,8 @@ public:
     float output_power_min;     ///< Minimum output power (if lower, DC/DC is switched off)
 
     // calibration parameters
-    unsigned int restart_interval;  ///< Restart interval (s): When should we retry to start
-                                    ///< charging after low output power cut-off?
+    uint32_t restart_interval;  ///< Restart interval (s): When should we retry to start
+                                ///< charging after low output power cut-off?
 
 private:
     /** Calculates the duty cycle change depending on operating mode and actual measurements

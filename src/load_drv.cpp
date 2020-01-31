@@ -6,6 +6,8 @@
 
 #include "load.h"
 
+#include <inttypes.h>       // for PRIu32 in printf statements
+
 #if defined(__ZEPHYR__)
 
 #include <zephyr.h>
@@ -207,7 +209,7 @@ void LoadOutput::switch_set(bool status)
     }
 #endif
 
-    print_info("Load pgood = %d, state = %u\n", status, state);
+    print_info("Load pgood = %d, state = %" PRIu32 "\n", status, state);
 }
 
 void LoadOutput::usb_set(bool status)
@@ -245,7 +247,7 @@ void LoadOutput::usb_set(bool status)
     }
 #endif
 
-    print_info("USB pgood = %d, state = %u, en = %d\n", status, usb_state, usb_enable);
+    print_info("USB pgood = %d, state = %" PRIu32 ", en = %d\n", status, usb_state, usb_enable);
 }
 
 #ifdef __ZEPHYR__
