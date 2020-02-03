@@ -140,8 +140,8 @@ void LoadOutput::control()
         // long-term overvoltage (overvoltage transients are detected as an ADC alert and switch
         // off the solar input instead of the load output)
         static int debounce_counter = 0;
-        if (port->voltage > port->sink_voltage_max ||
-            port->voltage > LOW_SIDE_VOLTAGE_MAX)
+        if (port->bus->voltage > port->sink_voltage_max ||
+            port->bus->voltage > LOW_SIDE_VOLTAGE_MAX)
         {
             debounce_counter++;
             if (debounce_counter >= CONTROL_FREQUENCY) {      // waited 1s before setting the flag
@@ -178,8 +178,8 @@ void LoadOutput::control()
         }
 
         if (dev_stat.has_error(ERR_LOAD_OVERVOLTAGE) &&
-            port->voltage < (port->sink_voltage_max - ov_hysteresis) &&
-            port->voltage < (LOW_SIDE_VOLTAGE_MAX - ov_hysteresis))
+            port->bus->voltage < (port->sink_voltage_max - ov_hysteresis) &&
+            port->bus->voltage < (LOW_SIDE_VOLTAGE_MAX - ov_hysteresis))
         {
             dev_stat.clear_error(ERR_LOAD_OVERVOLTAGE);
         }

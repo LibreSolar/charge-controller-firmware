@@ -152,10 +152,9 @@ bool PwmSwitch::signal_high()
     return pwm_signal_high();
 }
 
-PwmSwitch::PwmSwitch(PowerPort *pwm_terminal, PowerPort *pwm_port_int)
+PwmSwitch::PwmSwitch(PowerPort *pwm_port)
 {
-    terminal = pwm_terminal;
-    port_int = pwm_port_int;
+    port = pwm_port;
 
     off_timestamp = -10000;              // start immediately
 
@@ -172,20 +171,19 @@ PwmSwitch::PwmSwitch(PowerPort *pwm_terminal, PowerPort *pwm_port_int)
 void PwmSwitch::control()
 {
     if (_pwm_active) {
-        if (port_int->pos_current_limit == 0 || terminal->neg_current_limit == 0
-            || terminal->current > 0           // discharging battery into solar panel --> stop
-            || port_int->voltage < 9.0         // not enough voltage for MOSFET drivers anymore
+        if (port->neg_current_limit == 0
+            || port->current > 0           // discharging battery into solar panel --> stop
+            || port->bus->voltage < 9.0    // not enough voltage for MOSFET drivers anymore
             || enabled == false)
         {
             pwm_signal_stop();
             off_timestamp = uptime();
             print_info("PWM charger stop.\n");
         }
-        else if (port_int->voltage > (port_int->sink_voltage_max -
-                 port_int->pos_droop_res * port_int->current)       // voltage above target
-            || port_int->current > port_int->pos_current_limit      // port current limit exceeded
-            || port_int->current > PWM_CURRENT_MAX                  // PCB current limit exceeded
-            || terminal->current < terminal->neg_current_limit)     // input current (negative signs) above limit
+        else if (port->bus->voltage > (port->sink_voltage_max -
+                 port->pos_droop_res * port->current)       // voltage above target
+            || port->current < port->neg_current_limit      // port current limit exceeded
+            || port->current < -PWM_CURRENT_MAX)            // PCB current limit exceeded
         {
             // decrease power, as limits were reached
 
@@ -218,11 +216,10 @@ void PwmSwitch::control()
         }
     }
     else {
-        if (port_int->pos_current_limit > 0          // charging allowed
-            && port_int->voltage < port_int->sink_voltage_max
-            && port_int->voltage > port_int->sink_voltage_min
-            && terminal->neg_current_limit < 0     // discharging allowed
-            && terminal->voltage > port_int->voltage + offset_voltage_start
+        if (port->pos_current_limit > 0          // charging allowed
+            && port->bus->voltage < port->bus->voltage_max
+            && port->bus->voltage > port->bus->voltage_min
+            && ext_voltage > port->bus->voltage + offset_voltage_start
             && uptime() > (off_timestamp + restart_interval)
             && enabled == true)
         {

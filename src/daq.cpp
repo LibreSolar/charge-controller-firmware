@@ -154,17 +154,15 @@ void daq_update()
     //int vcc = 3300;
 
     // calculate lower voltage first, as it is needed for PWM terminal voltage calculation
-    lv_terminal.voltage = adc_scaled(ADC_POS_V_BAT, vcc, ADC_GAIN_V_BAT);
-    load_terminal.voltage = lv_terminal.voltage;
+    lv_bus.voltage = adc_scaled(ADC_POS_V_BAT, vcc, ADC_GAIN_V_BAT);
 
 #if CONFIG_HAS_DCDC_CONVERTER
-    hv_terminal.voltage = adc_scaled(ADC_POS_V_SOLAR, vcc, ADC_GAIN_V_SOLAR);
-    dcdc_lv_port.voltage = lv_terminal.voltage;
+    hv_bus.voltage = adc_scaled(ADC_POS_V_SOLAR, vcc, ADC_GAIN_V_SOLAR);
 #endif
+
 #if CONFIG_HAS_PWM_SWITCH
-    pwm_terminal.voltage = lv_terminal.voltage - vcc * (ADC_OFFSET_V_SOLAR / 1000.0) -
+    pwm_switch.ext_voltage = lv_bus.voltage - vcc * (ADC_OFFSET_V_SOLAR / 1000.0) -
         adc_scaled(ADC_POS_V_SOLAR, vcc, ADC_GAIN_V_SOLAR);
-    pwm_port_int.voltage = lv_terminal.voltage;
 #endif
 
     load_terminal.current =
@@ -172,25 +170,27 @@ void daq_update()
 
 #if CONFIG_HAS_PWM_SWITCH
     // current multiplied with PWM duty cycle for PWM charger to get avg current for correct power calculation
-    pwm_port_int.current = pwm_switch.get_duty_cycle() * (
+    pwm_terminal.current = -pwm_switch.get_duty_cycle() * (
         adc_scaled(ADC_POS_I_SOLAR, vcc, ADC_GAIN_I_SOLAR) + solar_current_offset);
-    pwm_terminal.current = -pwm_port_int.current;
-    lv_terminal.current = pwm_port_int.current - load_terminal.current;
 
-    pwm_port_int.power = pwm_port_int.voltage * pwm_port_int.current;
-    pwm_terminal.power = pwm_terminal.voltage * pwm_terminal.current;
+    lv_terminal.current = -pwm_terminal.current - load_terminal.current;
+
+    pwm_terminal.power = pwm_terminal.bus->voltage * pwm_terminal.current;
 #endif
+
 #if CONFIG_HAS_DCDC_CONVERTER
     dcdc_lv_port.current =
         adc_scaled(ADC_POS_I_DCDC, vcc, ADC_GAIN_I_DCDC) + solar_current_offset;
-    lv_terminal.current = dcdc_lv_port.current - load_terminal.current;
-    hv_terminal.current = -dcdc_lv_port.current * lv_terminal.voltage / hv_terminal.voltage;
 
-    dcdc_lv_port.power  = dcdc_lv_port.voltage * dcdc_lv_port.current;
-    hv_terminal.power   = hv_terminal.voltage * hv_terminal.current;
+    lv_terminal.current = dcdc_lv_port.current - load_terminal.current;
+
+    hv_terminal.current = -dcdc_lv_port.current * lv_terminal.bus->voltage / hv_terminal.bus->voltage;
+
+    dcdc_lv_port.power  = dcdc_lv_port.bus->voltage * dcdc_lv_port.current;
+    hv_terminal.power   = hv_terminal.bus->voltage * hv_terminal.current;
 #endif
-    lv_terminal.power   = lv_terminal.voltage * lv_terminal.current;
-    load_terminal.power = load_terminal.voltage * load_terminal.current;
+    lv_terminal.power   = lv_terminal.bus->voltage * lv_terminal.current;
+    load_terminal.power = load_terminal.bus->voltage * load_terminal.current;
 
 #ifdef PIN_ADC_TEMP_BAT
     // battery temperature calculation

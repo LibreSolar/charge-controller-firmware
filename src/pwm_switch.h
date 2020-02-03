@@ -26,7 +26,7 @@ class PwmSwitch
 public:
     /** Initialization of PWM switch struct
      */
-    PwmSwitch(PowerPort *pwm_terminal, PowerPort *pwm_port_int);
+    PwmSwitch(PowerPort *pwm_port);
 
     /** Main control function for the PWM switching algorithm
      */
@@ -56,8 +56,9 @@ public:
      */
     float get_duty_cycle();
 
-    PowerPort *terminal;            ///< Pointer to external power port (terminal)
-    PowerPort *port_int;            ///< Pointer to internal power port (junction with load and battery)
+    PowerPort *port;                ///< Pointer to internal power port (junction with load and battery)
+
+    float ext_voltage;              ///< Voltage measurement at terminal (external)
 
     bool enabled;                   ///< Can be used to disable the PWM power stage
     float offset_voltage_start;     ///< Offset voltage of solar panel vs. battery to start charging (V)

@@ -69,26 +69,26 @@ void charging_energy_calculation_valid()
 {
     energy_calculation_init();
     // charging only during sun hours
-    TEST_ASSERT_EQUAL_FLOAT(round(sun_hours * lv_terminal.voltage * (dcdc_current_sun - load_current)), round(lv_terminal.pos_energy_Wh));
+    TEST_ASSERT_EQUAL_FLOAT(round(sun_hours * lv_terminal.bus->voltage * (dcdc_current_sun - load_current)), round(lv_terminal.pos_energy_Wh));
 }
 
 void discharging_energy_calculation_valid()
 {
     energy_calculation_init();
     // discharging (sum of current) only during dis hours
-    TEST_ASSERT_EQUAL_FLOAT(round(night_hours * lv_terminal.voltage * adcval.load_current), round(lv_terminal.neg_energy_Wh));
+    TEST_ASSERT_EQUAL_FLOAT(round(night_hours * lv_terminal.bus->voltage * adcval.load_current), round(lv_terminal.neg_energy_Wh));
 }
 
 void solar_input_energy_calculation_valid()
 {
     energy_calculation_init();
-    TEST_ASSERT_EQUAL_FLOAT(round(sun_hours * lv_terminal.voltage * dcdc_current_sun), round(hv_terminal.neg_energy_Wh));
+    TEST_ASSERT_EQUAL_FLOAT(round(sun_hours * lv_terminal.bus->voltage * dcdc_current_sun), round(hv_terminal.neg_energy_Wh));
 }
 
 void load_output_energy_calculation_valid()
 {
     energy_calculation_init();
-    TEST_ASSERT_EQUAL_FLOAT(round((sun_hours + night_hours) * lv_terminal.voltage * adcval.load_current), round(load_terminal.pos_energy_Wh));
+    TEST_ASSERT_EQUAL_FLOAT(round((sun_hours + night_hours) * lv_terminal.bus->voltage * adcval.load_current), round(load_terminal.pos_energy_Wh));
 }
 
 void pass_voltage_targets_to_adjacent_bus()

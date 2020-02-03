@@ -15,6 +15,22 @@
 #include <stdbool.h>
 
 
+/**
+ * These values may be calculated based on external data, if multiple devices are connected to the
+ * bus.
+ */
+class DcBus
+{
+public:
+    float voltage;          ///< Measured bus voltage
+
+    float voltage_max;      ///< Maximum voltage of a DC bus, equivalent to battery
+                            ///< charging target voltage if hard-wired to a battery
+
+    float voltage_min;      ///< Absolute minimum for both chg and discharging direction
+};
+
+
 //    -----------------
 //    |               |    >> positive current/power direction
 //    |               o---->----
@@ -48,7 +64,7 @@
 class PowerPort
 {
 public:
-    float voltage;                  ///< Measured port voltage
+    DcBus *bus;                     ///< Pointer to DC bus containing voltage measurement
 
     float sink_voltage_max;         ///< Maximum voltage if connected device acts as a sink
                                     ///< (equivalent to battery charging target voltage)
@@ -59,9 +75,9 @@ public:
                                     ///< (equal to load reconnect voltage)
     float src_voltage_stop;         ///< Absolute minimum = load disconnect for batteries
 
-    float current;                  ///< Measured current through this port (positive sign =
+    float current = 0;              ///< Measured current through this port (positive sign =
                                     ///< sinking current into the named external device)
-    float power;                    ///< Product of current & voltage
+    float power = 0;                ///< Product of port current and bus voltage
 
     float pos_current_limit;        ///< Maximum positive current (valid values >= 0.0)
     float pos_droop_res;            ///< control voltage = nominal voltage - droop_res * current
@@ -71,6 +87,10 @@ public:
 
     float pos_energy_Wh;            ///< Cumulated sunk energy since last counter reset (Wh)
     float neg_energy_Wh;            ///< Cumulated sourced energy since last counter reset (Wh)
+
+    PowerPort(DcBus *dc_bus) :
+        bus(dc_bus)
+    {}
 
     /** Initialize power port for solar panel connection
      *

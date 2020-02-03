@@ -150,11 +150,11 @@ void ExtOled::process_1s()
         oled.writeString(buf, len);
     }
 #ifndef CHARGER_TYPE_PWM
-    if (in_terminal.voltage > bat_terminal.voltage)
+    if (in_terminal.bus->voltage > bat_terminal.bus->voltage)
 #endif
     {
         oled.setTextCursor(0, 26);
-        len = snprintf(buf, sizeof(buf), "%4.1fV", in_terminal.voltage);
+        len = snprintf(buf, sizeof(buf), "%4.1fV", in_terminal.bus->voltage);
         oled.writeString(buf, len);
     }
 
@@ -164,7 +164,7 @@ void ExtOled::process_1s()
         (abs(bat_terminal.power) < 0.1) ? 0 : bat_terminal.power);    // remove negative zeros
     oled.writeString(buf, len);
     oled.setTextCursor(42, 26);
-    len = snprintf(buf, sizeof(buf), "%5.1fV", bat_terminal.voltage);
+    len = snprintf(buf, sizeof(buf), "%5.1fV", bat_terminal.bus->voltage);
     oled.writeString(buf, len);
 
     // load data

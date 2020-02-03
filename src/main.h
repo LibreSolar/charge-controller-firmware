@@ -16,10 +16,12 @@
 #include "load.h"
 #include "pcb.h"
 
+extern DcBus lv_bus;
 extern PowerPort lv_terminal;
 extern PowerPort load_terminal;
 
 #if CONFIG_HAS_DCDC_CONVERTER
+extern DcBus hv_bus;
 extern PowerPort hv_terminal;
 extern PowerPort dcdc_lv_port;
 extern Dcdc dcdc;
@@ -27,7 +29,6 @@ extern Dcdc dcdc;
 
 #if CONFIG_HAS_PWM_SWITCH
 extern PowerPort pwm_terminal;
-extern PowerPort pwm_port_int;
 extern PwmSwitch pwm_switch;
 #endif
 

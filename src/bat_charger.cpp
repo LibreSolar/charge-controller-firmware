@@ -211,8 +211,8 @@ void battery_conf_overwrite(BatConf *source, BatConf *destination, Charger *char
 
 void Charger::detect_num_batteries(BatConf *bat)
 {
-    if (port->voltage > bat->voltage_absolute_min * 2 &&
-        port->voltage < bat->voltage_absolute_max * 2) {
+    if (port->bus->voltage > bat->voltage_absolute_min * 2 &&
+        port->bus->voltage < bat->voltage_absolute_max * 2) {
         num_batteries = 2;
         printf("Detected two batteries (total %.2f V max)\n", bat->topping_voltage * 2);
     }
@@ -226,7 +226,7 @@ void Charger::update_soc(BatConf *bat_conf)
     static int soc_filtered = 0;       // SOC / 100 for better filtering
 
     if (fabs(port->current) < 0.2) {
-        int soc_new = (int)((port->voltage - bat_conf->ocv_empty) /
+        int soc_new = (int)((port->bus->voltage - bat_conf->ocv_empty) /
                    (bat_conf->ocv_full - bat_conf->ocv_empty) * 10000.0);
 
         if (soc_new > 500 && soc_filtered == 0) {
@@ -262,7 +262,7 @@ void Charger::discharge_control(BatConf *bat_conf)
     // load output state is defined by battery negative current limit
     if (port->neg_current_limit < 0) {
         // discharging currently allowed. see if that's still valid:
-        if (port->voltage < num_batteries *
+        if (port->bus->voltage < num_batteries *
             (bat_conf->voltage_load_disconnect - port->current * port->neg_droop_res))
         {
             // low state of charge
@@ -297,7 +297,7 @@ void Charger::discharge_control(BatConf *bat_conf)
     }
     else {
         // discharging currently not allowed. should we allow it?
-        if (port->voltage >= num_batteries *
+        if (port->bus->voltage >= num_batteries *
             (bat_conf->voltage_load_reconnect - port->current * port->neg_droop_res)
             && bat_temperature < bat_conf->discharge_temp_max - 1
             && bat_temperature > bat_conf->discharge_temp_min + 1)
@@ -329,7 +329,7 @@ void Charger::charge_control(BatConf *bat_conf)
     }
 
     if (dev_stat.has_error(ERR_BAT_OVERVOLTAGE) &&
-        port->voltage < (bat_conf->voltage_absolute_max - 0.5) * num_batteries)
+        port->bus->voltage < (bat_conf->voltage_absolute_max - 0.5) * num_batteries)
     {
         dev_stat.clear_error(ERR_BAT_OVERVOLTAGE);
     }
@@ -337,7 +337,7 @@ void Charger::charge_control(BatConf *bat_conf)
     // state machine
     switch (state) {
         case CHG_STATE_IDLE: {
-            if  (port->voltage < bat_conf->voltage_recharge * num_batteries
+            if  (port->bus->voltage < bat_conf->voltage_recharge * num_batteries
                 && (uptime() - time_state_changed) > bat_conf->time_limit_recharge
                 && bat_temperature < bat_conf->charge_temp_max - 1
                 && bat_temperature > bat_conf->charge_temp_min + 1)
@@ -358,7 +358,7 @@ void Charger::charge_control(BatConf *bat_conf)
             port->sink_voltage_max = num_batteries * (bat_conf->topping_voltage +
                 bat_conf->temperature_compensation * (bat_temperature - 25));
 
-            if (port->voltage > num_batteries *
+            if (port->bus->voltage > num_batteries *
                 (port->sink_voltage_max - port->current * port->pos_droop_res))
             {
                 enter_state(CHG_STATE_TOPPING);
@@ -370,7 +370,7 @@ void Charger::charge_control(BatConf *bat_conf)
             port->sink_voltage_max = num_batteries * (bat_conf->topping_voltage +
                 bat_conf->temperature_compensation * (bat_temperature - 25));
 
-            if (port->voltage >= num_batteries *
+            if (port->bus->voltage >= num_batteries *
                 (port->sink_voltage_max - port->current * port->pos_droop_res))
             {
                 time_voltage_limit_reached = uptime();
@@ -414,7 +414,7 @@ void Charger::charge_control(BatConf *bat_conf)
             port->sink_voltage_max = num_batteries * (bat_conf->trickle_voltage +
                 bat_conf->temperature_compensation * (bat_temperature - 25));
 
-            if (port->voltage >= num_batteries *
+            if (port->bus->voltage >= num_batteries *
                 (port->sink_voltage_max - port->current * port->pos_droop_res))
             {
                 time_voltage_limit_reached = uptime();

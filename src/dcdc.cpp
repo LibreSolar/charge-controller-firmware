@@ -74,7 +74,7 @@ int Dcdc::duty_cycle_delta()
 
     print_test("P: %.2f, P_prev: %.2f, v_in: %.2f, v_out: %.2f, i_in: %.2f, i_out: %.2f, "
         "v_chg_target: %.2f, i_chg_max: %.2f, PWM: %.1f, chg_state: %d\n",
-        out->power, power_prev, in->voltage, out->voltage, in->current, out->current,
+        out->power, power_prev, in->bus->voltage, out->bus->voltage, in->current, out->current,
         out->sink_voltage_max, out->pos_current_limit, half_bridge_get_duty_cycle() * 100.0,
         state);
 
@@ -82,7 +82,7 @@ int Dcdc::duty_cycle_delta()
         // swith off after 10s low power or negative power (if not in nanogrid mode)
         pwr_inc_goal = 0;
     }
-    else if (out->voltage > (out->sink_voltage_max - out->pos_droop_res * out->current)) {
+    else if (out->bus->voltage > (out->sink_voltage_max - out->pos_droop_res * out->current)) {
         // output voltage target reached
         state = DCDC_STATE_CV;
         pwr_inc_goal = -1;  // decrease output power
@@ -94,14 +94,14 @@ int Dcdc::duty_cycle_delta()
     }
     else if (fabs(lvs->current) > ls_current_max    // current above hardware maximum
         || temp_mosfets > 80                        // temperature limits exceeded
-        || (in->voltage < (in->src_voltage_stop - in->neg_droop_res * in->current)
+        || (in->bus->voltage < (in->src_voltage_stop - in->neg_droop_res * in->current)
             && out->current > 0.1)                  // input voltage below limit
         || in->current < in->neg_current_limit)     // input current (negative signs) limit exceeded
     {
         state = DCDC_STATE_DERATING;
         pwr_inc_goal = -1;  // decrease output power
     }
-    else if (out->power < output_power_min && out->voltage < out->src_voltage_start) {
+    else if (out->power < output_power_min && out->bus->voltage < out->src_voltage_start) {
         // no load condition (e.g. start-up of nanogrid) --> raise voltage
         pwr_inc_goal = 1;   // increase output power
     }
@@ -121,9 +121,9 @@ int Dcdc::duty_cycle_delta()
 int Dcdc::check_start_conditions()
 {
     if (enabled == false ||
-        hvs->voltage > hs_voltage_max ||   // also critical for buck mode because of ringing
-        lvs->voltage > ls_voltage_max ||
-        lvs->voltage < ls_voltage_min ||
+        hvs->bus->voltage > hs_voltage_max ||   // also critical for buck mode because of ringing
+        lvs->bus->voltage > ls_voltage_max ||
+        lvs->bus->voltage < ls_voltage_min ||
         dev_stat.has_error(ERR_BAT_UNDERVOLTAGE | ERR_BAT_OVERVOLTAGE) ||
         (int)uptime() < (off_timestamp + (int)restart_interval))
     {
@@ -131,19 +131,19 @@ int Dcdc::check_start_conditions()
     }
 
     if (lvs->pos_current_limit > 0 &&
-        lvs->voltage < lvs->sink_voltage_max &&
-        lvs->voltage > lvs->sink_voltage_min &&
+        lvs->bus->voltage < lvs->sink_voltage_max &&
+        lvs->bus->voltage > lvs->sink_voltage_min &&
         hvs->neg_current_limit < 0 &&
-        hvs->voltage > hvs->src_voltage_start)
+        hvs->bus->voltage > hvs->src_voltage_start)
     {
         return 1;       // start in buck mode allowed
     }
 
     if (hvs->pos_current_limit > 0 &&
-        hvs->voltage < hvs->sink_voltage_max &&
-        hvs->voltage > hvs->sink_voltage_min &&
+        hvs->bus->voltage < hvs->sink_voltage_max &&
+        hvs->bus->voltage > hvs->sink_voltage_min &&
         lvs->neg_current_limit < 0 &&
-        lvs->voltage > lvs->src_voltage_start)
+        lvs->bus->voltage > lvs->src_voltage_start)
     {
         return -1;      // start in boost mode allowed
     }
@@ -155,7 +155,7 @@ void Dcdc::control()
 {
     if (half_bridge_enabled()) {
         const char *stop_reason = NULL;
-        if (lvs->voltage > ls_voltage_max || hvs->voltage > hs_voltage_max) {
+        if (lvs->bus->voltage > ls_voltage_max || hvs->bus->voltage > hs_voltage_max) {
             stop_reason = "emergency (voltage limits exceeded)";
         }
         else if (enabled == false) {
@@ -212,17 +212,17 @@ void Dcdc::control()
                         mode_name = "buck";
                         // Don't start directly at Vmpp (approx. 0.8 * Voc) to prevent high inrush
                         // currents and stress on MOSFETs
-                        half_bridge_start(lvs->voltage / (hvs->voltage - 1));
+                        half_bridge_start(lvs->bus->voltage / (hvs->bus->voltage - 1));
                     }
                     else {
                         mode_name = "boost";
                         // Will automatically start with max. duty (0.97) if connected to a
                         // nanogrid not yet started up (zero voltage)
-                        half_bridge_start(lvs->voltage / (hvs->voltage + 1));
+                        half_bridge_start(lvs->bus->voltage / (hvs->bus->voltage + 1));
                     }
                     power_good_timestamp = uptime();
                     print_info("DC/DC %s mode start (HV: %.2fV, LV: %.2fV, PWM: %.1f).\n", mode_name,
-                        hvs->voltage, lvs->voltage, half_bridge_get_duty_cycle() * 100);
+                        hvs->bus->voltage, lvs->bus->voltage, half_bridge_get_duty_cycle() * 100);
                     startup_delay_counter = 0; // ensure we will have a delay before next start
                 }
             }
@@ -246,9 +246,9 @@ void Dcdc::test()
 
         if (startup_delay_counter > num_wait_calls) {
             if (check_start_conditions() != 0) {
-                half_bridge_start(lvs->voltage / hvs->voltage);
+                half_bridge_start(lvs->bus->voltage / hvs->bus->voltage);
                 print_info("DC/DC test mode start (HV: %.2fV, LV: %.2fV, PWM: %.1f).\n",
-                    hvs->voltage, lvs->voltage, half_bridge_get_duty_cycle() * 100);
+                    hvs->bus->voltage, lvs->bus->voltage, half_bridge_get_duty_cycle() * 100);
             }
         }
         else {

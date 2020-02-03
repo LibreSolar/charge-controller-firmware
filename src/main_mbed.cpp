@@ -31,11 +31,13 @@
 #include "data_objects.h"       // for access to internal data via ThingSet
 #include "bl_support.h"         // Bootloader support from the application side
 
-PowerPort lv_terminal;          // low voltage terminal (battery for typical MPPT)
+DcBus lv_bus;
+PowerPort lv_terminal(&lv_bus);          // low voltage terminal (battery for typical MPPT)
 
 #if CONFIG_HAS_DCDC_CONVERTER
-PowerPort hv_terminal;          // high voltage terminal (solar for typical MPPT)
-PowerPort dcdc_lv_port;         // internal low voltage side of DC/DC converter
+DcBus hv_bus;
+PowerPort hv_terminal(&hv_bus);          // high voltage terminal (solar for typical MPPT)
+PowerPort dcdc_lv_port(&lv_bus);         // internal low voltage side of DC/DC converter
 #if CONFIG_HV_TERMINAL_NANOGRID
 Dcdc dcdc(&hv_terminal, &dcdc_lv_port, MODE_NANOGRID);
 #elif CONFIG_HV_TERMINAL_BATTERY
@@ -46,13 +48,12 @@ Dcdc dcdc(&hv_terminal, &dcdc_lv_port, MODE_MPPT_BUCK);
 #endif
 
 #if CONFIG_HAS_PWM_SWITCH
-PowerPort pwm_terminal;         // external terminal of PWM switch port (normally solar)
-PowerPort pwm_port_int;         // internal side of PWM switch
-PwmSwitch pwm_switch(&pwm_terminal, &pwm_port_int);
+PowerPort pwm_terminal(&lv_bus);         // internal side of PWM switch
+PwmSwitch pwm_switch(&pwm_terminal);
 #endif
 
 #if CONFIG_HAS_LOAD_OUTPUT
-PowerPort load_terminal;        // load terminal (also connected to lv_bus)
+PowerPort load_terminal(&lv_bus);        // load terminal (also connected to lv_bus)
 LoadOutput load(&load_terminal);
 #endif
 
@@ -152,7 +153,7 @@ int main()
             #endif
 
             #if CONFIG_HAS_PWM_SWITCH
-            bat_terminal.pass_voltage_targets(&pwm_port_int);
+            bat_terminal.pass_voltage_targets(&pwm_terminal);
             #endif
 
             eeprom_update();
@@ -187,10 +188,10 @@ void system_control()
     daq_update();
 
     // alerts should trigger only for transients, so update based on actual voltage
-    daq_set_lv_alerts(lv_terminal.voltage * 1.2, lv_terminal.voltage * 0.8);
+    daq_set_lv_alerts(lv_terminal.bus->voltage * 1.2, lv_terminal.bus->voltage * 0.8);
 
     #if CONFIG_HAS_PWM_SWITCH
-    ports_update_current_limits(&pwm_port_int, &bat_terminal, &load_terminal);
+    ports_update_current_limits(&pwm_terminal, &bat_terminal, &load_terminal);
     pwm_switch.control();
     leds_set_charging(pwm_switch.active());
     #endif

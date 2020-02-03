@@ -40,27 +40,27 @@ void check_filtering()
 
 void check_solar_terminal_readings()
 {
-    TEST_ASSERT_EQUAL_FLOAT(adcval.solar_voltage, round(hv_terminal.voltage * 10) / 10);
+    TEST_ASSERT_EQUAL_FLOAT(adcval.solar_voltage, round(hv_terminal.bus->voltage * 10) / 10);
     TEST_ASSERT_EQUAL_FLOAT(adcval.dcdc_current / adcval.solar_voltage * adcval.battery_voltage,
         -round(hv_terminal.current * 10) / 10);
 }
 
 void check_bat_terminal_readings()
 {
-    TEST_ASSERT_EQUAL_FLOAT(adcval.battery_voltage, round(lv_terminal.voltage * 10) / 10);
+    TEST_ASSERT_EQUAL_FLOAT(adcval.battery_voltage, round(lv_terminal.bus->voltage * 10) / 10);
     TEST_ASSERT_EQUAL_FLOAT(adcval.dcdc_current - adcval.load_current,
         round(lv_terminal.current * 10) / 10);
 }
 
 void check_load_terminal_readings()
 {
-    TEST_ASSERT_EQUAL_FLOAT(adcval.battery_voltage, round(load_terminal.voltage * 10) / 10);
+    TEST_ASSERT_EQUAL_FLOAT(adcval.battery_voltage, round(load_terminal.bus->voltage * 10) / 10);
     TEST_ASSERT_EQUAL_FLOAT(adcval.load_current, round(load_terminal.current * 10) / 10);
 }
 
 void check_lv_bus_int_readings()
 {
-    TEST_ASSERT_EQUAL_FLOAT(adcval.battery_voltage, round(dcdc_lv_port.voltage * 10) / 10);
+    TEST_ASSERT_EQUAL_FLOAT(adcval.battery_voltage, round(dcdc_lv_port.bus->voltage * 10) / 10);
     TEST_ASSERT_EQUAL_FLOAT(adcval.dcdc_current, round(dcdc_lv_port.current * 10) / 10);
 }
 

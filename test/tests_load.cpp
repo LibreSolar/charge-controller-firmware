@@ -18,13 +18,14 @@ void load_init(LoadOutput *l)
 {
     l->port->init_load(14.6);
     l->port->pos_current_limit = 10;
-    l->port->voltage = 14;
+    l->port->bus->voltage = 14;
     l->junction_temperature = 25;
 }
 
 void control_off_to_pgood_if_everything_fine()
 {
-    PowerPort port = {};
+    DcBus bus = {};
+    PowerPort port(&bus);
     LoadOutput load(&port);
     load_init(&load);
     dev_stat.clear_error(ERR_ANY_ERROR);
@@ -37,12 +38,13 @@ void control_off_to_pgood_if_everything_fine()
 
 void control_pgood_to_off_overvoltage()
 {
-    PowerPort port = {};
+    DcBus bus = {};
+    PowerPort port(&bus);
     LoadOutput load(&port);
     load_init(&load);
     load.state = LOAD_STATE_ON;
     dev_stat.clear_error(ERR_ANY_ERROR);
-    port.voltage = port.sink_voltage_max + 0.6;
+    port.bus->voltage = port.sink_voltage_max + 0.6;
 
     // increase debounce counter to 1 before limit
     for (int i = 0; i < CONTROL_FREQUENCY; i++) {
@@ -60,7 +62,8 @@ void control_pgood_to_off_overvoltage()
 
 void control_pgood_to_off_overcurrent()
 {
-    PowerPort port = {};
+    DcBus bus = {};
+    PowerPort port(&bus);
     LoadOutput load(&port);
     load_init(&load);
     port.current = LOAD_CURRENT_MAX * 1.9;  // with factor 2 it is switched off immediately
@@ -84,7 +87,8 @@ void control_pgood_to_off_overcurrent()
 
 void control_pgood_to_off_voltage_dip()
 {
-    PowerPort port = {};
+    DcBus bus = {};
+    PowerPort port(&bus);
     LoadOutput load(&port);
     load_init(&load);
     load.state = LOAD_STATE_ON;
@@ -104,7 +108,8 @@ void control_pgood_to_off_voltage_dip()
 
 void control_pgood_to_off_int_temp()
 {
-    PowerPort port = {};
+    DcBus bus = {};
+    PowerPort port(&bus);
     LoadOutput load(&port);
     load_init(&load);
     load.state = LOAD_STATE_ON;
@@ -121,7 +126,8 @@ void control_pgood_to_off_int_temp()
 
 void control_pgood_to_off_bat_temp()
 {
-    PowerPort port = {};
+    DcBus bus = {};
+    PowerPort port(&bus);
     LoadOutput load(&port);
     load_init(&load);
 
@@ -150,7 +156,8 @@ void control_pgood_to_off_bat_temp()
 
 void control_pgood_to_off_low_soc()
 {
-    PowerPort port = {};
+    DcBus bus = {};
+    PowerPort port(&bus);
     LoadOutput load(&port);
     load_init(&load);
 
@@ -168,7 +175,8 @@ void control_pgood_to_off_low_soc()
 
 void control_pgood_to_off_if_enable_false()
 {
-    PowerPort port = {};
+    DcBus bus = {};
+    PowerPort port(&bus);
     LoadOutput load(&port);
     load_init(&load);
     dev_stat.clear_error(ERR_ANY_ERROR);
@@ -194,7 +202,8 @@ void control_pgood_to_off_if_enable_false()
 
 void control_off_low_soc_to_on_after_delay()
 {
-    PowerPort port = {};
+    DcBus bus = {};
+    PowerPort port(&bus);
     LoadOutput load(&port);
     load_init(&load);
     load.state = LOAD_STATE_OFF_LOW_SOC;
@@ -218,7 +227,8 @@ void control_off_low_soc_to_on_after_delay()
 
 void control_off_overcurrent_to_on_after_delay()
 {
-    PowerPort port = {};
+    DcBus bus = {};
+    PowerPort port(&bus);
     LoadOutput load(&port);
     load_init(&load);
     load.state = LOAD_STATE_OFF_OVERCURRENT;
@@ -240,12 +250,13 @@ void control_off_overcurrent_to_on_after_delay()
 
 void control_off_overvoltage_to_on_at_lower_voltage()
 {
-    PowerPort port = {};
+    DcBus bus = {};
+    PowerPort port(&bus);
     LoadOutput load(&port);
     load_init(&load);
     load.state = LOAD_STATE_OFF_OVERVOLTAGE;
     load.usb_state = LOAD_STATE_ON;
-    port.voltage = port.sink_voltage_max + 0.1;
+    port.bus->voltage = port.sink_voltage_max + 0.1;
     dev_stat.error_flags = ERR_LOAD_OVERVOLTAGE;
 
     load.control();
@@ -253,12 +264,12 @@ void control_off_overvoltage_to_on_at_lower_voltage()
     TEST_ASSERT_EQUAL(LOAD_STATE_OFF_OVERVOLTAGE, load.state);
     TEST_ASSERT_EQUAL(LOAD_STATE_ON, load.usb_state);       // not affected by overvoltage
 
-    port.voltage = port.sink_voltage_max - 0.1;     // test hysteresis
+    port.bus->voltage = port.sink_voltage_max - 0.1;     // test hysteresis
     load.control();
     TEST_ASSERT_EQUAL(ERR_LOAD_OVERVOLTAGE, dev_stat.error_flags);
     TEST_ASSERT_EQUAL(LOAD_STATE_OFF_OVERVOLTAGE, load.state);
 
-    port.voltage = port.sink_voltage_max - load.ov_hysteresis - 0.1;
+    port.bus->voltage = port.sink_voltage_max - load.ov_hysteresis - 0.1;
     load.control();
     TEST_ASSERT_EQUAL(0, dev_stat.error_flags);
     TEST_ASSERT_EQUAL(LOAD_STATE_ON, load.state);       // deprecated
@@ -267,7 +278,8 @@ void control_off_overvoltage_to_on_at_lower_voltage()
 
 void control_off_short_circuit_flag_reset()
 {
-    PowerPort port = {};
+    DcBus bus = {};
+    PowerPort port(&bus);
     LoadOutput load(&port);
     load_init(&load);
     load.state = LOAD_STATE_OFF_SHORT_CIRCUIT;

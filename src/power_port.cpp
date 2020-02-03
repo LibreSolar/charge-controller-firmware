@@ -45,10 +45,10 @@ void PowerPort::energy_balance()
 {
     // remark: timespan = 1s, so no multiplication with time necessary for energy calculation
     if (current >= 0.0F) {
-        pos_energy_Wh += voltage * current / 3600.0;
+        pos_energy_Wh += bus->voltage * current / 3600.0;
     }
     else {
-        neg_energy_Wh -= voltage * current / 3600.0;
+        neg_energy_Wh -= bus->voltage * current / 3600.0;
     }
 }
 

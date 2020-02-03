@@ -22,11 +22,13 @@
 
 #include "tests.h"
 
-PowerPort lv_terminal;          // low voltage terminal (battery for typical MPPT)
+DcBus lv_bus;
+PowerPort lv_terminal(&lv_bus);          // low voltage terminal (battery for typical MPPT)
 
 #if CONFIG_HAS_DCDC_CONVERTER
-PowerPort hv_terminal;          // high voltage terminal (solar for typical MPPT)
-PowerPort dcdc_lv_port;         // internal low voltage side of DC/DC converter
+DcBus hv_bus;
+PowerPort hv_terminal(&hv_bus);          // high voltage terminal (solar for typical MPPT)
+PowerPort dcdc_lv_port(&lv_bus);         // internal low voltage side of DC/DC converter
 #if CONFIG_HV_TERMINAL_NANOGRID
 Dcdc dcdc(&hv_terminal, &dcdc_lv_port, MODE_NANOGRID);
 #elif CONFIG_HV_TERMINAL_BATTERY
@@ -37,13 +39,12 @@ Dcdc dcdc(&hv_terminal, &dcdc_lv_port, MODE_MPPT_BUCK);
 #endif
 
 #if CONFIG_HAS_PWM_SWITCH
-PowerPort pwm_terminal;         // external terminal of PWM switch port (normally solar)
-PowerPort pwm_port_int;         // internal side of PWM switch
-PwmSwitch pwm_switch(&pwm_terminal, &pwm_port_int);
+PowerPort pwm_terminal(&lv_bus);         // internal side of PWM switch
+PwmSwitch pwm_switch(&pwm_terminal);
 #endif
 
 #if CONFIG_HAS_LOAD_OUTPUT
-PowerPort load_terminal;        // load terminal (also connected to lv_bus)
+PowerPort load_terminal(&lv_bus);        // load terminal (also connected to lv_bus)
 LoadOutput load(&load_terminal);
 #endif
 
