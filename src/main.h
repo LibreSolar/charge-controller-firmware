@@ -28,7 +28,6 @@ extern Dcdc dcdc;
 #endif
 
 #if CONFIG_HAS_PWM_SWITCH
-extern PowerPort pwm_terminal;
 extern PwmSwitch pwm_switch;
 #endif
 

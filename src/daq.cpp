@@ -170,12 +170,12 @@ void daq_update()
 
 #if CONFIG_HAS_PWM_SWITCH
     // current multiplied with PWM duty cycle for PWM charger to get avg current for correct power calculation
-    pwm_terminal.current = -pwm_switch.get_duty_cycle() * (
+    pwm_switch.current = -pwm_switch.get_duty_cycle() * (
         adc_scaled(ADC_POS_I_SOLAR, vcc, ADC_GAIN_I_SOLAR) + solar_current_offset);
 
-    lv_terminal.current = -pwm_terminal.current - load_terminal.current;
+    lv_terminal.current = -pwm_switch.current - load_terminal.current;
 
-    pwm_terminal.power = pwm_terminal.bus->voltage * pwm_terminal.current;
+    pwm_switch.power = pwm_switch.bus->voltage * pwm_switch.current;
 #endif
 
 #if CONFIG_HAS_DCDC_CONVERTER

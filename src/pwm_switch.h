@@ -21,12 +21,10 @@
  *
  * Contains all data belonging to the PWM switching sub-component.
  */
-class PwmSwitch
+class PwmSwitch : public PowerPort
 {
 public:
-    /** Initialization of PWM switch struct
-     */
-    PwmSwitch(PowerPort *pwm_port);
+    PwmSwitch(DcBus *dc_bus);
 
     /** Main control function for the PWM switching algorithm
      */
@@ -56,11 +54,9 @@ public:
      */
     float get_duty_cycle();
 
-    PowerPort *port;                ///< Pointer to internal power port (junction with load and battery)
-
     float ext_voltage;              ///< Voltage measurement at terminal (external)
 
-    bool enabled;                   ///< Can be used to disable the PWM power stage
+    bool enable;                    ///< Can be used to disable the PWM power stage
     float offset_voltage_start;     ///< Offset voltage of solar panel vs. battery to start charging (V)
     int restart_interval;           ///< Interval to wait before retrying charging after low solar power cut-off (s)
     time_t off_timestamp;           ///< Time when charger was switched off last time

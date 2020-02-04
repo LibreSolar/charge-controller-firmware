@@ -178,7 +178,7 @@ const data_object_t data_objects[] = {
 #endif
 
 #if CONFIG_HAS_PWM_SWITCH
-    TS_DATA_OBJ_BOOL(0x63, "PwmEn", &pwm_switch.enabled,
+    TS_DATA_OBJ_BOOL(0x63, "PwmEn", &pwm_switch.enable,
         TS_INPUT, TS_READ_ALL | TS_WRITE_ALL),
 #endif
 

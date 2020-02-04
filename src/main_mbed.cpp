@@ -48,8 +48,7 @@ Dcdc dcdc(&hv_terminal, &dcdc_lv_port, MODE_MPPT_BUCK);
 #endif
 
 #if CONFIG_HAS_PWM_SWITCH
-PowerPort pwm_terminal(&lv_bus);         // internal side of PWM switch
-PwmSwitch pwm_switch(&pwm_terminal);
+PwmSwitch pwm_switch(&lv_bus);
 #endif
 
 #if CONFIG_HAS_LOAD_OUTPUT
@@ -62,7 +61,7 @@ PowerPort &solar_terminal = hv_terminal;
 #elif CONFIG_LV_TERMINAL_SOLAR
 PowerPort &solar_terminal = lv_terminal;
 #elif CONFIG_PWM_TERMINAL_SOLAR
-PowerPort &solar_terminal = pwm_terminal;
+PowerPort &solar_terminal = pwm_switch;
 #endif
 
 #if CONFIG_HV_TERMINAL_NANOGRID
@@ -153,7 +152,7 @@ int main()
             #endif
 
             #if CONFIG_HAS_PWM_SWITCH
-            bat_terminal.pass_voltage_targets(&pwm_terminal);
+            bat_terminal.pass_voltage_targets(&pwm_switch);
             #endif
 
             eeprom_update();
@@ -191,7 +190,7 @@ void system_control()
     daq_set_lv_alerts(lv_terminal.bus->voltage * 1.2, lv_terminal.bus->voltage * 0.8);
 
     #if CONFIG_HAS_PWM_SWITCH
-    ports_update_current_limits(&pwm_terminal, &bat_terminal, &load_terminal);
+    ports_update_current_limits(&pwm_switch, &bat_terminal, &load_terminal);
     pwm_switch.control();
     leds_set_charging(pwm_switch.active());
     #endif
@@ -216,7 +215,7 @@ void system_control()
         #endif
 
         #if CONFIG_HAS_PWM_SWITCH
-        pwm_terminal.energy_balance();
+        pwm_switch.energy_balance();
         #endif
 
         lv_terminal.energy_balance();

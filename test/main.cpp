@@ -39,8 +39,7 @@ Dcdc dcdc(&hv_terminal, &dcdc_lv_port, MODE_MPPT_BUCK);
 #endif
 
 #if CONFIG_HAS_PWM_SWITCH
-PowerPort pwm_terminal(&lv_bus);         // internal side of PWM switch
-PwmSwitch pwm_switch(&pwm_terminal);
+PwmSwitch pwm_switch(&lv_bus);
 #endif
 
 #if CONFIG_HAS_LOAD_OUTPUT
@@ -53,7 +52,7 @@ PowerPort &solar_terminal = hv_terminal;
 #elif CONFIG_LV_TERMINAL_SOLAR
 PowerPort &solar_terminal = lv_terminal;
 #elif CONFIG_PWM_TERMINAL_SOLAR
-PowerPort &solar_terminal = pwm_terminal;
+PowerPort &solar_terminal = pwm_switch;
 #endif
 
 #if CONFIG_HV_TERMINAL_NANOGRID

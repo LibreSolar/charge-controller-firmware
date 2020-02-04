@@ -152,10 +152,9 @@ bool PwmSwitch::signal_high()
     return pwm_signal_high();
 }
 
-PwmSwitch::PwmSwitch(PowerPort *pwm_port)
+PwmSwitch::PwmSwitch(DcBus *dc_bus) :
+    PowerPort(dc_bus)
 {
-    port = pwm_port;
-
     off_timestamp = -10000;              // start immediately
 
     // calibration parameters
@@ -164,26 +163,26 @@ PwmSwitch::PwmSwitch(PowerPort *pwm_port)
 
     pwm_signal_init_registers(PWM_FREQUENCY);
 
-    enabled = true;     // enable charging in general
+    enable = true;     // enable charging in general
     _pwm_active = false;               // still disable actual switch
 }
 
 void PwmSwitch::control()
 {
     if (_pwm_active) {
-        if (port->neg_current_limit == 0
-            || port->current > 0           // discharging battery into solar panel --> stop
-            || port->bus->voltage < 9.0    // not enough voltage for MOSFET drivers anymore
-            || enabled == false)
+        if (neg_current_limit == 0
+            || current > 0           // discharging battery into solar panel --> stop
+            || bus->voltage < 9.0    // not enough voltage for MOSFET drivers anymore
+            || enable == false)
         {
             pwm_signal_stop();
             off_timestamp = uptime();
             print_info("PWM charger stop.\n");
         }
-        else if (port->bus->voltage > (port->sink_voltage_max -
-                 port->pos_droop_res * port->current)       // voltage above target
-            || port->current < port->neg_current_limit      // port current limit exceeded
-            || port->current < -PWM_CURRENT_MAX)            // PCB current limit exceeded
+        else if (bus->voltage > (sink_voltage_max -
+                 pos_droop_res * current)       // voltage above target
+            || current < neg_current_limit      // port current limit exceeded
+            || current < -PWM_CURRENT_MAX)            // PCB current limit exceeded
         {
             // decrease power, as limits were reached
 
@@ -216,12 +215,12 @@ void PwmSwitch::control()
         }
     }
     else {
-        if (port->pos_current_limit > 0          // charging allowed
-            && port->bus->voltage < port->bus->voltage_max
-            && port->bus->voltage > port->bus->voltage_min
-            && ext_voltage > port->bus->voltage + offset_voltage_start
+        if (pos_current_limit > 0          // charging allowed
+            && bus->voltage < bus->voltage_max
+            && bus->voltage > bus->voltage_min
+            && ext_voltage > bus->voltage + offset_voltage_start
             && uptime() > (off_timestamp + restart_interval)
-            && enabled == true)
+            && enable == true)
         {
             // turning the PWM switch on creates a short voltage rise, so inhibit alerts by 50 ms
             adc_upper_alert_inhibit(ADC_POS_V_BAT, 50);
