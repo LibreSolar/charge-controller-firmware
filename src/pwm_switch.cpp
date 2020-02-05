@@ -179,8 +179,8 @@ void PwmSwitch::control()
             off_timestamp = uptime();
             print_info("PWM charger stop.\n");
         }
-        else if (bus->voltage > (sink_voltage_max -
-                 pos_droop_res * current)       // voltage above target
+        else if (bus->voltage > (bus->sink_voltage_bound -
+                 bus->droop_res * current)       // voltage above target
             || current < neg_current_limit      // port current limit exceeded
             || current < -PWM_CURRENT_MAX)            // PCB current limit exceeded
         {
@@ -215,9 +215,8 @@ void PwmSwitch::control()
         }
     }
     else {
-        if (pos_current_limit > 0          // charging allowed
-            && bus->voltage < bus->voltage_max
-            && bus->voltage > bus->voltage_min
+        if (bus->sink_current_margin > 0          // charging allowed
+            && bus->voltage < bus->sink_voltage_bound
             && ext_voltage > bus->voltage + offset_voltage_start
             && uptime() > (off_timestamp + restart_interval)
             && enable == true)

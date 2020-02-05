@@ -14,43 +14,94 @@
 
 #include <stdbool.h>
 
+class PowerPort;    // forward-declaration
 
 /**
- * These values may be calculated based on external data, if multiple devices are connected to the
- * bus.
+ * DC bus class
+ *
+ * Stores measurement data and settings necessary for voltage control
  */
 class DcBus
 {
 public:
-    float voltage;          ///< Measured bus voltage
+    /**
+     * Measured bus voltage
+     */
+    float voltage;
 
-    float voltage_max;      ///< Maximum voltage of a DC bus, equivalent to battery
-                            ///< charging target voltage if hard-wired to a battery
+    /**
+     * Upper voltage boundary where this bus may be used to sink current.
+     *
+     * This value is the voltage at zero current. Values for other currents are calculated
+     * using the droop resistance.
+     */
+    float sink_voltage_bound;
 
-    float voltage_min;      ///< Absolute minimum for both chg and discharging direction
+    /**
+     * Lower voltage boundary where this bus may be used to source current.
+     *
+     * This value is the voltage at zero current. Values for other currents are calculated
+     * using the droop resistance.
+     */
+    float src_voltage_bound;
+
+    /**
+     * Droop resistance to adjust voltage bounds depending on actual current
+     *
+     * control voltage = nominal voltage - droop_res * current
+     */
+    float droop_res;
+
+    /**
+     * Pointer to current measurement that is used to determine the droop. This is typically the
+     * battery or nanogrid terminal.
+     */
+    float *ref_current;
+
+    /**
+     * Available additional current towards the DC bus until limits of the connected ports are
+     * reached
+     */
+    float sink_current_margin;
+
+    /**
+     * Available additional current from the DC bus until limits of the connected ports are reached
+     * (has a negative sign)
+     */
+    float src_current_margin;
+
+    inline float droop_voltage(float v0)
+    {
+        if (ref_current != nullptr) {
+            return v0 - droop_res * (*ref_current);
+        }
+        else {
+            return v0;
+        }
+    }
 };
 
-
-//    -----------------
-//    |               |    >> positive current/power direction
-//    |               o---->----
-//    |               |     +  |
-//    |  considered   |       | | external device: battery / solar panel / load / DC grid
-//    |   system or   |       | |
-//    |  sub-circuit  |       | | (the port should be named after the external device)
-//    |               |     -  |
-//    |               o---------
-//    |               |
-//    -----------------
-
-/** Power Port class
+/**
+ * Power Port class
  *
- * Stores actual measurements and voltage / current limits for external terminals or internal ports
+ * Stores current measurements and limits for external terminals or internal ports
  *
  * The signs follow the passive sign convention. Current or power from the considered system or
  * circuit towards an external device connected to the port has a positive sign. For all terminals,
  * the entire charge controller is considered as the system boundary and acts as a source or a sink.
  * For internal sub-circuits, e.g. the DC/DC converter circuit defines the sub-system boundaries.
+ *
+ *    -----------------
+ *    |               |    >> positive current/power direction
+ *    |               o---->----
+ *    |               |     +  |
+ *    |  considered   |       | | external device: battery / solar panel / load / DC grid
+ *    |   system or   |       | |
+ *    |  sub-circuit  |       | | (the port should be named after the external device)
+ *    |               |     -  |
+ *    |               o---------
+ *    |               |
+ *    -----------------
  *
  * Examples:
  * - Charging a connected battery has a positive sign, as current flows from the charge controller
@@ -64,67 +115,80 @@ public:
 class PowerPort
 {
 public:
-    DcBus *bus;                     ///< Pointer to DC bus containing voltage measurement
+    /**
+     * Each power port is connected to a DC bus, containing relevant voltage information
+     */
+    DcBus *bus;
 
-    float sink_voltage_max;         ///< Maximum voltage if connected device acts as a sink
-                                    ///< (equivalent to battery charging target voltage)
-    float sink_voltage_min;         ///< Minimum voltage to allow positive current (necessary
-                                    ///< to prevent charging of deep-discharged Li-ion batteries)
+    /**
+     * Measured current through this port (positive sign = current into the external device)
+     */
+    float current;
 
-    float src_voltage_start;        ///< Minimum voltage to allow source current from the device
-                                    ///< (equal to load reconnect voltage)
-    float src_voltage_stop;         ///< Absolute minimum = load disconnect for batteries
+    /**
+     * Product of port current and bus voltage
+     */
+    float power;
 
-    float current = 0;              ///< Measured current through this port (positive sign =
-                                    ///< sinking current into the named external device)
-    float power = 0;                ///< Product of port current and bus voltage
+    /**
+     * Maximum positive current (valid values >= 0.0)
+     */
+    float pos_current_limit;
 
-    float pos_current_limit;        ///< Maximum positive current (valid values >= 0.0)
-    float pos_droop_res;            ///< control voltage = nominal voltage - droop_res * current
+    /**
+     * Maximum negative current (valid values <= 0.0)
+     */
+    float neg_current_limit;
 
-    float neg_current_limit;        ///< Maximum negative current (valid values <= 0.0)
-    float neg_droop_res;            ///< control voltage = nominal voltage - droop_res * current
+    /**
+     * Cumulated energy in positive current direction since last counter reset (Wh)
+     */
+    float pos_energy_Wh;
 
-    float pos_energy_Wh;            ///< Cumulated sunk energy since last counter reset (Wh)
-    float neg_energy_Wh;            ///< Cumulated sourced energy since last counter reset (Wh)
+    /**
+     * Cumulated energy in negative current direction since last counter reset (Wh)
+     */
+    float neg_energy_Wh;
 
-    PowerPort(DcBus *dc_bus) :
-        bus(dc_bus)
-    {}
-
-    /** Initialize power port for solar panel connection
+    /**
+     * Constructor assigning the port to a DC bus
      *
-     * @param max_abs_current Maximum input current allowed by PCB (as a positive value)
+     * @param dc_bus The DC bus this port is assigned to
+     * @param assign_ref_current defines if the bus ref_current should point to the current
+     *                           of this port (must be true for at least one port)
+     */
+    PowerPort(DcBus *dc_bus, bool assign_ref_current = false) :
+        bus(dc_bus)
+    {
+        if (assign_ref_current) {
+            bus->ref_current = &current;
+        }
+    }
+
+    /**
+     * Initialize power port for solar panel connection
      */
     void init_solar();
 
-    /** Initialize power port for nanogrid connection
+    /**
+     * Initialize power port for nanogrid connection
      */
     void init_nanogrid();
 
-    /** Initialize power port for load output connection
-     */
-    void init_load(float max_load_voltage);
-
-    /** Energy balance calculation for power port
+    /**
+     * Energy balance calculation for power port
      *
      * Must be called exactly once per second, otherwise energy calculation gets wrong.
      */
     void energy_balance();
 
-    /** Passes own voltage target settings to another port
+    /**
+     * Sets current limits for control of the bus voltage
      *
-     * @param port Port where the voltage settings will be adjusted
+     * This function has to be called using the port defining the bus control targets, i.e.
+     * the battery, the solar panel or the DC grid.
      */
-    void pass_voltage_targets(PowerPort *port);
+    void update_bus_current_margins();
 };
-
-/** Sets current limits of DC/DC or PWM switch according to load and battery status
- *
- * @param internal DC/DC or PWM switch internal port that can be controlled
- * @param p_bat Battery terminal port whose current limits have to be respected
- * @param p_load Load output port with current determined by external consumers
- */
-void ports_update_current_limits(PowerPort *internal, PowerPort *p_bat, PowerPort *p_load);
 
 #endif /* POWER_PORT_H */

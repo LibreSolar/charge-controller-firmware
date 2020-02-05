@@ -32,12 +32,12 @@
 #include "bl_support.h"         // Bootloader support from the application side
 
 DcBus lv_bus;
-PowerPort lv_terminal(&lv_bus);          // low voltage terminal (battery for typical MPPT)
+PowerPort lv_terminal(&lv_bus, true);   // low voltage terminal (battery for typical MPPT)
 
 #if CONFIG_HAS_DCDC_CONVERTER
 DcBus hv_bus;
-PowerPort hv_terminal(&hv_bus);          // high voltage terminal (solar for typical MPPT)
-PowerPort dcdc_lv_port(&lv_bus);         // internal low voltage side of DC/DC converter
+PowerPort hv_terminal(&hv_bus, true);   // high voltage terminal (solar for typical MPPT)
+PowerPort dcdc_lv_port(&lv_bus);        // internal low voltage side of DC/DC converter
 #if CONFIG_HV_TERMINAL_NANOGRID
 Dcdc dcdc(&hv_terminal, &dcdc_lv_port, MODE_NANOGRID);
 #elif CONFIG_HV_TERMINAL_BATTERY
@@ -123,8 +123,8 @@ int main()
     #endif
 
     charger.detect_num_batteries(&bat_conf);     // check if we have 24V instead of 12V system
-    battery_init_dc_bus(&bat_terminal, &bat_conf, charger.num_batteries);
-    load_terminal.init_load(bat_conf.voltage_absolute_max * charger.num_batteries);
+    battery_init_terminal(&bat_terminal, &bat_conf, charger.num_batteries);
+    battery_init_load(&load, &bat_conf, charger.num_batteries);
 
     wait(2);    // safety feature: be able to re-flash before starting
     control_timer_start(CONTROL_FREQUENCY);
@@ -146,14 +146,6 @@ int main()
 
             charger.discharge_control(&bat_conf);
             charger.charge_control(&bat_conf);
-
-            #if CONFIG_HAS_DCDC_CONVERTER
-            bat_terminal.pass_voltage_targets(&dcdc_lv_port);
-            #endif
-
-            #if CONFIG_HAS_PWM_SWITCH
-            bat_terminal.pass_voltage_targets(&pwm_switch);
-            #endif
 
             eeprom_update();
 
@@ -189,14 +181,15 @@ void system_control()
     // alerts should trigger only for transients, so update based on actual voltage
     daq_set_lv_alerts(lv_terminal.bus->voltage * 1.2, lv_terminal.bus->voltage * 0.8);
 
+    bat_terminal.update_bus_current_margins();
+
     #if CONFIG_HAS_PWM_SWITCH
-    ports_update_current_limits(&pwm_switch, &bat_terminal, &load_terminal);
     pwm_switch.control();
     leds_set_charging(pwm_switch.active());
     #endif
 
     #if CONFIG_HAS_DCDC_CONVERTER
-    ports_update_current_limits(&dcdc_lv_port, &bat_terminal, &load_terminal);
+    hv_terminal.update_bus_current_margins();
     dcdc.control();     // control of DC/DC including MPPT algorithm
     leds_set_charging(half_bridge_enabled());
     #endif

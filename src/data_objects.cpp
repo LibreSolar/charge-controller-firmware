@@ -30,6 +30,18 @@ uint32_t device_id = CONFIG_DEVICE_ID;
 
 extern uint32_t timestamp;
 
+#if CONFIG_LV_TERMINAL_BATTERY
+#define bat_bus lv_bus
+#elif CONFIG_HV_TERMINAL_BATTERY
+#define bat_bus hv_bus
+#endif
+
+#if CONFIG_HV_TERMINAL_SOLAR
+#define solar_bus hv_bus
+#elif CONFIG_LV_TERMINAL_SOLAR || CONFIG_PWM_TERMINAL_SOLAR
+#define solar_bus lv_bus
+#endif
+
 /** Data Objects
  *
  * IDs from 0x00 to 0x17 consume only 1 byte, so they are reserved for output data
@@ -173,7 +185,7 @@ const data_object_t data_objects[] = {
         TS_INPUT, TS_READ_ALL | TS_WRITE_ALL),
 
 #if CONFIG_HAS_DCDC_CONVERTER
-    TS_DATA_OBJ_BOOL(0x62, "DcdcEn", &dcdc.enabled,
+    TS_DATA_OBJ_BOOL(0x62, "DcdcEn", &dcdc.enable,
         TS_INPUT, TS_READ_ALL | TS_WRITE_ALL),
 #endif
 
@@ -183,13 +195,10 @@ const data_object_t data_objects[] = {
 #endif
 
 #if CONFIG_HV_TERMINAL_NANOGRID
-    TS_DATA_OBJ_FLOAT(0x64, "GridSink_V", &grid_terminal.sink_voltage_max, 2,
+    TS_DATA_OBJ_FLOAT(0x64, "GridSink_V", &hv_bus.sink_voltage_bound, 2,
         TS_INPUT, TS_READ_ALL | TS_WRITE_ALL),
 
-    TS_DATA_OBJ_FLOAT(0x65, "GridSrcStart_V", &grid_terminal.src_voltage_start, 2,
-        TS_INPUT, TS_READ_ALL | TS_WRITE_ALL),
-
-    TS_DATA_OBJ_FLOAT(0x66, "GridSrcStop_V", &grid_terminal.src_voltage_stop, 2,
+    TS_DATA_OBJ_FLOAT(0x66, "GridSrc_V", &hv_bus.src_voltage_bound, 2,
         TS_INPUT, TS_READ_ALL | TS_WRITE_ALL),
 #endif
 
@@ -207,11 +216,11 @@ const data_object_t data_objects[] = {
         TS_OUTPUT, TS_READ_ALL),
 
     // battery related data objects
-    TS_DATA_OBJ_FLOAT(0x70, "Bat_V", &bat_terminal.bus->voltage, 2,
+    TS_DATA_OBJ_FLOAT(0x70, "Bat_V", &bat_bus.voltage, 2,
         TS_OUTPUT, TS_READ_ALL),
 
 #if CONFIG_HV_TERMINAL_SOLAR || CONFIG_LV_TERMINAL_SOLAR || CONFIG_PWM_TERMINAL_SOLAR
-    TS_DATA_OBJ_FLOAT(0x71, "Solar_V", &solar_terminal.bus->voltage, 2,
+    TS_DATA_OBJ_FLOAT(0x71, "Solar_V", &solar_bus.voltage, 2,
         TS_OUTPUT, TS_READ_ALL),
 #endif
 
@@ -248,7 +257,7 @@ const data_object_t data_objects[] = {
         TS_OUTPUT, TS_READ_ALL),
 #endif
 
-    TS_DATA_OBJ_FLOAT(0x7B, "BatTarget_V", &bat_terminal.sink_voltage_max, 2,
+    TS_DATA_OBJ_FLOAT(0x7B, "BatTarget_V", &bat_bus.sink_voltage_bound, 2,
         TS_OUTPUT, TS_READ_ALL),
 
     TS_DATA_OBJ_FLOAT(0x7C, "BatTarget_A", &bat_terminal.pos_current_limit, 2,
@@ -264,6 +273,11 @@ const data_object_t data_objects[] = {
 
     TS_DATA_OBJ_FLOAT(0x7F, "Load_W", &load_terminal.power, 2,
         TS_OUTPUT, TS_READ_ALL),
+
+#if CONFIG_HV_TERMINAL_NANOGRID
+    TS_DATA_OBJ_FLOAT(0x80, "Grid_V", &hv_bus.voltage, 2,
+        TS_OUTPUT, TS_READ_ALL),
+#endif
 
     TS_DATA_OBJ_UINT32(0x90, "ErrorFlags", &dev_stat.error_flags,
         TS_OUTPUT, TS_READ_ALL),

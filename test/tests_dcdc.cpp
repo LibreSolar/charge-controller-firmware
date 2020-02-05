@@ -18,20 +18,22 @@ static void init_structs_buck()
 {
     hv_terminal.init_solar();
     hv_terminal.bus->voltage = 20;
-    hv_terminal.src_voltage_start = 18;
+    hv_terminal.bus->src_voltage_bound = 18;
     hv_terminal.current = 0;
+    hv_terminal.update_bus_current_margins();
 
     battery_conf_init(&bat_conf, BAT_TYPE_GEL, 6, 100);
-    battery_init_dc_bus(&dcdc_lv_port, &bat_conf, 1);
+    battery_init_terminal(&dcdc_lv_port, &bat_conf, 1);
     dcdc_lv_port.bus->voltage = 14;
     dcdc_lv_port.current = 0;
+    dcdc_lv_port.update_bus_current_margins();
 
     dcdc.mode = MODE_MPPT_BUCK;
     dcdc.temp_mosfets = 25;
     dcdc.off_timestamp = 0;
     dcdc.power_prev = 0;
     dcdc.pwm_delta = 1;
-    dcdc.enabled = true;
+    dcdc.enable = true;
 }
 
 static void start_buck()
@@ -50,22 +52,24 @@ static void init_structs_boost()
 
     hv_terminal.init_solar();
     dcdc_lv_port.bus->voltage = 20;
-    dcdc_lv_port.src_voltage_start = 18;
+    dcdc_lv_port.bus->src_voltage_bound = 18;
     dcdc_lv_port.current = 0;
     dcdc_lv_port.power = 0;
+    dcdc_lv_port.update_bus_current_margins();
 
     battery_conf_init(&bat_conf, BAT_TYPE_NMC, 10, 9);
-    battery_init_dc_bus(&hv_terminal, &bat_conf, 1);
+    battery_init_terminal(&hv_terminal, &bat_conf, 1);
     hv_terminal.bus->voltage = 3.7 * 10;
     hv_terminal.current = 0;
     hv_terminal.power = 0;
+    hv_terminal.update_bus_current_margins();
 
     dcdc.mode = MODE_MPPT_BOOST;
     dcdc.temp_mosfets = 25;
     dcdc.off_timestamp = 0;
     dcdc.power_prev = 0;
     dcdc.pwm_delta = 1;
-    dcdc.enabled = true;
+    dcdc.enable = true;
 }
 
 static void start_boost()
@@ -102,7 +106,7 @@ void no_start_before_restart_delay()
 void no_start_if_dcdc_disabled()
 {
     init_structs_buck();
-    dcdc.enabled = false;
+    dcdc.enable = false;
     TEST_ASSERT_EQUAL(0, dcdc.check_start_conditions());
 }
 
@@ -115,13 +119,6 @@ void no_start_if_dcdc_lv_voltage_low()
 
 // buck
 
-void no_buck_start_if_bat_voltage_low()
-{
-    init_structs_buck();
-    dcdc_lv_port.bus->voltage = bat_conf.voltage_absolute_min - 0.1;
-    TEST_ASSERT_EQUAL(0, dcdc.check_start_conditions());
-}
-
 void no_buck_start_if_bat_voltage_high()
 {
     init_structs_buck();
@@ -132,7 +129,7 @@ void no_buck_start_if_bat_voltage_high()
 void no_buck_start_if_bat_chg_not_allowed()
 {
     init_structs_buck();
-    dcdc_lv_port.pos_current_limit = 0;
+    dcdc_lv_port.bus->sink_current_margin = 0;
     TEST_ASSERT_EQUAL(0, dcdc.check_start_conditions());
 }
 
@@ -152,13 +149,6 @@ void no_buck_start_if_solar_voltage_low()
 
 // boost
 
-void no_boost_start_if_bat_voltage_low()
-{
-    init_structs_boost();
-    hv_terminal.bus->voltage = bat_conf.voltage_absolute_min - 0.1;
-    TEST_ASSERT_EQUAL(0, dcdc.check_start_conditions());
-}
-
 void no_boost_start_if_bat_voltage_high()
 {
     init_structs_boost();
@@ -169,7 +159,7 @@ void no_boost_start_if_bat_voltage_high()
 void no_boost_start_if_bat_chg_not_allowed()
 {
     init_structs_boost();
-    hv_terminal.pos_current_limit = 0;
+    hv_terminal.bus->sink_current_margin = 0;
     TEST_ASSERT_EQUAL(0, dcdc.check_start_conditions());
 }
 
@@ -202,7 +192,7 @@ void buck_derating_output_voltage_too_high()
 {
     start_buck();
     float pwm_before = half_bridge_get_duty_cycle();
-    dcdc_lv_port.bus->voltage = dcdc_lv_port.sink_voltage_max + 0.1;
+    dcdc_lv_port.bus->voltage = dcdc_lv_port.bus->sink_voltage_bound + 0.1;
     dcdc.control();
     float pwm_after = half_bridge_get_duty_cycle();
     TEST_ASSERT(pwm_after < pwm_before);    // less duty cycle = higher voltage
@@ -224,7 +214,7 @@ void buck_derating_input_voltage_too_low()
 {
     start_buck();
     float pwm_before = half_bridge_get_duty_cycle();
-    hv_terminal.bus->voltage = hv_terminal.src_voltage_stop - 0.1;
+    hv_terminal.bus->voltage = hv_terminal.bus->src_voltage_bound - 0.1;
     dcdc_lv_port.current = 0.2;
     dcdc.control();
     float pwm_after = half_bridge_get_duty_cycle();
@@ -303,7 +293,7 @@ void boost_derating_output_voltage_too_high()
 {
     start_boost();
     float pwm_before = half_bridge_get_duty_cycle();
-    hv_terminal.bus->voltage = hv_terminal.sink_voltage_max + 0.5;
+    hv_terminal.bus->voltage = hv_terminal.bus->sink_voltage_bound + 0.5;
     dcdc.control();
     float pwm_after = half_bridge_get_duty_cycle();
     TEST_ASSERT(pwm_after > pwm_before);    // higher duty cycle = less power
@@ -323,7 +313,7 @@ void boost_derating_input_voltage_too_low()
 {
     start_boost();
     float pwm_before = half_bridge_get_duty_cycle();
-    dcdc_lv_port.bus->voltage = dcdc_lv_port.src_voltage_stop - 0.1;
+    dcdc_lv_port.bus->voltage = dcdc_lv_port.bus->src_voltage_bound - 0.1;
     hv_terminal.current = 0.2;
     dcdc.control();
     float pwm_after = half_bridge_get_duty_cycle();
@@ -400,7 +390,6 @@ void dcdc_tests()
 
     // 2. Check startup for MPPT buck converter scenario
 
-    RUN_TEST(no_buck_start_if_bat_voltage_low);
     RUN_TEST(no_buck_start_if_bat_voltage_high);
     RUN_TEST(no_buck_start_if_bat_chg_not_allowed);
     RUN_TEST(no_buck_start_if_solar_voltage_high);
@@ -408,7 +397,6 @@ void dcdc_tests()
 
     // 3. Check startup for MPPT boost converter scenario
 
-    RUN_TEST(no_boost_start_if_bat_voltage_low);
     RUN_TEST(no_boost_start_if_bat_voltage_high);
     RUN_TEST(no_boost_start_if_bat_chg_not_allowed);
     RUN_TEST(no_boost_start_if_solar_voltage_high);

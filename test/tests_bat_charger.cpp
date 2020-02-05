@@ -14,8 +14,7 @@
 static void init_structs()
 {
     battery_conf_init(&bat_conf, BAT_TYPE_FLOODED, 6, 100);
-    //charger_init(&charger);
-    battery_init_dc_bus(&bat_terminal, &bat_conf, 1);
+    battery_init_terminal(&bat_terminal, &bat_conf, 1);
     charger.state = CHG_STATE_IDLE;
     charger.bat_temperature = 25;
     bat_terminal.bus->voltage = 14.0;

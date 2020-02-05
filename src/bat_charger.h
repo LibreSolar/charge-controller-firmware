@@ -18,6 +18,7 @@
 #include <time.h>
 
 #include "power_port.h"
+#include "load.h"
 
 /** Battery cell types
  */
@@ -352,10 +353,16 @@ bool battery_conf_check(BatConf *bat);
  */
 void battery_conf_overwrite(BatConf *source, BatConf *destination, Charger *charger = NULL);
 
-/** Initialize dc bus for battery connection
+/** Initialize terminal and dc bus for battery connection
  *
  * @param num_batteries definies the number of series connected batteries, e.g. 2 for 24V system
  */
-void battery_init_dc_bus(PowerPort *port, BatConf *bat, unsigned int num_batteries);
+void battery_init_terminal(PowerPort *port, BatConf *bat, unsigned int num_batteries);
+
+/** Initialize terminal and dc bus for battery connection
+ *
+ * @param num_batteries definies the number of series connected batteries, e.g. 2 for 24V system
+ */
+void battery_init_load(LoadOutput *port, BatConf *bat, unsigned int num_batteries);
 
 #endif /* BAT_CHARGER_H */

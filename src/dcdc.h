@@ -93,7 +93,7 @@ public:
     void fuse_destruction();
 
     DcdcOperationMode mode;     ///< DC/DC mode (buck, boost or nanogrid)
-    bool enabled;               ///< Can be used to disable the DC/DC power stage
+    bool enable;                ///< Can be used to disable the DC/DC power stage
     uint16_t state;             ///< Control state (off / MPPT / CC / CV)
 
     // actual measurements

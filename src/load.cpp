@@ -52,7 +52,7 @@ void LoadOutput::usb_state_machine()
     switch (usb_state) {
         case LOAD_STATE_DISABLED:
             if (usb_enable == true) {
-                if (port->pos_current_limit > 0) {
+                if (port->bus->src_current_margin < 0) {
                     usb_set(true);
                     usb_state = LOAD_STATE_ON;
                 }
@@ -132,24 +132,25 @@ void LoadOutput::control()
             oc_timestamp = uptime();
         }
 
-        if (dev_stat.has_error(ERR_BAT_UNDERVOLTAGE)) {
+        if (dev_stat.has_error(ERR_BAT_UNDERVOLTAGE) ||
+            port->bus->voltage < disconnect_voltage)
+        {
             dev_stat.set_error(ERR_LOAD_LOW_SOC);
             lvd_timestamp = uptime();
         }
 
         // long-term overvoltage (overvoltage transients are detected as an ADC alert and switch
         // off the solar input instead of the load output)
-        static int debounce_counter = 0;
-        if (port->bus->voltage > port->sink_voltage_max ||
+        if (port->bus->voltage > port->bus->sink_voltage_bound ||
             port->bus->voltage > LOW_SIDE_VOLTAGE_MAX)
         {
-            debounce_counter++;
-            if (debounce_counter >= CONTROL_FREQUENCY) {      // waited 1s before setting the flag
+            ov_debounce_counter++;
+            if (ov_debounce_counter >= CONTROL_FREQUENCY) {      // waited 1s before setting the flag
                 dev_stat.set_error(ERR_LOAD_OVERVOLTAGE);
             }
         }
         else {
-            debounce_counter = 0;
+            ov_debounce_counter = 0;
         }
 
         if (dev_stat.has_error(ERR_LOAD_ANY)) {
@@ -165,6 +166,7 @@ void LoadOutput::control()
 
         if (dev_stat.has_error(ERR_LOAD_LOW_SOC) &&
             !dev_stat.has_error(ERR_BAT_UNDERVOLTAGE) &&
+            port->bus->voltage > reconnect_voltage &&
             uptime() - lvd_timestamp > lvd_recovery_delay)
         {
             dev_stat.clear_error(ERR_LOAD_LOW_SOC);
@@ -178,7 +180,7 @@ void LoadOutput::control()
         }
 
         if (dev_stat.has_error(ERR_LOAD_OVERVOLTAGE) &&
-            port->bus->voltage < (port->sink_voltage_max - ov_hysteresis) &&
+            port->bus->voltage < (port->bus->sink_voltage_bound - ov_hysteresis) &&
             port->bus->voltage < (LOW_SIDE_VOLTAGE_MAX - ov_hysteresis))
         {
             dev_stat.clear_error(ERR_LOAD_OVERVOLTAGE);
@@ -190,7 +192,7 @@ void LoadOutput::control()
         }
 
         // finally switch on if all errors were resolved
-        if (enable == true && !dev_stat.has_error(ERR_LOAD_ANY) && port->pos_current_limit > 0) {
+        if (enable == true && !dev_stat.has_error(ERR_LOAD_ANY) && port->bus->src_current_margin < 0) {
             switch_set(true);
         }
     }

@@ -83,9 +83,9 @@ public:
     PowerPort *port;            ///< Pointer to DC bus containting actual voltage and current
                                 ///< measurement of (external) load output terminal
 
-    bool enable;                ///< Target on state set via communication port (overruled if
+    bool enable = false;        ///< Target on state set via communication port (overruled if
                                 ///< battery is empty or any errors occured)
-    bool usb_enable;            ///< Target on state for USB output
+    bool usb_enable = false;    ///< Target on state for USB output
 
     bool pgood = false;         ///< Power good flag that is true if load switch is on
     bool usb_pgood = false;     ///< Power good flag for USB output
@@ -94,6 +94,9 @@ public:
     int32_t oc_recovery_delay;  ///< Seconds before we attempt to re-enable the load
                                 ///< after an overcurrent event
 
+    float disconnect_voltage = 0;   ///< Low voltage disconnect (LVD) setpoint
+    float reconnect_voltage = 0;    ///< Low voltage reconnect (LVD) setpoint
+
     time_t lvd_timestamp;       ///< Time when last low voltage disconnect happened
     int32_t lvd_recovery_delay; ///< Seconds before we re-enable the load after a low voltage
                                 ///< disconnect
@@ -101,11 +104,14 @@ public:
     float junction_temperature; ///< calculated using thermal model based on current and ambient
                                 ///< temperature measurement (unit: °C)
 
+    float overvoltage = 0;
     float ov_hysteresis;        ///< Hysteresis to switch back on after an overvoltage event
 
 private:
     int determine_load_state();
     void short_circuit_comp_init();
+
+    int ov_debounce_counter = 0;
 
 #ifdef __ZEPHYR__
     void get_bindings();

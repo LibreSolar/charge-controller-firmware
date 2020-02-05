@@ -91,35 +91,6 @@ void load_output_energy_calculation_valid()
     TEST_ASSERT_EQUAL_FLOAT(round((sun_hours + night_hours) * lv_terminal.bus->voltage * adcval.load_current), round(load_terminal.pos_energy_Wh));
 }
 
-void pass_voltage_targets_to_adjacent_bus()
-{
-    // without any droop
-    bat_terminal.current = 0;
-    bat_terminal.pass_voltage_targets(&dcdc_lv_port);
-    TEST_ASSERT_EQUAL(bat_terminal.sink_voltage_min, dcdc_lv_port.sink_voltage_min);
-    TEST_ASSERT_EQUAL(bat_terminal.sink_voltage_max, dcdc_lv_port.sink_voltage_max);
-    TEST_ASSERT_EQUAL(bat_terminal.src_voltage_start, dcdc_lv_port.src_voltage_start);
-    TEST_ASSERT_EQUAL(bat_terminal.src_voltage_stop, dcdc_lv_port.src_voltage_stop);
-
-    // now with droop for positive current
-    bat_terminal.current = 11;
-    bat_terminal.pos_droop_res = 0.1;
-    bat_terminal.pass_voltage_targets(&dcdc_lv_port);
-    TEST_ASSERT_EQUAL(bat_terminal.sink_voltage_min, dcdc_lv_port.sink_voltage_min);
-    TEST_ASSERT_EQUAL(bat_terminal.sink_voltage_max + 11*0.1, dcdc_lv_port.sink_voltage_max);
-    TEST_ASSERT_EQUAL(bat_terminal.src_voltage_start + 11*0.1, dcdc_lv_port.src_voltage_start);
-    TEST_ASSERT_EQUAL(bat_terminal.src_voltage_stop + 11*0.1, dcdc_lv_port.src_voltage_stop);
-
-    // now with droop for negative current
-    bat_terminal.current = -11;
-    bat_terminal.pos_droop_res = 0.1;
-    bat_terminal.pass_voltage_targets(&dcdc_lv_port);
-    TEST_ASSERT_EQUAL(bat_terminal.sink_voltage_min, dcdc_lv_port.sink_voltage_min);
-    TEST_ASSERT_EQUAL(bat_terminal.sink_voltage_max - 11*0.1, dcdc_lv_port.sink_voltage_max);
-    TEST_ASSERT_EQUAL(bat_terminal.src_voltage_start - 11*0.1, dcdc_lv_port.src_voltage_start);
-    TEST_ASSERT_EQUAL(bat_terminal.src_voltage_stop - 11*0.1, dcdc_lv_port.src_voltage_stop);
-}
-
 void power_port_tests()
 {
     energy_calculation_init();
@@ -131,8 +102,6 @@ void power_port_tests()
     RUN_TEST(discharging_energy_calculation_valid);
     RUN_TEST(solar_input_energy_calculation_valid);
     RUN_TEST(load_output_energy_calculation_valid);
-
-    RUN_TEST(pass_voltage_targets_to_adjacent_bus);
 
     UNITY_END();
 }
