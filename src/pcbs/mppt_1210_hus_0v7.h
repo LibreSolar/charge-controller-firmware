@@ -7,12 +7,14 @@
 #ifndef MPPT_1210_HUS_0V7_H
 #define MPPT_1210_HUS_0V7_H
 
-#define DEVICE_TYPE "MPPT-1210-HUS"
-#define HARDWARE_VERSION "v0.7.1"
-
 #ifdef __MBED__
 #include "mbed.h"
+#elif defined(__ZEPHYR__)
+#include <zephyr.h>
 #endif
+
+#define DEVICE_TYPE "MPPT-1210-HUS"
+#define HARDWARE_VERSION "v0.7.1"
 
 // specify features of charge controller
 #define CONFIG_HAS_DCDC_CONVERTER  1
@@ -67,21 +69,27 @@ enum pin_state_t { PIN_HIGH, PIN_LOW, PIN_FLOAT };
 #define LED_LOAD  3     // LED4
 #define LED_RXTX  4     // LED5, used to indicate when sending data
 
-#ifdef __MBED__
 // LED pins and pin state configuration to switch above LEDs on
 #define NUM_LED_PINS 3
+
+#ifdef __MBED__
 static const PinName led_pins[NUM_LED_PINS] = {
     //  A         B         C
        PB_13,    PB_2,    PB_14
 };
-static const pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
+#elif defined(__ZEPHYR__)
+// defined in board definition pinmux.c
+extern const char *led_ports[CONFIG_NUM_LED_PINS];
+extern const int led_pins[CONFIG_NUM_LED_PINS];
+#endif // MBED or ZEPHYR
+
+static const enum pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
     { PIN_HIGH,  PIN_LOW,   PIN_FLOAT }, // LED1
     { PIN_LOW,   PIN_HIGH,  PIN_FLOAT }, // LED2
     { PIN_HIGH,  PIN_FLOAT, PIN_LOW   }, // LED3
     { PIN_FLOAT, PIN_HIGH,  PIN_LOW   }, // LED4
     { PIN_FLOAT, PIN_LOW,   PIN_HIGH  }  // LED5
 };
-#endif // __MBED__
 
 // pin definition only needed in adc_dma.cpp to detect if they are present on the PCB
 #define PIN_ADC_TEMP_BAT

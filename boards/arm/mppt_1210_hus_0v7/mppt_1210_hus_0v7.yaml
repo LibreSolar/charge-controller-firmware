@@ -1,0 +1,17 @@
+identifier: mppt_1210_hus_0v7
+name: MPPT-1210-HUS-0V7
+type: mcu
+arch: arm
+toolchain:
+  - zephyr
+  - gnuarmemb
+  - xtools
+ram: 20
+flash: 192
+supported:
+  - arduino_i2c
+  - gpio
+  - i2c
+  - spi
+  - watchdog
+  - adc

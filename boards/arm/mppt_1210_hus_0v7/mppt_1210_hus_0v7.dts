@@ -1,14 +1,14 @@
 /*
  * SPDX-License-Identifier: Apache-2.0
  *
- * Copyright (c) 2019 Martin Jäger / Libre Solar
+ * Copyright (c) 2020 Martin Jäger / Libre Solar
  */
 
 /dts-v1/;
 #include <st/l0/stm32l073Xz.dtsi>
 
 / {
-	model = "Libre Solar PWM 2420 LUS v0.3";
+	model = "Libre Solar MPPT 1210 HUS v0.7";
 	compatible = "st,stm32l073";
 
 	chosen {
@@ -29,20 +29,24 @@
 			label = "LED pin B";
 		};
 		c {
-			gpios = <&gpiob 15 GPIO_INT_ACTIVE_HIGH>;
+			gpios = <&gpiob 2 GPIO_INT_ACTIVE_HIGH>;
 			label = "LED pin C";
 		};
 	};
 
 	switches {
 		compatible = "switch";
-		load-dis {
-			gpios = <&gpiob 2 GPIO_DIR_IN>;
-			label = "Load disable";
+		load-en {
+			gpios = <&gpioc 13 GPIO_DIR_IN>;
+			label = "Load enable";
 		};
-		usb-pwr-dis {
-			gpios = <&gpiob 5 GPIO_DIR_IN>;
-			label = "USB charging port disable";
+		usb-pwr-en {
+			gpios = <&gpiob 10 GPIO_DIR_IN>;
+			label = "USB charging port enable";
+		};
+		v-solar-en {
+			gpios = <&gpioc 14 GPIO_DIR_IN>;
+			label = "Solar voltage measurement enable";
 		};
 	};
 
