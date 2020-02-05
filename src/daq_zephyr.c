@@ -13,6 +13,7 @@
 
 #include <zephyr.h>
 #include <drivers/adc.h>
+#include <drivers/gpio.h>
 
 #if defined(CONFIG_SOC_SERIES_STM32L0X)
 #include <stm32l0xx_ll_system.h>
@@ -96,9 +97,10 @@ static void dac_setup()
 
 static void adc_setup()
 {
-#ifdef PIN_V_SOLAR_EN
-    //DigitalOut solar_en(PIN_V_SOLAR_EN);
-    //solar_en = 1;
+#ifdef DT_SWITCH_V_SOLAR_EN_GPIOS_CONTROLLER
+    struct device *dev = device_get_binding(DT_SWITCH_V_SOLAR_EN_GPIOS_CONTROLLER);
+    gpio_pin_configure(dev, DT_SWITCH_V_SOLAR_EN_GPIOS_PIN, GPIO_DIR_OUT);
+    gpio_pin_write(dev, DT_SWITCH_V_SOLAR_EN_GPIOS_PIN, 1);
 #endif
 
     struct device *dev_adc = device_get_binding(DT_ADC_1_NAME);
