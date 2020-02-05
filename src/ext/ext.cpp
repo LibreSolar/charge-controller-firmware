@@ -8,6 +8,11 @@
 
 #include <algorithm>
 
+// necessary for PlatformIO debug session
+void std::__throw_bad_alloc() {
+    while (1) {}
+}
+
 // we use code to self register objects at construction time.
 // It relies on the fact that initially this pointer will be initialized
 // with NULL ! This is only true for global variables or static members of classes
