@@ -86,7 +86,12 @@ void adc_update_value(unsigned int pos);
 
 static void dac_setup()
 {
-    /* TODO */
+#if defined(CONFIG_SOC_SERIES_STM32F0X) || defined(CONFIG_SOC_SERIES_STM32L0X)
+    LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_DAC1);
+	LL_DAC_SetOutputBuffer(DAC1, LL_DAC_CHANNEL_1, LL_DAC_OUTPUT_BUFFER_ENABLE);
+	LL_DAC_Enable(DAC1, LL_DAC_CHANNEL_1);
+    LL_DAC_ConvertData12RightAligned(DAC1, LL_DAC_CHANNEL_1, 4096 / 10);
+#endif /* STM32F0X || STM32L0X */
 }
 
 static void adc_setup()
