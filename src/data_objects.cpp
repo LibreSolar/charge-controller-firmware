@@ -381,9 +381,7 @@ const data_object_t data_objects[] = {
     // FUNCTION CALLS (EXEC) //////////////////////////////////////////////////
     // using IDs >= 0xE0
 
-#if defined(__MBED__) && !defined(UNIT_TEST)
-    TS_DATA_OBJ_EXEC(0xE0, "Reset", &NVIC_SystemReset, TS_EXEC_ALL),
-#endif
+    TS_DATA_OBJ_EXEC(0xE0, "Reset", &reset_device, TS_EXEC_ALL),
     TS_DATA_OBJ_EXEC(0xE1, "BootloaderSTM", &start_stm32_bootloader, TS_EXEC_ALL),
     TS_DATA_OBJ_EXEC(0xE2, "SaveSettings", &eeprom_store_data, TS_EXEC_ALL),
 };

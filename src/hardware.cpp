@@ -4,17 +4,28 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#if defined(__MBED__)
-
 #include "hardware.h"
-
-#include "mbed.h"
 
 #include "mcu.h"
 #include "pcb.h"
 #include "load.h"
 #include "half_bridge.h"
 #include "leds.h"
+
+#if defined(STM32F0)
+#define SYS_MEM_START       0x1FFFC800
+#define SRAM_END            0x20003FFF  // 16k
+#elif defined(STM32L0)
+#define SYS_MEM_START       0x1FF00000
+#define SRAM_END            0X20004FFF  // 20k
+#define FLASH_LAST_PAGE     0x0802FF80  // start address of last page (192 kbyte cat 5 devices)
+#endif
+
+#define MAGIC_CODE_ADDR     (SRAM_END - 0xF)    // where the magic code is stored
+
+#if defined(__MBED__)
+
+#include "mbed.h"
 
 extern LoadOutput load;
 
@@ -160,17 +171,6 @@ void mbed_die(void)
     }
 }
 
-#if defined(STM32F0)
-#define SYS_MEM_START       0x1FFFC800
-#define SRAM_END            0x20003FFF  // 16k
-#elif defined(STM32L0)
-#define SYS_MEM_START       0x1FF00000
-#define SRAM_END            0X20004FFF  // 20k
-#define FLASH_LAST_PAGE     0x0802FF80  // start address of last page (192 kbyte cat 5 devices)
-#endif
-
-#define MAGIC_CODE_ADDR     (SRAM_END - 0xF)    // where the magic code is stored
-
 void start_stm32_bootloader()
 {
 #ifdef PIN_BOOT0_EN
@@ -212,15 +212,29 @@ extern "C" void system_init_hook()
     }
 }
 
+void reset_device()
+{
+    NVIC_SystemReset();
+}
+
+#elif defined(__ZEPHYR__)
+
+#include <power/reboot.h>
+
+void start_stm32_bootloader()
+{
+    // TODO
+}
+
+void reset_device()
+{
+    sys_reboot(SYS_REBOOT_COLD);
+}
+
 #else
 
 // dummy functions for unit tests
-void hw_load_switch(bool enabled) {;}
-void hw_usb_out(bool enabled) {;}
-void init_watchdog(float timeout) {;}
-void feed_the_dog() {;}
-void control_timer_start(int freq_Hz) {;}
-void system_control() {;}
-void start_stm32_bootloader() {;}
+void start_stm32_bootloader() {}
+void reset_device() {}
 
 #endif /* UNIT_TEST */

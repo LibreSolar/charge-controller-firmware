@@ -37,4 +37,9 @@ void system_control();
  */
 void start_stm32_bootloader();
 
+/**
+ * Reset device
+ */
+void reset_device();
+
 #endif /* HARDWARE_H */
