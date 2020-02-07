@@ -270,11 +270,9 @@ void Charger::discharge_control(BatConf *bat_conf)
             num_deep_discharges++;
             dev_stat.set_error(ERR_BAT_UNDERVOLTAGE);
 
-            if (usable_capacity < 0.1) {
+            if (usable_capacity == 0.0F) {
                 // reset to measured value if discharged the first time
-                if (first_full_charge_reached) {
-                    usable_capacity = discharged_Ah;
-                }
+                usable_capacity = discharged_Ah;
             }
             else {
                 // slowly adapt new measurements with low-pass filter
@@ -360,8 +358,9 @@ void Charger::charge_control(BatConf *bat_conf)
                 bat_conf->temperature_compensation * (bat_temperature - 25));
 
             if (port->bus->voltage > num_batteries *
-                (port->bus->sink_voltage_bound - port->current * port->bus->droop_res))
+                port->bus->droop_voltage(port->bus->sink_voltage_bound))
             {
+                target_voltage_timer = 0;
                 enter_state(CHG_STATE_TOPPING);
             }
             break;
@@ -372,21 +371,26 @@ void Charger::charge_control(BatConf *bat_conf)
                 bat_conf->temperature_compensation * (bat_temperature - 25));
 
             if (port->bus->voltage >= num_batteries *
-                (port->bus->sink_voltage_bound - port->current * port->bus->droop_res))
+                port->bus->droop_voltage(port->bus->sink_voltage_bound) - 0.05F)
             {
-                time_voltage_limit_reached = uptime();
+                // battery is full if topping target voltage is still reached (i.e. sufficient
+                // solar power available) and time limit or cut-off current reached
+                if (port->current < bat_conf->topping_current_cutoff ||
+                    target_voltage_timer > bat_conf->topping_duration)
+                {
+                    full = true;
+                }
+                target_voltage_timer++;
+            }
+            else if (uptime() - time_state_changed > 8 * 60 * 60) {
+                // in topping phase already for 8 hours (i.e. not enough solar power available)
+                // --> go back to bulk charging for the next day
+                enter_state(CHG_STATE_BULK);
             }
 
-            // cut-off limit reached because battery full (i.e. CV limit still
-            // reached by available solar power within last 2s) or CV period long enough?
-            if ((port->current < bat_conf->topping_current_cutoff &&
-                (uptime() - time_voltage_limit_reached) < 2)
-                || (uptime() - time_state_changed) > bat_conf->topping_duration)
-            {
-                full = true;
+            if (full) {
                 num_full_charges++;
                 discharged_Ah = 0;         // reset coulomb counter
-                first_full_charge_reached = true;
 
                 if (bat_conf->equalization_enabled && (
                     (uptime() - time_last_equalization) / (24*60*60)
@@ -394,7 +398,7 @@ void Charger::charge_control(BatConf *bat_conf)
                     num_deep_discharges - deep_dis_last_equalization
                     >= bat_conf->equalization_trigger_deep_cycles))
                 {
-                    port->bus->sink_voltage_bound = bat_conf->equalization_voltage;
+                    port->bus->sink_voltage_bound = num_batteries * bat_conf->equalization_voltage;
                     port->pos_current_limit = bat_conf->equalization_current_limit;
                     enter_state(CHG_STATE_EQUALIZATION);
                 }
@@ -418,17 +422,18 @@ void Charger::charge_control(BatConf *bat_conf)
             if (port->bus->voltage >= num_batteries *
                 (port->bus->sink_voltage_bound - port->current * port->bus->droop_res))
             {
-                time_voltage_limit_reached = uptime();
+                time_target_voltage_reached = uptime();
             }
 
-            if (uptime() - time_voltage_limit_reached > bat_conf->trickle_recharge_time)
+            if (uptime() - time_target_voltage_reached > bat_conf->trickle_recharge_time)
             {
+                // the battery was discharged: trickle voltage could not be reached anymore
                 port->pos_current_limit = bat_conf->charge_current_max;
                 full = false;
+                // assumption: trickle does not harm the battery --> never go back to idle
+                // (for Li-ion battery: disable trickle!)
                 enter_state(CHG_STATE_BULK);
             }
-            // assumption: trickle does not harm the battery --> never go back to idle
-            // (for Li-ion battery: disable trickle!)
             break;
         }
         case CHG_STATE_EQUALIZATION: {

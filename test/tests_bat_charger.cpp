@@ -72,18 +72,34 @@ void enter_topping_at_voltage_setpoint()
     TEST_ASSERT_EQUAL(CHG_STATE_TOPPING, charger.state);
 }
 
+void topping_to_bulk_after_8h_low_power()
+{
+    enter_topping_at_voltage_setpoint();
+
+    charger.time_state_changed = time(NULL) - 8 * 60 * 60 + 1;
+    bat_terminal.bus->voltage = bat_conf.topping_voltage - 0.1;
+    bat_terminal.current = bat_conf.topping_current_cutoff + 0.1;
+
+    charger.charge_control(&bat_conf);
+    TEST_ASSERT_EQUAL(CHG_STATE_TOPPING, charger.state);
+
+    charger.time_state_changed = time(NULL) - 8 * 60 * 60 - 1;
+    charger.charge_control(&bat_conf);
+    TEST_ASSERT_EQUAL(CHG_STATE_BULK, charger.state);
+}
+
 void stop_topping_after_time_limit()
 {
     enter_topping_at_voltage_setpoint();
 
-    charger.time_state_changed = time(NULL) - bat_conf.topping_duration + 1;
+    charger.target_voltage_timer = bat_conf.topping_duration - 1;
     bat_terminal.bus->voltage = bat_conf.topping_voltage + 0.1;
     bat_terminal.current = bat_conf.topping_current_cutoff + 0.1;
 
     charger.charge_control(&bat_conf);
     TEST_ASSERT_EQUAL(CHG_STATE_TOPPING, charger.state);
 
-    charger.time_state_changed = time(NULL) - bat_conf.topping_duration - 1;
+    charger.target_voltage_timer = bat_conf.topping_duration + 1;
     charger.charge_control(&bat_conf);
     TEST_ASSERT_EQUAL(CHG_STATE_TRICKLE, charger.state);
 }
@@ -92,7 +108,7 @@ void stop_topping_at_cutoff_current()
 {
     enter_topping_at_voltage_setpoint();
 
-    charger.time_state_changed = time(NULL) - 1;
+    charger.target_voltage_timer = 0;
     bat_terminal.bus->voltage = bat_conf.topping_voltage + 0.1;
     bat_terminal.current = bat_conf.topping_current_cutoff - 0.1;
     charger.charge_control(&bat_conf);
@@ -109,23 +125,6 @@ void trickle_to_idle_for_li_ion()
     bat_terminal.current = bat_conf.topping_current_cutoff - 0.1;
     charger.charge_control(&bat_conf);
     TEST_ASSERT_EQUAL(CHG_STATE_IDLE, charger.state);
-}
-
-void no_trickle_if_low_current_because_of_low_input()
-{
-    enter_topping_at_voltage_setpoint();
-
-    charger.time_state_changed = time(NULL) - 200;
-    charger.time_voltage_limit_reached = time(NULL) - 3;
-    bat_terminal.bus->voltage = bat_conf.topping_voltage - 0.1;
-    bat_terminal.current = bat_conf.topping_current_cutoff - 0.1;
-
-    charger.charge_control(&bat_conf);
-    TEST_ASSERT_EQUAL(CHG_STATE_TOPPING, charger.state);
-
-    charger.time_voltage_limit_reached = time(NULL) - 1;
-    charger.charge_control(&bat_conf);
-    TEST_ASSERT_EQUAL(CHG_STATE_TRICKLE, charger.state);
 }
 
 void no_equalization_if_disabled()
@@ -294,12 +293,12 @@ void bat_charger_tests()
 
     // topping
     RUN_TEST(enter_topping_at_voltage_setpoint);
+    RUN_TEST(topping_to_bulk_after_8h_low_power);
     RUN_TEST(stop_topping_after_time_limit);
     RUN_TEST(stop_topping_at_cutoff_current);
 
     // trickle
     RUN_TEST(trickle_to_idle_for_li_ion);
-    RUN_TEST(no_trickle_if_low_current_because_of_low_input);
 
     // equalization
     RUN_TEST(no_equalization_if_disabled);
