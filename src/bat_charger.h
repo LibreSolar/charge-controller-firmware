@@ -251,16 +251,16 @@ public:
     uint16_t soc = 100;             ///< State of Charge (%)
     uint16_t soh = 100;             ///< State of Health (%)
 
-    time_t time_state_changed;         ///< Timestamp of last state change
-    time_t time_voltage_limit_reached; ///< Last time the CV limit was reached
+    time_t time_state_changed;          ///< Timestamp of last state change
+    time_t time_target_voltage_reached; ///< Last time the CV limit was reached
+
+    int target_voltage_timer;       ///< Counts the number of seconds during which the target
+                                    ///< voltage of current charging phase was reached.
 
     time_t time_last_equalization;  ///< Timestamp after finish of last equalization charge
     int deep_dis_last_equalization; ///< Deep discharge counter value after last equalization
 
     bool full;                      ///< Flag to indicate if battery was fully charged
-    bool first_full_charge_reached = false;
-                                    //< Set to true if battery was fully charged at least once
-                                    ///< (necessary for proper capacity estimation)
 
     /** Detect if two batteries are connected in series (12V/24V auto-detection)
      */
