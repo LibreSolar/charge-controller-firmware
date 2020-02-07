@@ -48,8 +48,11 @@
 			gpios = <&gpioc 14 GPIO_DIR_IN>;
 			label = "Solar voltage measurement enable";
 		};
+		boot0-en {
+			gpios = <&gpiob 12 GPIO_DIR_IN>;
+			label = "BOOT0 pin trigger";
+		};
 	};
-
 	aliases {
 		uart-dbg = &usart1;
 		uext-uart = &usart2;

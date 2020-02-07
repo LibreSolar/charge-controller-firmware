@@ -44,6 +44,10 @@
 			gpios = <&gpiob 5 GPIO_DIR_IN>;
 			label = "USB charging port disable";
 		};
+		boot0-en {
+			gpios = <&gpiob 12 GPIO_DIR_IN>;
+			label = "BOOT0 pin trigger";
+		};
 	};
 
 	aliases {
