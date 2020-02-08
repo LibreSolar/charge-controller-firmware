@@ -8,7 +8,7 @@
 #include "daq.h"
 #include "daq_stub.h"
 
-#include "main.h"
+#include "setup.h"
 
 #include <stdint.h>
 

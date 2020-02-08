@@ -21,7 +21,8 @@
 #include <drivers/gpio.h>
 #endif
 
-#include "main.h"
+#include "setup.h"
+#include "half_bridge.h"
 #include "pcb.h"
 #include "oled_ssd1306.h"
 

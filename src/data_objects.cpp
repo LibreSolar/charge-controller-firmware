@@ -6,7 +6,7 @@
 
 #include <stdio.h>
 
-#include "main.h"
+#include "setup.h"
 
 #include "pcb.h"
 #include "config.h"
@@ -27,8 +27,6 @@ const char* const hardware_version = HARDWARE_VERSION;
 const char* const firmware_version = "0.1";
 const char* const firmware_commit = COMMIT_HASH;
 uint32_t device_id = CONFIG_DEVICE_ID;
-
-extern uint32_t timestamp;
 
 #if CONFIG_LV_TERMINAL_BATTERY
 #define bat_bus lv_bus

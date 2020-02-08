@@ -9,12 +9,11 @@
 #include <stdio.h>
 
 #include "bat_charger.h"
-#include "power_port.h"
 #include "device_status.h"
-#include "pwm_switch.h"
-#include "half_bridge.h"
 #include "load.h"
-#include "pcb.h"
+#include "power_port.h"
+#include "pwm_switch.h"
+#include "thingset.h"
 
 extern DcBus lv_bus;
 extern PowerPort lv_terminal;
@@ -41,3 +40,12 @@ extern BatConf bat_conf;
 extern BatConf bat_conf_user;
 
 extern LoadOutput load;
+
+extern ThingSet ts;             // defined in data_objects.cpp
+
+extern uint32_t timestamp;
+
+/**
+ * Perform some device setup tasks (currently only used in Zephyr)
+ */
+void setup();

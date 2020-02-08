@@ -10,7 +10,7 @@
 #include <stdio.h>
 #include <math.h>
 
-#include "main.h"
+#include "setup.h"
 
 void reset_counters_at_start_of_day()
 {

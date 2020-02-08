@@ -14,7 +14,7 @@
 #include "mbed.h"
 
 #include "mcu.h"
-#include "main.h"
+#include "setup.h"
 #include "debug.h"
 #include "pcb.h"        // contains defines for pins
 

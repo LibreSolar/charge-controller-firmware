@@ -11,7 +11,7 @@
 
 #include "config.h"
 #include "pcb.h"
-#include "main.h"
+#include "setup.h"
 #include "helper.h"
 
 //----------------------------------------------------------------------------

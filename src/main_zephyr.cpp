@@ -14,6 +14,7 @@
 #include "thingset.h"           // handles access to internal data via communication interfaces
 #include "pcb.h"                // hardware-specific settings
 #include "config.h"             // user-specific configuration
+#include "setup.h"
 
 #include "half_bridge.h"        // PWM generation for DC/DC converter
 #include "hardware.h"           // hardware-related functions like load switch, LED control, watchdog, etc.
@@ -28,65 +29,11 @@
 #include "device_status.h"      // log data (error memory, min/max measurements, etc.)
 #include "data_objects.h"       // for access to internal data via ThingSet
 
-DcBus lv_bus;
-PowerPort lv_terminal(&lv_bus, true);   // low voltage terminal (battery for typical MPPT)
-
-#if CONFIG_HAS_DCDC_CONVERTER
-DcBus hv_bus;
-PowerPort hv_terminal(&hv_bus, true);   // high voltage terminal (solar for typical MPPT)
-PowerPort dcdc_lv_port(&lv_bus);        // internal low voltage side of DC/DC converter
-#if CONFIG_HV_TERMINAL_NANOGRID
-Dcdc dcdc(&hv_terminal, &dcdc_lv_port, MODE_NANOGRID);
-#elif CONFIG_HV_TERMINAL_BATTERY
-Dcdc dcdc(&hv_terminal, &dcdc_lv_port, MODE_MPPT_BOOST);
-#else
-Dcdc dcdc(&hv_terminal, &dcdc_lv_port, MODE_MPPT_BUCK);
-#endif // CONFIG_HV_TERMINAL
-#endif
-
-#if CONFIG_HAS_PWM_SWITCH
-PwmSwitch pwm_switch(&lv_bus);
-#endif
-
-#if CONFIG_HAS_LOAD_OUTPUT
-PowerPort load_terminal(&lv_bus);        // load terminal (also connected to lv_bus)
-LoadOutput load(&load_terminal);
-#endif
-
-#if CONFIG_HV_TERMINAL_SOLAR
-PowerPort &solar_terminal = hv_terminal;
-#elif CONFIG_LV_TERMINAL_SOLAR
-PowerPort &solar_terminal = lv_terminal;
-#elif CONFIG_PWM_TERMINAL_SOLAR
-PowerPort &solar_terminal = pwm_switch;
-#endif
-
-#if CONFIG_HV_TERMINAL_NANOGRID
-PowerPort &grid_terminal = hv_terminal;
-#endif
-
-#if CONFIG_LV_TERMINAL_BATTERY
-PowerPort &bat_terminal = lv_terminal;
-#elif CONFIG_HV_TERMINAL_BATTERY
-PowerPort &bat_terminal = hv_terminal;
-#endif
-
-Charger charger(&bat_terminal);
-
-BatConf bat_conf;               // actual (used) battery configuration
-BatConf bat_conf_user;          // temporary storage where the user can write to
-
-DeviceStatus dev_stat;
-
-extern ThingSet ts;             // defined in data_objects.cpp
-
-time_t timestamp;    // current unix timestamp (independent of time(NULL), as it is user-configurable)
-
 void main(void)
 {
-    u32_t cnt = 0;
+    printf("Libre Solar Charge Controller: %s\n", CONFIG_BOARD);
 
-    printf("Booting Libre Solar Charge Controller: %s\n", CONFIG_BOARD);
+    setup();
 
     battery_conf_init(&bat_conf,
         BAT_TYPE_GEL,                   // temporary!!
@@ -126,15 +73,13 @@ void main(void)
 
         eeprom_update();
 
-        cnt++;
         k_sleep(1000);
     }
 }
 
-
 void control_thread()
 {
-    int counter = 0;
+    uint32_t last_call = 0;
     while (1) {
 
         // convert ADC readings to meaningful measurement values
@@ -158,11 +103,9 @@ void control_thread()
 
         load.control();
 
-        if (counter % CONTROL_FREQUENCY == 0) {
-            // called once per second (this timer is much more accurate than time(NULL) based on LSI)
-            // see also here: https://github.com/ARMmbed/mbed-os/issues/9065
-            timestamp++;
-            counter = 0;
+        uint32_t now = k_uptime_get() / 1000;
+        if (now > last_call) {
+            last_call = now;
 
             // energy + soc calculation must be called exactly once per second
             #if CONFIG_HAS_DCDC_CONVERTER
@@ -178,16 +121,19 @@ void control_thread()
             dev_stat.update_energy();
             dev_stat.update_min_max_values();
             charger.update_soc(&bat_conf);
-        }
 
-        counter++;
+            #if CONFIG_HS_MOSFET_FAIL_SAFE_PROTECTION && CONFIG_HAS_DCDC_CONVERTER
+            if (dev_stat.has_error(ERR_DCDC_HS_MOSFET_SHORT)) {
+                dcdc.fuse_destruction();
+            }
+            #endif
+        }
         k_sleep(100);
     }
 }
 
 void ext_mgr_thread()
 {
-    u32_t cnt = 0;
     uint32_t last_call = 0;
     while (1) {
         uint32_t now = k_uptime_get() / 1000;
@@ -196,7 +142,6 @@ void ext_mgr_thread()
             last_call = now;
             ext_mgr.process_1s();
         }
-        cnt++;
         k_sleep(1);
     }
 }

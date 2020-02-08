@@ -12,7 +12,7 @@
 #include <stdio.h>
 #include <math.h>
 
-#include "main.h"
+#include "setup.h"
 
 void load_init(LoadOutput *l)
 {

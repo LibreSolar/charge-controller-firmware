@@ -9,7 +9,7 @@
 #include <time.h>
 #include <stdio.h>
 
-#include "main.h"
+#include "setup.h"
 
 static void init_structs()
 {
