@@ -4,3 +4,19 @@
 config BOARD_MPPT_2420_HPX
 	bool "Libre Solar MPPT 2420 HPX"
 	depends on SOC_STM32G431XX
+
+if ADC_STM32
+
+config ADC_1
+	prompt "ADC1"
+	default y
+	help
+	  Enable ADC1
+
+config ADC_2
+	prompt "ADC2"
+	default y
+	help
+	  Enable ADC2
+
+endif # ADC_STM32

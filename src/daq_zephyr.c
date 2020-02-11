@@ -81,6 +81,8 @@ static const u32_t table_seq_len[] = {
 };
 #endif /* !STM32F0X && !STM32L0X */
 
+#define DT_ADC_2_NAME "ADC_2"
+
 // for ADC and DMA
 extern uint16_t adc_readings[];
 
