@@ -31,6 +31,7 @@
 #include <stm32g4xx_ll_system.h>
 #include <stm32g4xx_ll_dac.h>
 #include <stm32g4xx_ll_dma.h>
+#include <stm32g4xx_ll_bus.h>
 #endif
 
 #include "pcb.h"
@@ -124,7 +125,11 @@ static void adc_setup()
         .channel_id = LL_ADC_CHANNEL_0,
         .differential = 0
     };
-    adc_channel_setup(dev_adc, &channel_cfg);
+
+    int ret = adc_channel_setup(dev_adc, &channel_cfg);
+    if (ret) {
+        printk("ADC channel setup error.. \n");
+    }
 
     // The following configuration necessary for DMA is not yet possible with Zephyr driver,
     // so we need to use STM LL interface directly
@@ -143,7 +148,7 @@ static void adc_setup()
 #endif
 
     LL_ADC_SetDataAlignment(ADC1, LL_ADC_DATA_ALIGN_LEFT);
-	LL_ADC_SetResolution(ADC1, LL_ADC_RESOLUTION_12B);
+    LL_ADC_SetResolution(ADC1, LL_ADC_RESOLUTION_12B);
     LL_ADC_REG_SetOverrun(ADC1, LL_ADC_REG_OVR_DATA_OVERWRITTEN);
 
     // Enable DMA transfer on ADC and circular mode
@@ -169,6 +174,11 @@ static void DMA1_Channel1_IRQHandler(void *args)
 static void dma_setup()
 {
     LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_DMA1);
+
+#if defined(CONFIG_SOC_SERIES_STM32G4X)
+    LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_DMAMUX1);
+    LL_DMA_SetPeriphRequest(DMA1, LL_DMA_CHANNEL_1, LL_DMAMUX_REQ_ADC1);
+#endif //CONFIG_SOC_SERIES_STM32G4X
 
     LL_DMA_ConfigAddresses(DMA1, LL_DMA_CHANNEL_1,
         LL_ADC_DMA_GetRegAddr(ADC1, LL_ADC_DMA_REG_REGULAR_DATA),   // source address
