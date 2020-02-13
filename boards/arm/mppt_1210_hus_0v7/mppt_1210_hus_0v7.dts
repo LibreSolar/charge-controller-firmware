@@ -21,15 +21,15 @@
 	leds {
 		compatible = "gpio-leds";
 		a {
-			gpios = <&gpiob 13 GPIO_INT_ACTIVE_HIGH>;
+			gpios = <&gpiob 13 GPIO_ACTIVE_HIGH>;
 			label = "LED pin A";
 		};
 		b {
-			gpios = <&gpiob 14 GPIO_INT_ACTIVE_HIGH>;
+			gpios = <&gpiob 14 GPIO_ACTIVE_HIGH>;
 			label = "LED pin B";
 		};
 		c {
-			gpios = <&gpiob 2 GPIO_INT_ACTIVE_HIGH>;
+			gpios = <&gpiob 2 GPIO_ACTIVE_HIGH>;
 			label = "LED pin C";
 		};
 	};
@@ -37,19 +37,19 @@
 	switches {
 		compatible = "switch";
 		load-en {
-			gpios = <&gpioc 13 GPIO_DIR_IN>;
+			gpios = <&gpioc 13 GPIO_ACTIVE_HIGH>;
 			label = "Load enable";
 		};
 		usb-pwr-en {
-			gpios = <&gpiob 10 GPIO_DIR_IN>;
+			gpios = <&gpiob 10 GPIO_ACTIVE_HIGH>;
 			label = "USB charging port enable";
 		};
 		v-solar-en {
-			gpios = <&gpioc 14 GPIO_DIR_IN>;
+			gpios = <&gpioc 14 GPIO_ACTIVE_HIGH>;
 			label = "Solar voltage measurement enable";
 		};
 		boot0-en {
-			gpios = <&gpiob 12 GPIO_DIR_IN>;
+			gpios = <&gpiob 12 GPIO_ACTIVE_HIGH>;
 			label = "BOOT0 pin trigger";
 		};
 	};

@@ -9,7 +9,14 @@
 #include <algorithm>
 
 // necessary for PlatformIO debug session
-void std::__throw_bad_alloc() {
+void std::__throw_bad_alloc()
+{
+    while (1) {}
+}
+
+// necessary to compile Zephyr v2.2
+void std::__throw_length_error(char const*)
+{
     while (1) {}
 }
 

@@ -48,6 +48,8 @@ After that, you should be able to compile and flash Zephyr for supported boards 
 
 As the build system in PlatformIO is not the same as the native Zephyr build system, there might still be some issues. Generally, also `west build` and `west flash` should work if called from within the zephyr subdirectory.
 
+**Important:** For the STM32G4 we require several bug fixes that were introduced in Zephyr v2.2. The PlatformIO package is currently based on v2.1, so it is required to use native Zephyr build system until PlatformIO package is updated.
+
 ### Troubleshooting
 
 #### Errors with STM32L072 MCU using OpenOCD

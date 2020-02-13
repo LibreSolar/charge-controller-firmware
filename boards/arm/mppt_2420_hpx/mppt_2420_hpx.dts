@@ -52,7 +52,7 @@
 	leds {
 		compatible = "gpio-leds";
 		pwr {
-			gpios = <&gpioc 15 GPIO_INT_ACTIVE_HIGH>;
+			gpios = <&gpioc 15 GPIO_ACTIVE_HIGH>;
 			label = "Power LED";
 		};
 	};
@@ -60,7 +60,7 @@
 	switches {
 		compatible = "switch";
 		load-dis {
-			gpios = <&gpiob 15 GPIO_DIR_IN>;
+			gpios = <&gpiob 15 GPIO_ACTIVE_HIGH>;
 			label = "Load disable";
 		};
 	};

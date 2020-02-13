@@ -21,23 +21,23 @@
 	leds {
 		compatible = "gpio-leds";
 		gnd {
-			gpios = <&gpiob 14 GPIO_INT_ACTIVE_LOW>;
+			gpios = <&gpiob 14 GPIO_ACTIVE_HIGH>;
 			label = "LED GND";
 		};
 		soc12 {
-			gpios = <&gpiob 13 GPIO_INT_ACTIVE_HIGH>;
+			gpios = <&gpiob 13 GPIO_ACTIVE_HIGH>;
 			label = "LED SOC12";
 		};
 		soc3 {
-			gpios = <&gpiob 2 GPIO_INT_ACTIVE_HIGH>;
+			gpios = <&gpiob 2 GPIO_ACTIVE_HIGH>;
 			label = "LED SOC3";
 		};
 		rxtx {
-			gpios = <&gpiob 11 GPIO_INT_ACTIVE_HIGH>;
+			gpios = <&gpiob 11 GPIO_ACTIVE_HIGH>;
 			label = "LED RXTX";
 		};
 		load {
-			gpios = <&gpiob 10 GPIO_INT_ACTIVE_HIGH>;
+			gpios = <&gpiob 10 GPIO_ACTIVE_HIGH>;
 			label = "LED Load";
 		};
 	};
@@ -45,11 +45,11 @@
 	switches {
 		compatible = "switch";
 		load-en {
-			gpios = <&gpiob 12 GPIO_DIR_IN>;
+			gpios = <&gpiob 12 GPIO_ACTIVE_HIGH>;
 			label = "Load enable";
 		};
 		usb-en {
-			gpios = <&gpiob 12 GPIO_DIR_IN>;
+			gpios = <&gpiob 12 GPIO_ACTIVE_HIGH>;
 			label = "USB charging port enable";
 		};
 	};

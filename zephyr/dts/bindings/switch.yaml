@@ -1,13 +1,11 @@
 # Copyright (c) 2020 Martin Jäger / Libre Solar
 # SPDX-License-Identifier: Apache-2.0
 
-title: GPIO switch parent node
 description: GPIO pins to switch something on or off
 
 compatible: "switch"
 
 child-binding:
-  title: GPIO switch child node
   description: GPIO switch child node
   properties:
     gpios:

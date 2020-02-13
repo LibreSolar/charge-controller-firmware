@@ -21,11 +21,11 @@
 	leds {
 		compatible = "gpio-leds";
 		pwr {
-			gpios = <&gpiob 14 GPIO_INT_ACTIVE_LOW>;
+			gpios = <&gpiob 14 GPIO_ACTIVE_HIGH>;
 			label = "LED GND";
 		};
 		load {
-			gpios = <&gpiob 15 GPIO_INT_ACTIVE_HIGH>;
+			gpios = <&gpiob 15 GPIO_ACTIVE_HIGH>;
 			label = "LED Load";
 		};
 	};
@@ -33,15 +33,15 @@
 	switches {
 		compatible = "switch";
 		load-dis {
-			gpios = <&gpiob 2 GPIO_DIR_IN>;
+			gpios = <&gpiob 2 GPIO_ACTIVE_HIGH>;
 			label = "Load disable";
 		};
 		uext-dis {
-			gpios = <&gpioc 14 GPIO_DIR_IN>;
+			gpios = <&gpioc 14 GPIO_ACTIVE_HIGH>;
 			label = "UEXT disable";
 		};
 		can-dis {
-			gpios = <&gpioa 15 GPIO_DIR_IN>;
+			gpios = <&gpioa 15 GPIO_ACTIVE_HIGH>;
 			label = "CAN disable / standby";
 		};
 	};
