@@ -36,15 +36,15 @@
 
 	switches {
 		compatible = "switch";
-		load-dis {
-			gpios = <&gpiob 2 GPIO_ACTIVE_HIGH>;
+		load {
+			gpios = <&gpiob 2 GPIO_ACTIVE_LOW>;
 			label = "Load disable";
 		};
-		usb-pwr-dis {
-			gpios = <&gpiob 5 GPIO_ACTIVE_HIGH>;
+		usb-pwr {
+			gpios = <&gpiob 5 GPIO_ACTIVE_LOW>;
 			label = "USB charging port disable";
 		};
-		boot0-en {
+		boot0 {
 			gpios = <&gpiob 12 GPIO_ACTIVE_HIGH>;
 			label = "BOOT0 pin trigger";
 		};

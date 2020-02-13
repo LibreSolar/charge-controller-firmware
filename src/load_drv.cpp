@@ -185,27 +185,18 @@ void LoadOutput::switch_set(bool status)
     }
 #endif
 
-#if defined(__ZEPHYR__) && defined(DT_SWITCH_LOAD_EN_GPIOS_CONTROLLER)
-    gpio_pin_configure(dev_load, DT_SWITCH_LOAD_EN_GPIOS_PIN, GPIO_DIR_OUT);
+#ifdef DT_SWITCH_LOAD_GPIOS_CONTROLLER
+    gpio_pin_configure(dev_load, DT_SWITCH_LOAD_GPIOS_PIN,
+        DT_SWITCH_LOAD_GPIOS_FLAGS | GPIO_OUTPUT_INACTIVE);
     if (status == true) {
-        gpio_pin_write(dev_load, DT_SWITCH_LOAD_EN_GPIOS_PIN, 1);
-    }
-    else {
-        gpio_pin_write(dev_load, DT_SWITCH_LOAD_EN_GPIOS_PIN, 0);
-    }
+#ifdef PIN_I_LOAD_COMP
+        lptim_init();
+#else
+        gpio_pin_set(dev_load, DT_SWITCH_LOAD_GPIOS_PIN, 1);
 #endif
-
-#if defined(__ZEPHYR__) && defined(DT_SWITCH_LOAD_DIS_GPIOS_CONTROLLER)
-    gpio_pin_configure(dev_load, DT_SWITCH_LOAD_DIS_GPIOS_PIN, GPIO_DIR_OUT);
-    if (status == true) {
-        #ifdef PIN_I_LOAD_COMP
-            lptim_init();
-        #else
-            gpio_pin_write(dev_load, DT_SWITCH_LOAD_DIS_GPIOS_PIN, 0);
-        #endif
     }
     else {
-        gpio_pin_write(dev_load, DT_SWITCH_LOAD_DIS_GPIOS_PIN, 1);
+        gpio_pin_set(dev_load, DT_SWITCH_LOAD_GPIOS_PIN, 0);
     }
 #endif
 
@@ -227,23 +218,14 @@ void LoadOutput::usb_set(bool status)
     else usb_pwr_dis = 1;
 #endif
 
-#if defined(__ZEPHYR__) && defined(DT_SWITCH_USB_PWR_EN_GPIOS_CONTROLLER)
-    gpio_pin_configure(dev_usb, DT_SWITCH_USB_PWR_EN_GPIOS_PIN, GPIO_DIR_OUT);
+#ifdef DT_SWITCH_USB_PWR_GPIOS_CONTROLLER
+    gpio_pin_configure(dev_usb, DT_SWITCH_USB_PWR_GPIOS_PIN,
+        DT_SWITCH_USB_PWR_GPIOS_FLAGS | GPIO_OUTPUT_INACTIVE);
     if (status == true) {
-        gpio_pin_write(dev_usb, DT_SWITCH_USB_PWR_EN_GPIOS_PIN, 1);
+        gpio_pin_set(dev_usb, DT_SWITCH_USB_PWR_GPIOS_PIN, 1);
     }
     else {
-        gpio_pin_write(dev_usb, DT_SWITCH_USB_PWR_EN_GPIOS_PIN, 0);
-    }
-#endif
-
-#if defined(__ZEPHYR__) && defined(DT_SWITCH_USB_PWR_DIS_GPIOS_CONTROLLER)
-    gpio_pin_configure(dev_usb, DT_SWITCH_USB_PWR_DIS_GPIOS_PIN, GPIO_DIR_OUT);
-    if (status == true) {
-        gpio_pin_write(dev_usb, DT_SWITCH_USB_PWR_DIS_GPIOS_PIN, 0);
-    }
-    else {
-        gpio_pin_write(dev_usb, DT_SWITCH_USB_PWR_DIS_GPIOS_PIN, 1);
+        gpio_pin_set(dev_usb, DT_SWITCH_USB_PWR_GPIOS_PIN, 0);
     }
 #endif
 
@@ -254,16 +236,12 @@ void LoadOutput::usb_set(bool status)
 
 void LoadOutput::get_bindings()
 {
-#if defined(DT_SWITCH_USB_PWR_EN_GPIOS_CONTROLLER)
-    dev_usb = device_get_binding(DT_SWITCH_USB_PWR_EN_GPIOS_CONTROLLER);
-#elif defined(DT_SWITCH_USB_PWR_DIS_GPIOS_CONTROLLER)
-    dev_usb = device_get_binding(DT_SWITCH_USB_PWR_DIS_GPIOS_CONTROLLER);
+#ifdef DT_SWITCH_USB_PWR_GPIOS_CONTROLLER
+    dev_usb = device_get_binding(DT_SWITCH_USB_PWR_GPIOS_CONTROLLER);
 #endif
 
-#if defined(DT_SWITCH_LOAD_EN_GPIOS_CONTROLLER)
-    dev_load = device_get_binding(DT_SWITCH_LOAD_EN_GPIOS_CONTROLLER);
-#elif defined(DT_SWITCH_LOAD_DIS_GPIOS_CONTROLLER)
-    dev_load = device_get_binding(DT_SWITCH_LOAD_DIS_GPIOS_CONTROLLER);
+#ifdef DT_SWITCH_LOAD_GPIOS_CONTROLLER
+    dev_load = device_get_binding(DT_SWITCH_LOAD_GPIOS_CONTROLLER);
 #endif
 }
 

@@ -71,11 +71,10 @@ void ExtOled::enable()
     uext_dis = 0;
 #endif
 
-#if defined(DT_SWITCH_UEXT_DIS_GPIOS_CONTROLLER) && defined(__ZEPHYR__)
-    struct device *dev_uext_dis =
-        device_get_binding(DT_SWITCH_UEXT_DIS_GPIOS_CONTROLLER);
-    gpio_pin_configure(dev_uext_dis, DT_SWITCH_UEXT_DIS_GPIOS_PIN, GPIO_DIR_OUT);
-    gpio_pin_write(dev_uext_dis, DT_SWITCH_UEXT_DIS_GPIOS_PIN, 0);
+#ifdef DT_SWITCH_UEXT_GPIOS_CONTROLLER
+    struct device *dev_uext_dis = device_get_binding(DT_SWITCH_UEXT_GPIOS_CONTROLLER);
+    gpio_pin_configure(dev_uext_dis, DT_SWITCH_UEXT_GPIOS_PIN,
+        DT_SWITCH_UEXT_GPIOS_FLAGS | GPIO_OUTPUT_ACTIVE);
 #endif
 
 #ifdef OLED_BRIGHTNESS

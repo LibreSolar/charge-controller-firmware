@@ -32,16 +32,16 @@
 
 	switches {
 		compatible = "switch";
-		load-dis {
-			gpios = <&gpiob 2 GPIO_ACTIVE_HIGH>;
+		load {
+			gpios = <&gpiob 2 GPIO_ACTIVE_LOW>;
 			label = "Load disable";
 		};
-		uext-dis {
-			gpios = <&gpioc 14 GPIO_ACTIVE_HIGH>;
+		uext {
+			gpios = <&gpioc 14 GPIO_ACTIVE_LOW>;
 			label = "UEXT disable";
 		};
-		can-dis {
-			gpios = <&gpioa 15 GPIO_ACTIVE_HIGH>;
+		can {
+			gpios = <&gpioa 15 GPIO_ACTIVE_LOW>;
 			label = "CAN disable / standby";
 		};
 	};

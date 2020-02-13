@@ -79,7 +79,7 @@ private:
     DigitalOut can_disable;
 #elif defined(__ZEPHYR__)
     struct device *can_dev;
-    struct device *gpio_stb_dev;
+    struct device *can_en_dev;
 #endif
 };
 
@@ -130,17 +130,16 @@ ThingSetCAN::ThingSetCAN(uint8_t can_node_id, const unsigned int c):
     node_id(can_node_id),
     channel(c)
 {
-    gpio_stb_dev = device_get_binding(DT_SWITCH_CAN_DIS_GPIOS_CONTROLLER);
-    gpio_pin_configure(gpio_stb_dev, DT_SWITCH_CAN_DIS_GPIOS_PIN, GPIO_DIR_OUT);
-    gpio_pin_write(gpio_stb_dev, DT_SWITCH_CAN_DIS_GPIOS_PIN, 1);
+    can_en_dev = device_get_binding(DT_SWITCH_CAN_GPIOS_CONTROLLER);
+    gpio_pin_configure(can_en_dev, DT_SWITCH_CAN_GPIOS_PIN,
+        DT_SWITCH_CAN_GPIOS_FLAGS | GPIO_OUTPUT_INACTIVE);
 
     can_dev = device_get_binding("CAN_1");
 }
 
 void ThingSetCAN::enable()
 {
-    // enable the transceiver (set STB pin low)
-    gpio_pin_write(gpio_stb_dev, DT_SWITCH_CAN_DIS_GPIOS_PIN, 0);
+    gpio_pin_write(gpio_stb_dev, DT_SWITCH_CAN_GPIOS_PIN, 1);
 }
 
 #endif

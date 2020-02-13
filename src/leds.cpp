@@ -172,15 +172,15 @@ void leds_update_thread()
             for (int pin_number = 0; pin_number < NUM_LED_PINS; pin_number++) {
                 switch (led_pin_setup[led_count][pin_number]) {
                     case PIN_HIGH:
-                        gpio_pin_configure(led_devs[pin_number], led_pins[pin_number], GPIO_DIR_OUT);
-                        gpio_pin_write(led_devs[pin_number], led_pins[pin_number], 1);
+                        gpio_pin_configure(led_devs[pin_number], led_pins[pin_number], GPIO_OUTPUT);
+                        gpio_pin_set(led_devs[pin_number], led_pins[pin_number], 1);
                         break;
                     case PIN_LOW:
-                        gpio_pin_configure(led_devs[pin_number], led_pins[pin_number], GPIO_DIR_OUT);
-                        gpio_pin_write(led_devs[pin_number], led_pins[pin_number], 0);
+                        gpio_pin_configure(led_devs[pin_number], led_pins[pin_number], GPIO_OUTPUT);
+                        gpio_pin_set(led_devs[pin_number], led_pins[pin_number], 0);
                         break;
                     case PIN_FLOAT:
-                        gpio_pin_configure(led_devs[pin_number], led_pins[pin_number], GPIO_DIR_IN);
+                        gpio_pin_configure(led_devs[pin_number], led_pins[pin_number], GPIO_INPUT);
                         break;
                 }
             }
@@ -188,7 +188,7 @@ void leds_update_thread()
         else {
             // all pins floating
             for (int pin_number = 0; pin_number < NUM_LED_PINS; pin_number++) {
-                gpio_pin_configure(led_devs[pin_number], led_pins[pin_number], GPIO_DIR_IN);
+                gpio_pin_configure(led_devs[pin_number], led_pins[pin_number], GPIO_INPUT);
             }
         }
 

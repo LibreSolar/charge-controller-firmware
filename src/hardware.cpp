@@ -224,11 +224,11 @@ void reset_device()
 
 void start_stm32_bootloader()
 {
-#ifdef DT_SWITCH_BOOT0_EN_GPIOS_CONTROLLER
+#ifdef DT_SWITCH_BOOT0_GPIOS_CONTROLLER
     // pin is connected to BOOT0 via resistor and capacitor
-    struct device *dev = device_get_binding(DT_SWITCH_BOOT0_EN_GPIOS_CONTROLLER);
-    gpio_pin_configure(dev, DT_SWITCH_BOOT0_EN_GPIOS_PIN, GPIO_DIR_OUT);
-    gpio_pin_write(dev, DT_SWITCH_BOOT0_EN_GPIOS_PIN, 1);
+    struct device *dev = device_get_binding(DT_SWITCH_BOOT0_GPIOS_CONTROLLER);
+    gpio_pin_configure(dev, DT_SWITCH_BOOT0_GPIOS_PIN,
+        DT_SWITCH_BOOT0_GPIOS_FLAGS | GPIO_OUTPUT_ACTIVE);
 
     k_sleep(100);   // wait for capacitor at BOOT0 pin to charge up
     reset_device();

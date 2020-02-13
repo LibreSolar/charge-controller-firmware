@@ -59,8 +59,8 @@
 
 	switches {
 		compatible = "switch";
-		load-dis {
-			gpios = <&gpiob 15 GPIO_ACTIVE_HIGH>;
+		load {
+			gpios = <&gpiob 15 GPIO_ACTIVE_LOW>;
 			label = "Load disable";
 		};
 	};

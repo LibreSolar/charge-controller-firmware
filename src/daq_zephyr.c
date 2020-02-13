@@ -98,10 +98,10 @@ static void dac_setup()
 
 static void adc_setup()
 {
-#ifdef DT_SWITCH_V_SOLAR_EN_GPIOS_CONTROLLER
-    struct device *dev = device_get_binding(DT_SWITCH_V_SOLAR_EN_GPIOS_CONTROLLER);
-    gpio_pin_configure(dev, DT_SWITCH_V_SOLAR_EN_GPIOS_PIN, GPIO_DIR_OUT);
-    gpio_pin_write(dev, DT_SWITCH_V_SOLAR_EN_GPIOS_PIN, 1);
+#ifdef DT_SWITCH_V_SOLAR_GPIOS_CONTROLLER
+    struct device *dev = device_get_binding(DT_SWITCH_V_SOLAR_GPIOS_CONTROLLER);
+    gpio_pin_configure(dev, DT_SWITCH_V_SOLAR_GPIOS_PIN,
+        DT_SWITCH_V_SOLAR_GPIOS_FLAGS | GPIO_OUTPUT_ACTIVE);
 #endif
 
     struct device *dev_adc = device_get_binding(DT_ADC_1_NAME);
