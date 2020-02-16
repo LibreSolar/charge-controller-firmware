@@ -261,7 +261,7 @@ void control_off_overvoltage_to_on_at_lower_voltage()
     load_init(&load_out);
     load_out.state = LOAD_STATE_OFF_OVERVOLTAGE;
     load_out.usb_state = LOAD_STATE_ON;
-    port.bus->voltage = port.bus->sink_voltage_bound + 0.1;
+    port.bus->voltage = load_out.overvoltage + 0.1;
     dev_stat.error_flags = ERR_LOAD_OVERVOLTAGE;
 
     load_out.control();
@@ -269,12 +269,12 @@ void control_off_overvoltage_to_on_at_lower_voltage()
     TEST_ASSERT_EQUAL(LOAD_STATE_OFF_OVERVOLTAGE, load_out.state);
     TEST_ASSERT_EQUAL(LOAD_STATE_ON, load_out.usb_state);       // not affected by overvoltage
 
-    port.bus->voltage = port.bus->sink_voltage_bound - 0.1;     // test hysteresis
+    port.bus->voltage = load_out.overvoltage - 0.1;     // test hysteresis
     load_out.control();
     TEST_ASSERT_EQUAL(ERR_LOAD_OVERVOLTAGE, dev_stat.error_flags);
     TEST_ASSERT_EQUAL(LOAD_STATE_OFF_OVERVOLTAGE, load_out.state);
 
-    port.bus->voltage = port.bus->sink_voltage_bound - load_out.ov_hysteresis - 0.1;
+    port.bus->voltage = load_out.overvoltage - load_out.ov_hysteresis - 0.1;
     load_out.control();
     TEST_ASSERT_EQUAL(0, dev_stat.error_flags);
     TEST_ASSERT_EQUAL(LOAD_STATE_ON, load_out.state);       // deprecated
