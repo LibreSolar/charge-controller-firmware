@@ -395,7 +395,7 @@ void Charger::charge_control(BatConf *bat_conf)
             port->bus->sink_voltage_bound = num_batteries * (bat_conf->topping_voltage +
                 bat_conf->temperature_compensation * (bat_temperature - 25));
 
-            if (port->bus->voltage > num_batteries *
+            if (port->bus->voltage >
                 port->bus->droop_voltage(port->bus->sink_voltage_bound))
             {
                 target_voltage_timer = 0;
@@ -408,7 +408,7 @@ void Charger::charge_control(BatConf *bat_conf)
             port->bus->sink_voltage_bound = num_batteries * (bat_conf->topping_voltage +
                 bat_conf->temperature_compensation * (bat_temperature - 25));
 
-            if (port->bus->voltage >= num_batteries *
+            if (port->bus->voltage >=
                 port->bus->droop_voltage(port->bus->sink_voltage_bound) - 0.05F)
             {
                 // battery is full if topping target voltage is still reached (i.e. sufficient
@@ -503,29 +503,14 @@ void Charger::charge_control(BatConf *bat_conf)
     }
 }
 
-void battery_init_terminal(PowerPort *port, BatConf *bat, unsigned int num_batteries)
+void Charger::init_terminal(BatConf *bat)
 {
-    unsigned int n = (num_batteries == 2 ? 2 : 1);  // only 1 or 2 allowed
+    port->bus->sink_voltage_bound = bat->topping_voltage * num_batteries;
+    port->bus->src_voltage_bound = bat->voltage_load_disconnect * num_batteries;
 
     port->neg_current_limit = -bat->discharge_current_max;
-
-    // negative sign for compensation of actual resistance
-    port->bus->droop_res = -(bat->internal_resistance + -bat->wire_resistance) * n;
-
-    port->bus->sink_voltage_bound = bat->topping_voltage * n;
     port->pos_current_limit = bat->charge_current_max;
-    port->bus->src_voltage_bound = bat->voltage_load_disconnect * n;
 
     // negative sign for compensation of actual resistance
-    port->bus->droop_res = -bat->wire_resistance * n;
-}
-
-void battery_init_load(LoadOutput *load, BatConf *bat, unsigned int num_batteries)
-{
-    unsigned int n = (num_batteries == 2 ? 2 : 1);  // only 1 or 2 allowed
-
-    load->reconnect_voltage = bat->voltage_load_reconnect * n;
-    load->disconnect_voltage = bat->voltage_load_disconnect * n;
-
-    load->overvoltage = bat->voltage_absolute_max * n;
+    port->bus->droop_res = -(bat->internal_resistance + bat->wire_resistance) * num_batteries;
 }

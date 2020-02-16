@@ -62,8 +62,11 @@ void main(void)
     #endif
 
     charger.detect_num_batteries(&bat_conf);     // check if we have 24V instead of 12V system
-    battery_init_terminal(&bat_terminal, &bat_conf, charger.num_batteries);
-    battery_init_load(&load, &bat_conf, charger.num_batteries);
+    charger.init_terminal(&bat_conf);
+    load.set_voltage_limits(
+        bat_conf.voltage_load_disconnect * charger.num_batteries,
+        bat_conf.voltage_load_reconnect * charger.num_batteries,
+        bat_conf.voltage_absolute_max * charger.num_batteries);
 
     k_sleep(2000);      // safety feature: be able to re-flash before starting
 

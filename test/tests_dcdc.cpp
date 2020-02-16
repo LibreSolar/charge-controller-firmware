@@ -24,7 +24,8 @@ static void init_structs_buck()
     hv_terminal.update_bus_current_margins();
 
     battery_conf_init(&bat_conf, BAT_TYPE_GEL, 6, 100);
-    battery_init_terminal(&dcdc_lv_port, &bat_conf, 1);
+    charger.port = &dcdc_lv_port;
+    charger.init_terminal(&bat_conf);
     dcdc_lv_port.bus->voltage = 14;
     dcdc_lv_port.current = 0;
     dcdc_lv_port.update_bus_current_margins();
@@ -60,7 +61,8 @@ static void init_structs_boost()
     dcdc_lv_port.update_bus_current_margins();
 
     battery_conf_init(&bat_conf, BAT_TYPE_NMC, 10, 9);
-    battery_init_terminal(&hv_terminal, &bat_conf, 1);
+    charger.port = &hv_terminal;
+    charger.init_terminal(&bat_conf);
     hv_terminal.bus->voltage = 3.7 * 10;
     hv_terminal.current = 0;
     hv_terminal.power = 0;

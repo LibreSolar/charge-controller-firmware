@@ -447,6 +447,10 @@ void data_objects_update_conf()
     if (battery_conf_check(&bat_conf_user)) {
         printf("New config valid and activated.\n");
         battery_conf_overwrite(&bat_conf_user, &bat_conf, &charger);
+        load.set_voltage_limits(
+            bat_conf.voltage_load_disconnect * charger.num_batteries,
+            bat_conf.voltage_load_reconnect * charger.num_batteries,
+            bat_conf.voltage_absolute_max * charger.num_batteries);
         changed = true;
     }
     else {

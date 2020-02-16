@@ -234,7 +234,7 @@ public:
 
     uint32_t state;             ///< Current charger state (see enum ChargerState)
 
-    int32_t num_batteries = 1;          ///< Used for automatic 12V/24V battery detection at
+    int32_t num_batteries = 1;      ///< Used for automatic 12V/24V battery detection at
                                     ///< start-up (can be 1 or 2 only)
 
     float bat_temperature = 25;     ///< Battery temperature in °C from ext. temperature sensor
@@ -279,6 +279,12 @@ public:
      * Must be called exactly once per second, otherwise SOC calculation gets wrong.
      */
     void update_soc(BatConf *bat_conf);
+
+    /** Initialize terminal and dc bus for battery connection
+     *
+     * @param bat Configuration to be used for terminal setpoints
+     */
+    void init_terminal(BatConf *bat);
 
 private:
     void enter_state(int next_state);
@@ -360,17 +366,5 @@ void battery_conf_overwrite(BatConf *source, BatConf *destination, Charger *char
  * Returns true if changed
  */
 bool battery_conf_changed(BatConf *a, BatConf *b);
-
-/** Initialize terminal and dc bus for battery connection
- *
- * @param num_batteries definies the number of series connected batteries, e.g. 2 for 24V system
- */
-void battery_init_terminal(PowerPort *port, BatConf *bat, unsigned int num_batteries);
-
-/** Initialize terminal and dc bus for battery connection
- *
- * @param num_batteries definies the number of series connected batteries, e.g. 2 for 24V system
- */
-void battery_init_load(LoadOutput *port, BatConf *bat, unsigned int num_batteries);
 
 #endif /* BAT_CHARGER_H */

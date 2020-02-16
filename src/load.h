@@ -77,6 +77,15 @@ public:
      */
     void stop(uint32_t error_flag = 0);
 
+    /**
+     * Update of load voltage limits (typically based on battery configuration)
+     *
+     * @param lvd Low voltage disconnect setpoint
+     * @param lvr Low voltage reconnect setpoint
+     * @param ov Overvoltage setpoint
+     */
+    void set_voltage_limits(float lvd, float lvr, float ov);
+
     uint32_t state;             ///< Current state of load output switch (DEPRECATED)
     uint32_t usb_state;         ///< Current state of USB output (DEPRECATED)
 

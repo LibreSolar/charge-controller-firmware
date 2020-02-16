@@ -216,3 +216,11 @@ void LoadOutput::stop(uint32_t error_flag)
         oc_timestamp = uptime();
     }
 }
+
+void LoadOutput::set_voltage_limits(float lvd, float lvr, float ov)
+{
+    disconnect_voltage = lvd;
+    reconnect_voltage = lvr;
+
+    overvoltage = ov;
+}
