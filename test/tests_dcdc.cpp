@@ -16,6 +16,7 @@
 
 static void init_structs_buck()
 {
+    dev_stat.error_flags = 0;
     hv_terminal.init_solar();
     hv_terminal.bus->voltage = 20;
     hv_terminal.bus->src_voltage_bound = 18;
@@ -38,6 +39,7 @@ static void init_structs_buck()
 
 static void start_buck()
 {
+    dev_stat.error_flags = 0;
     init_structs_buck();
     half_bridge_init(70, 200, 12 / dcdc.hs_voltage_max, 0.97);
     dcdc.control();

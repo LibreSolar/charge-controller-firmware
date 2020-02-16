@@ -282,6 +282,8 @@ public:
 
 private:
     void enter_state(int next_state);
+
+    int uv_debounce_counter = 0;
 };
 
 

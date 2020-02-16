@@ -295,26 +295,34 @@ void Charger::discharge_control(BatConf *bat_conf)
         if (port->bus->voltage < num_batteries *
             (bat_conf->voltage_load_disconnect - port->current * port->bus->droop_res))
         {
-            // low state of charge
-            port->neg_current_limit = 0;
-            num_deep_discharges++;
-            dev_stat.set_error(ERR_BAT_UNDERVOLTAGE);
+            uv_debounce_counter++;
+            if (uv_debounce_counter >= 3) {      // 3s in undervoltage --> switch off
+                // low state of charge
+                port->neg_current_limit = 0;
+                num_deep_discharges++;
+                dev_stat.set_error(ERR_BAT_UNDERVOLTAGE);
 
-            if (usable_capacity == 0.0F) {
-                // reset to measured value if discharged the first time
-                usable_capacity = discharged_Ah;
-            }
-            else {
-                // slowly adapt new measurements with low-pass filter
-                usable_capacity =
-                    0.8 * usable_capacity +
-                    0.2 * discharged_Ah;
-            }
+                if (usable_capacity == 0.0F) {
+                    // reset to measured value if discharged the first time
+                    usable_capacity = discharged_Ah;
+                }
+                else {
+                    // slowly adapt new measurements with low-pass filter
+                    usable_capacity =
+                        0.8 * usable_capacity +
+                        0.2 * discharged_Ah;
+                }
 
-            // simple SOH estimation
-            soh = usable_capacity / bat_conf->nominal_capacity;
+                // simple SOH estimation
+                soh = usable_capacity / bat_conf->nominal_capacity;
+            }
         }
-        else if (bat_temperature > bat_conf->discharge_temp_max) {
+        else {
+            uv_debounce_counter = 0;
+        }
+
+
+        if (bat_temperature > bat_conf->discharge_temp_max) {
             port->neg_current_limit = 0;
             dev_stat.set_error(ERR_BAT_DIS_OVERTEMP);
         }

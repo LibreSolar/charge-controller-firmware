@@ -223,6 +223,9 @@ void stop_discharge_at_low_voltage()
 
     bat_terminal.bus->voltage = bat_conf.voltage_load_disconnect - 0.1;
     charger.discharge_control(&bat_conf);
+    charger.discharge_control(&bat_conf);       // 2s: still on
+    TEST_ASSERT_NOT_EQUAL(0, bat_terminal.neg_current_limit);
+    charger.discharge_control(&bat_conf);       // 3s: off
     TEST_ASSERT_EQUAL(0, bat_terminal.neg_current_limit);
 }
 
@@ -253,6 +256,8 @@ void restart_discharge_if_allowed()
     // stop because of undervoltage
     bat_terminal.bus->voltage = bat_conf.voltage_load_disconnect - 0.1;
     charger.discharge_control(&bat_conf);
+    charger.discharge_control(&bat_conf);
+    charger.discharge_control(&bat_conf);       // 3s debounce
     TEST_ASSERT_EQUAL(0, bat_terminal.neg_current_limit);
 
     // increase voltage slightly above DISconnect voltage
