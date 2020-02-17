@@ -209,6 +209,36 @@ void battery_conf_overwrite(BatConf *source, BatConf *destination, Charger *char
     // - restart DC/DC
 }
 
+bool battery_conf_changed(BatConf *a, BatConf *b)
+{
+    if (
+        a->topping_voltage                != b->topping_voltage ||
+        a->voltage_recharge               != b->voltage_recharge ||
+        a->voltage_load_reconnect         != b->voltage_load_reconnect ||
+        a->voltage_load_disconnect        != b->voltage_load_disconnect ||
+        a->voltage_absolute_max           != b->voltage_absolute_max ||
+        a->voltage_absolute_min           != b->voltage_absolute_min ||
+        a->charge_current_max             != b->charge_current_max ||
+        a->topping_current_cutoff         != b->topping_current_cutoff ||
+        a->topping_duration               != b->topping_duration ||
+        a->trickle_enabled                != b->trickle_enabled ||
+        a->trickle_voltage                != b->trickle_voltage ||
+        a->trickle_recharge_time          != b->trickle_recharge_time ||
+        a->charge_temp_max                != b->charge_temp_max ||
+        a->charge_temp_min                != b->charge_temp_min ||
+        a->discharge_temp_max             != b->discharge_temp_max ||
+        a->discharge_temp_min             != b->discharge_temp_min ||
+        a->temperature_compensation       != b->temperature_compensation ||
+        a->internal_resistance            != b->internal_resistance ||
+        a->wire_resistance                != b->wire_resistance
+    ) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
 void Charger::detect_num_batteries(BatConf *bat)
 {
     if (port->bus->voltage > bat->voltage_absolute_min * 2 &&

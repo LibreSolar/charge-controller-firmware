@@ -353,6 +353,12 @@ bool battery_conf_check(BatConf *bat);
  */
 void battery_conf_overwrite(BatConf *source, BatConf *destination, Charger *charger = NULL);
 
+/** Checks if incoming configuration is different to current configuration
+ *
+ * Returns true if changed
+ */
+bool battery_conf_changed(BatConf *a, BatConf *b);
+
 /** Initialize terminal and dc bus for battery connection
  *
  * @param num_batteries definies the number of series connected batteries, e.g. 2 for 24V system
