@@ -16,7 +16,10 @@ void PowerPort::init_nanogrid()
 {
     pos_current_limit = 5.0;
     neg_current_limit = -5.0;
-    bus->droop_res = 0.1;            // 1 Ohm means 1V change of target voltage per amp
+
+    // 1 Ohm means 1V change of target voltage per amp, same droop for both current directions.
+    bus->sink_droop_res = 0.1;
+    bus->src_droop_res = 0.1;
 
     // also initialize the connected bus
     bus->src_voltage_bound = 30.0;          // starting buck mode above this point

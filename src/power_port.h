@@ -46,11 +46,18 @@ public:
     float src_voltage_bound;
 
     /**
-     * Droop resistance to adjust voltage bounds depending on actual current
+     * Droop resistance to adjust voltage bounds for current in sourcing direction
      *
      * control voltage = nominal voltage - droop_res * current
      */
-    float droop_res;
+    float src_droop_res;
+
+    /**
+     * Droop resistance to adjust voltage bounds for current in sinking direction
+     *
+     * control voltage = nominal voltage - droop_res * current
+     */
+    float sink_droop_res;
 
     /**
      * Pointer to current measurement that is used to determine the droop. This is typically the
@@ -70,10 +77,34 @@ public:
      */
     float src_current_margin;
 
-    inline float droop_voltage(float v0)
+    /**
+     * Calculate current-compensated voltage based on bus reference current
+     *
+     * @param voltage_zero_current Voltage at zero current (without droop). If this parameter is
+     *                             left empty, the src_voltage_bound is considered.
+     */
+    inline float src_droop_voltage(float voltage_zero_current = 0)
     {
+        float v0 = (voltage_zero_current == 0) ? src_voltage_bound : voltage_zero_current;
         if (ref_current != nullptr) {
-            return v0 - droop_res * (*ref_current);
+            return v0 - src_droop_res * (*ref_current);
+        }
+        else {
+            return v0;
+        }
+    }
+
+    /**
+     * Calculate current-compensated voltage based on bus reference current
+     *
+     * @param voltage_zero_current Voltage at zero current (without droop). If this parameter is
+     *                             left empty, the sink_voltage_bound is considered.
+     */
+    inline float sink_droop_voltage(float voltage_zero_current = 0)
+    {
+        float v0 = (voltage_zero_current == 0) ? sink_voltage_bound : voltage_zero_current;
+        if (ref_current != nullptr) {
+            return v0 - sink_droop_res * (*ref_current);
         }
         else {
             return v0;

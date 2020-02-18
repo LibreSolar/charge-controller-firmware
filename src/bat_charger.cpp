@@ -293,7 +293,7 @@ void Charger::discharge_control(BatConf *bat_conf)
     if (port->neg_current_limit < 0) {
         // discharging currently allowed. see if that's still valid:
         if (port->bus->voltage < num_batteries *
-            (bat_conf->voltage_load_disconnect - port->current * port->bus->droop_res))
+            port->bus->src_droop_voltage(bat_conf->voltage_load_disconnect))
         {
             uv_debounce_counter++;
             if (uv_debounce_counter >= 3) {      // 3s in undervoltage --> switch off
@@ -334,7 +334,7 @@ void Charger::discharge_control(BatConf *bat_conf)
     else {
         // discharging currently not allowed. should we allow it?
         if (port->bus->voltage >= num_batteries *
-            (bat_conf->voltage_load_reconnect - port->current * port->bus->droop_res)
+            port->bus->src_droop_voltage(bat_conf->voltage_load_reconnect)
             && bat_temperature < bat_conf->discharge_temp_max - 1
             && bat_temperature > bat_conf->discharge_temp_min + 1)
         {
@@ -395,9 +395,7 @@ void Charger::charge_control(BatConf *bat_conf)
             port->bus->sink_voltage_bound = num_batteries * (bat_conf->topping_voltage +
                 bat_conf->temperature_compensation * (bat_temperature - 25));
 
-            if (port->bus->voltage >
-                port->bus->droop_voltage(port->bus->sink_voltage_bound))
-            {
+            if (port->bus->voltage > port->bus->sink_droop_voltage()) {
                 target_voltage_timer = 0;
                 enter_state(CHG_STATE_TOPPING);
             }
@@ -408,9 +406,7 @@ void Charger::charge_control(BatConf *bat_conf)
             port->bus->sink_voltage_bound = num_batteries * (bat_conf->topping_voltage +
                 bat_conf->temperature_compensation * (bat_temperature - 25));
 
-            if (port->bus->voltage >=
-                port->bus->droop_voltage(port->bus->sink_voltage_bound) - 0.05F)
-            {
+            if (port->bus->voltage >= port->bus->sink_droop_voltage() - 0.05F) {
                 // battery is full if topping target voltage is still reached (i.e. sufficient
                 // solar power available) and time limit or cut-off current reached
                 if (port->current < bat_conf->topping_current_cutoff ||
@@ -457,9 +453,7 @@ void Charger::charge_control(BatConf *bat_conf)
             port->bus->sink_voltage_bound = num_batteries * (bat_conf->trickle_voltage +
                 bat_conf->temperature_compensation * (bat_temperature - 25));
 
-            if (port->bus->voltage >= num_batteries *
-                (port->bus->sink_voltage_bound - port->current * port->bus->droop_res))
-            {
+            if (port->bus->voltage >= port->bus->sink_droop_voltage()) {
                 time_target_voltage_reached = uptime();
             }
 
@@ -512,5 +506,9 @@ void Charger::init_terminal(BatConf *bat)
     port->pos_current_limit = bat->charge_current_max;
 
     // negative sign for compensation of actual resistance
-    port->bus->droop_res = -(bat->internal_resistance + bat->wire_resistance) * num_batteries;
+    port->bus->sink_droop_res = -bat->wire_resistance;
+
+    // in discharging direction also include battery internal resistance for current-compensation
+    // of voltage setpoints
+    port->bus->src_droop_res = -bat->wire_resistance - bat->internal_resistance * num_batteries;
 }
