@@ -118,8 +118,8 @@ static const enum pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
 #define NTC_BETA_VALUE 3435
 #define NTC_SERIES_RESISTOR 8200.0
 
-#define ADC_GAIN_V_BAT (132 / 12)
-#define ADC_GAIN_V_SOLAR (1 + 120/12 + 120/8.2)
+#define ADC_GAIN_V_LOW (132 / 12)
+#define ADC_GAIN_V_PWM (1 + 120/12 + 120/8.2)
 
 #ifdef CONFIG_BOARD_PWM_2420_LUS_0V2
 // op amp gain: 68/2.2, resistor: 2 mOhm
@@ -129,17 +129,17 @@ static const enum pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
 #define ADC_GAIN_I_LOAD (1000 / 2 / (68/2.2) * (39+12+8.2) / (12+8.2))
 #endif
 
-#define ADC_GAIN_I_SOLAR (1000 / 2 / (68/2.2))
+#define ADC_GAIN_I_PWM (1000 / 2 / (68/2.2))
 
-#define ADC_OFFSET_V_SOLAR (-120.0 / 8.2)        // to be multiplied with VDDA to get absolute voltage offset
+#define ADC_OFFSET_V_PWM (-120.0 / 8.2)        // to be multiplied with VDDA to get absolute voltage offset
 
 
 // position in the array written by the DMA controller
 enum {
-    ADC_POS_V_BAT,      // ADC 0 (PA_0)
-    ADC_POS_V_SOLAR,    // ADC 1 (PA_1)
+    ADC_POS_V_LOW,      // ADC 0 (PA_0)
+    ADC_POS_V_PWM,      // ADC 1 (PA_1)
     ADC_POS_I_LOAD,     // ADC 5 (PA_5)
-    ADC_POS_I_SOLAR,    // ADC 6 (PA_6)
+    ADC_POS_I_PWM,      // ADC 6 (PA_6)
     ADC_POS_TEMP_BAT,   // ADC 7 (PA_7)
     ADC_POS_VREF_MCU,   // ADC 17
     ADC_POS_TEMP_MCU,   // ADC 18

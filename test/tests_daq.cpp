@@ -29,13 +29,13 @@ void check_filtering()
 
     uint32_t adc_filtered_bak[NUM_ADC_CH];
     adc_filtered_bak[ADC_POS_VREF_MCU] = get_adc_filtered(ADC_POS_VREF_MCU);
-    adc_filtered_bak[ADC_POS_V_SOLAR] = get_adc_filtered(ADC_POS_V_SOLAR);
+    adc_filtered_bak[ADC_POS_V_HIGH] = get_adc_filtered(ADC_POS_V_HIGH);
 
     // overwrite filtered values
     prepare_adc_filtered();
 
     TEST_ASSERT_EQUAL(get_adc_filtered(ADC_POS_VREF_MCU), adc_filtered_bak[ADC_POS_VREF_MCU]);
-    TEST_ASSERT_EQUAL(get_adc_filtered(ADC_POS_V_SOLAR), adc_filtered_bak[ADC_POS_V_SOLAR]);
+    TEST_ASSERT_EQUAL(get_adc_filtered(ADC_POS_V_HIGH), adc_filtered_bak[ADC_POS_V_HIGH]);
 }
 
 void check_solar_terminal_readings()
@@ -75,14 +75,14 @@ void adc_alert_undervoltage_triggering()
     battery_conf_init(&bat_conf, BAT_TYPE_LFP, 4, 100);
     daq_set_lv_alerts(bat_conf.voltage_absolute_max, bat_conf.voltage_absolute_min);
     prepare_adc_filtered();
-    adc_update_value(ADC_POS_V_BAT);
+    adc_update_value(ADC_POS_V_LOW);
 
     // undervoltage test
     adcval.battery_voltage = bat_conf.voltage_absolute_min - 0.1;
     prepare_adc_readings(adcval);
-    adc_update_value(ADC_POS_V_BAT);
+    adc_update_value(ADC_POS_V_LOW);
     TEST_ASSERT_EQUAL(false, dev_stat.has_error(ERR_LOAD_VOLTAGE_DIP));
-    adc_update_value(ADC_POS_V_BAT);
+    adc_update_value(ADC_POS_V_LOW);
     load.control();
     TEST_ASSERT_EQUAL(true, dev_stat.has_error(ERR_LOAD_VOLTAGE_DIP));
     TEST_ASSERT_EQUAL(false, load.pgood);
@@ -104,16 +104,16 @@ void adc_alert_overvoltage_triggering()
     battery_conf_init(&bat_conf, BAT_TYPE_LFP, 4, 100);
     daq_set_lv_alerts(bat_conf.voltage_absolute_max, bat_conf.voltage_absolute_min);
     prepare_adc_filtered();
-    adc_update_value(ADC_POS_V_BAT);
+    adc_update_value(ADC_POS_V_LOW);
 
     dcdc.state = DCDC_STATE_MPPT;
 
     // overvoltage test
     adcval.battery_voltage = bat_conf.voltage_absolute_max + 0.1;
     prepare_adc_readings(adcval);
-    adc_update_value(ADC_POS_V_BAT);
+    adc_update_value(ADC_POS_V_LOW);
     TEST_ASSERT_EQUAL(false, dev_stat.has_error(ERR_BAT_OVERVOLTAGE));
-    adc_update_value(ADC_POS_V_BAT);
+    adc_update_value(ADC_POS_V_LOW);
     TEST_ASSERT_EQUAL(true, dev_stat.has_error(ERR_BAT_OVERVOLTAGE));
     TEST_ASSERT_EQUAL(false, pwm_switch.active());
     TEST_ASSERT_EQUAL(DCDC_STATE_OFF, dcdc.state);

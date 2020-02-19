@@ -72,21 +72,21 @@ static const pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
 #define NTC_BETA_VALUE 3435
 #define NTC_SERIES_RESISTOR 8200.0
 
-#define ADC_GAIN_V_BAT (105.6 / 5.6)    // both voltage dividers: 100k + 5.6k
-#define ADC_GAIN_V_SOLAR (105.6 / 5.6)
+#define ADC_GAIN_V_LOW  (105.6 / 5.6)   // both voltage dividers: 100k + 5.6k
+#define ADC_GAIN_V_HIGH (105.6 / 5.6)
+#define ADC_GAIN_V_PWM  (105.6 / 5.6)
 #define ADC_GAIN_I_LOAD (1000 / 4 / 50) // amp gain: 50, resistor: 4 mOhm
 #define ADC_GAIN_I_DCDC (1000 / 4 / 50)
+#define ADC_GAIN_I_PWM  (1000 / 4 / 50)
 
-#define ADC_OFFSET_V_SOLAR (-120.0 / 8.2)        // to be multiplied with VDDA to get absolute voltage offset
-
-// trick to pass unit tests for MPPT
-#define ADC_POS_I_SOLAR ADC_POS_I_DCDC
-#define ADC_GAIN_I_SOLAR ADC_GAIN_I_DCDC
+#define ADC_OFFSET_V_PWM (-120.0 / 8.2)        // to be multiplied with VDDA to get absolute voltage offset
 
 // position in the array written by the DMA controller
 enum {
-    ADC_POS_V_BAT,      // ADC 0 (PA_0)
-    ADC_POS_V_SOLAR,    // ADC 1 (PA_1)
+    ADC_POS_V_LOW,      // ADC 0 (PA_0)
+    ADC_POS_V_HIGH,     // ADC 1 (PA_1)
+    ADC_POS_V_PWM,      // ADC 3 (PA_2)
+    ADC_POS_I_PWM,      // ADC 4 (PA_4)
     ADC_POS_I_LOAD,     // ADC 5 (PA_5)
     ADC_POS_I_DCDC,     // ADC 6 (PA_6)
     ADC_POS_TEMP_BAT,   // ADC 7 (PA_7)

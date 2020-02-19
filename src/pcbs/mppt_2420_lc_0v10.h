@@ -100,8 +100,8 @@ static const enum pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
 #define NTC_BETA_VALUE 3435
 #define NTC_SERIES_RESISTOR 10000.0
 
-#define ADC_GAIN_V_BAT (110.0 / 10 )    // battery voltage divider 100k + 10k
-#define ADC_GAIN_V_SOLAR (105.6 / 5.6)  // solar voltage divider: 100k + 5.6k
+#define ADC_GAIN_V_LOW  (110.0 / 10 )   // battery voltage divider 100k + 10k
+#define ADC_GAIN_V_HIGH (105.6 / 5.6)   // solar voltage divider: 100k + 5.6k
 #define ADC_GAIN_I_LOAD (1000 / 2 / (1500.0 / 22.0)) // op amp gain: 150/2.2 = 68.2, resistor: 2 mOhm
 #define ADC_GAIN_I_DCDC (1000 / 2 / (1500.0 / 22.0))
 
@@ -110,8 +110,8 @@ enum {
     ADC_POS_TEMP_BAT,   // ADC 0 (PA_0)
     ADC_POS_TEMP_FETS,  // ADC 1 (PA_1)
     ADC_POS_V_REF,      // ADC 5 (PA_5)
-    ADC_POS_V_BAT,      // ADC 6 (PA_6)
-    ADC_POS_V_SOLAR,    // ADC 7 (PA_7)
+    ADC_POS_V_LOW,      // ADC 6 (PA_6)
+    ADC_POS_V_HIGH,     // ADC 7 (PA_7)
     ADC_POS_I_LOAD,     // ADC 8 (PB_0)
     ADC_POS_I_DCDC,     // ADC 9 (PB_1)
     ADC_POS_TEMP_MCU,   // ADC 16

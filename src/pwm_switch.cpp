@@ -77,7 +77,7 @@ extern "C" void TIM3_IRQHandler(void)
     if ((int)TIM3->CCR4 < _pwm_resolution) {
         // turning the PWM switch on creates a short voltage rise, so inhibit alerts by 10 ms
         // at each rising edge if switch is not continuously on
-        adc_upper_alert_inhibit(ADC_POS_V_BAT, 10);
+        adc_upper_alert_inhibit(ADC_POS_V_LOW, 10);
     }
 }
 
@@ -221,7 +221,7 @@ void PwmSwitch::control()
             && enable == true)
         {
             // turning the PWM switch on creates a short voltage rise, so inhibit alerts by 50 ms
-            adc_upper_alert_inhibit(ADC_POS_V_BAT, 50);
+            adc_upper_alert_inhibit(ADC_POS_V_LOW, 50);
             pwm_signal_start(1);
             print_info("PWM charger start.\n");
         }

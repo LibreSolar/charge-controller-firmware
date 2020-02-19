@@ -84,7 +84,7 @@ void calibrate_current_sensors()
 {
     int vcc = VREFINT_VALUE * VREFINT_CAL / adc_value(ADC_POS_VREF_MCU);
 #if CONFIG_HAS_PWM_SWITCH
-    solar_current_offset = -adc_scaled(ADC_POS_I_SOLAR, vcc, ADC_GAIN_I_SOLAR);
+    solar_current_offset = -adc_scaled(ADC_POS_I_PWM, vcc, ADC_GAIN_I_PWM);
 #endif
 #if CONFIG_HAS_DCDC_CONVERTER
     solar_current_offset = -adc_scaled(ADC_POS_I_DCDC, vcc, ADC_GAIN_I_DCDC);
@@ -99,7 +99,7 @@ void adc_update_value(unsigned int pos)
     // see also here: http://techteach.no/simview/lowpass_filter/doc/filter_algorithm.pdf
 
 #if CONFIG_HAS_PWM_SWITCH == 1
-    if (pos == ADC_POS_V_SOLAR || pos == ADC_POS_I_SOLAR) {
+    if (pos == ADC_POS_V_PWM || pos == ADC_POS_I_PWM) {
         // only read input voltage and current when switch is on or permanently off
         if (pwm_switch.signal_high() || pwm_switch.active() == false) {
             adc_filtered[pos] += (uint32_t)adc_readings[pos] - (adc_filtered[pos] >> ADC_FILTER_CONST);
@@ -154,15 +154,15 @@ void daq_update()
     //int vcc = 3300;
 
     // calculate lower voltage first, as it is needed for PWM terminal voltage calculation
-    lv_bus.voltage = adc_scaled(ADC_POS_V_BAT, vcc, ADC_GAIN_V_BAT);
+    lv_bus.voltage = adc_scaled(ADC_POS_V_LOW, vcc, ADC_GAIN_V_LOW);
 
 #if CONFIG_HAS_DCDC_CONVERTER
-    hv_bus.voltage = adc_scaled(ADC_POS_V_SOLAR, vcc, ADC_GAIN_V_SOLAR);
+    hv_bus.voltage = adc_scaled(ADC_POS_V_HIGH, vcc, ADC_GAIN_V_HIGH);
 #endif
 
 #if CONFIG_HAS_PWM_SWITCH
-    pwm_switch.ext_voltage = lv_bus.voltage - vcc * (ADC_OFFSET_V_SOLAR / 1000.0) -
-        adc_scaled(ADC_POS_V_SOLAR, vcc, ADC_GAIN_V_SOLAR);
+    pwm_switch.ext_voltage = lv_bus.voltage - vcc * (ADC_OFFSET_V_PWM / 1000.0) -
+        adc_scaled(ADC_POS_V_PWM, vcc, ADC_GAIN_V_PWM);
 #endif
 
     load_terminal.current =
@@ -171,7 +171,7 @@ void daq_update()
 #if CONFIG_HAS_PWM_SWITCH
     // current multiplied with PWM duty cycle for PWM charger to get avg current for correct power calculation
     pwm_switch.current = -pwm_switch.get_duty_cycle() * (
-        adc_scaled(ADC_POS_I_SOLAR, vcc, ADC_GAIN_I_SOLAR) + solar_current_offset);
+        adc_scaled(ADC_POS_I_PWM, vcc, ADC_GAIN_I_PWM) + solar_current_offset);
 
     lv_terminal.current = -pwm_switch.current - load_terminal.current;
 
@@ -243,7 +243,7 @@ void high_voltage_alert()
     dev_stat.set_error(ERR_BAT_OVERVOLTAGE);
 
     print_error("High voltage alert, ADC reading: %d limit: %d\n",
-        adc_readings[ADC_POS_V_BAT], adc_alerts_upper[ADC_POS_V_BAT].limit);
+        adc_readings[ADC_POS_V_LOW], adc_alerts_upper[ADC_POS_V_LOW].limit);
 }
 
 void low_voltage_alert()
@@ -252,7 +252,7 @@ void low_voltage_alert()
     load.stop(ERR_LOAD_VOLTAGE_DIP);
 
     print_error("Low voltage alert, ADC reading: %d limit: %d\n",
-        adc_readings[ADC_POS_V_BAT], adc_alerts_lower[ADC_POS_V_BAT].limit);
+        adc_readings[ADC_POS_V_LOW], adc_alerts_lower[ADC_POS_V_LOW].limit);
 }
 
 void adc_upper_alert_inhibit(int adc_pos, int timeout_ms)
@@ -275,15 +275,15 @@ uint16_t adc_get_alert_limit(float scale, float limit)
 void daq_set_lv_alerts(float upper, float lower)
 {
     int vcc = VREFINT_VALUE * VREFINT_CAL / adc_value(ADC_POS_VREF_MCU);
-    float scale =  ((4096* 1000) / (ADC_GAIN_V_BAT)) / vcc;
+    float scale =  ((4096* 1000) / (ADC_GAIN_V_LOW)) / vcc;
 
     // LV side (battery) overvoltage alert
-    adc_alerts_upper[ADC_POS_V_BAT].limit = adc_get_alert_limit(scale, upper);
-    adc_alerts_upper[ADC_POS_V_BAT].callback = high_voltage_alert;
+    adc_alerts_upper[ADC_POS_V_LOW].limit = adc_get_alert_limit(scale, upper);
+    adc_alerts_upper[ADC_POS_V_LOW].callback = high_voltage_alert;
 
     // LV side (battery) undervoltage alert
-    adc_alerts_lower[ADC_POS_V_BAT].limit = adc_get_alert_limit(scale, lower);
-    adc_alerts_lower[ADC_POS_V_BAT].callback = low_voltage_alert;
+    adc_alerts_lower[ADC_POS_V_LOW].limit = adc_get_alert_limit(scale, lower);
+    adc_alerts_lower[ADC_POS_V_LOW].callback = low_voltage_alert;
 }
 
 #if defined(UNIT_TEST)
@@ -293,8 +293,8 @@ void daq_set_lv_alerts(float upper, float lower)
 void prepare_adc_readings(AdcValues values)
 {
     adc_readings[ADC_POS_VREF_MCU] = (uint16_t)(1.224 / 3.3 * 4096) << 4;
-    adc_readings[ADC_POS_V_SOLAR] = (uint16_t)((values.solar_voltage / (ADC_GAIN_V_SOLAR)) / 3.3 * 4096) << 4;
-    adc_readings[ADC_POS_V_BAT] = (uint16_t)((values.battery_voltage / (ADC_GAIN_V_BAT)) / 3.3 * 4096) << 4;
+    adc_readings[ADC_POS_V_HIGH] = (uint16_t)((values.solar_voltage / (ADC_GAIN_V_HIGH)) / 3.3 * 4096) << 4;
+    adc_readings[ADC_POS_V_LOW] = (uint16_t)((values.battery_voltage / (ADC_GAIN_V_LOW)) / 3.3 * 4096) << 4;
     adc_readings[ADC_POS_I_DCDC] = (uint16_t)((values.dcdc_current / (ADC_GAIN_I_DCDC)) / 3.3 * 4096) << 4;
     adc_readings[ADC_POS_I_LOAD] = (uint16_t)((values.load_current / (ADC_GAIN_I_LOAD)) / 3.3 * 4096) << 4;
 }
