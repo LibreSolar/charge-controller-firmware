@@ -115,6 +115,8 @@ enum {
     NUM_ADC_CH          // trick to get the number of elements
 };
 
+#define NUM_ADC_1_CH NUM_ADC_CH
+
 // selected ADC channels (has to match with above enum)
 #define ADC_CHSEL ( \
     ADC_CHSELR_CHSEL0 | \

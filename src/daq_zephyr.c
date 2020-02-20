@@ -84,12 +84,6 @@ static const u32_t table_seq_len[] = {
 // for ADC and DMA
 extern uint16_t adc_readings[];
 
-#if defined(CONFIG_SOC_SERIES_STM32G4X)
-// Added these temporarily. Need to change it according to the actual use of ADC2
-#define NUM_ADC_2_CH    1
-volatile uint16_t adc_readings_2[NUM_ADC_2_CH] = {};
-#endif // #if defined(CONFIG_SOC_SERIES_STM32G4X)
-
 void adc_update_value(unsigned int pos);
 
 static void dac_setup()
@@ -138,11 +132,13 @@ static void adc_init(ADC_TypeDef *adc)
 
     LL_ADC_SetCommonClock(__LL_ADC_COMMON_INSTANCE(adc), LL_ADC_CLOCK_SYNC_PCLK_DIV4);
 
+    // Calibration got stuck during testing. TODO: Check and improve!
+    /*
     // Start calibration of the ADCs
     LL_ADC_StartCalibration(adc, LL_ADC_SINGLE_ENDED);
-
     while (LL_ADC_IsCalibrationOnGoing(adc)) {
     }
+    */
 
     if (LL_ADC_IsActiveFlag_ADRDY(adc)) {
         LL_ADC_ClearFlag_ADRDY(adc);
@@ -158,21 +154,14 @@ static void adc_init(ADC_TypeDef *adc)
 	LL_ADC_REG_SetSequencerChannels(adc, ADC_CHSEL);
 
 #else // Others including CONFIG_SOC_SERIES_STM32G4X
-    if (adc == ADC1) {
-        for (int i = 0; i < NUM_ADC_1_CH; i++) {
-            LL_ADC_REG_SetSequencerRanks(adc, table_rank[i], adc_1_sequence[i]);
-
-            LL_ADC_SetChannelSamplingTime(adc, adc_1_sequence[i], LL_ADC_SAMPLINGTIME_47CYCLES_5);
-        }
-        LL_ADC_REG_SetSequencerLength(adc, table_seq_len[NUM_ADC_1_CH]);
+    const uint32_t *adc_seq = (adc == ADC1) ? adc_1_sequence : adc_2_sequence;
+    int num_ch = (adc == ADC1) ? NUM_ADC_1_CH : NUM_ADC_2_CH;
+    for (int i = 0; i < num_ch; i++) {
+        LL_ADC_REG_SetSequencerRanks(adc, table_rank[i], adc_seq[i]);
+        LL_ADC_SetChannelSamplingTime(adc, adc_seq[i], LL_ADC_SAMPLINGTIME_47CYCLES_5);
     }
-    else if (adc == ADC2) {
-        // This needs to be adapted to the ADC2 requirements of the board.
-        LL_ADC_REG_SetSequencerRanks (adc, LL_ADC_REG_RANK_1, LL_ADC_CHANNEL_17);
-        LL_ADC_SetChannelSamplingTime(adc, LL_ADC_CHANNEL_17, LL_ADC_SAMPLINGTIME_47CYCLES_5);
-        LL_ADC_REG_SetSequencerLength(adc, LL_ADC_REG_SEQ_SCAN_DISABLE);
-    }
-#endif // #if defined(CONFIG_SOC_SERIES_STM32F0X) || defined(CONFIG_SOC_SERIES_STM32L0X)
+    LL_ADC_REG_SetSequencerLength(adc, table_seq_len[num_ch - 1]);
+#endif // defined(CONFIG_SOC_SERIES_STM32F0X) || defined(CONFIG_SOC_SERIES_STM32L0X)
 
     LL_ADC_SetDataAlignment(adc, LL_ADC_DATA_ALIGN_LEFT);
     LL_ADC_SetResolution(adc, LL_ADC_RESOLUTION_12B);
@@ -192,15 +181,13 @@ static void adc_setup()
     gpio_pin_configure(dev, DT_SWITCH_V_SOLAR_GPIOS_PIN,
         DT_SWITCH_V_SOLAR_GPIOS_FLAGS | GPIO_OUTPUT_ACTIVE);
 #endif
-    // Initialise ADC1
+
     adc_init(ADC1);
 
 #if defined(CONFIG_SOC_SERIES_STM32G4X)
-    // Initialise ADC2
     adc_init(ADC2);
-#endif // #if defined(CONFIG_SOC_SERIES_STM32G4X)
+#endif
 }
-
 
 static inline void adc_trigger_conversion(struct k_timer *timer_id)
 {
@@ -215,7 +202,7 @@ static void DMA1_Channel1_IRQHandler(void *args)
 {
     if ((DMA1->ISR & DMA_ISR_TCIF1) != 0) // Test if transfer completed on DMA channel 1
     {
-        for (unsigned int i = 0; i < NUM_ADC_CH; i++) {
+        for (unsigned int i = 0; i < NUM_ADC_1_CH; i++) {
             adc_update_value(i);
         }
     }
@@ -225,27 +212,29 @@ static void DMA1_Channel1_IRQHandler(void *args)
 #if defined(CONFIG_SOC_SERIES_STM32G4X)
 static void DMA2_Channel1_IRQHandler(void *args)
 {
-    if ((DMA2->ISR & DMA_ISR_TCIF1) != 0) { // Test if transfer completed on DMA channel 1
-        printk("ADC 2 - Read ch 0: %X\n", adc_readings_2[0]);
+    if ((DMA2->ISR & DMA_ISR_TCIF1) != 0) { // Test if transfer completed on DMA channel 2
+        for (unsigned int i = NUM_ADC_1_CH; i < NUM_ADC_1_CH + NUM_ADC_2_CH; i++) {
+            adc_update_value(i);
+        }
     }
     DMA2->IFCR |= 0x0FFFFFFF;       // clear all interrupt registers
 }
-#endif
+#endif // CONFIG_SOC_SERIES_STM32G4X
 
 // Assuming DMA1 is mapped to ADC1 and DMA2 mapped to ADC2.
 static void dma_init(DMA_TypeDef *dma)
 {
 #if defined(CONFIG_SOC_SERIES_STM32G4X)
     LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_DMAMUX1);
-    if (dma == DMA1) { // DMA1
+    if (dma == DMA1) {
         LL_DMA_SetPeriphRequest(dma, LL_DMA_CHANNEL_1, LL_DMAMUX_REQ_ADC1);
     }
-    else if (dma == DMA2) { // DMA2
+    else if (dma == DMA2) {
         LL_DMA_SetPeriphRequest(dma, LL_DMA_CHANNEL_1, LL_DMAMUX_REQ_ADC2);
     }
 #endif // CONFIG_SOC_SERIES_STM32G4X
 
-    if (dma == DMA1) { // DMA1
+    if (dma == DMA1) {
         LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_DMA1);
 
         LL_DMA_ConfigAddresses(dma, LL_DMA_CHANNEL_1,
@@ -254,22 +243,23 @@ static void dma_init(DMA_TypeDef *dma)
             LL_DMA_DIRECTION_PERIPH_TO_MEMORY);
 
         // Configure the number of DMA transfers (data length in multiples of size per transfer)
-        LL_DMA_SetDataLength(dma, LL_DMA_CHANNEL_1, NUM_ADC_CH);
+        LL_DMA_SetDataLength(dma, LL_DMA_CHANNEL_1, NUM_ADC_1_CH);
     }
 #if defined(CONFIG_SOC_SERIES_STM32G4X)
-    else if (dma == DMA2) { //DMA2
+    else if (dma == DMA2) {
         LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_DMA2);
 
         // If DMA 2 is mapped to ADC 2
         LL_DMA_ConfigAddresses(dma, LL_DMA_CHANNEL_1,
             LL_ADC_DMA_GetRegAddr(ADC2, LL_ADC_DMA_REG_REGULAR_DATA),   // source address
-            (uint32_t)(&(adc_readings_2[0])),     // destination address
+            // destination address = position behind ADC_1 values
+            (uint32_t)(&(adc_readings[NUM_ADC_1_CH])),
             LL_DMA_DIRECTION_PERIPH_TO_MEMORY);
 
         // Configure the number of DMA transfers (data length in multiples of size per transfer)
         LL_DMA_SetDataLength(dma, LL_DMA_CHANNEL_1, NUM_ADC_2_CH);
     }
-#endif // #if defined(CONFIG_SOC_SERIES_STM32G4X)
+#endif // CONFIG_SOC_SERIES_STM32G4X
 
     LL_DMA_SetMemoryIncMode(dma, LL_DMA_CHANNEL_1, LL_DMA_MEMORY_INCREMENT);
     LL_DMA_SetMemorySize(dma, LL_DMA_CHANNEL_1, LL_DMA_MDATAALIGN_HALFWORD);
@@ -281,17 +271,16 @@ static void dma_init(DMA_TypeDef *dma)
     LL_DMA_EnableChannel(dma, LL_DMA_CHANNEL_1);
 
     // Configure NVIC for DMA (priority 2: second-lowest value for STM32L0/F0)
-    if (dma == DMA1) { // DMA1
+    if (dma == DMA1) {
         IRQ_CONNECT(DMA1_Channel1_IRQn, 2, DMA1_Channel1_IRQHandler, 0, 0);
         irq_enable(DMA1_Channel1_IRQn);
-
     }
 #if defined(CONFIG_SOC_SERIES_STM32G4X)
-    else if (dma == DMA2) { //DMA2
+    else if (dma == DMA2) {
         IRQ_CONNECT(DMA2_Channel1_IRQn, 2, DMA2_Channel1_IRQHandler, 0, 0);
         irq_enable(DMA2_Channel1_IRQn);
     }
-#endif // #if defined(CONFIG_SOC_SERIES_STM32G4X)
+#endif // CONFIG_SOC_SERIES_STM32G4X
 }
 
 static void dma_setup()
@@ -302,7 +291,7 @@ static void dma_setup()
 #if defined(CONFIG_SOC_SERIES_STM32G4X)
     dma_init(DMA2);
     LL_ADC_REG_StartConversion(ADC2);
-#endif //#if defined(CONFIG_SOC_SERIES_STM32G4X)
+#endif // CONFIG_SOC_SERIES_STM32G4X
 }
 
 void daq_setup()

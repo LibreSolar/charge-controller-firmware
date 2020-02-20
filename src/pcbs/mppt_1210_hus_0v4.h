@@ -111,6 +111,8 @@ enum {
     NUM_ADC_CH          // trick to get the number of elements
 };
 
+#define NUM_ADC_1_CH NUM_ADC_CH
+
 // selected ADC channels (has to match with above enum)
 #if defined(STM32F0) || defined(CONFIG_SOC_SERIES_STM32F0X)
 #define ADC_CHSEL ( \

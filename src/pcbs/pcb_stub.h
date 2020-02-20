@@ -95,4 +95,6 @@ enum {
     NUM_ADC_CH          // trick to get the number of elements
 };
 
+#define NUM_ADC_1_CH NUM_ADC_CH
+
 #endif
