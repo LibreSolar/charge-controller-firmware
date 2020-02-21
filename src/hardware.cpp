@@ -11,6 +11,7 @@
 #include "load.h"
 #include "half_bridge.h"
 #include "leds.h"
+#include "setup.h"
 
 #if defined(STM32F0)
 #define SYS_MEM_START       0x1FFFC800
@@ -26,8 +27,6 @@
 #if defined(__MBED__)
 
 #include "mbed.h"
-
-extern LoadOutput load;
 
 #if defined(STM32F0)
 
@@ -156,8 +155,8 @@ void init_watchdog(float timeout) {
 void mbed_die(void)
 {
     half_bridge_stop();
-    load.switch_set(false);
-    load.usb_set(false);
+    load.stop();
+    usb_pwr.stop();
 
     leds_init(false);
 

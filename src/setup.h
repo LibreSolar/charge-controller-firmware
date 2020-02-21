@@ -17,7 +17,6 @@
 
 extern DcBus lv_bus;
 extern PowerPort lv_terminal;
-extern PowerPort load_terminal;
 
 #if CONFIG_HAS_DCDC_CONVERTER
 extern DcBus hv_bus;
@@ -40,6 +39,7 @@ extern BatConf bat_conf;
 extern BatConf bat_conf_user;
 
 extern LoadOutput load;
+extern LoadOutput usb_pwr;
 
 extern ThingSet ts;             // defined in data_objects.cpp
 

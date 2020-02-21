@@ -107,7 +107,7 @@ void ExtOled::process_1s()
         oled.drawBitmap(34, 3, bmp_arrow_right, 5, 7, 1);
     }
 
-    if (load.pgood) {
+    if (load.state == LOAD_STATE_ON) {
         oled.drawBitmap(84, 3, bmp_arrow_right, 5, 7, 1);
     }
     else {
@@ -170,16 +170,16 @@ void ExtOled::process_1s()
     // load data
     oled.setTextCursor(90, 18);
     len = snprintf(buf, sizeof(buf), "%5.1fW",
-        (abs(load_terminal.power) < 0.1) ? 0 : load_terminal.power);    // remove negative zeros
+        (abs(load.power) < 0.1) ? 0 : load.power);    // remove negative zeros
     oled.writeString(buf, len);
     oled.setTextCursor(90, 26);
     len = snprintf(buf, sizeof(buf), "%5.1fA\n",
-        (abs(load_terminal.current) < 0.1) ? 0 : load_terminal.current);
+        (abs(load.current) < 0.1) ? 0 : load.current);
     oled.writeString(buf, len);
 
     oled.setTextCursor(0, 36);
     len = snprintf(buf, sizeof(buf), "Day +%5.0fWh -%5.0fWh",
-        in_terminal.neg_energy_Wh, fabs(load_terminal.pos_energy_Wh));
+        in_terminal.neg_energy_Wh, fabs(load.pos_energy_Wh));
     oled.writeString(buf, len);
     len = snprintf(buf, sizeof(buf), "Tot +%4.1fkWh -%4.1fkWh",
         dev_stat.solar_in_total_Wh / 1000.0, fabs(dev_stat.load_out_total_Wh) / 1000.0);

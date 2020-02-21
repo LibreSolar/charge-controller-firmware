@@ -7,7 +7,7 @@
 #include "tests.h"
 #include "daq.h"
 #include "daq_stub.h"
-
+#include "helper.h"
 #include "setup.h"
 
 #include <stdint.h>
@@ -54,8 +54,8 @@ void check_bat_terminal_readings()
 
 void check_load_terminal_readings()
 {
-    TEST_ASSERT_EQUAL_FLOAT(adcval.battery_voltage, round(load_terminal.bus->voltage * 10) / 10);
-    TEST_ASSERT_EQUAL_FLOAT(adcval.load_current, round(load_terminal.current * 10) / 10);
+    TEST_ASSERT_EQUAL_FLOAT(adcval.battery_voltage, round(load.bus->voltage * 10) / 10);
+    TEST_ASSERT_EQUAL_FLOAT(adcval.load_current, round(load.current * 10) / 10);
 }
 
 void check_lv_bus_int_readings()
@@ -84,9 +84,8 @@ void adc_alert_undervoltage_triggering()
     TEST_ASSERT_EQUAL(false, dev_stat.has_error(ERR_LOAD_VOLTAGE_DIP));
     adc_update_value(ADC_POS_V_LOW);
     load.control();
-    TEST_ASSERT_EQUAL(true, dev_stat.has_error(ERR_LOAD_VOLTAGE_DIP));
-    TEST_ASSERT_EQUAL(false, load.pgood);
-    TEST_ASSERT_EQUAL(LOAD_STATE_OFF_OVERCURRENT, load.state);
+    TEST_ASSERT_EQUAL(true, flags_check(&load.error_flags, ERR_LOAD_VOLTAGE_DIP));
+    TEST_ASSERT_EQUAL(LOAD_STATE_OFF, load.state);
 
     // reset values
     adcval.battery_voltage = 13;

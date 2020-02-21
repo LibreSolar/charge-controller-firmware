@@ -152,7 +152,7 @@ const data_object_t data_objects[] = {
     TS_DATA_OBJ_BOOL(0x40, "LoadEnDefault", &load.enable,
         TS_CONF, TS_READ_ALL | TS_WRITE_ALL),
 
-    TS_DATA_OBJ_BOOL(0x41, "UsbEnDefault", &load.usb_enable,
+    TS_DATA_OBJ_BOOL(0x41, "UsbEnDefault", &usb_pwr.enable,
         TS_CONF, TS_READ_ALL | TS_WRITE_ALL),
 
     TS_DATA_OBJ_FLOAT(0x42, "LoadDisconnect_V", &bat_conf_user.voltage_load_disconnect, 2,
@@ -179,7 +179,7 @@ const data_object_t data_objects[] = {
     TS_DATA_OBJ_BOOL(0x60, "LoadEn", &load.enable,
         TS_INPUT, TS_READ_ALL | TS_WRITE_ALL),
 
-    TS_DATA_OBJ_BOOL(0x61, "UsbEn", &load.usb_enable,
+    TS_DATA_OBJ_BOOL(0x61, "UsbEn", &usb_pwr.enable,
         TS_INPUT, TS_READ_ALL | TS_WRITE_ALL),
 
 #if CONFIG_HAS_DCDC_CONVERTER
@@ -207,7 +207,7 @@ const data_object_t data_objects[] = {
     TS_DATA_OBJ_UINT32(0x04, "LoadState", &load.state,
         TS_OUTPUT, TS_READ_ALL),
 
-    TS_DATA_OBJ_UINT32(0x05, "UsbState", &load.usb_state,
+    TS_DATA_OBJ_UINT32(0x05, "UsbState", &usb_pwr.state,
         TS_OUTPUT, TS_READ_ALL),
 
     TS_DATA_OBJ_UINT16(0x06, "SOC_%", &charger.soc, // output will be uint8_t
@@ -225,7 +225,7 @@ const data_object_t data_objects[] = {
     TS_DATA_OBJ_FLOAT(0x72, "Bat_A", &bat_terminal.current, 2,
         TS_OUTPUT, TS_READ_ALL),
 
-    TS_DATA_OBJ_FLOAT(0x73, "Load_A", &load_terminal.current, 2,
+    TS_DATA_OBJ_FLOAT(0x73, "Load_A", &load.current, 2,
         TS_OUTPUT, TS_READ_ALL),
 
     TS_DATA_OBJ_FLOAT(0x74, "Bat_degC", &charger.bat_temperature, 1,
@@ -269,7 +269,7 @@ const data_object_t data_objects[] = {
         TS_OUTPUT, TS_READ_ALL),
 #endif
 
-    TS_DATA_OBJ_FLOAT(0x7F, "Load_W", &load_terminal.power, 2,
+    TS_DATA_OBJ_FLOAT(0x7F, "Load_W", &load.power, 2,
         TS_OUTPUT, TS_READ_ALL),
 
 #if CONFIG_HV_TERMINAL_NANOGRID
@@ -278,6 +278,9 @@ const data_object_t data_objects[] = {
 #endif
 
     TS_DATA_OBJ_UINT32(0x90, "ErrorFlags", &dev_stat.error_flags,
+        TS_OUTPUT, TS_READ_ALL),
+
+    TS_DATA_OBJ_UINT32(0x91, "LoadErrorFlags", &load.error_flags,
         TS_OUTPUT, TS_READ_ALL),
 
     // RECORDED DATA ///////////////////////////////////////////////////////
@@ -316,7 +319,7 @@ const data_object_t data_objects[] = {
         TS_REC, TS_READ_ALL | TS_WRITE_MAKER),
 #endif
 
-    TS_DATA_OBJ_FLOAT(0xA1, "LoadOutDay_Wh", &load_terminal.pos_energy_Wh, 2,
+    TS_DATA_OBJ_FLOAT(0xA1, "LoadOutDay_Wh", &load.pos_energy_Wh, 2,
         TS_REC, TS_READ_ALL | TS_WRITE_MAKER),
 
     TS_DATA_OBJ_FLOAT(0xA2, "BatChgDay_Wh", &bat_terminal.pos_energy_Wh, 2,

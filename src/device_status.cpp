@@ -53,7 +53,7 @@ void DeviceStatus::update_energy()
             bat_chg_total_Wh_prev = bat_chg_total_Wh;
             bat_dis_total_Wh_prev = bat_dis_total_Wh;
             solar_terminal.neg_energy_Wh = 0.0;
-            load_terminal.pos_energy_Wh = 0.0;
+            load.pos_energy_Wh = 0.0;
             bat_terminal.pos_energy_Wh = 0.0;
             bat_terminal.neg_energy_Wh = 0.0;
         }
@@ -70,7 +70,7 @@ void DeviceStatus::update_energy()
         (solar_terminal.neg_energy_Wh > 0 ? solar_terminal.neg_energy_Wh : 0);
 #endif
     load_out_total_Wh = load_out_total_Wh_prev +
-        (load_terminal.pos_energy_Wh > 0 ? load_terminal.pos_energy_Wh : 0);
+        (load.pos_energy_Wh > 0 ? load.pos_energy_Wh : 0);
 }
 
 void DeviceStatus::update_min_max_values()
@@ -95,8 +95,8 @@ void DeviceStatus::update_min_max_values()
     }
 #endif
 
-    if (load_terminal.current > load_current_max) {
-        load_current_max = load_terminal.current;
+    if (load.current > load_current_max) {
+        load_current_max = load.current;
     }
 
 #if CONFIG_HV_TERMINAL_SOLAR || CONFIG_LV_TERMINAL_SOLAR || CONFIG_PWM_TERMINAL_SOLAR
@@ -108,8 +108,8 @@ void DeviceStatus::update_min_max_values()
     }
 #endif
 
-    if (load_terminal.power > load_power_max_day) {
-        load_power_max_day = load_terminal.power;
+    if (load.power > load_power_max_day) {
+        load_power_max_day = load.power;
         if (load_power_max_day > load_power_max_total) {
             load_power_max_total = load_power_max_day;
         }

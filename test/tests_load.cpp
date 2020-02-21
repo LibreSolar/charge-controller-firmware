@@ -14,293 +14,220 @@
 
 #include "setup.h"
 
-void load_init(LoadOutput *l)
+static bool output_on;
+
+static void load_drv_set(bool status)
+{
+    output_on = status;
+}
+
+static void load_drv_init()
+{
+    output_on = false;
+}
+
+static void load_init(LoadOutput *l, bool on = false)
 {
     l->overvoltage = 14.6;
-    l->port->current = 0;
-    l->port->pos_current_limit = 10;
-    l->port->bus->voltage = 14;
-    l->port->bus->sink_voltage_bound = 14.4;
-    l->port->bus->src_voltage_bound = 12;
-    l->port->bus->sink_current_margin = 10;
-    l->port->bus->src_current_margin = -10;
+    l->current = 0;
+    l->pos_current_limit = 10;
+    l->bus->voltage = 14;
+    l->bus->sink_voltage_bound = 14.4;
+    l->bus->src_voltage_bound = 12;
+    l->bus->sink_current_margin = 10;
+    l->bus->src_current_margin = -10;
     l->junction_temperature = 25;
+    l->error_flags = 0;
+    l->enable = true;
+
+    if (on) {
+        load_drv_set(true);
+        l->state = LOAD_STATE_ON;
+
+        // check if it stays on
+        l->control();
+        TEST_ASSERT_EQUAL(LOAD_STATE_ON, l->state);
+    }
 }
 
-void control_off_to_pgood_if_everything_fine()
+static void control_off_to_on_if_everything_fine()
 {
     DcBus bus = {};
-    PowerPort port(&bus);
-    LoadOutput load_out(&port);
+    LoadOutput load_out(&bus, &load_drv_set, &load_drv_init);
     load_init(&load_out);
-    dev_stat.clear_error(ERR_ANY_ERROR);
 
+    load_out.enable = true;
     load_out.control();
-    TEST_ASSERT_EQUAL(0, dev_stat.error_flags);
-    TEST_ASSERT_EQUAL(true, load_out.pgood);
-    TEST_ASSERT_EQUAL(LOAD_STATE_ON, load_out.state);       // deprecated
+    TEST_ASSERT_EQUAL(0, load_out.error_flags);
+    TEST_ASSERT_EQUAL(LOAD_STATE_ON, load_out.state);
 }
 
-void control_pgood_to_off_overvoltage()
+static void control_on_to_off_shedding()
 {
     DcBus bus = {};
-    PowerPort port(&bus);
-    LoadOutput load_out(&port);
-    load_init(&load_out);
-    load_out.state = LOAD_STATE_ON;
-    dev_stat.clear_error(ERR_ANY_ERROR);
-    port.bus->voltage = port.bus->sink_voltage_bound + 0.6;
+    LoadOutput load_out(&bus, &load_drv_set, &load_drv_init);
+    load_init(&load_out, true);
+
+    bus.voltage = load_out.disconnect_voltage - 0.1;
+    load_out.control();
+    TEST_ASSERT_EQUAL(ERR_LOAD_SHEDDING, load_out.error_flags);
+    TEST_ASSERT_EQUAL(LOAD_STATE_OFF, load_out.state);
+}
+
+void control_on_to_off_overvoltage()
+{
+    DcBus bus = {};
+    LoadOutput load_out(&bus, &load_drv_set, &load_drv_init);
+    load_init(&load_out, true);
+
+    bus.voltage = bus.sink_voltage_bound + 0.6;
 
     // increase debounce counter to 1 before limit
     for (int i = 0; i < CONTROL_FREQUENCY; i++) {
         load_out.control();
     }
 
-    TEST_ASSERT_EQUAL(true, load_out.pgood);
-    TEST_ASSERT_EQUAL(LOAD_STATE_ON, load_out.state);                   // deprecated
+    TEST_ASSERT_EQUAL(0, load_out.error_flags);
+    TEST_ASSERT_EQUAL(LOAD_STATE_ON, load_out.state);
 
     load_out.control();     // once more
-    TEST_ASSERT_EQUAL(false, load_out.pgood);
-    TEST_ASSERT_EQUAL(ERR_LOAD_OVERVOLTAGE, dev_stat.error_flags);
-    TEST_ASSERT_EQUAL(LOAD_STATE_OFF_OVERVOLTAGE, load_out.state);      // deprecated
+    TEST_ASSERT_EQUAL(ERR_LOAD_OVERVOLTAGE, load_out.error_flags);
+    TEST_ASSERT_EQUAL(LOAD_STATE_OFF, load_out.state);
 }
 
-void control_pgood_to_off_overcurrent()
+void control_on_to_off_overcurrent()
 {
     DcBus bus = {};
-    PowerPort port(&bus);
-    LoadOutput load_out(&port);
-    load_init(&load_out);
-    port.current = LOAD_CURRENT_MAX * 1.9;  // with factor 2 it is switched off immediately
-    load_out.state = LOAD_STATE_ON;
-    dev_stat.internal_temp = 25;
-    dev_stat.clear_error(ERR_ANY_ERROR);
+    LoadOutput load_out(&bus, &load_drv_set, &load_drv_init);
+    load_init(&load_out, true);
 
+    load_out.current = LOAD_CURRENT_MAX * 1.9;  // with factor 2 it is switched off immediately
     load_out.control();
-    TEST_ASSERT_EQUAL(true, load_out.pgood);
-    TEST_ASSERT_EQUAL(LOAD_STATE_ON, load_out.state);                   // deprecated
+    TEST_ASSERT_EQUAL(LOAD_STATE_ON, load_out.state);
 
     // almost 2x current = 4x heat generation: Should definitely trigger after waiting one time constant
     int trigger_steps = MOSFET_THERMAL_TIME_CONSTANT * CONTROL_FREQUENCY;
     for (int i = 0; i <= trigger_steps; i++) {
         load_out.control();
     }
-    TEST_ASSERT_EQUAL(false, load_out.pgood);
-    TEST_ASSERT_EQUAL(ERR_LOAD_OVERCURRENT, dev_stat.error_flags);
-    TEST_ASSERT_EQUAL(LOAD_STATE_OFF_OVERCURRENT, load_out.state);      // deprecated
+    TEST_ASSERT_EQUAL(ERR_LOAD_OVERCURRENT, load_out.error_flags);
+    TEST_ASSERT_EQUAL(LOAD_STATE_OFF, load_out.state);
 }
 
-void control_pgood_to_off_voltage_dip()
+void control_on_to_off_voltage_dip()
 {
     DcBus bus = {};
-    PowerPort port(&bus);
-    LoadOutput load_out(&port);
-    load_init(&load_out);
-    load_out.state = LOAD_STATE_ON;
-    dev_stat.internal_temp = 25;
-    dev_stat.clear_error(ERR_ANY_ERROR);
-
-    load_out.control();
-    TEST_ASSERT_EQUAL(true, load_out.pgood);
-    TEST_ASSERT_EQUAL(LOAD_STATE_ON, load_out.state);                   // deprecated
+    LoadOutput load_out(&bus, &load_drv_set, &load_drv_init);
+    load_init(&load_out, true);
 
     load_out.stop(ERR_LOAD_VOLTAGE_DIP);
     load_out.control();
-    TEST_ASSERT_EQUAL(false, load_out.pgood);
-    TEST_ASSERT_EQUAL(ERR_LOAD_VOLTAGE_DIP, dev_stat.error_flags);
-    TEST_ASSERT_EQUAL(LOAD_STATE_OFF_OVERCURRENT, load_out.state);      // deprecated
+    TEST_ASSERT_EQUAL(ERR_LOAD_VOLTAGE_DIP, load_out.error_flags);
+    TEST_ASSERT_EQUAL(LOAD_STATE_OFF, load_out.state);
 }
 
-void control_pgood_to_off_int_temp()
+void control_on_to_off_bus_limit()
 {
     DcBus bus = {};
-    PowerPort port(&bus);
-    LoadOutput load_out(&port);
-    load_init(&load_out);
-    load_out.state = LOAD_STATE_ON;
-    dev_stat.internal_temp = 25;
-    dev_stat.clear_error(ERR_ANY_ERROR);
+    LoadOutput load_out(&bus, &load_drv_set, &load_drv_init);
+    load_init(&load_out, true);
 
+    load_out.bus->src_current_margin = 0;
     load_out.control();
-    TEST_ASSERT_EQUAL(true, load_out.pgood);
-    dev_stat.set_error(ERR_INT_OVERTEMP);
-    load_out.control();
-    TEST_ASSERT_EQUAL(false, load_out.pgood);
-    TEST_ASSERT_EQUAL(LOAD_STATE_OFF_TEMPERATURE, load_out.state);      // deprecated
+    TEST_ASSERT_EQUAL(ERR_LOAD_BUS_SRC_CURRENT, load_out.error_flags);
+    TEST_ASSERT_EQUAL(LOAD_STATE_OFF, load_out.state);
 }
 
-void control_pgood_to_off_bat_temp()
+void control_on_to_off_if_enable_false()
 {
     DcBus bus = {};
-    PowerPort port(&bus);
-    LoadOutput load_out(&port);
-    load_init(&load_out);
-
-    // overtemp
-    load_out.state = LOAD_STATE_ON;
-    load_out.usb_state = LOAD_STATE_ON;
-    dev_stat.clear_error(ERR_ANY_ERROR);
-    dev_stat.set_error(ERR_BAT_DIS_OVERTEMP);
-    load_out.control();
-    TEST_ASSERT_EQUAL(false, load_out.pgood);
-    TEST_ASSERT_EQUAL(false, load_out.usb_pgood);
-    TEST_ASSERT_EQUAL(LOAD_STATE_OFF_TEMPERATURE, load_out.state);      // deprecated
-    TEST_ASSERT_EQUAL(LOAD_STATE_OFF_TEMPERATURE, load_out.usb_state);  // deprecated
-
-    // undertemp
-    load_out.state = LOAD_STATE_ON;
-    load_out.usb_state = LOAD_STATE_ON;
-    dev_stat.clear_error(ERR_ANY_ERROR);
-    dev_stat.set_error(ERR_BAT_DIS_UNDERTEMP);
-    load_out.control();
-    TEST_ASSERT_EQUAL(false, load_out.pgood);
-    TEST_ASSERT_EQUAL(false, load_out.usb_pgood);
-    TEST_ASSERT_EQUAL(LOAD_STATE_OFF_TEMPERATURE, load_out.state);      // deprecated
-    TEST_ASSERT_EQUAL(LOAD_STATE_OFF_TEMPERATURE, load_out.usb_state);  // deprecated
-}
-
-void control_pgood_to_off_low_soc()
-{
-    DcBus bus = {};
-    PowerPort port(&bus);
-    LoadOutput load_out(&port);
-    load_init(&load_out);
-
-    dev_stat.clear_error(ERR_ANY_ERROR);
-    load_out.state = LOAD_STATE_ON;
-    load_out.control();
-    TEST_ASSERT_EQUAL(true, load_out.pgood);
-
-    dev_stat.set_error(ERR_BAT_UNDERVOLTAGE);
-    load_out.control();
-    TEST_ASSERT_EQUAL(false, load_out.pgood);
-    TEST_ASSERT_EQUAL(ERR_LOAD_LOW_SOC | ERR_BAT_UNDERVOLTAGE, dev_stat.error_flags);
-    TEST_ASSERT_EQUAL(LOAD_STATE_OFF_LOW_SOC, load_out.state);          // deprecated
-}
-
-void control_pgood_to_off_if_enable_false()
-{
-    DcBus bus = {};
-    PowerPort port(&bus);
-    LoadOutput load_out(&port);
-    load_init(&load_out);
-    dev_stat.clear_error(ERR_ANY_ERROR);
-
-    load_out.state = LOAD_STATE_ON;
-    load_out.control();
-    TEST_ASSERT_EQUAL(true, load_out.pgood);
-    TEST_ASSERT_EQUAL(true, load_out.usb_pgood);
-    TEST_ASSERT_EQUAL(LOAD_STATE_ON, load_out.state);
-    TEST_ASSERT_EQUAL(LOAD_STATE_ON, load_out.usb_state);
+    LoadOutput load_out(&bus, &load_drv_set, &load_drv_init);
+    load_init(&load_out, true);
 
     load_out.enable = false;
     load_out.control();
-    TEST_ASSERT_EQUAL(false, load_out.pgood);
-    TEST_ASSERT_EQUAL(LOAD_STATE_DISABLED, load_out.state);
-    TEST_ASSERT_EQUAL(LOAD_STATE_ON, load_out.usb_state);
-
-    load_out.usb_enable = false;
-    load_out.control();
-    TEST_ASSERT_EQUAL(false, load_out.usb_pgood);
-    TEST_ASSERT_EQUAL(LOAD_STATE_DISABLED, load_out.usb_state);
+    TEST_ASSERT_EQUAL(LOAD_STATE_OFF, load_out.state);
+    TEST_ASSERT_EQUAL(0, load_out.error_flags);
 }
 
-void control_off_low_soc_to_on_after_delay()
+void control_off_shedding_to_on_after_delay()
 {
     DcBus bus = {};
-    PowerPort port(&bus);
-    LoadOutput load_out(&port);
+    LoadOutput load_out(&bus, &load_drv_set, &load_drv_init);
     load_init(&load_out);
-    load_out.state = LOAD_STATE_OFF_LOW_SOC;
-    load_out.usb_state = LOAD_STATE_OFF_LOW_SOC;
-    dev_stat.error_flags = ERR_LOAD_LOW_SOC;
+    load_out.error_flags = ERR_LOAD_SHEDDING;
 
     load_out.lvd_timestamp = time(NULL) - load_out.lvd_recovery_delay + 1;
     load_out.control();
-    TEST_ASSERT_EQUAL(ERR_LOAD_LOW_SOC, dev_stat.error_flags);
-    TEST_ASSERT_EQUAL(LOAD_STATE_OFF_LOW_SOC, load_out.state);          // deprecated
-    TEST_ASSERT_EQUAL(LOAD_STATE_OFF_LOW_SOC, load_out.usb_state);      // deprecated
+    TEST_ASSERT_EQUAL(ERR_LOAD_SHEDDING, load_out.error_flags);
+    TEST_ASSERT_EQUAL(LOAD_STATE_OFF, load_out.state);
 
     load_out.lvd_timestamp = time(NULL) - load_out.lvd_recovery_delay - 1;
     load_out.control();
-    TEST_ASSERT_EQUAL(0, dev_stat.error_flags);
-    TEST_ASSERT_EQUAL(true, load_out.pgood);
-    TEST_ASSERT_EQUAL(true, load_out.usb_pgood);
-    TEST_ASSERT_EQUAL(LOAD_STATE_ON, load_out.state);                   // deprecated
-    TEST_ASSERT_EQUAL(LOAD_STATE_ON, load_out.usb_state);               // deprecated
+    TEST_ASSERT_EQUAL(0, load_out.error_flags);
+    TEST_ASSERT_EQUAL(LOAD_STATE_ON, load_out.state);
 }
 
 void control_off_overcurrent_to_on_after_delay()
 {
     DcBus bus = {};
-    PowerPort port(&bus);
-    LoadOutput load_out(&port);
+    LoadOutput load_out(&bus, &load_drv_set, &load_drv_init);
     load_init(&load_out);
-    load_out.state = LOAD_STATE_OFF_OVERCURRENT;
-    load_out.usb_state = LOAD_STATE_ON;
-    dev_stat.error_flags = ERR_LOAD_OVERCURRENT;
+    load_out.error_flags = ERR_LOAD_OVERCURRENT;
 
     load_out.oc_timestamp = time(NULL) - load_out.oc_recovery_delay + 1;
     load_out.control();
-    TEST_ASSERT_EQUAL(ERR_LOAD_OVERCURRENT, dev_stat.error_flags);
-    TEST_ASSERT_EQUAL(LOAD_STATE_OFF_OVERCURRENT, load_out.state);
-    TEST_ASSERT_EQUAL(LOAD_STATE_ON, load_out.usb_state);       // not affected by overcurrent
+    TEST_ASSERT_EQUAL(ERR_LOAD_OVERCURRENT, load_out.error_flags);
+    TEST_ASSERT_EQUAL(LOAD_STATE_OFF, load_out.state);
 
     load_out.oc_timestamp = time(NULL) - load_out.oc_recovery_delay - 1;
     load_out.control();
-    TEST_ASSERT_EQUAL(0, dev_stat.error_flags);
-    TEST_ASSERT_EQUAL(LOAD_STATE_ON, load_out.state);       // deprecated
-    TEST_ASSERT_EQUAL(LOAD_STATE_ON, load_out.usb_state);   // deprecated
+    TEST_ASSERT_EQUAL(0, load_out.error_flags);
+    TEST_ASSERT_EQUAL(LOAD_STATE_ON, load_out.state);
 }
 
 void control_off_overvoltage_to_on_at_lower_voltage()
 {
     DcBus bus = {};
-    PowerPort port(&bus);
-    LoadOutput load_out(&port);
+    LoadOutput load_out(&bus, &load_drv_set, &load_drv_init);
     load_init(&load_out);
-    load_out.state = LOAD_STATE_OFF_OVERVOLTAGE;
-    load_out.usb_state = LOAD_STATE_ON;
-    port.bus->voltage = load_out.overvoltage + 0.1;
-    dev_stat.error_flags = ERR_LOAD_OVERVOLTAGE;
+    bus.voltage = load_out.overvoltage + 0.1;
+    load_out.error_flags = ERR_LOAD_OVERVOLTAGE;
 
     load_out.control();
-    TEST_ASSERT_EQUAL(ERR_LOAD_OVERVOLTAGE, dev_stat.error_flags);
-    TEST_ASSERT_EQUAL(LOAD_STATE_OFF_OVERVOLTAGE, load_out.state);
-    TEST_ASSERT_EQUAL(LOAD_STATE_ON, load_out.usb_state);       // not affected by overvoltage
+    TEST_ASSERT_EQUAL(ERR_LOAD_OVERVOLTAGE, load_out.error_flags);
+    TEST_ASSERT_EQUAL(LOAD_STATE_OFF, load_out.state);
 
-    port.bus->voltage = load_out.overvoltage - 0.1;     // test hysteresis
+    bus.voltage = load_out.overvoltage - 0.1;     // test hysteresis
     load_out.control();
-    TEST_ASSERT_EQUAL(ERR_LOAD_OVERVOLTAGE, dev_stat.error_flags);
-    TEST_ASSERT_EQUAL(LOAD_STATE_OFF_OVERVOLTAGE, load_out.state);
+    TEST_ASSERT_EQUAL(ERR_LOAD_OVERVOLTAGE, load_out.error_flags);
+    TEST_ASSERT_EQUAL(LOAD_STATE_OFF, load_out.state);
 
-    port.bus->voltage = load_out.overvoltage - load_out.ov_hysteresis - 0.1;
+    bus.voltage = load_out.overvoltage - load_out.ov_hysteresis - 0.1;
     load_out.control();
-    TEST_ASSERT_EQUAL(0, dev_stat.error_flags);
-    TEST_ASSERT_EQUAL(LOAD_STATE_ON, load_out.state);       // deprecated
-    TEST_ASSERT_EQUAL(LOAD_STATE_ON, load_out.usb_state);   // deprecated
+    TEST_ASSERT_EQUAL(0, load_out.error_flags);
+    TEST_ASSERT_EQUAL(LOAD_STATE_ON, load_out.state);
 }
 
 void control_off_short_circuit_flag_reset()
 {
     DcBus bus = {};
-    PowerPort port(&bus);
-    LoadOutput load_out(&port);
+    LoadOutput load_out(&bus, &load_drv_set, &load_drv_init);
     load_init(&load_out);
-    load_out.state = LOAD_STATE_OFF_SHORT_CIRCUIT;
-    load_out.usb_state = LOAD_STATE_ON;
-    dev_stat.error_flags = ERR_LOAD_SHORT_CIRCUIT;
+    load_out.error_flags = ERR_LOAD_SHORT_CIRCUIT;
 
     load_out.control();
-    TEST_ASSERT_EQUAL(ERR_LOAD_SHORT_CIRCUIT, dev_stat.error_flags);
-    TEST_ASSERT_EQUAL(LOAD_STATE_OFF_SHORT_CIRCUIT, load_out.state);
-    TEST_ASSERT_EQUAL(LOAD_STATE_ON, load_out.usb_state);       // not affected by overvoltage
+    TEST_ASSERT_EQUAL(ERR_LOAD_SHORT_CIRCUIT, load_out.error_flags);
+    TEST_ASSERT_EQUAL(LOAD_STATE_OFF, load_out.state);
 
     load_out.enable = false;        // this is like a manual reset
     load_out.control();
-    TEST_ASSERT_EQUAL(0, dev_stat.error_flags);
-    TEST_ASSERT_EQUAL(LOAD_STATE_DISABLED, load_out.state);
-    TEST_ASSERT_EQUAL(LOAD_STATE_ON, load_out.usb_state);
+    TEST_ASSERT_EQUAL(0, load_out.error_flags);
+    TEST_ASSERT_EQUAL(LOAD_STATE_OFF, load_out.state);
+
+    load_out.enable = true;
+    load_out.control();
+    TEST_ASSERT_EQUAL(LOAD_STATE_ON, load_out.state);
 }
 
 void load_tests()
@@ -308,16 +235,15 @@ void load_tests()
     UNITY_BEGIN();
 
     // control tests
-    RUN_TEST(control_off_to_pgood_if_everything_fine);
-    RUN_TEST(control_pgood_to_off_overvoltage);
-    RUN_TEST(control_pgood_to_off_overcurrent);
-    RUN_TEST(control_pgood_to_off_voltage_dip);
-    RUN_TEST(control_pgood_to_off_int_temp);
-    RUN_TEST(control_pgood_to_off_bat_temp);
-    RUN_TEST(control_pgood_to_off_low_soc);
-    RUN_TEST(control_pgood_to_off_if_enable_false);
+    RUN_TEST(control_off_to_on_if_everything_fine);
+    RUN_TEST(control_on_to_off_shedding);
+    RUN_TEST(control_on_to_off_overvoltage);
+    RUN_TEST(control_on_to_off_overcurrent);
+    RUN_TEST(control_on_to_off_voltage_dip);
+    RUN_TEST(control_on_to_off_bus_limit);
+    RUN_TEST(control_on_to_off_if_enable_false);
 
-    RUN_TEST(control_off_low_soc_to_on_after_delay);
+    RUN_TEST(control_off_shedding_to_on_after_delay);
     RUN_TEST(control_off_overcurrent_to_on_after_delay);
     RUN_TEST(control_off_overvoltage_to_on_at_lower_voltage);
     RUN_TEST(control_off_short_circuit_flag_reset);

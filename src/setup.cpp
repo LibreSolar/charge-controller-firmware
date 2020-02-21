@@ -47,8 +47,8 @@ PwmSwitch pwm_switch(&lv_bus);
 #endif
 
 #if CONFIG_HAS_LOAD_OUTPUT
-PowerPort load_terminal(&lv_bus);        // load terminal (also connected to lv_bus)
-LoadOutput load(&load_terminal);
+LoadOutput load(&lv_bus, &load_out_set, &load_out_init);
+LoadOutput usb_pwr(&lv_bus, &usb_out_set, &usb_out_init);
 #endif
 
 #if CONFIG_HV_TERMINAL_SOLAR

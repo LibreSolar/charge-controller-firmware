@@ -20,6 +20,12 @@
 #include <stm32g4xx_ll_system.h>
 #endif
 
+static struct device *dev_load;
+
+#ifdef DT_SWITCH_USB_PWR_GPIOS_CONTROLLER
+static struct device *dev_usb;
+#endif
+
 #endif // __ZEPHYR__
 
 #include "pcb.h"
@@ -85,7 +91,7 @@ static void lptim_init()
 }
 #endif
 
-void LoadOutput::short_circuit_comp_init()
+void short_circuit_comp_init()
 {
 #if defined(PIN_I_LOAD_COMP)
 
@@ -154,9 +160,8 @@ extern "C" void ADC1_COMP_IRQHandler(void)
 #endif // PIN_I_LOAD_COMP
 
 
-void LoadOutput::switch_set(bool status)
+void load_out_set(bool status)
 {
-    pgood = status;
 #ifdef LED_LOAD
     leds_set(LED_LOAD, status);
 #endif
@@ -199,14 +204,10 @@ void LoadOutput::switch_set(bool status)
         gpio_pin_set(dev_load, DT_SWITCH_LOAD_GPIOS_PIN, 0);
     }
 #endif
-
-    print_info("Load pgood = %d, state = %" PRIu32 "\n", status, state);
 }
 
-void LoadOutput::usb_set(bool status)
+void usb_out_set(bool status)
 {
-    usb_pgood = status;
-
 #if defined(__MBED__) && defined(PIN_USB_PWR_EN)
     DigitalOut usb_pwr_en(PIN_USB_PWR_EN);
     if (status == true) usb_pwr_en = 1;
@@ -228,21 +229,21 @@ void LoadOutput::usb_set(bool status)
         gpio_pin_set(dev_usb, DT_SWITCH_USB_PWR_GPIOS_PIN, 0);
     }
 #endif
-
-    print_info("USB pgood = %d, state = %" PRIu32 ", en = %d\n", status, usb_state, usb_enable);
 }
 
-#ifdef __ZEPHYR__
+void load_out_init()
+{
+#ifdef DT_SWITCH_LOAD_GPIOS_CONTROLLER
+    dev_load = device_get_binding(DT_SWITCH_LOAD_GPIOS_CONTROLLER);
+#endif
 
-void LoadOutput::get_bindings()
+    // analog comparator to detect short circuits and trigger immediate load switch-off
+    short_circuit_comp_init();
+}
+
+void usb_out_init()
 {
 #ifdef DT_SWITCH_USB_PWR_GPIOS_CONTROLLER
     dev_usb = device_get_binding(DT_SWITCH_USB_PWR_GPIOS_CONTROLLER);
 #endif
-
-#ifdef DT_SWITCH_LOAD_GPIOS_CONTROLLER
-    dev_load = device_get_binding(DT_SWITCH_LOAD_GPIOS_CONTROLLER);
-#endif
 }
-
-#endif

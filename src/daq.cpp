@@ -165,15 +165,15 @@ void daq_update()
         adc_scaled(ADC_POS_V_PWM, vcc, ADC_GAIN_V_PWM);
 #endif
 
-    load_terminal.current =
-        adc_scaled(ADC_POS_I_LOAD, vcc, ADC_GAIN_I_LOAD) + load_current_offset;
+    load.current = adc_scaled(ADC_POS_I_LOAD, vcc, ADC_GAIN_I_LOAD) + load_current_offset;
 
 #if CONFIG_HAS_PWM_SWITCH
-    // current multiplied with PWM duty cycle for PWM charger to get avg current for correct power calculation
+    // current multiplied with PWM duty cycle for PWM charger to get avg current for correct power
+    // calculation
     pwm_switch.current = -pwm_switch.get_duty_cycle() * (
         adc_scaled(ADC_POS_I_PWM, vcc, ADC_GAIN_I_PWM) + solar_current_offset);
 
-    lv_terminal.current = -pwm_switch.current - load_terminal.current;
+    lv_terminal.current = -pwm_switch.current - load.current;
 
     pwm_switch.power = pwm_switch.bus->voltage * pwm_switch.current;
 #endif
@@ -182,7 +182,7 @@ void daq_update()
     dcdc_lv_port.current =
         adc_scaled(ADC_POS_I_DCDC, vcc, ADC_GAIN_I_DCDC) + solar_current_offset;
 
-    lv_terminal.current = dcdc_lv_port.current - load_terminal.current;
+    lv_terminal.current = dcdc_lv_port.current - load.current;
 
     hv_terminal.current = -dcdc_lv_port.current * lv_terminal.bus->voltage / hv_terminal.bus->voltage;
 
@@ -190,7 +190,7 @@ void daq_update()
     hv_terminal.power   = hv_terminal.bus->voltage * hv_terminal.current;
 #endif
     lv_terminal.power   = lv_terminal.bus->voltage * lv_terminal.current;
-    load_terminal.power = load_terminal.bus->voltage * load_terminal.current;
+    load.power = load.bus->voltage * load.current;
 
 #ifdef PIN_ADC_TEMP_BAT
     // battery temperature calculation

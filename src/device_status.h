@@ -77,38 +77,6 @@ enum ErrorFlag {
      */
     ERR_BAT_CHG_OVERTEMP = 1U << 7,
 
-    /** SOC too low so that load was switched off
-     *
-     * Set in LoadOutput::control() in case of ERR_BAT_UNDERVOLTAGE, cleared after reconnect
-     * delay passed and undervoltage error is resolved.
-     */
-    ERR_LOAD_LOW_SOC = 1U << 8,
-
-    /** To high voltage for load so that it was switched off
-     *
-     * Set and cleared in LoadOutput::control()
-     */
-    ERR_LOAD_OVERVOLTAGE = 1U << 9,
-
-    /** Long-term overcurrent of load port
-     *
-     * Set in LoadOutput::control() and cleared after configurable delay.
-     */
-    ERR_LOAD_OVERCURRENT = 1U << 10,
-
-    /** Short circuit detected at load port
-     *
-     * Set by LoadOutput::control() after overcurrent comparator triggered, cleared only if
-     * load output is manually disabled and enabled again.
-     */
-    ERR_LOAD_SHORT_CIRCUIT = 1U << 11,
-
-    /** Overcurrent identified via voltage dip (may be caused by too small battery)
-     *
-     * Set and cleared in LoadOutput::control(). Treated same as load overcurrent.
-     */
-    ERR_LOAD_VOLTAGE_DIP = 1U << 12,
-
     /** Charge controller internal temperature too high
      *
      * Set and cleared by daq_update()
@@ -125,12 +93,6 @@ enum ErrorFlag {
      */
     ERR_ANY_ERROR = UINT32_MAX,
 };
-
-/** Error flags that require load to be switched off
- */
-const uint32_t ERR_LOAD_ANY = ERR_BAT_DIS_OVERTEMP | ERR_BAT_DIS_UNDERTEMP |
-    ERR_LOAD_LOW_SOC | ERR_LOAD_OVERVOLTAGE | ERR_LOAD_OVERCURRENT |
-    ERR_LOAD_SHORT_CIRCUIT | ERR_LOAD_VOLTAGE_DIP | ERR_INT_OVERTEMP;
 
 /** Device Status data
  *

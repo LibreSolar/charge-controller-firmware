@@ -17,6 +17,7 @@
 #include "pcb.h"                // hardware-specific settings
 #include "config.h"             // user-specific configuration
 #include "setup.h"
+#include "helper.h"
 
 #include "half_bridge.h"        // PWM generation for DC/DC converter
 #include "hardware.h"           // hardware-related functions like watchdog, etc.
@@ -100,7 +101,7 @@ int main()
             eeprom_update();
 
             leds_update_1s();
-            leds_update_soc(charger.soc, dev_stat.has_error(ERR_LOAD_LOW_SOC));
+            leds_update_soc(charger.soc, flags_check(&load.error_flags, ERR_LOAD_SHEDDING));
 
             ext_mgr.process_1s();
 
@@ -162,7 +163,7 @@ void system_control()
         #endif
 
         lv_terminal.energy_balance();
-        load_terminal.energy_balance();
+        load.energy_balance();
         dev_stat.update_energy();
         dev_stat.update_min_max_values();
         charger.update_soc(&bat_conf);

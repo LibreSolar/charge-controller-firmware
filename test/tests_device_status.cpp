@@ -21,7 +21,7 @@ void reset_counters_at_start_of_day()
     solar_terminal.neg_energy_Wh = 10.0;
     bat_terminal.neg_energy_Wh = 3.0;
     bat_terminal.pos_energy_Wh = 4.0;
-    load_terminal.pos_energy_Wh = 9.0;
+    load.pos_energy_Wh = 9.0;
 
     // 5 houurs without sun
     for (int i = 0; i <= 5 * 60 * 60; i++) {
@@ -36,7 +36,7 @@ void reset_counters_at_start_of_day()
     TEST_ASSERT_EQUAL(10, solar_terminal.neg_energy_Wh);
     TEST_ASSERT_EQUAL(3, bat_terminal.neg_energy_Wh);
     TEST_ASSERT_EQUAL(4, bat_terminal.pos_energy_Wh);
-    TEST_ASSERT_EQUAL(9, load_terminal.pos_energy_Wh);
+    TEST_ASSERT_EQUAL(9, load.pos_energy_Wh);
 
     // solar didn't come back yet
     TEST_ASSERT_EQUAL(0, dev_stat.day_counter);
@@ -50,7 +50,7 @@ void reset_counters_at_start_of_day()
     TEST_ASSERT_EQUAL(0, solar_terminal.neg_energy_Wh);
     TEST_ASSERT_EQUAL(0, bat_terminal.neg_energy_Wh);
     TEST_ASSERT_EQUAL(0, bat_terminal.pos_energy_Wh);
-    TEST_ASSERT_EQUAL(0, load_terminal.pos_energy_Wh);
+    TEST_ASSERT_EQUAL(0, load.pos_energy_Wh);
 }
 
 void dev_stat_new_solar_voltage_max()
@@ -76,7 +76,7 @@ void dev_stat_new_dcdc_current_max()
 
 void dev_stat_new_load_current_max()
 {
-    load.port->current = 21;
+    load.current = 21;
     dev_stat.update_min_max_values();
     TEST_ASSERT_EQUAL(21, dev_stat.load_current_max);
 }
@@ -91,7 +91,7 @@ void dev_stat_solar_power_max()
 
 void dev_stat_load_power_max()
 {
-    load.port->power = 50;
+    load.power = 50;
     dev_stat.update_min_max_values();
     TEST_ASSERT_EQUAL(50, dev_stat.load_power_max_day);
     TEST_ASSERT_EQUAL(50, dev_stat.load_power_max_total);

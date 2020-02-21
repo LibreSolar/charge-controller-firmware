@@ -28,7 +28,7 @@ void energy_calculation_init()
     dev_stat.bat_chg_total_Wh = 0;
     dev_stat.bat_dis_total_Wh = 0;
     hv_terminal.neg_energy_Wh = 0.0;
-    load_terminal.pos_energy_Wh = 0.0;
+    load.pos_energy_Wh = 0.0;
     lv_terminal.pos_energy_Wh = 0.0;
     lv_terminal.neg_energy_Wh = 0.0;
 
@@ -49,7 +49,7 @@ void energy_calculation_init()
     for (int i = 0; i < 60*60*sun_hours; i++) {
         hv_terminal.energy_balance();
         lv_terminal.energy_balance();
-        load_terminal.energy_balance();
+        load.energy_balance();
     }
 
     // disable DC/DC = solar charging
@@ -61,7 +61,7 @@ void energy_calculation_init()
     for (int i = 0; i < 60*60*night_hours; i++) {
         hv_terminal.energy_balance();
         lv_terminal.energy_balance();
-        load_terminal.energy_balance();
+        load.energy_balance();
     }
 }
 
@@ -88,7 +88,7 @@ void solar_input_energy_calculation_valid()
 void load_output_energy_calculation_valid()
 {
     energy_calculation_init();
-    TEST_ASSERT_EQUAL_FLOAT(round((sun_hours + night_hours) * lv_terminal.bus->voltage * adcval.load_current), round(load_terminal.pos_energy_Wh));
+    TEST_ASSERT_EQUAL_FLOAT(round((sun_hours + night_hours) * lv_terminal.bus->voltage * adcval.load_current), round(load.pos_energy_Wh));
 }
 
 void power_port_tests()
