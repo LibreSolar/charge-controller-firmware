@@ -13,6 +13,7 @@
 #include <zephyr.h>
 #include <device.h>
 #include <drivers/gpio.h>
+#include <drivers/pwm.h>
 
 #if defined(CONFIG_SOC_SERIES_STM32L0X)
 #include <stm32l0xx_ll_system.h>
@@ -231,6 +232,19 @@ void usb_out_set(bool status)
 #endif
 }
 
+void load_cp_enable()
+{
+#ifdef DT_PWM_OUT_CHARGE_PUMP_PWMS_CONTROLLER
+	struct device *pwm_dev;
+	pwm_dev = device_get_binding(DT_PWM_OUT_CHARGE_PUMP_PWMS_CONTROLLER);
+	if (!pwm_dev) {
+		print_error("Cannot find %s!\n", DT_PWM_OUT_CHARGE_PUMP_PWMS_CONTROLLER);
+		return;
+	}
+    pwm_pin_set_usec(pwm_dev, DT_PWM_OUT_CHARGE_PUMP_PWMS_CHANNEL, 200, 100, 0);
+#endif
+}
+
 void load_out_init()
 {
 #ifdef DT_SWITCH_LOAD_GPIOS_CONTROLLER
@@ -239,6 +253,9 @@ void load_out_init()
 
     // analog comparator to detect short circuits and trigger immediate load switch-off
     short_circuit_comp_init();
+
+    // enable charge pump for high-side switches (if existing)
+    load_cp_enable();
 }
 
 void usb_out_init()

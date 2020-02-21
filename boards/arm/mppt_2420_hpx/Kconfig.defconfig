@@ -40,8 +40,9 @@ endif # I2C
 
 if PWM
 
-config PWM_STM32_2
+config PWM_STM32_3
 	default y
+	depends on PWM
 
 endif # PWM
 

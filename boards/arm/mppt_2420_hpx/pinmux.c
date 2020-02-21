@@ -12,6 +12,9 @@
 
 #include <pinmux/stm32/pinmux_stm32.h>
 
+#define STM32G4X_PINMUX_FUNC_PC6_PWM8_CH1                                      \
+	(STM32_PINMUX_ALT_FUNC_4 | STM32_PUSHPULL_NOPULL)
+
 static const struct pin_config pinconf[] = {
 #ifdef CONFIG_UART_1
 	{STM32_PIN_PA9, STM32G4X_PINMUX_FUNC_PA9_USART1_TX},
@@ -32,6 +35,12 @@ static const struct pin_config pinconf[] = {
 #ifdef CONFIG_PWM_STM32_2
 	{STM32_PIN_PA5, STM32G4X_PINMUX_FUNC_PA5_PWM2_CH1},
 #endif /* CONFIG_PWM_STM32_2 */
+#ifdef CONFIG_PWM_STM32_3
+	{STM32_PIN_PC6, STM32G4X_PINMUX_FUNC_PC6_PWM3_CH1},
+#endif /* CONFIG_PWM_STM32_3 */
+#ifdef CONFIG_PWM_STM32_8
+	{STM32_PIN_PC6, STM32G4X_PINMUX_FUNC_PC6_PWM8_CH1},
+#endif /* CONFIG_PWM_STM32_8 */
 #ifdef CONFIG_SPI_1
 	/* SPI1 on the Arduino connectors pins A2, D3, D11, D12 */
 #ifdef CONFIG_SPI_STM32_USE_HW_SS
