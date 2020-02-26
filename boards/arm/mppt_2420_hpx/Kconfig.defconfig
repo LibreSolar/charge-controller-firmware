@@ -10,10 +10,10 @@ config HAS_DCDC_CONVERTER
 	default y
 
 config DCDC_PWM_FREQUENCY_KHZ
-	default 50
+	default 70
 
 config DCDC_PWM_DEADTIME_NS
-	default 230
+	default 300
 
 config HAS_LOAD_OUTPUT
 	default y

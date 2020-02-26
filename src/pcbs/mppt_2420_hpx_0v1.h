@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef MPPT_1210_HUS_0V4_H
-#define MPPT_1210_HUS_0V4_H
+#ifndef MPPT_2420_HPX_0V1_H
+#define MPPT_2420_HPX_0V1_H
 
 #ifdef __MBED__
 #include "mbed.h"
@@ -13,8 +13,8 @@
 #include <zephyr.h>
 #endif
 
-#define DEVICE_TYPE "MPPT-1210-HUS"
-#define HARDWARE_VERSION "v0.4"
+#define DEVICE_TYPE "MPPT-2420-HPX"
+#define HARDWARE_VERSION "v0.1"
 
 // specify features of charge controller
 #define CONFIG_HAS_DCDC_CONVERTER  1
@@ -22,12 +22,12 @@
 #define CONFIG_HAS_LOAD_OUTPUT     1
 
 // DC/DC converter settings
-#define PWM_FREQUENCY 50 // kHz  50 = better for cloud solar to increase efficiency
-#define PWM_DEADTIME 230 // ns
-//#define PWM_TIM        1 // use TIM1 timer
+#define PWM_FREQUENCY 70 // kHz
+#define PWM_DEADTIME 300 // ns
+#define PWM_TIM        1 // use TIM1 timer
 
-#define DCDC_CURRENT_MAX 10  // PCB maximum DCDC output current
-#define LOAD_CURRENT_MAX 10  // PCB maximum load switch current
+#define DCDC_CURRENT_MAX 20  // PCB maximum DCDC output current
+#define LOAD_CURRENT_MAX 20  // PCB maximum load switch current
 
 #define LOW_SIDE_VOLTAGE_MAX    16  // Maximum voltage at battery port (V)
 #define HIGH_SIDE_VOLTAGE_MAX   55  // Maximum voltage at PV input port (V)
