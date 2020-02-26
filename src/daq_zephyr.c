@@ -93,7 +93,17 @@ static void dac_setup()
 	LL_DAC_SetOutputBuffer(DAC1, LL_DAC_CHANNEL_1, LL_DAC_OUTPUT_BUFFER_ENABLE);
 	LL_DAC_Enable(DAC1, LL_DAC_CHANNEL_1);
     LL_DAC_ConvertData12RightAligned(DAC1, LL_DAC_CHANNEL_1, 4096 / 10);
-#endif /* STM32F0X || STM32L0X */
+#elif defined(CONFIG_SOC_SERIES_STM32G4X)
+    LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_DAC1);
+    /* DAC1 at PA4 for bi-directional DC/DC current measurement at 0.5 * VCC */
+	LL_DAC_SetOutputBuffer(DAC1, LL_DAC_CHANNEL_1, LL_DAC_OUTPUT_BUFFER_ENABLE);
+	LL_DAC_Enable(DAC1, LL_DAC_CHANNEL_1);
+    LL_DAC_ConvertData12RightAligned(DAC1, LL_DAC_CHANNEL_1, 4096 / 2);
+    /* DAC1 at PA5 for uni-directional PWM and load current measurement at 0.1 * VCC */
+	LL_DAC_SetOutputBuffer(DAC1, LL_DAC_CHANNEL_2, LL_DAC_OUTPUT_BUFFER_ENABLE);
+	LL_DAC_Enable(DAC1, LL_DAC_CHANNEL_2);
+    LL_DAC_ConvertData12RightAligned(DAC1, LL_DAC_CHANNEL_2, 4096 / 10);
+#endif
 }
 
 static void adc_init(ADC_TypeDef *adc)
