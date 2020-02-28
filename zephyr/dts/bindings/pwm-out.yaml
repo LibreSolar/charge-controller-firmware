@@ -1,0 +1,17 @@
+# Copyright (c) 2020 Martin Jäger / Libre Solar
+# SPDX-License-Identifier: Apache-2.0
+
+description: GPIO pins to generate a PWM signal
+
+compatible: "pwm-out"
+
+child-binding:
+  description: PWM output child node
+  properties:
+    pwms:
+      type: phandle-array
+      required: true
+    label:
+      type: string
+      required: true
+      description: Human readable string describing the device (used by Zephyr for API name)
