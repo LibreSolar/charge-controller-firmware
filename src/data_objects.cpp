@@ -204,10 +204,10 @@ const data_object_t data_objects[] = {
     // using IDs >= 0x70 except for high priority data objects
 
     // high priority data objects (low IDs)
-    TS_DATA_OBJ_UINT32(0x04, "LoadState", &load.state,
+    TS_DATA_OBJ_INT32(0x04, "LoadInfo", &load.info,
         TS_OUTPUT, TS_READ_ALL),
 
-    TS_DATA_OBJ_UINT32(0x05, "UsbState", &usb_pwr.state,
+    TS_DATA_OBJ_INT32(0x05, "UsbInfo", &usb_pwr.info,
         TS_OUTPUT, TS_READ_ALL),
 
     TS_DATA_OBJ_UINT16(0x06, "SOC_%", &charger.soc, // output will be uint8_t
@@ -278,9 +278,6 @@ const data_object_t data_objects[] = {
 #endif
 
     TS_DATA_OBJ_UINT32(0x90, "ErrorFlags", &dev_stat.error_flags,
-        TS_OUTPUT, TS_READ_ALL),
-
-    TS_DATA_OBJ_UINT32(0x91, "LoadErrorFlags", &load.error_flags,
         TS_OUTPUT, TS_READ_ALL),
 
     // RECORDED DATA ///////////////////////////////////////////////////////

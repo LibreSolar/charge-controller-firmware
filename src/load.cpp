@@ -116,6 +116,8 @@ void LoadOutput::control()
             state = LOAD_STATE_ON;
         }
     }
+
+    info = error_flags > 0 ? -error_flags : state;
 }
 
 void LoadOutput::stop(uint32_t flag)

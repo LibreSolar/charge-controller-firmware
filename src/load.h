@@ -122,10 +122,13 @@ public:
      */
     void set_voltage_limits(float lvd, float lvr, float ov);
 
-    uint32_t state;             ///< Current state of load output switch (negative value means
-                                ///< error state, indicated by LoadErrorFlags)
+    uint32_t state;             ///< Current state of load output switch
 
-    uint32_t error_flags = 0;
+    uint32_t error_flags = 0;   ///< Stores error flags as bits according to LoadErrorFlag enum
+
+    int32_t info;               ///< Contains either the state or negative value of error_flags
+                                ///< in case of error_flags > 0. This allows to have a single
+                                ///< variable for load state diagnosis.
 
     bool enable = false;        ///< Target on state set via communication port (overruled if
                                 ///< battery is empty or any errors occured)
