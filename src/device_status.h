@@ -29,8 +29,8 @@ enum ErrorFlag {
 
     /** Battery voltage too low
      *
-     * Set directly in ISR after ADC conversion finished, cleared in Charger::discharge_control()
-     * when voltage reached higher level again.
+     * Set and cleared in Charger::discharge_control() if the battery voltage dropped to lower than
+     * absolute minimum. Load outputs should have switched off earlier.
      */
     ERR_BAT_UNDERVOLTAGE = 1U << 0,
 

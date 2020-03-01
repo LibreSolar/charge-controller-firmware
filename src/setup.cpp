@@ -48,6 +48,9 @@ PwmSwitch pwm_switch(&lv_bus);
 
 #if CONFIG_HAS_LOAD_OUTPUT
 LoadOutput load(&lv_bus, &load_out_set, &load_out_init);
+#endif
+
+#if CONFIG_HAS_USB_PWR_OUTPUT
 LoadOutput usb_pwr(&lv_bus, &usb_out_set, &usb_out_init);
 #endif
 

@@ -12,6 +12,9 @@ config HAS_PWM_SWITCH
 config HAS_LOAD_OUTPUT
 	default y
 
+config HAS_USB_PWR_OUTPUT
+	default y
+
 config NUM_LED_PINS
 	default 3
 

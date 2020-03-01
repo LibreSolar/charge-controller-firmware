@@ -156,6 +156,14 @@ private:
      */
     void (*switch_set)(bool);
 
+    /**
+     * Used to prevent switching of because of very short voltage dip
+     */
+    int uv_debounce_counter = 0;
+
+    /**
+     * Used to prevent switching off because of short voltage spike
+     */
     int ov_debounce_counter = 0;
 };
 

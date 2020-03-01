@@ -94,7 +94,7 @@ void adc_alert_undervoltage_triggering()
     daq_update();
 
     charger.discharge_control(&bat_conf);
-    TEST_ASSERT_EQUAL(false, dev_stat.has_error(ERR_BAT_UNDERVOLTAGE));
+    TEST_ASSERT_EQUAL(false, dev_stat.has_error(ERR_BAT_UNDERVOLTAGE));  // ToDo
 }
 
 void adc_alert_overvoltage_triggering()

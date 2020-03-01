@@ -19,21 +19,19 @@ config HAS_DCDC_CONVERTER
 	help
 	  Board has a DC/DC converter.
 
-if HAS_DCDC_CONVERTER
-
 config DCDC_PWM_FREQUENCY_KHZ
+	depends on HAS_DCDC_CONVERTER
 	int
 	range 30 100
 	help
 	  PWM frequency of DC/DC converter in kHz, range 30 to 100.
 
 config DCDC_PWM_DEADTIME_NS
+	depends on HAS_DCDC_CONVERTER
 	int
 	range 100 300
 	help
 	  Dead time for synchronous PWM generation in nanoseconds.
-
-endif # HAS_DCDC_CONVERTER
 
 config HAS_PWM_SWITCH
 	bool
@@ -44,6 +42,11 @@ config HAS_LOAD_OUTPUT
 	bool
 	help
 	  PCB has a load output.
+
+config HAS_USB_PWR_OUTPUT
+	bool
+	help
+	  PCB has a USB power output.
 
 config NUM_LED_PINS
 	int

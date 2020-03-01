@@ -15,6 +15,7 @@
 #include "device_status.h"
 
 extern DeviceStatus dev_stat;
+extern LoadOutput load;
 
 void battery_conf_init(BatConf *bat, BatType type, int num_cells, float nominal_capacity)
 {
@@ -242,7 +243,8 @@ bool battery_conf_changed(BatConf *a, BatConf *b)
 void Charger::detect_num_batteries(BatConf *bat)
 {
     if (port->bus->voltage > bat->voltage_absolute_min * 2 &&
-        port->bus->voltage < bat->voltage_absolute_max * 2) {
+        port->bus->voltage < bat->voltage_absolute_max * 2)
+    {
         port->bus->series_multiplier = 2;
         printf("Detected two batteries (total %.2f V max)\n", bat->topping_voltage * 2);
     }
@@ -289,38 +291,45 @@ void Charger::enter_state(int next_state)
 
 void Charger::discharge_control(BatConf *bat_conf)
 {
-    // load output state is defined by battery negative current limit
-    if (port->neg_current_limit < 0) {
-        // discharging currently allowed. see if that's still valid:
-        if (port->bus->voltage <
-            port->bus->src_control_voltage(bat_conf->voltage_load_disconnect))
-        {
-            uv_debounce_counter++;
-            if (uv_debounce_counter >= 3) {      // 3s in undervoltage --> switch off
-                // low state of charge
-                port->neg_current_limit = 0;
-                num_deep_discharges++;
-                dev_stat.set_error(ERR_BAT_UNDERVOLTAGE);
+    if (!empty) {
+        // as we don't have a proper SOC estimation, we determine an empty battery by the main
+        // load output being switched off
+        if (flags_check(&load.error_flags, ERR_LOAD_SHEDDING)) {
+            empty = true;
+            num_deep_discharges++;
+            dev_stat.set_error(ERR_BAT_UNDERVOLTAGE);
 
-                if (usable_capacity == 0.0F) {
-                    // reset to measured value if discharged the first time
-                    usable_capacity = discharged_Ah;
-                }
-                else {
-                    // slowly adapt new measurements with low-pass filter
-                    usable_capacity =
-                        0.8 * usable_capacity +
-                        0.2 * discharged_Ah;
-                }
-
-                // simple SOH estimation
-                soh = usable_capacity / bat_conf->nominal_capacity;
+            if (usable_capacity == 0.0F) {
+                // reset to measured value if discharged the first time
+                usable_capacity = discharged_Ah;
             }
-        }
-        else {
-            uv_debounce_counter = 0;
-        }
+            else {
+                // slowly adapt new measurements with low-pass filter
+                usable_capacity =
+                    0.8 * usable_capacity +
+                    0.2 * discharged_Ah;
+            }
 
+            // simple SOH estimation
+            soh = usable_capacity / bat_conf->nominal_capacity;
+        }
+    }
+    else {
+        if (!flags_check(&load.error_flags, ERR_LOAD_SHEDDING)) {
+            empty = false;
+        }
+    }
+
+    // negative current limit = allowed battery discharge current
+    if (port->neg_current_limit < 0) {
+
+        // This limit should normally never be reached, as the load output settings should be
+        // higher. The flag can be used to trigger actions of last resort, e.g. deep-sleep
+        // of the charge controller itself.
+        if (port->bus->voltage < port->bus->src_control_voltage(bat_conf->voltage_absolute_min)) {
+            port->neg_current_limit = 0;
+            dev_stat.set_error(ERR_BAT_UNDERVOLTAGE);
+        }
 
         if (bat_temperature > bat_conf->discharge_temp_max) {
             port->neg_current_limit = 0;
@@ -333,18 +342,26 @@ void Charger::discharge_control(BatConf *bat_conf)
     }
     else {
         // discharging currently not allowed. should we allow it?
-        if (port->bus->voltage >= port->bus->src_control_voltage(bat_conf->voltage_load_reconnect)
-            && bat_temperature < bat_conf->discharge_temp_max - 1
-            && bat_temperature > bat_conf->discharge_temp_min + 1)
+
+        if (port->bus->voltage >=
+            port->bus->src_control_voltage(bat_conf->voltage_absolute_min + 0.1))
+        {
+            dev_stat.clear_error(ERR_BAT_UNDERVOLTAGE);
+        }
+
+        if (bat_temperature < bat_conf->discharge_temp_max - 1 &&
+            bat_temperature > bat_conf->discharge_temp_min + 1)
+        {
+            dev_stat.clear_error(ERR_BAT_DIS_OVERTEMP | ERR_BAT_DIS_UNDERTEMP);
+        }
+
+        if (!dev_stat.has_error(
+            ERR_BAT_UNDERVOLTAGE | ERR_BAT_DIS_OVERTEMP | ERR_BAT_DIS_UNDERTEMP))
         {
             // discharge current is stored as absolute value in bat_conf, but defined
             // as negative current for power port
             port->neg_current_limit = -bat_conf->discharge_current_max;
 
-            // delete all discharge error flags
-            dev_stat.clear_error(ERR_BAT_DIS_OVERTEMP);
-            dev_stat.clear_error(ERR_BAT_DIS_UNDERTEMP);
-            dev_stat.clear_error(ERR_BAT_UNDERVOLTAGE);
         }
     }
 }

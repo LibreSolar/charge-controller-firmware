@@ -38,8 +38,13 @@ extern Charger charger;
 extern BatConf bat_conf;
 extern BatConf bat_conf_user;
 
+#if CONFIG_HAS_LOAD_OUTPUT
 extern LoadOutput load;
+#endif
+
+#if CONFIG_HAS_USB_PWR_OUTPUT
 extern LoadOutput usb_pwr;
+#endif
 
 extern ThingSet ts;             // defined in data_objects.cpp
 

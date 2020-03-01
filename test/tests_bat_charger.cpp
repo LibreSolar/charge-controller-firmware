@@ -227,11 +227,8 @@ void stop_discharge_at_low_voltage()
     charger.discharge_control(&bat_conf);
     TEST_ASSERT_LESS_THAN(0, bat_terminal.neg_current_limit);
 
-    bat_terminal.bus->voltage = bat_conf.voltage_load_disconnect - 0.1;
+    bat_terminal.bus->voltage = bat_conf.voltage_absolute_min - 0.1;
     charger.discharge_control(&bat_conf);
-    charger.discharge_control(&bat_conf);       // 2s: still on
-    TEST_ASSERT_NOT_EQUAL(0, bat_terminal.neg_current_limit);
-    charger.discharge_control(&bat_conf);       // 3s: off
     TEST_ASSERT_EQUAL(0, bat_terminal.neg_current_limit);
 }
 
@@ -260,19 +257,17 @@ void restart_discharge_if_allowed()
     init_structs();
 
     // stop because of undervoltage
-    bat_terminal.bus->voltage = bat_conf.voltage_load_disconnect - 0.1;
-    charger.discharge_control(&bat_conf);
-    charger.discharge_control(&bat_conf);
-    charger.discharge_control(&bat_conf);       // 3s debounce
-    TEST_ASSERT_EQUAL(0, bat_terminal.neg_current_limit);
-
-    // increase voltage slightly above DISconnect voltage
-    bat_terminal.bus->voltage = bat_conf.voltage_load_disconnect + 0.1;
+    bat_terminal.bus->voltage = bat_conf.voltage_absolute_min - 0.1;
     charger.discharge_control(&bat_conf);
     TEST_ASSERT_EQUAL(0, bat_terminal.neg_current_limit);
 
-    // increase voltage above REconnect voltage
-    bat_terminal.bus->voltage = bat_conf.voltage_load_reconnect + 0.1;
+    // increase voltage slightly above absolute minimum
+    bat_terminal.bus->voltage = bat_conf.voltage_absolute_min + 0.05;
+    charger.discharge_control(&bat_conf);
+    TEST_ASSERT_EQUAL(0, bat_terminal.neg_current_limit);
+
+    // increase voltage above hysteresis voltage
+    bat_terminal.bus->voltage = bat_conf.voltage_absolute_min + 0.15;
     charger.discharge_control(&bat_conf);
     TEST_ASSERT_LESS_THAN(0, bat_terminal.neg_current_limit);
 }

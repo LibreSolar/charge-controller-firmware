@@ -156,7 +156,10 @@ void mbed_die(void)
 {
     half_bridge_stop();
     load.stop();
+
+#if CONFIG_HAS_USB_PWR_OUTPUT
     usb_pwr.stop();
+#endif
 
     leds_init(false);
 

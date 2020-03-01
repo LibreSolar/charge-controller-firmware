@@ -75,6 +75,11 @@ int main()
     load.set_voltage_limits(bat_conf.voltage_load_disconnect, bat_conf.voltage_load_reconnect,
         bat_conf.voltage_absolute_max);
 
+    #if CONFIG_HAS_USB_PWR_OUTPUT
+    usb_pwr.set_voltage_limits(bat_conf.voltage_load_disconnect - 0.1, // keep on longer than load
+        bat_conf.voltage_load_reconnect, bat_conf.voltage_absolute_max);
+    #endif
+
     wait(2);    // safety feature: be able to re-flash before starting
     control_timer_start(CONTROL_FREQUENCY);
     wait(0.1);  // necessary to prevent MCU from randomly getting stuck here if PV panel is connected before battery
@@ -144,6 +149,10 @@ void system_control()
     #endif
 
     load.control();
+
+    #if CONFIG_HAS_USB_PWR_OUTPUT
+    usb_pwr.control();
+    #endif
 
     if (counter % CONTROL_FREQUENCY == 0) {
         // called once per second (this timer is much more accurate than time(NULL) based on LSI)

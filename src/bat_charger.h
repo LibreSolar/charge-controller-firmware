@@ -257,6 +257,7 @@ public:
     int deep_dis_last_equalization; ///< Deep discharge counter value after last equalization
 
     bool full;                      ///< Flag to indicate if battery was fully charged
+    bool empty;                     ///< Flag to indicate if battery was completely discharged
 
     /** Detect if two batteries are connected in series (12V/24V auto-detection)
      */
@@ -284,8 +285,6 @@ public:
 
 private:
     void enter_state(int next_state);
-
-    int uv_debounce_counter = 0;
 };
 
 

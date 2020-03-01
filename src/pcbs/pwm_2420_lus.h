@@ -25,6 +25,7 @@
 #define CONFIG_HAS_DCDC_CONVERTER  0
 #define CONFIG_HAS_PWM_SWITCH      1
 #define CONFIG_HAS_LOAD_OUTPUT     1
+#define CONFIG_HAS_USB_PWR_OUTPUT  1
 
 #define PWM_TIM        3    // use TIM3 timer
 #define PWM_FREQUENCY  50   // Hz

@@ -20,6 +20,7 @@
 #define CONFIG_HAS_DCDC_CONVERTER  1
 #define CONFIG_HAS_PWM_SWITCH      0
 #define CONFIG_HAS_LOAD_OUTPUT     1
+#define CONFIG_HAS_USB_PWR_OUTPUT  1
 
 // DC/DC converter settings
 #define PWM_FREQUENCY 50 // kHz  50 = better for cloud solar to increase efficiency

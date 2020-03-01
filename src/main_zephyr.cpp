@@ -67,11 +67,19 @@ void main(void)
     load.set_voltage_limits(bat_conf.voltage_load_disconnect, bat_conf.voltage_load_reconnect,
         bat_conf.voltage_absolute_max);
 
+    #if CONFIG_HAS_USB_PWR_OUTPUT
+    usb_pwr.set_voltage_limits(bat_conf.voltage_load_disconnect - 0.1, // keep on longer than load
+        bat_conf.voltage_load_reconnect, bat_conf.voltage_absolute_max);
+    #endif
+
     k_sleep(2000);      // safety feature: be able to re-flash before starting
 
     while (1) {
+        charger.discharge_control(&bat_conf);
+        charger.charge_control(&bat_conf);
+
         leds_update_1s();
-            leds_update_soc(charger.soc, flags_check(&load.error_flags, ERR_LOAD_SHEDDING));
+        leds_update_soc(charger.soc, flags_check(&load.error_flags, ERR_LOAD_SHEDDING));
 
         eeprom_update();
 
@@ -103,7 +111,13 @@ void control_thread()
         leds_set_charging(half_bridge_enabled());
         #endif
 
+        #if CONFIG_HAS_LOAD_OUTPUT
         load.control();
+        #endif
+
+        #if CONFIG_HAS_USB_PWR_OUTPUT
+        usb_pwr.control();
+        #endif
 
         uint32_t now = k_uptime_get() / 1000;
         if (now > last_call) {
