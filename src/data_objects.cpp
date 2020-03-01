@@ -277,6 +277,9 @@ const data_object_t data_objects[] = {
         TS_OUTPUT, TS_READ_ALL),
 #endif
 
+    TS_DATA_OBJ_INT16(0x8F, "NumBatteries", &lv_bus.series_multiplier,
+        TS_OUTPUT, TS_READ_ALL),
+
     TS_DATA_OBJ_UINT32(0x90, "ErrorFlags", &dev_stat.error_flags,
         TS_OUTPUT, TS_READ_ALL),
 
@@ -447,10 +450,8 @@ void data_objects_update_conf()
     if (battery_conf_check(&bat_conf_user)) {
         printf("New config valid and activated.\n");
         battery_conf_overwrite(&bat_conf_user, &bat_conf, &charger);
-        load.set_voltage_limits(
-            bat_conf.voltage_load_disconnect * charger.num_batteries,
-            bat_conf.voltage_load_reconnect * charger.num_batteries,
-            bat_conf.voltage_absolute_max * charger.num_batteries);
+        load.set_voltage_limits(bat_conf.voltage_load_disconnect, bat_conf.voltage_load_reconnect,
+            bat_conf.voltage_absolute_max);
         changed = true;
     }
     else {

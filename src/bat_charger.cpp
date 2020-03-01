@@ -243,7 +243,7 @@ void Charger::detect_num_batteries(BatConf *bat)
 {
     if (port->bus->voltage > bat->voltage_absolute_min * 2 &&
         port->bus->voltage < bat->voltage_absolute_max * 2) {
-        num_batteries = 2;
+        port->bus->series_multiplier = 2;
         printf("Detected two batteries (total %.2f V max)\n", bat->topping_voltage * 2);
     }
     else {
@@ -292,8 +292,8 @@ void Charger::discharge_control(BatConf *bat_conf)
     // load output state is defined by battery negative current limit
     if (port->neg_current_limit < 0) {
         // discharging currently allowed. see if that's still valid:
-        if (port->bus->voltage < num_batteries *
-            port->bus->src_droop_voltage(bat_conf->voltage_load_disconnect))
+        if (port->bus->voltage <
+            port->bus->src_control_voltage(bat_conf->voltage_load_disconnect))
         {
             uv_debounce_counter++;
             if (uv_debounce_counter >= 3) {      // 3s in undervoltage --> switch off
@@ -333,8 +333,7 @@ void Charger::discharge_control(BatConf *bat_conf)
     }
     else {
         // discharging currently not allowed. should we allow it?
-        if (port->bus->voltage >= num_batteries *
-            port->bus->src_droop_voltage(bat_conf->voltage_load_reconnect)
+        if (port->bus->voltage >= port->bus->src_control_voltage(bat_conf->voltage_load_reconnect)
             && bat_temperature < bat_conf->discharge_temp_max - 1
             && bat_temperature > bat_conf->discharge_temp_min + 1)
         {
@@ -365,7 +364,7 @@ void Charger::charge_control(BatConf *bat_conf)
     }
 
     if (dev_stat.has_error(ERR_BAT_OVERVOLTAGE) &&
-        port->bus->voltage < (bat_conf->voltage_absolute_max - 0.5) * num_batteries)
+        port->bus->voltage < (bat_conf->voltage_absolute_max - 0.5) * port->bus->series_multiplier)
     {
         dev_stat.clear_error(ERR_BAT_OVERVOLTAGE);
     }
@@ -373,14 +372,14 @@ void Charger::charge_control(BatConf *bat_conf)
     // state machine
     switch (state) {
         case CHG_STATE_IDLE: {
-            if  (port->bus->voltage < bat_conf->voltage_recharge * num_batteries
-                && port->bus->voltage > bat_conf->voltage_absolute_min * num_batteries // ToDo set error flag otherwise
+            if  (port->bus->voltage < port->bus->sink_control_voltage(bat_conf->voltage_recharge)
+                && port->bus->voltage > port->bus->sink_control_voltage(bat_conf->voltage_absolute_min) // ToDo set error flag otherwise
                 && (uptime() - time_state_changed) > bat_conf->time_limit_recharge
                 && bat_temperature < bat_conf->charge_temp_max - 1
                 && bat_temperature > bat_conf->charge_temp_min + 1)
             {
-                port->bus->sink_voltage_bound = num_batteries * (bat_conf->topping_voltage +
-                    bat_conf->temperature_compensation * (bat_temperature - 25));
+                port->bus->sink_voltage_bound = bat_conf->topping_voltage +
+                    bat_conf->temperature_compensation * (bat_temperature - 25);
                 port->pos_current_limit = bat_conf->charge_current_max;
                 full = false;
                 dev_stat.clear_error(ERR_BAT_CHG_OVERTEMP);
@@ -392,10 +391,10 @@ void Charger::charge_control(BatConf *bat_conf)
         }
         case CHG_STATE_BULK: {
             // continuously adjust voltage setting for temperature compensation
-            port->bus->sink_voltage_bound = num_batteries * (bat_conf->topping_voltage +
-                bat_conf->temperature_compensation * (bat_temperature - 25));
+            port->bus->sink_voltage_bound = bat_conf->topping_voltage +
+                bat_conf->temperature_compensation * (bat_temperature - 25);
 
-            if (port->bus->voltage > port->bus->sink_droop_voltage()) {
+            if (port->bus->voltage > port->bus->sink_control_voltage()) {
                 target_voltage_timer = 0;
                 enter_state(CHG_STATE_TOPPING);
             }
@@ -403,10 +402,10 @@ void Charger::charge_control(BatConf *bat_conf)
         }
         case CHG_STATE_TOPPING: {
             // continuously adjust voltage setting for temperature compensation
-            port->bus->sink_voltage_bound = num_batteries * (bat_conf->topping_voltage +
-                bat_conf->temperature_compensation * (bat_temperature - 25));
+            port->bus->sink_voltage_bound = bat_conf->topping_voltage +
+                bat_conf->temperature_compensation * (bat_temperature - 25);
 
-            if (port->bus->voltage >= port->bus->sink_droop_voltage() - 0.05F) {
+            if (port->bus->voltage >= port->bus->sink_control_voltage() - 0.05F) {
                 // battery is full if topping target voltage is still reached (i.e. sufficient
                 // solar power available) and time limit or cut-off current reached
                 if (port->current < bat_conf->topping_current_cutoff ||
@@ -432,13 +431,13 @@ void Charger::charge_control(BatConf *bat_conf)
                     num_deep_discharges - deep_dis_last_equalization
                     >= bat_conf->equalization_trigger_deep_cycles))
                 {
-                    port->bus->sink_voltage_bound = num_batteries * bat_conf->equalization_voltage;
+                    port->bus->sink_voltage_bound = bat_conf->equalization_voltage;
                     port->pos_current_limit = bat_conf->equalization_current_limit;
                     enter_state(CHG_STATE_EQUALIZATION);
                 }
                 else if (bat_conf->trickle_enabled) {
-                    port->bus->sink_voltage_bound = num_batteries * (bat_conf->trickle_voltage +
-                        bat_conf->temperature_compensation * (bat_temperature - 25));
+                    port->bus->sink_voltage_bound = bat_conf->trickle_voltage +
+                        bat_conf->temperature_compensation * (bat_temperature - 25);
                     enter_state(CHG_STATE_TRICKLE);
                 }
                 else {
@@ -450,10 +449,10 @@ void Charger::charge_control(BatConf *bat_conf)
         }
         case CHG_STATE_TRICKLE: {
             // continuously adjust voltage setting for temperature compensation
-            port->bus->sink_voltage_bound = num_batteries * (bat_conf->trickle_voltage +
-                bat_conf->temperature_compensation * (bat_temperature - 25));
+            port->bus->sink_voltage_bound = bat_conf->trickle_voltage +
+                bat_conf->temperature_compensation * (bat_temperature - 25);
 
-            if (port->bus->voltage >= port->bus->sink_droop_voltage()) {
+            if (port->bus->voltage >= port->bus->sink_control_voltage()) {
                 time_target_voltage_reached = uptime();
             }
 
@@ -470,8 +469,8 @@ void Charger::charge_control(BatConf *bat_conf)
         }
         case CHG_STATE_EQUALIZATION: {
             // continuously adjust voltage setting for temperature compensation
-            port->bus->sink_voltage_bound = num_batteries * (bat_conf->equalization_voltage +
-                bat_conf->temperature_compensation * (bat_temperature - 25));
+            port->bus->sink_voltage_bound = bat_conf->equalization_voltage +
+                bat_conf->temperature_compensation * (bat_temperature - 25);
 
             // current or time limit for equalization reached
             if (uptime() - time_state_changed > bat_conf->equalization_duration)
@@ -483,8 +482,8 @@ void Charger::charge_control(BatConf *bat_conf)
                 discharged_Ah = 0;         // reset coulomb counter again
 
                 if (bat_conf->trickle_enabled) {
-                    port->bus->sink_voltage_bound = num_batteries * (bat_conf->trickle_voltage +
-                        bat_conf->temperature_compensation * (bat_temperature - 25));
+                    port->bus->sink_voltage_bound = bat_conf->trickle_voltage +
+                        bat_conf->temperature_compensation * (bat_temperature - 25);
                     enter_state(CHG_STATE_TRICKLE);
                 }
                 else {
@@ -499,16 +498,24 @@ void Charger::charge_control(BatConf *bat_conf)
 
 void Charger::init_terminal(BatConf *bat)
 {
-    port->bus->sink_voltage_bound = bat->topping_voltage * num_batteries;
-    port->bus->src_voltage_bound = bat->voltage_load_disconnect * num_batteries;
+    port->bus->sink_voltage_bound = bat->topping_voltage;
+    port->bus->src_voltage_bound = bat->voltage_load_disconnect;
 
     port->neg_current_limit = -bat->discharge_current_max;
     port->pos_current_limit = bat->charge_current_max;
 
-    // negative sign for compensation of actual resistance
-    port->bus->sink_droop_res = -bat->wire_resistance;
+    /*
+     * Negative sign for compensation of actual resistance
+     *
+     * droop_res is multiplied with number of series connected batteries to calculate control
+     * voltage, so we need to divide by number of batteries here for correction
+    */
+    port->bus->sink_droop_res = -bat->wire_resistance / port->bus->series_multiplier;
 
-    // in discharging direction also include battery internal resistance for current-compensation
-    // of voltage setpoints
-    port->bus->src_droop_res = -bat->wire_resistance - bat->internal_resistance * num_batteries;
+    /*
+     * In discharging direction also include battery internal resistance for current-compensation
+     * of voltage setpoints
+     */
+    port->bus->src_droop_res = -bat->wire_resistance / port->bus->series_multiplier
+        - bat->internal_resistance;
 }

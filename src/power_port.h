@@ -12,6 +12,7 @@
  * @brief Definition of charge controller terminals and internal DC buses
  */
 
+#include <stdint.h>
 #include <stdbool.h>
 
 class PowerPort;    // forward-declaration
@@ -28,6 +29,15 @@ public:
      * Measured bus voltage
      */
     float voltage;
+
+    /**
+     * Multiplier for series connection of batteries
+     *
+     * Used for automatic 12V/24V battery detection at start-up (can be 1 or 2 only)
+     *
+     * This factur must be applied to all voltage setpoints
+     */
+    int16_t series_multiplier = 1;
 
     /**
      * Upper voltage boundary where this bus may be used to sink current.
@@ -78,36 +88,36 @@ public:
     float src_current_margin;
 
     /**
-     * Calculate current-compensated voltage based on bus reference current
+     * Calculate current-compensated src control voltage, considering droop and series multiplier
      *
      * @param voltage_zero_current Voltage at zero current (without droop). If this parameter is
      *                             left empty, the src_voltage_bound is considered.
      */
-    inline float src_droop_voltage(float voltage_zero_current = 0)
+    inline float src_control_voltage(float voltage_zero_current = 0)
     {
         float v0 = (voltage_zero_current == 0) ? src_voltage_bound : voltage_zero_current;
         if (ref_current != nullptr) {
-            return v0 - src_droop_res * (*ref_current);
+            return (v0 - src_droop_res * (*ref_current)) * series_multiplier;
         }
         else {
-            return v0;
+            return v0 * series_multiplier;
         }
     }
 
     /**
-     * Calculate current-compensated voltage based on bus reference current
+     * Calculate current-compensated sink control voltage, considering droop and series multiplier
      *
      * @param voltage_zero_current Voltage at zero current (without droop). If this parameter is
      *                             left empty, the sink_voltage_bound is considered.
      */
-    inline float sink_droop_voltage(float voltage_zero_current = 0)
+    inline float sink_control_voltage(float voltage_zero_current = 0)
     {
         float v0 = (voltage_zero_current == 0) ? sink_voltage_bound : voltage_zero_current;
         if (ref_current != nullptr) {
-            return v0 - sink_droop_res * (*ref_current);
+            return (v0 - sink_droop_res * (*ref_current)) * series_multiplier;
         }
         else {
-            return v0;
+            return v0 * series_multiplier;
         }
     }
 };

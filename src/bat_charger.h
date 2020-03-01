@@ -18,7 +18,6 @@
 #include <time.h>
 
 #include "power_port.h"
-#include "load.h"
 
 /** Battery cell types
  */
@@ -233,9 +232,6 @@ public:
     PowerPort *port;
 
     uint32_t state;             ///< Current charger state (see enum ChargerState)
-
-    int32_t num_batteries = 1;      ///< Used for automatic 12V/24V battery detection at
-                                    ///< start-up (can be 1 or 2 only)
 
     float bat_temperature = 25;     ///< Battery temperature in °C from ext. temperature sensor
                                     ///< (if existing)

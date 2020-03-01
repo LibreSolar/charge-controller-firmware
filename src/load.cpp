@@ -56,7 +56,7 @@ void LoadOutput::control()
             flags_set(&error_flags, ERR_LOAD_BUS_SRC_CURRENT);
         }
 
-        if (bus->voltage < bus->src_droop_voltage(disconnect_voltage)) {
+        if (bus->voltage < bus->src_control_voltage(disconnect_voltage)) {
             flags_set(&error_flags, ERR_LOAD_SHEDDING);
             lvd_timestamp = uptime();
         }
@@ -86,7 +86,7 @@ void LoadOutput::control()
         // load is off: check if errors are resolved and if load can be switched on
 
         if (flags_check(&error_flags, ERR_LOAD_SHEDDING) &&
-            bus->voltage > bus->src_droop_voltage(reconnect_voltage) &&
+            bus->voltage > bus->src_control_voltage(reconnect_voltage) &&
             uptime() - lvd_timestamp > lvd_recovery_delay)
         {
             flags_clear(&error_flags, ERR_LOAD_SHEDDING);

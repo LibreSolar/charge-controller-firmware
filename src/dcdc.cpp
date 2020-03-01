@@ -78,7 +78,7 @@ int Dcdc::duty_cycle_delta()
         // swith off after 10s low power or negative power (if not in nanogrid mode)
         pwr_inc_goal = 0;
     }
-    else if (out->bus->voltage > out->bus->sink_droop_voltage()) {
+    else if (out->bus->voltage > out->bus->sink_control_voltage()) {
         // output voltage target reached
         state = DCDC_STATE_CV;
         pwr_inc_goal = -1;  // decrease output power
@@ -90,7 +90,7 @@ int Dcdc::duty_cycle_delta()
     }
     else if (fabs(lvs->current) > ls_current_max    // current above hardware maximum
         || temp_mosfets > 80                        // temperature limits exceeded
-        || (in->bus->voltage < in->bus->src_droop_voltage()
+        || (in->bus->voltage < in->bus->src_control_voltage()
             && out->current > 0.1)                  // input voltage below limit
         || in->current < in->neg_current_limit)     // input current (negative signs) limit exceeded
     {
