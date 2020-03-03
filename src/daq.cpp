@@ -33,6 +33,14 @@ static volatile AdcAlert adc_alerts_lower[NUM_ADC_CH] = {};
 
 extern DeviceStatus dev_stat;
 
+#ifdef CONFIG_SOC_SERIES_STM32G4X
+// Using internal reference buffer at VREF+ pin, set to 2048 mV
+#define VREF (2048)
+#else
+// internal STM reference voltage
+#define VREF (VREFINT_VALUE * VREFINT_CAL / adc_value(ADC_POS_VREF_MCU))
+#endif
+
 /**
  * Average value for ADC channel
  * @param channel valid ADC channel pos ADC_POS_..., see adc_h.c
@@ -46,50 +54,50 @@ static inline uint32_t adc_value(uint32_t channel)
 /**
  * Measured voltage for ADC channel after average
  * @param channel valid ADC channel pos ADC_POS_..., see adc_h.c
- * @param vcc reference voltage in millivolts
+ * @param vref reference voltage in millivolts
  *
  * @return voltage in millivolts
  */
 
-static inline float adc_voltage(uint32_t channel, int32_t vcc)
+static inline float adc_voltage(uint32_t channel, int32_t vref)
 {
-    return (adc_value(channel) * vcc) / 4096;
+    return (adc_value(channel) * vref) / 4096;
 }
 
 /**
  * Measured current/voltage for ADC channel after average and scaling
  * @param channel valid ADC channel pos ADC_POS_..., see adc_h.c
- * @param vcc reference voltage in millivolts
+ * @param vref reference voltage in millivolts
  *
  * @return scaled final value
  */
-static inline float adc_scaled(uint32_t channel, int32_t vcc, const float gain)
+static inline float adc_scaled(uint32_t channel, int32_t vref, const float gain)
 {
-    return adc_voltage(channel,vcc) * (gain/1000.0);
+    return adc_voltage(channel, vref) * (gain/1000.0);
 }
 
-static inline float ntc_temp(uint32_t channel, int32_t vcc)
+static inline float ntc_temp(uint32_t channel, int32_t vref)
 {
     /** \todo Improved (faster) temperature calculation:
        https://www.embeddedrelated.com/showarticle/91.php
     */
 
-    float v_temp = adc_voltage(channel, vcc);  // voltage read by ADC (mV)
-    float rts = NTC_SERIES_RESISTOR * v_temp / (vcc - v_temp); // resistance of NTC (Ohm)
+    float v_temp = adc_voltage(channel, vref);  // voltage read by ADC (mV)
+    float rts = NTC_SERIES_RESISTOR * v_temp / (vref - v_temp); // resistance of NTC (Ohm)
 
     return 1.0/(1.0/(273.15+25) + 1.0/NTC_BETA_VALUE*log(rts/10000.0)) - 273.15; // °C
 }
 
 void calibrate_current_sensors()
 {
-    int vcc = VREFINT_VALUE * VREFINT_CAL / adc_value(ADC_POS_VREF_MCU);
+    int vref = VREF;
 #if CONFIG_HAS_PWM_SWITCH
-    solar_current_offset = -adc_scaled(ADC_POS_I_PWM, vcc, ADC_GAIN_I_PWM);
+    solar_current_offset = -adc_scaled(ADC_POS_I_PWM, vref, ADC_GAIN_I_PWM);
 #endif
 #if CONFIG_HAS_DCDC_CONVERTER
-    solar_current_offset = -adc_scaled(ADC_POS_I_DCDC, vcc, ADC_GAIN_I_DCDC);
+    solar_current_offset = -adc_scaled(ADC_POS_I_DCDC, vref, ADC_GAIN_I_DCDC);
 #endif
-    load_current_offset = -adc_scaled(ADC_POS_I_LOAD, vcc, ADC_GAIN_I_LOAD);
+    load_current_offset = -adc_scaled(ADC_POS_I_LOAD, vref, ADC_GAIN_I_LOAD);
 }
 
 void adc_update_value(unsigned int pos)
@@ -144,34 +152,27 @@ void adc_update_value(unsigned int pos)
 
 void daq_update()
 {
-    // reference voltage of 2.5 V at PIN_V_REF
-    //int vcc = 2500 * 4096 / (adc_filtered[ADC_POS_V_REF] >> (4 + ADC_FILTER_CONST));
-
-    // internal STM reference voltage
-    int vcc = VREFINT_VALUE * VREFINT_CAL / adc_value(ADC_POS_VREF_MCU);
-
-    // rely on LDO accuracy
-    //int vcc = 3300;
+    int vref = VREF;
 
     // calculate lower voltage first, as it is needed for PWM terminal voltage calculation
-    lv_bus.voltage = adc_scaled(ADC_POS_V_LOW, vcc, ADC_GAIN_V_LOW);
+    lv_bus.voltage = adc_scaled(ADC_POS_V_LOW, vref, ADC_GAIN_V_LOW);
 
 #if CONFIG_HAS_DCDC_CONVERTER
-    hv_bus.voltage = adc_scaled(ADC_POS_V_HIGH, vcc, ADC_GAIN_V_HIGH);
+    hv_bus.voltage = adc_scaled(ADC_POS_V_HIGH, vref, ADC_GAIN_V_HIGH);
 #endif
 
 #if CONFIG_HAS_PWM_SWITCH
-    pwm_switch.ext_voltage = lv_bus.voltage - vcc * (ADC_OFFSET_V_PWM / 1000.0) -
-        adc_scaled(ADC_POS_V_PWM, vcc, ADC_GAIN_V_PWM);
+    pwm_switch.ext_voltage = lv_bus.voltage - vref * (ADC_OFFSET_V_PWM / 1000.0) -
+        adc_scaled(ADC_POS_V_PWM, vref, ADC_GAIN_V_PWM);
 #endif
 
-    load.current = adc_scaled(ADC_POS_I_LOAD, vcc, ADC_GAIN_I_LOAD) + load_current_offset;
+    load.current = adc_scaled(ADC_POS_I_LOAD, vref, ADC_GAIN_I_LOAD) + load_current_offset;
 
 #if CONFIG_HAS_PWM_SWITCH
     // current multiplied with PWM duty cycle for PWM charger to get avg current for correct power
     // calculation
     pwm_switch.current = -pwm_switch.get_duty_cycle() * (
-        adc_scaled(ADC_POS_I_PWM, vcc, ADC_GAIN_I_PWM) + solar_current_offset);
+        adc_scaled(ADC_POS_I_PWM, vref, ADC_GAIN_I_PWM) + solar_current_offset);
 
     lv_terminal.current = -pwm_switch.current - load.current;
 
@@ -180,7 +181,7 @@ void daq_update()
 
 #if CONFIG_HAS_DCDC_CONVERTER
     dcdc_lv_port.current =
-        adc_scaled(ADC_POS_I_DCDC, vcc, ADC_GAIN_I_DCDC) + solar_current_offset;
+        adc_scaled(ADC_POS_I_DCDC, vref, ADC_GAIN_I_DCDC) + solar_current_offset;
 
     lv_terminal.current = dcdc_lv_port.current - load.current;
 
@@ -194,7 +195,7 @@ void daq_update()
 
 #ifdef PIN_ADC_TEMP_BAT
     // battery temperature calculation
-    float bat_temp = ntc_temp(ADC_POS_TEMP_BAT, vcc);
+    float bat_temp = ntc_temp(ADC_POS_TEMP_BAT, vref);
 
     if (bat_temp > -50) {
         // external sensor connected: take measured value
@@ -210,11 +211,11 @@ void daq_update()
 
 #ifdef PIN_ADC_TEMP_FETS
     // MOSFET temperature calculation
-    dcdc.temp_mosfets = ntc_temp(ADC_POS_TEMP_FETS, vcc);
+    dcdc.temp_mosfets = ntc_temp(ADC_POS_TEMP_FETS, vref);
 #endif
 
     // internal MCU temperature
-    uint16_t adcval = adc_value(ADC_POS_TEMP_MCU) * vcc / VREFINT_VALUE;
+    uint16_t adcval = adc_value(ADC_POS_TEMP_MCU) * vref / VREFINT_VALUE;
     dev_stat.internal_temp = (TSENSE_CAL2_VALUE - TSENSE_CAL1_VALUE) /
         (TSENSE_CAL2 - TSENSE_CAL1) * (adcval - TSENSE_CAL1) + TSENSE_CAL1_VALUE;
 
@@ -274,8 +275,8 @@ uint16_t adc_get_alert_limit(float scale, float limit)
 
 void daq_set_lv_alerts(float upper, float lower)
 {
-    int vcc = VREFINT_VALUE * VREFINT_CAL / adc_value(ADC_POS_VREF_MCU);
-    float scale =  ((4096* 1000) / (ADC_GAIN_V_LOW)) / vcc;
+    int vref = VREF;
+    float scale =  ((4096* 1000) / (ADC_GAIN_V_LOW)) / vref;
 
     // LV side (battery) overvoltage alert
     adc_alerts_upper[ADC_POS_V_LOW].limit = adc_get_alert_limit(scale, upper);

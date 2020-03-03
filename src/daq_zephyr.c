@@ -86,6 +86,17 @@ extern uint16_t adc_readings[];
 
 void adc_update_value(unsigned int pos);
 
+static void vref_setup()
+{
+#ifdef CONFIG_SOC_SERIES_STM32G4X
+    // output 2.048V at VREF+ pin (also used internally for ADC and DAC)
+	LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_SYSCFG);
+	LL_VREFBUF_SetVoltageScaling(LL_VREFBUF_VOLTAGE_SCALE0);
+	LL_VREFBUF_Enable();
+	LL_VREFBUF_DisableHIZ();
+#endif
+}
+
 static void dac_setup()
 {
 #if defined(CONFIG_SOC_SERIES_STM32F0X) || defined(CONFIG_SOC_SERIES_STM32L0X)
@@ -135,20 +146,16 @@ static void adc_init(ADC_TypeDef *adc)
 #elif defined(CONFIG_SOC_SERIES_STM32G4X)
     LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_ADC12);
 
-    // Enable Power regulators
+    // Prepare for ADC calibration
+    LL_ADC_Disable(adc);
     LL_ADC_DisableDeepPowerDown(adc);
     LL_ADC_EnableInternalRegulator(adc);
     k_busy_wait(LL_ADC_DELAY_INTERNAL_REGUL_STAB_US);
 
     LL_ADC_SetCommonClock(__LL_ADC_COMMON_INSTANCE(adc), LL_ADC_CLOCK_SYNC_PCLK_DIV4);
 
-    // Calibration got stuck during testing. TODO: Check and improve!
-    /*
-    // Start calibration of the ADCs
     LL_ADC_StartCalibration(adc, LL_ADC_SINGLE_ENDED);
-    while (LL_ADC_IsCalibrationOnGoing(adc)) {
-    }
-    */
+    while (LL_ADC_IsCalibrationOnGoing(adc)) {;}
 
     if (LL_ADC_IsActiveFlag_ADRDY(adc)) {
         LL_ADC_ClearFlag_ADRDY(adc);
@@ -308,6 +315,7 @@ void daq_setup()
 {
     static struct k_timer adc_trigger_timer;
 
+    vref_setup();
     dac_setup();
     adc_setup();
     dma_setup();
