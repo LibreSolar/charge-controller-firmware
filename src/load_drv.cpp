@@ -252,7 +252,11 @@ void load_out_init()
 #endif
 
     // analog comparator to detect short circuits and trigger immediate load switch-off
+#ifdef __MBED__
+    // The STM32L0 uses the same interrupt for ADC and COMP, which creates interference with the
+    // Zephyr ADC driver that need still to be resolved
     short_circuit_comp_init();
+#endif
 
     // enable charge pump for high-side switches (if existing)
     load_cp_enable();
