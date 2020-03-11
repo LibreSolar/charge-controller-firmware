@@ -7,3 +7,6 @@
 [submodule "lib/paho-mqtt"]
 	path = lib/paho-mqtt
 	url = https://github.com/eclipse/paho.mqtt.embedded-c
+[submodule "lib/cicada-modem"]
+	path = lib/cicada-modem
+	url = https://github.com/LibreSolar/cicada-library
