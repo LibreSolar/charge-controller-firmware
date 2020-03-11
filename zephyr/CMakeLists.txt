@@ -35,5 +35,8 @@ target_sources(app PRIVATE ../src/ext/serial.cpp)
 target_sources(app PRIVATE ../src/ext/can.cpp)
 target_sources(app PRIVATE ../src/ext/can_msg_queue.cpp)
 
+# fix cpp static guard errors until PR #19754 gets merged
+target_sources(app PRIVATE subsys/cpp/guards.c)
+
 add_subdirectory(../lib/thingset build/thingset)
 add_subdirectory(../lib/oled-display build/oled-display)
