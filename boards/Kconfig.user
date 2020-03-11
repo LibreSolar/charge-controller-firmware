@@ -143,4 +143,42 @@ config DEVICE_ID
     int "Initial device ID for communication interfaces"
     default 0
 
+config EXT_MODEM
+    bool "2G/4G modem using Cicada library"
+
+config EXT_MODEM_APN
+    depends on EXT_MODEM
+    string "GSM access point name of network provider"
+    default "internet"
+
+config EXT_MQTT_HOST
+    depends on EXT_MODEM
+    string "MQTT server host name"
+    default "test.mosquitto.org"
+
+config EXT_MQTT_PORT
+    depends on EXT_MODEM
+    int "MQTT server port"
+    default 1883
+
+config EXT_MQTT_USER
+    depends on EXT_MODEM
+    string "MQTT user"
+    default ""
+
+config EXT_MQTT_PASS
+    depends on EXT_MODEM
+    string "MQTT password"
+    default ""
+
+config EXT_MQTT_PUB_TOPIC
+    depends on EXT_MODEM
+    string "MQTT publish topic"
+    default ""
+
+config EXT_MQTT_SUB_TOPIC
+    depends on EXT_MODEM
+    string "MQTT subscribe topic"
+    default ""
+
 endmenu

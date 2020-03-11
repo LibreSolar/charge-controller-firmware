@@ -52,7 +52,7 @@
 
 	aliases {
 		uart-dbg = &usart1;
-		uext-uart = &usart2;
+		uart-uext = &usart2;
 		spi-uext = &spi1;
 		i2c-uext = &i2c1;
 	};
