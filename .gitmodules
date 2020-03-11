@@ -4,3 +4,6 @@
 [submodule "lib/oled-display"]
 	path = lib/oled-display
 	url = https://github.com/LibreSolar/oled-display-library
+[submodule "lib/paho-mqtt"]
+	path = lib/paho-mqtt
+	url = https://github.com/eclipse/paho.mqtt.embedded-c
