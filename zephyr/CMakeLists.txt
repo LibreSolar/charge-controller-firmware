@@ -8,7 +8,7 @@ include($ENV{ZEPHYR_BASE}/cmake/app/boilerplate.cmake NO_POLICY_SCOPE)
 
 project(libre_solar_charge_controller)
 
-add_definitions(-D__ZEPHYR__ -DDEBUG_PRINT_FLAGS=7)
+add_definitions(-D__ZEPHYR__ -DDEBUG_PRINT_FLAGS=7 -DCICADA_DEBUG)
 
 include_directories(../src)
 
@@ -29,7 +29,9 @@ target_sources(app PRIVATE ../src/main_zephyr.cpp)
 target_sources(app PRIVATE ../src/power_port.cpp)
 target_sources(app PRIVATE ../src/pwm_switch.cpp)
 target_sources(app PRIVATE ../src/setup.cpp)
+
 target_sources(app PRIVATE ../src/ext/ext.cpp)
+target_sources(app PRIVATE ../src/ext/modem.cpp)
 target_sources(app PRIVATE ../src/ext/oled.cpp)
 target_sources(app PRIVATE ../src/ext/serial.cpp)
 target_sources(app PRIVATE ../src/ext/can.cpp)
@@ -40,3 +42,11 @@ target_sources(app PRIVATE subsys/cpp/guards.c)
 
 add_subdirectory(../lib/thingset build/thingset)
 add_subdirectory(../lib/oled-display build/oled-display)
+add_subdirectory(../lib/cicada-modem/cicada/platform/zephyr build/cicada)
+
+zephyr_include_directories(../lib/paho-mqtt/MQTTClient/src)
+zephyr_include_directories(../lib/paho-mqtt/MQTTPacket/src)
+target_sources(app PRIVATE ../lib/paho-mqtt/MQTTPacket/src/MQTTPacket.c)
+target_sources(app PRIVATE ../lib/paho-mqtt/MQTTPacket/src/MQTTDeserializePublish.c)
+target_sources(app PRIVATE ../lib/paho-mqtt/MQTTPacket/src/MQTTSerializePublish.c)
+target_sources(app PRIVATE ../lib/paho-mqtt/MQTTPacket/src/MQTTConnectClient.c)
