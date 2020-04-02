@@ -159,6 +159,15 @@ class PWM_TIM1
         // OIS1 = OIS1N = 0: Output Idle State is set to off
         //TIM1->CR2 |= ;
 
+#ifdef STM32G4
+        // Boards with STM32G4 MCU use ADC2 for synchronized ADC sampling. We use OC2
+        // for triggering, but but don't configure any pin for PWM mode
+        TIM1->CCMR1 |= TIM_CCMR1_OC2M_2 | TIM_CCMR1_OC2M_1 | TIM_CCMR1_OC2PE;
+        TIM1->CCER |= TIM_CCER_CC2E | TIM_CCER_CC2NE;
+        // Trigger ADC via TIM1_TRGO2 on OC2ref signal event
+        TIM1->CR2 |= TIM_CR2_MMS2_2 |  TIM_CR2_MMS2_0;
+#endif
+
         // Force update generation (UG = 1)
         TIM1->EGR |= TIM_EGR_UG;
 
@@ -199,6 +208,9 @@ class PWM_TIM1
     static void set_ccr(uint32_t val)
     {
         TIM1->CCR1 = val;
+
+        // Trigger ADC for current measurement in the middle of the cycle.
+        TIM1->CCR2 = 1;
     }
 };
 

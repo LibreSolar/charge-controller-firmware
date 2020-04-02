@@ -3,19 +3,3 @@
 
 # include generic charge controller Kconfig
 rsource "../../Kconfig"
-
-if ADC_STM32
-
-config ADC_1
-	prompt "ADC1"
-	default y
-	help
-	  Enable ADC1
-
-config ADC_2
-	prompt "ADC2"
-	default y
-	help
-	  Enable ADC2
-
-endif # ADC_STM32
