@@ -12,28 +12,31 @@ add_definitions(-D__ZEPHYR__ -DDEBUG_PRINT_FLAGS=7)
 
 include_directories(../src)
 
-target_sources(app PRIVATE ../src/bat_charger.cpp)
-target_sources(app PRIVATE ../src/data_objects.cpp)
-target_sources(app PRIVATE ../src/daq.cpp)
-target_sources(app PRIVATE ../src/daq_zephyr.c)
-target_sources(app PRIVATE ../src/device_status.cpp)
-target_sources(app PRIVATE ../src/dcdc.cpp)
-target_sources(app PRIVATE ../src/eeprom.cpp)
-target_sources(app PRIVATE ../src/half_bridge.cpp)
-target_sources(app PRIVATE ../src/hardware.cpp)
-target_sources(app PRIVATE ../src/helper.cpp)
-target_sources(app PRIVATE ../src/leds.cpp)
-target_sources(app PRIVATE ../src/load.cpp)
-target_sources(app PRIVATE ../src/load_drv.cpp)
-target_sources(app PRIVATE ../src/main_zephyr.cpp)
-target_sources(app PRIVATE ../src/power_port.cpp)
-target_sources(app PRIVATE ../src/pwm_switch.cpp)
-target_sources(app PRIVATE ../src/setup.cpp)
-target_sources(app PRIVATE ../src/ext/ext.cpp)
-target_sources(app PRIVATE ../src/ext/oled.cpp)
-target_sources(app PRIVATE ../src/ext/serial.cpp)
-target_sources(app PRIVATE ../src/ext/can.cpp)
-target_sources(app PRIVATE ../src/ext/can_msg_queue.cpp)
+target_sources(app PRIVATE
+        ../src/bat_charger.cpp
+        ../src/data_objects.cpp
+        ../src/daq.cpp
+        ../src/daq_driver.c
+        ../src/device_status.cpp
+        ../src/dcdc.cpp
+        ../src/eeprom.cpp
+        ../src/half_bridge.cpp
+        ../src/hardware.cpp
+        ../src/helper.cpp
+        ../src/leds.cpp
+        ../src/load.cpp
+        ../src/load_drv.cpp
+        ../src/main.cpp
+        ../src/power_port.cpp
+        ../src/pwm_switch.cpp
+        ../src/setup.cpp
+        ../src/ext/ext.cpp
+        ../src/ext/oled.cpp
+        ../src/ext/serial.cpp
+        ../src/ext/can.cpp
+        ../src/ext/can_msg_queue.cpp
+)
 
 add_subdirectory(../lib/thingset build/thingset)
 add_subdirectory(../lib/oled-display build/oled-display)
+#add_subdirectory_ifdef(CONFIG_EXT_OLED_DISPLAY ../lib/oled-display)

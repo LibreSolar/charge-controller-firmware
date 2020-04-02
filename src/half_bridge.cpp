@@ -38,13 +38,8 @@ class PWM_TIM3
         GPIOB->MODER = (GPIOB->MODER & ~(GPIO_MODER_MODE1)) | GPIO_MODER_MODE1_1;
 
         // Select AF2 on PB0 and PB1
-#ifdef __MBED__
-        GPIOB->AFR[0] |= 0x2 << GPIO_AFRL_AFRL0_Pos;
-        GPIOB->AFR[0] |= 0x2 << GPIO_AFRL_AFRL1_Pos;
-#else
         GPIOB->AFR[0] |= 0x2 << GPIO_AFRL_AFSEL0_Pos;
         GPIOB->AFR[0] |= 0x2 << GPIO_AFRL_AFSEL1_Pos;
-#endif
 
         // No prescaler --> timer frequency == SystemClock
         TIM3->PSC = 0;

@@ -15,124 +15,7 @@ static int blink_state = 1;                     // global state of all blinking 
 
 static bool charging = false;
 
-#ifdef __MBED__
-
-#include "mbed.h"
-
-static void charlieplexing()
-{
-    static int led_count = 0;
-    static int flicker_count = 0;
-    static bool flicker_state = 1;
-
-    // could be increased to value >NUM_LEDS to reduce on-time
-    if (led_count >= NUM_LEDS) {
-        led_count = 0;
-    }
-
-    if (flicker_count > 30) {
-        flicker_count = 0;
-        flicker_state = !flicker_state;
-    }
-
-    if (led_count < NUM_LEDS && (
-            led_states[led_count] == LED_STATE_ON ||
-            (led_states[led_count] == LED_STATE_FLICKER && flicker_state == 1) ||
-            (led_states[led_count] == LED_STATE_BLINK && blink_state == 1)
-       )) {
-        for (int pin_number = 0; pin_number < NUM_LED_PINS; pin_number++) {
-            DigitalInOut pin(led_pins[pin_number]);
-            switch (led_pin_setup[led_count][pin_number]) {
-                case PIN_HIGH:
-                    pin.output();
-                    pin = 1;
-                    break;
-                case PIN_LOW:
-                    pin.output();
-                    pin = 0;
-                    break;
-                case PIN_FLOAT:
-                    pin.input();
-                    break;
-            }
-        }
-    }
-    else {
-        // all pins floating
-        for (int pin_number = 0; pin_number < NUM_LED_PINS; pin_number++) {
-            DigitalIn pin(led_pins[pin_number]);
-        }
-    }
-
-    led_count++;
-    flicker_count++;
-}
-
-#if defined(STM32F0)
-
-static void timer_start(int freq_Hz)   // max. 10 kHz
-{
-    // Enable TIM17 clock
-    RCC->APB2ENR |= RCC_APB2ENR_TIM17EN;
-
-    // Set timer clock to 10 kHz
-    TIM17->PSC = SystemCoreClock / 10000 - 1;
-
-    // Interrupt on timer update
-    TIM17->DIER |= TIM_DIER_UIE;
-
-    // Auto Reload Register sets interrupt frequency
-    TIM17->ARR = 10000 / freq_Hz - 1;
-
-    // 3 = lowest priority of STM32L0/F0
-    NVIC_SetPriority(TIM17_IRQn, 3);
-    NVIC_EnableIRQ(TIM17_IRQn);
-
-    // Control Register 1
-    // TIM_CR1_CEN =  1: Counter enable
-    TIM17->CR1 |= TIM_CR1_CEN;
-}
-
-extern "C" void TIM17_IRQHandler(void)
-{
-    TIM17->SR &= ~TIM_SR_UIF;       // clear update interrupt flag to restart timer
-    charlieplexing();
-}
-
-#elif defined(STM32L0)
-
-static void timer_start(int freq_Hz)   // max. 10 kHz
-{
-    // Enable TIM22 clock
-    RCC->APB2ENR |= RCC_APB2ENR_TIM22EN;
-
-    // Set timer clock to 10 kHz
-    TIM22->PSC = SystemCoreClock / 10000 - 1;
-
-    // Interrupt on timer update
-    TIM22->DIER |= TIM_DIER_UIE;
-
-    // Auto Reload Register sets interrupt frequency
-    TIM22->ARR = 10000 / freq_Hz - 1;
-
-    // 3 = lowest priority of STM32L0/F0
-    NVIC_SetPriority(TIM22_IRQn, 3);
-    NVIC_EnableIRQ(TIM22_IRQn);
-
-    // Control Register 1
-    // TIM_CR1_CEN =  1: Counter enable
-    TIM22->CR1 |= TIM_CR1_CEN;
-}
-
-extern "C" void TIM22_IRQHandler(void)
-{
-    TIM22->SR &= ~(1 << 0);
-    charlieplexing();
-}
-
-#endif // STM32
-
-#elif defined(__ZEPHYR__)
+#ifndef UNIT_TEST
 
 #include <zephyr.h>
 #include <drivers/gpio.h>
@@ -199,7 +82,7 @@ void leds_update_thread()
     }
 }
 
-#endif  // ZEPHYR or MBED
+#endif  // UNIT_TEST
 
 void leds_init(bool enabled)
 {
@@ -213,9 +96,6 @@ void leds_init(bool enabled)
             trigger_timeout[led] = -1;
         }
     }
-#ifdef __MBED__
-    timer_start(NUM_LEDS * 60);     // 60 Hz
-#endif
 }
 
 void leds_set_charging(bool enabled)

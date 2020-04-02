@@ -7,6 +7,8 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+#ifndef __ZEPHYR__
+
 #include "pcb.h"
 
 /** @file
@@ -87,5 +89,7 @@
 #define MQTT_PASS "pass"
 #define MQTT_PUBLISH_TOPIC "nodes2server/report"
 #define MQTT_SUBSCRIBE_TOPIC "server2node/state-req"
+
+#endif
 
 #endif /* CONFIG_H */

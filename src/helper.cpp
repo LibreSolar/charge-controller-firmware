@@ -8,15 +8,13 @@
 
 #include <time.h>
 
-#ifdef __MBED__
-#include "mbed.h"
-#elif defined(__ZEPHYR__)
+#ifndef UNIT_TEST
 #include <zephyr.h>
 #endif
 
 uint32_t uptime()
 {
-#ifdef __ZEPHYR__
+#ifndef UNIT_TEST
     return k_uptime_get() / 1000;
 #else
     return time(NULL);

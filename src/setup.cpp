@@ -83,7 +83,7 @@ DeviceStatus dev_stat;
 // uint32_t considered large enough, so we avoid 64-bit math (overflow in year 2106)
 uint32_t timestamp;
 
-#ifdef __ZEPHYR__
+#ifndef UNIT_TEST
 
 #include <zephyr.h>
 

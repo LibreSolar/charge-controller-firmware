@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifdef __ZEPHYR__
+#ifndef UNIT_TEST
 
 #include <zephyr.h>
 #include <stdio.h>
@@ -168,4 +168,4 @@ K_THREAD_DEFINE(leds_thread, 256, leds_update_thread, NULL, NULL, NULL,	4, 0, K_
 
 K_THREAD_DEFINE(ext_thread, 1024, ext_mgr_thread, NULL, NULL, NULL, 6, 0, 1000);
 
-#endif // __ZEPHYR__
+#endif // UNIT_TEST

@@ -139,7 +139,7 @@ ThingSetCAN::ThingSetCAN(uint8_t can_node_id, const unsigned int c):
 
 void ThingSetCAN::enable()
 {
-    gpio_pin_write(gpio_stb_dev, DT_SWITCH_CAN_GPIOS_PIN, 1);
+    gpio_pin_set(can_en_dev, DT_SWITCH_CAN_GPIOS_PIN, 1);
 }
 
 #endif

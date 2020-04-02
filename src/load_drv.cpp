@@ -8,7 +8,7 @@
 
 #include <inttypes.h>       // for PRIu32 in printf statements
 
-#if defined(__ZEPHYR__)
+#ifndef UNIT_TEST
 
 #include <zephyr.h>
 #include <device.h>
@@ -27,7 +27,7 @@ static struct device *dev_load;
 static struct device *dev_usb;
 #endif
 
-#endif // __ZEPHYR__
+#endif // UNIT_TEST
 
 #include "pcb.h"
 #include "config.h"
@@ -51,11 +51,7 @@ static void lptim_init()
     GPIOB->MODER = (GPIOB->MODER & ~(GPIO_MODER_MODE2)) | GPIO_MODER_MODE2_1;
 
     // Select AF2 (LPTIM_OUT) on PB2
-#ifdef __MBED__ // older version of STM32 Cube
-    GPIOB->AFR[0] |= 0x2U << GPIO_AFRL_AFRL2_Pos;
-#else
     GPIOB->AFR[0] |= 0x2U << GPIO_AFRL_AFSEL2_Pos;
-#endif
 
     // Set prescaler to 32 (resulting in 1 MHz timer frequency)
     LPTIM1->CFGR |= 0x5U << LPTIM_CFGR_PRESC_Pos;
@@ -95,10 +91,6 @@ static void lptim_init()
 void short_circuit_comp_init()
 {
 #if defined(PIN_I_LOAD_COMP)
-
-#ifdef __MBED__
-    MBED_ASSERT(PIN_I_LOAD_COMP == PB_4);
-#endif
 
     // set GPIO pin to analog
     RCC->IOPENR |= RCC_IOPENR_GPIOBEN;
@@ -167,30 +159,6 @@ void load_out_set(bool status)
     leds_set(LED_LOAD, status);
 #endif
 
-#if defined(__MBED__) && defined(PIN_LOAD_EN)
-    DigitalOut load_enable(PIN_LOAD_EN);
-    if (status == true) {
-        load_enable = 1;
-    }
-    else {
-        load_enable = 0;
-    }
-#endif
-
-#if defined(__MBED__) && defined(PIN_LOAD_DIS)
-    DigitalOut load_disable(PIN_LOAD_DIS);
-    if (status == true) {
-        #ifdef PIN_I_LOAD_COMP
-        lptim_init();
-        #else
-        load_disable = 0;
-        #endif
-    }
-    else {
-        load_disable = 1;
-    }
-#endif
-
 #ifdef DT_SWITCH_LOAD_GPIOS_CONTROLLER
     gpio_pin_configure(dev_load, DT_SWITCH_LOAD_GPIOS_PIN,
         DT_SWITCH_LOAD_GPIOS_FLAGS | GPIO_OUTPUT_INACTIVE);
@@ -209,17 +177,6 @@ void load_out_set(bool status)
 
 void usb_out_set(bool status)
 {
-#if defined(__MBED__) && defined(PIN_USB_PWR_EN)
-    DigitalOut usb_pwr_en(PIN_USB_PWR_EN);
-    if (status == true) usb_pwr_en = 1;
-    else usb_pwr_en = 0;
-#endif
-#if defined(__MBED__) && defined(PIN_USB_PWR_DIS)
-    DigitalOut usb_pwr_dis(PIN_USB_PWR_DIS);
-    if (status == true) usb_pwr_dis = 0;
-    else usb_pwr_dis = 1;
-#endif
-
 #ifdef DT_SWITCH_USB_PWR_GPIOS_CONTROLLER
     gpio_pin_configure(dev_usb, DT_SWITCH_USB_PWR_GPIOS_PIN,
         DT_SWITCH_USB_PWR_GPIOS_FLAGS | GPIO_OUTPUT_INACTIVE);

@@ -15,11 +15,9 @@
 #include <math.h>
 #include <stdio.h>
 
-#if defined(__ZEPHYR__)
 #include <zephyr.h>
 #include <device.h>
 #include <drivers/gpio.h>
-#endif
 
 #include "setup.h"
 #include "half_bridge.h"
@@ -56,32 +54,18 @@ const unsigned char bmp_disconnected [] = {
     0x08, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
-#if defined(__MBED__)
-I2C i2c_dev(PIN_UEXT_SDA, PIN_UEXT_SCL);
-OledSSD1306 oled(i2c_dev);
-#elif defined(__ZEPHYR__)
 const char i2c_dev[] = DT_ALIAS_I2C_UEXT_LABEL;
 OledSSD1306 oled(i2c_dev);
-#endif
 
 void ExtOled::enable()
 {
-#if defined(PIN_UEXT_DIS) && defined(__MBED__)
-    DigitalOut uext_dis(PIN_UEXT_DIS);
-    uext_dis = 0;
-#endif
-
 #ifdef DT_SWITCH_UEXT_GPIOS_CONTROLLER
     struct device *dev_uext_dis = device_get_binding(DT_SWITCH_UEXT_GPIOS_CONTROLLER);
     gpio_pin_configure(dev_uext_dis, DT_SWITCH_UEXT_GPIOS_PIN,
         DT_SWITCH_UEXT_GPIOS_FLAGS | GPIO_OUTPUT_ACTIVE);
 #endif
 
-#ifdef OLED_BRIGHTNESS
-    oled.init(OLED_BRIGHTNESS);
-#else
-    oled.init();        // use default (lowest brightness)
-#endif
+    oled.init(CONFIG_EXT_OLED_BRIGHTNESS);
 }
 
 void ExtOled::process_1s()
