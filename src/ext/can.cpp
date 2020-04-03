@@ -222,22 +222,22 @@ void ThingSetCAN::process_asap()
 #endif
 }
 
+void can_pub_isr(u32_t err_flags, void *arg)
+{
+	// Do nothing. Publication messages are fire and forget.
+}
+
 void ThingSetCAN::process_outbox()
 {
     int max_attempts = 15;
     while (!tx_queue.empty() && max_attempts > 0) {
         CanFrame msg;
         tx_queue.first(msg);
-#ifdef __MBED__
-        if (can.write(msg)) {
-#elif defined(__ZEPHYR__)
-        if (can_send(can_dev, &msg, K_MSEC(100), NULL, NULL) == CAN_TX_OK) {
-#endif
+        if (can_send(can_dev, &msg, K_MSEC(10), can_pub_isr, NULL) == CAN_TX_OK) {
             tx_queue.dequeue();
         }
         else {
-            //printk("Sending CAN message failed, MCR: %x, MSR: %x, TSR: %x\n", (uint32_t)CAN->MCR, (uint32_t)CAN->MSR, (uint32_t)CAN->TSR);
-            //printf("Sending CAN message failed, MCR: %x, MSR: %x, TSR: %x\n", (uint32_t)CAN1->MCR, (uint32_t)CAN1->MSR, (uint32_t)CAN1->TSR);
+            //printk("Sending CAN message failed");
         }
         max_attempts--;
     }
