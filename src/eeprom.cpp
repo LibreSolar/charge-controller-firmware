@@ -8,6 +8,12 @@
 
 #include <stdio.h>
 
+#ifndef UNIT_TEST
+#include <zephyr.h>
+#include <device.h>
+#include <drivers/eeprom.h>
+#endif
+
 #include "mcu.h"
 #include "board.h"
 #include "thingset.h"
@@ -36,11 +42,15 @@ const uint16_t eeprom_data_objects[] = {
     0xA6 // day count
 };
 
-#if !defined(UNIT_TEST) && (defined(STM32F0) || defined(STM32L0))
+#ifndef UNIT_TEST
 
 uint32_t _calc_crc(const uint8_t *buf, size_t len)
 {
+#if defined(CONFIG_SOC_SERIES_STM32G4X)
+    RCC->AHB1ENR |= RCC_AHB1ENR_CRCEN;
+#else
     RCC->AHBENR |= RCC_AHBENR_CRCEN;
+#endif
 
     // we keep standard polynomial 0x04C11DB7 (same for STM32L0 and STM32F0)
     // and we don't care for endianness here
@@ -57,152 +67,14 @@ uint32_t _calc_crc(const uint8_t *buf, size_t len)
         }
     }
 
+#if defined(CONFIG_SOC_SERIES_STM32G4X)
+    RCC->AHB1ENR &= ~(RCC_AHB1ENR_CRCEN);
+#else
     RCC->AHBENR &= ~(RCC_AHBENR_CRCEN);
-    return CRC->DR;
-}
-
-#endif // UNIT_TEST
-
-#if (defined(EEPROM_24AA01) || defined(EEPROM_24AA32)) && defined(__MBED__)
-
-#ifdef EEPROM_24AA01
-#define EEPROM_PAGE_SIZE 8      // see datasheet of 24AA01
-#define EEPROM_ADDRESS_SIZE 1   // bytes
-#elif defined(EEPROM_24AA32)
-#define EEPROM_PAGE_SIZE 32     // see datasheet of 24AA32
-#define EEPROM_ADDRESS_SIZE 2   // bytes
 #endif
 
-int device = 0b1010000 << 1;	// 8-bit address
-I2C i2c_eeprom(PIN_EEPROM_SDA, PIN_EEPROM_SCL);
-
-void eeprom_init (int i2c_address)
-{
-	device = i2c_address;
+    return CRC->DR;
 }
-
-int eeprom_write (unsigned int addr, uint8_t* data, int len)
-{
-	int err = 0;
-	uint8_t buf[EEPROM_PAGE_SIZE + 2];  // page size + 2 address bytes
-
-    for (uint16_t pos = 0; pos < len; pos += EEPROM_PAGE_SIZE) {
-        if (EEPROM_ADDRESS_SIZE == 1) {
-            buf[0] = (addr + pos) & 0xFF;
-        }
-        else {
-            buf[0] = (addr + pos) >> 8;    // high byte
-            buf[1] = (addr + pos) & 0xFF;  // low byte
-        }
-
-        int page_len = 0;
-        for (int i = 0; i < EEPROM_PAGE_SIZE && pos + i < len; i++) {
-            buf[i+EEPROM_ADDRESS_SIZE] = data[pos + i];
-            page_len++;
-        }
-
-        // send I2C start + device address + memory address + data + I2C stop
-        err =  i2c_eeprom.write(device, (char*)buf, page_len + 2);
-
-        if (err != 0)
-            return -1;	// write error
-
-        // ACK polling as described in datasheet.
-        // EEPROM won't send an ACK from a new request until it finished writing.
-        for (int counter = 0; counter < 100; counter++) {
-            err =  i2c_eeprom.write(device, (char*)buf, 2);
-            if (err == 0) {
-                //printf("EEPROM write finished, counter: %d\n", counter);
-                break;
-            }
-        }
-
-    }
-	return err;
- }
-
-int eeprom_read (unsigned int addr, uint8_t* ret, int len)
-{
-	uint8_t buf[2];
-    int err = 0;
-
-    if (EEPROM_ADDRESS_SIZE == 1) {
-        // write the address we want to read
-        buf[0] = addr & 0xFF;
-        // send memory address without stop (repeated = true)
-        err = i2c_eeprom.write(device, (char*)buf, 1, true);
-    }
-    else {
-        // same as above, but with 2 bytes address
-        buf[0] = addr >> 8;    // high byte
-        buf[1] = addr & 0xFF;  // low byte
-        err = i2c_eeprom.write(device, (char*)buf, 2, true);
-    }
-
-	if (err != 0)
-		return -1;  // read error
-
-	wait(0.02);
-
-	return i2c_eeprom.read(device, (char*)ret, len);
-}
-
-#elif defined(STM32L0) // internal EEPROM
-
-int eeprom_write (unsigned int addr, const uint8_t* data, int len)
-{
-    int timeout = 0;
-
-    // Wait till no operation is on going
-    while ((FLASH->SR & FLASH_SR_BSY) != 0 && timeout < 100) {
-        timeout++;
-    }
-
-    // Perform unlock sequence if EEPROM is locked
-    if ((FLASH->PECR & FLASH_PECR_PELOCK) != 0) {
-        FLASH->PEKEYR = 0x89ABCDEFU;   // FLASH_PEKEY1
-        FLASH->PEKEYR = 0x02030405U;   // FLASH_PEKEY2
-    }
-
-    if (addr + len > DATA_EEPROM_BANK1_END - DATA_EEPROM_BASE) {
-        return -1;
-    }
-
-    // write data byte-wise to EEPROM
-	for (int i = 0; i < len; i++) {
-        *(uint8_t *)(DATA_EEPROM_BASE + addr + i) = data[i];
-	}
-
-    // Wait till no operation is on going
-    while ((FLASH->SR & FLASH_SR_BSY) != 0 && timeout < 200) {
-        timeout++;
-    }
-    // Lock the NVM again by setting PELOCK in PECR
-    FLASH->PECR |= FLASH_PECR_PELOCK;
-
-	return 0;
-}
-
-int eeprom_read (unsigned int addr, uint8_t* ret, int len)
-{
-    if (addr + len > DATA_EEPROM_BANK1_END - DATA_EEPROM_BASE) {
-        return -1;
-    }
-
-    memcpy(ret, ((uint8_t*)addr) + DATA_EEPROM_BASE, len);
-    return 0;
-}
-
-#else
-
-// ToDo for Zephyr
-int eeprom_write (unsigned int addr, const uint8_t* data, int len) { return 1; }
-int eeprom_read (unsigned int addr, uint8_t* ret, int len) { return 1; }
-
-#endif // STM32L0
-
-
-#if (defined(PIN_EEPROM_SDA) && defined(PIN_EEPROM_SCL)) || defined(STM32L0)
 
 // EEPROM layout:
 // bytes 0-1: Version number
@@ -213,11 +85,15 @@ int eeprom_read (unsigned int addr, uint8_t* ret, int len) { return 1; }
 void eeprom_restore_data()
 {
     uint8_t buf_req[300];  // ThingSet request buffer
+    int err;
+
+	struct device *eeprom_dev = device_get_binding("EEPROM_0");
 
     // EEPROM header
     uint8_t buf_header[EEPROM_HEADER_SIZE] = {};    // initialize to avoid compiler warning
-    if (eeprom_read(0, buf_header, EEPROM_HEADER_SIZE) < 0) {
-        printf("EEPROM: read error!\n");
+    err = eeprom_read(eeprom_dev, 0, buf_header, EEPROM_HEADER_SIZE);
+    if (err != 0) {
+        printf("EEPROM: read error: %d\n", err);
         return;
     }
     uint16_t version = *((uint16_t*)&buf_header[0]);
@@ -230,7 +106,8 @@ void eeprom_restore_data()
     //    buf_header[4], buf_header[5], buf_header[6], buf_header[7]);
 
     if (version == EEPROM_VERSION && len <= sizeof(buf_req)) {
-        eeprom_read(EEPROM_HEADER_SIZE, buf_req, len);
+
+        err = eeprom_read(eeprom_dev, EEPROM_HEADER_SIZE, buf_req, len);
 
         //printf("Data (len=%d): ", len);
         //for (int i = 0; i < len; i++) printf("%.2x ", buf_req[i]);
@@ -240,7 +117,8 @@ void eeprom_restore_data()
             printf("EEPROM: Data objects read and updated, ThingSet result: %d\n", status);
         }
         else {
-            printf("EEPROM: CRC of data not correct, expected 0x%x (data_len = %d)\n", (unsigned int)crc, len);
+            printf("EEPROM: CRC of data not correct, expected 0x%x (data_len = %d)\n",
+                (unsigned int)crc, len);
         }
     }
     else {
@@ -252,7 +130,10 @@ void eeprom_store_data()
 {
     uint8_t buf[300];
 
-    int len = ts.pub_msg_cbor(buf + EEPROM_HEADER_SIZE, sizeof(buf) - EEPROM_HEADER_SIZE, eeprom_data_objects, sizeof(eeprom_data_objects)/sizeof(uint16_t));
+	struct device *eeprom_dev = device_get_binding("EEPROM_0");
+
+    int len = ts.pub_msg_cbor(buf + EEPROM_HEADER_SIZE, sizeof(buf) - EEPROM_HEADER_SIZE,
+        eeprom_data_objects, sizeof(eeprom_data_objects)/sizeof(uint16_t));
     uint32_t crc = _calc_crc(buf + EEPROM_HEADER_SIZE, len);
 
     // store EEPROM_VERSION, number of bytes and CRC
@@ -269,11 +150,14 @@ void eeprom_store_data()
     if (len == 0) {
         printf("EEPROM: Data could not be stored, ThingSet error: %d\n", len);
     }
-    else if (eeprom_write(0, buf, len + EEPROM_HEADER_SIZE) < 0) {
-        printf("EEPROM: Write error.\n");
-    }
     else {
-        printf("EEPROM: Data successfully stored.\n");
+        int err = eeprom_write(eeprom_dev, 0, buf, len + EEPROM_HEADER_SIZE);
+        if (err == 0) {
+            printf("EEPROM: Data successfully stored.\n");
+        }
+        else {
+            printf("EEPROM: Write error.\n");
+        }
     }
 }
 
