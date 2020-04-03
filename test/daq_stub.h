@@ -7,8 +7,6 @@
 #ifndef DAQ_STUB_H_
 #define DAQ_STUB_H_
 
-#include "config.h"
-
 /** Data to fill adc_filtered array during unit-tests
  */
 typedef struct {

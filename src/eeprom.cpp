@@ -9,7 +9,7 @@
 #include <stdio.h>
 
 #include "mcu.h"
-#include "pcb.h"
+#include "board.h"
 #include "thingset.h"
 #include "helper.h"
 

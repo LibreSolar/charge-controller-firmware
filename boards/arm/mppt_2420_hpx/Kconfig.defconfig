@@ -18,8 +18,8 @@ config DCDC_PWM_DEADTIME_NS
 config HAS_LOAD_OUTPUT
 	default y
 
-#config HAS_PWM_SWITCH
-#	default y
+config HAS_PWM_SWITCH
+	default y
 
 config NUM_LED_PINS
 	default 1

@@ -83,7 +83,7 @@ void control_on_to_off_overvoltage()
     bus.voltage = bus.sink_voltage_bound + 0.6;
 
     // increase debounce counter to 1 before limit
-    for (int i = 0; i < CONTROL_FREQUENCY; i++) {
+    for (int i = 0; i < CONFIG_CONTROL_FREQUENCY; i++) {
         load_out.control();
     }
 
@@ -106,7 +106,7 @@ void control_on_to_off_overcurrent()
     TEST_ASSERT_EQUAL(LOAD_STATE_ON, load_out.state);
 
     // almost 2x current = 4x heat generation: Should definitely trigger after waiting one time constant
-    int trigger_steps = MOSFET_THERMAL_TIME_CONSTANT * CONTROL_FREQUENCY;
+    int trigger_steps = CONFIG_MOSFET_THERMAL_TIME_CONSTANT * CONFIG_CONTROL_FREQUENCY;
     for (int i = 0; i <= trigger_steps; i++) {
         load_out.control();
     }

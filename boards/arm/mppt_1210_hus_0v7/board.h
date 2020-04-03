@@ -1,26 +1,16 @@
 /*
- * Copyright (c) 2018 Martin Jäger / Libre Solar
+ * Copyright (c) 2019 Martin Jäger / Libre Solar
  *
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef MPPT_1210_HUS_0V4_H
-#define MPPT_1210_HUS_0V4_H
+#ifndef MPPT_1210_HUS_0V7_H
+#define MPPT_1210_HUS_0V7_H
 
-#ifdef __MBED__
-#include "mbed.h"
-#elif defined(__ZEPHYR__)
 #include <zephyr.h>
-#endif
 
 #define DEVICE_TYPE "MPPT-1210-HUS"
-#define HARDWARE_VERSION "v0.4"
-
-// specify features of charge controller
-#define CONFIG_HAS_DCDC_CONVERTER  1
-#define CONFIG_HAS_PWM_SWITCH      0
-#define CONFIG_HAS_LOAD_OUTPUT     1
-#define CONFIG_HAS_USB_PWR_OUTPUT  1
+#define HARDWARE_VERSION "v0.7.1"
 
 // DC/DC converter settings
 #define PWM_FREQUENCY 50 // kHz  50 = better for cloud solar to increase efficiency
@@ -46,9 +36,18 @@
 #define PIN_SWD_RX    PA_10
 
 #define PIN_LOAD_EN     PC_13
-#define PIN_USB_PWR_EN  PB_12
+#define PIN_USB_PWR_EN  PB_10
+#define PIN_V_SOLAR_EN  PC_14
+#define PIN_5V_PGOOD    PC_15
+
+#define PIN_EXT_BTN     PB_12
+#define PIN_BOOT0_EN    PB_12
 
 #define PIN_REF_I_DCDC  PA_4
+
+// Internal NTC temperature currently ignored by firmware as it is similar to MCU temperature and
+// does not reflect external battery temperature. Feature will be removed in future HW revisions.
+#define PIN_TEMP_INT_PD PA_8
 
 enum pin_state_t { PIN_HIGH, PIN_LOW, PIN_FLOAT };
 
@@ -58,74 +57,51 @@ enum pin_state_t { PIN_HIGH, PIN_LOW, PIN_FLOAT };
 #define LED_SOC_1 0     // LED1
 #define LED_SOC_2 1     // LED2
 #define LED_SOC_3 2     // LED3
-#define LED_RXTX  3     // LED4, used to indicate when sending data
-#define LED_LOAD  4     // LED5
+#define LED_LOAD  3     // LED4
+#define LED_RXTX  4     // LED5, used to indicate when sending data
 
 // LED pins and pin state configuration to switch above LEDs on
-#define NUM_LED_PINS 5
+#define NUM_LED_PINS 3
 
-#ifdef __MBED__
-static const PinName led_pins[NUM_LED_PINS] = {
-    //  GND      SOC12     SOC3      RXTX      LOAD
-       PB_14,    PB_13,    PB_2,     PB_11,    PB_10
-};
-#elif defined(__ZEPHYR__)
 // defined in board definition pinmux.c
 extern const char *led_ports[CONFIG_NUM_LED_PINS];
 extern const int led_pins[CONFIG_NUM_LED_PINS];
-#endif // MBED or ZEPHYR
 
-const enum pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
-    { PIN_HIGH, PIN_LOW,  PIN_LOW,  PIN_LOW,  PIN_LOW  }, // LED1
-    { PIN_LOW,  PIN_HIGH, PIN_LOW,  PIN_LOW,  PIN_LOW  }, // LED2
-    { PIN_LOW,  PIN_LOW,  PIN_HIGH, PIN_LOW,  PIN_LOW  }, // LED3
-    { PIN_LOW,  PIN_LOW,  PIN_LOW,  PIN_HIGH, PIN_LOW  }, // LED4
-    { PIN_LOW,  PIN_LOW,  PIN_LOW,  PIN_LOW,  PIN_HIGH }  // LED5
+static const enum pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
+    { PIN_HIGH,  PIN_LOW,   PIN_FLOAT }, // LED1
+    { PIN_LOW,   PIN_HIGH,  PIN_FLOAT }, // LED2
+    { PIN_HIGH,  PIN_FLOAT, PIN_LOW   }, // LED3
+    { PIN_FLOAT, PIN_HIGH,  PIN_LOW   }, // LED4
+    { PIN_FLOAT, PIN_LOW,   PIN_HIGH  }  // LED5
 };
 
 // pin definition only needed in adc_dma.cpp to detect if they are present on the PCB
-#define PIN_ADC_TEMP_FETS   PA_5
+#define PIN_ADC_TEMP_BAT
 
 // typical value for Semitec 103AT-5 thermistor: 3435
 #define NTC_BETA_VALUE 3435
 #define NTC_SERIES_RESISTOR 10000.0
 
-#define ADC_GAIN_V_LOW  (105.6 / 5.6)   // both voltage dividers: 100k + 5.6k
+#define ADC_GAIN_V_LOW  (105.6 / 5.6)    // both voltage dividers: 100k + 5.6k
 #define ADC_GAIN_V_HIGH (105.6 / 5.6)
-#define ADC_GAIN_I_LOAD (1000 / 4 / 50) // amp gain: 50, resistor: 4 mOhm
-#define ADC_GAIN_I_DCDC (1000 / 4 / 50)
+#define ADC_GAIN_I_LOAD (1000.0 / 3.0 / 50.0) // amp gain: 50, resistor: 3 mOhm
+#define ADC_GAIN_I_DCDC (1000.0 / 3.0 / 50.0)
 
 // position in the array written by the DMA controller
 enum {
     ADC_POS_V_LOW,      // ADC 0 (PA_0)
     ADC_POS_V_HIGH,     // ADC 1 (PA_1)
-    ADC_POS_TEMP_FETS,  // ADC 5 (PA_5)
-    ADC_POS_I_LOAD,     // ADC 6 (PA_6)
-    ADC_POS_I_DCDC,     // ADC 7 (PA_7)
-#if defined(STM32F0) || defined(CONFIG_SOC_SERIES_STM32F0X)
-    ADC_POS_TEMP_MCU,   // ADC 16
-    ADC_POS_VREF_MCU,   // ADC 17
-#elif defined(STM32L0) || defined(CONFIG_SOC_SERIES_STM32L0X)
+    ADC_POS_I_LOAD,     // ADC 5 (PA_5)
+    ADC_POS_I_DCDC,     // ADC 6 (PA_6)
+    ADC_POS_TEMP_BAT,   // ADC 7 (PA_7)
     ADC_POS_VREF_MCU,   // ADC 17
     ADC_POS_TEMP_MCU,   // ADC 18
-#endif
     NUM_ADC_CH          // trick to get the number of elements
 };
 
 #define NUM_ADC_1_CH NUM_ADC_CH
 
 // selected ADC channels (has to match with above enum)
-#if defined(STM32F0) || defined(CONFIG_SOC_SERIES_STM32F0X)
-#define ADC_CHSEL ( \
-    ADC_CHSELR_CHSEL0 | \
-    ADC_CHSELR_CHSEL1 | \
-    ADC_CHSELR_CHSEL5 | \
-    ADC_CHSELR_CHSEL6 | \
-    ADC_CHSELR_CHSEL7 | \
-    ADC_CHSELR_CHSEL16 | \
-    ADC_CHSELR_CHSEL17 \
-)
-#elif defined(STM32L0) || defined(CONFIG_SOC_SERIES_STM32L0X)
 #define ADC_CHSEL ( \
     ADC_CHSELR_CHSEL0 | \
     ADC_CHSELR_CHSEL1 | \
@@ -135,6 +111,5 @@ enum {
     ADC_CHSELR_CHSEL17 | \
     ADC_CHSELR_CHSEL18 \
 )
-#endif
 
 #endif

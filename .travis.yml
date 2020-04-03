@@ -21,7 +21,6 @@ addons:
 script:
     # check for trailing white spaces (comparing with first commit in git log)
     - git diff --check `git rev-list HEAD | tail -n 1`..$TRAVIS_BRANCH
-    - cp src/config.h_template src/config.h
     - platformio run -e mppt-2420-lc-v0.10 -e mppt-1210-hus-v0.7 -e pwm-2420-lus-v0.3
     - platformio test -e unit-test-native
     - platformio check -e mppt-1210-hus-v0.7 -e pwm-2420-lus-v0.3

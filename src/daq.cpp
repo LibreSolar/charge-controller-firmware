@@ -9,18 +9,10 @@
 #include <math.h>       // log for thermistor calculation
 #include <assert.h>
 
-#ifdef __MBED__
-#include "mbed.h"
-#endif
-
 #include "mcu.h"
 #include "setup.h"
 #include "debug.h"
-#include "pcb.h"        // contains defines for pins
-
-#if defined(__MBED__) && defined(PIN_REF_I_DCDC)
-AnalogOut ref_i_dcdc(PIN_REF_I_DCDC);
-#endif
+#include "board.h"        // contains defines for pins
 
 static float solar_current_offset;
 static float load_current_offset;

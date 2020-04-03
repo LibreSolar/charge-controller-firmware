@@ -7,7 +7,7 @@
 #include "hardware.h"
 
 #include "mcu.h"
-#include "pcb.h"
+#include "board.h"
 #include "load.h"
 #include "half_bridge.h"
 #include "leds.h"

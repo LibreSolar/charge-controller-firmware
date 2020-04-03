@@ -29,8 +29,7 @@ static struct device *dev_usb;
 
 #endif // UNIT_TEST
 
-#include "pcb.h"
-#include "config.h"
+#include "board.h"
 #include "hardware.h"
 #include "leds.h"
 #include "device_status.h"

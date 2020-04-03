@@ -7,6 +7,23 @@
 #ifndef PCB_STUB_H
 #define PCB_STUB_H
 
+// PWM charge controller
+#define CONFIG_PWM_TERMINAL_SOLAR CONFIG_HAS_PWM_SWITCH
+
+// MPPT buck/boost or nanogrid mode
+#define CONFIG_HV_TERMINAL_SOLAR CONFIG_HAS_DCDC_CONVERTER
+#define CONFIG_HV_TERMINAL_NANOGRID 0
+
+// battery always assumed to be at low-voltage terminal (might need to be changed for boost mode)
+#define CONFIG_LV_TERMINAL_BATTERY 1
+
+// basic battery configuration
+#define BATTERY_TYPE        BAT_TYPE_GEL    ///< GEL most suitable for general batteries (see battery.h for other types)
+#define BATTERY_NUM_CELLS   6               ///< For lead-acid batteries: 6 for 12V system, 12 for 24V system
+#define BATTERY_CAPACITY    40              ///< Cell capacity or sum of parallel cells capacity (Ah)
+
+#define CONFIG_DEVICE_ID 12345678
+
 #define DEVICE_TYPE "PCB-STUB"
 #define HARDWARE_VERSION "v0.1"
 
@@ -15,6 +32,12 @@
 #define CONFIG_HAS_PWM_SWITCH      1
 #define CONFIG_HAS_LOAD_OUTPUT     1
 #define CONFIG_HAS_USB_PWR_OUTPUT  1
+
+// Values that are otherwise defined by Kconfig
+#define CONFIG_CONTROL_FREQUENCY   10   // Hz
+#define CONFIG_MOSFET_MAX_JUNCTION_TEMP    120
+#define CONFIG_INTERNAL_MAX_REFERENCE_TEMP 50
+#define CONFIG_MOSFET_THERMAL_TIME_CONSTANT  5
 
 #define PWM_FREQUENCY 50    // kHz
 #define PWM_DEADTIME 230    // ns

@@ -11,8 +11,6 @@
 
 #ifdef BOOTLOADER_ENABLED
 
-#include "config.h"
-
 #include <cstdint>
 
 /** Length of the bootloader name string (including \0 termination) */

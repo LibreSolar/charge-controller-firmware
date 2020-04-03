@@ -6,8 +6,6 @@
 
 #ifndef UNIT_TEST
 
-#include "config.h"
-
 #if CONFIG_EXT_THINGSET_CAN
 
 #include "ext/can_msg_queue.h"

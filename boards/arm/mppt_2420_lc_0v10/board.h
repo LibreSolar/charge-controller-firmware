@@ -10,17 +10,7 @@
 #define DEVICE_TYPE "MPPT-2420-LC"
 #define HARDWARE_VERSION "v0.10"
 
-#ifdef __MBED__
-#include "mbed.h"
-#elif defined(__ZEPHYR__)
 #include <zephyr.h>
-#endif
-
-// specify features of charge controller
-#define CONFIG_HAS_DCDC_CONVERTER  1
-#define CONFIG_HAS_PWM_SWITCH      0
-#define CONFIG_HAS_LOAD_OUTPUT     1
-#define CONFIG_HAS_USB_PWR_OUTPUT  0
 
 // DC/DC converter settings
 #define PWM_FREQUENCY 70 // kHz  70 = good compromise between output ripple and efficiency
@@ -77,16 +67,9 @@ enum pin_state_t { PIN_HIGH, PIN_LOW, PIN_FLOAT };
 // LED pins and pin state configuration to switch above LEDs on
 #define NUM_LED_PINS 2
 
-#ifdef __MBED__
-static const PinName led_pins[NUM_LED_PINS] = {
-    //  PWR      LOAD
-       PB_14,   PB_15
-};
-#elif defined(__ZEPHYR__)
 // defined in board definition pinmux.c
 extern const char *led_ports[CONFIG_NUM_LED_PINS];
 extern const int led_pins[CONFIG_NUM_LED_PINS];
-#endif // MBED or ZEPHYR
 
 static const enum pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
     { PIN_HIGH, PIN_LOW  }, // LED1

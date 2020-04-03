@@ -34,7 +34,7 @@
 #include <stm32g4xx_ll_bus.h>
 #endif
 
-#include "pcb.h"
+#include "board.h"
 #include "debug.h"
 
 #if !defined(CONFIG_SOC_SERIES_STM32F0X) && !defined(CONFIG_SOC_SERIES_STM32L0X)

@@ -4,8 +4,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "config.h"
-
 #include <stdio.h>
 
 #include "bat_charger.h"
@@ -14,6 +12,7 @@
 #include "power_port.h"
 #include "pwm_switch.h"
 #include "thingset.h"
+#include "board.h"
 
 extern DcBus lv_bus;
 extern PowerPort lv_terminal;

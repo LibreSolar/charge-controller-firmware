@@ -10,7 +10,7 @@
 #include <stdlib.h>     // for min/max function
 #include <stdio.h>
 
-#include "pcb.h"
+#include "board.h"
 #include "device_status.h"
 #include "debug.h"
 #include "helper.h"
@@ -190,7 +190,7 @@ void Dcdc::control()
             // high-side MOSFET must be broken --> set flag and let main() decide
             // what to do... (e.g. call dcdc_self_destruction)
             current_debounce_counter++;
-            if (current_debounce_counter > CONTROL_FREQUENCY) {      // waited 1s before setting the flag
+            if (current_debounce_counter > CONFIG_CONTROL_FREQUENCY) {      // waited 1s before setting the flag
                 dev_stat.set_error(ERR_DCDC_HS_MOSFET_SHORT);
             }
         }
@@ -201,7 +201,7 @@ void Dcdc::control()
 
             // wait at least 100 ms for voltages to settle
             static const int num_wait_calls =
-                (CONTROL_FREQUENCY / 10 >= 1) ? (CONTROL_FREQUENCY / 10) : 1;
+                (CONFIG_CONTROL_FREQUENCY / 10 >= 1) ? (CONFIG_CONTROL_FREQUENCY / 10) : 1;
 
             int startup_mode = check_start_conditions();
 
@@ -246,7 +246,7 @@ void Dcdc::test()
 
         // wait at least 100 ms for voltages to settle
         static const int num_wait_calls =
-            (CONTROL_FREQUENCY / 10 >= 1) ? (CONTROL_FREQUENCY / 10) : 1;
+            (CONFIG_CONTROL_FREQUENCY / 10 >= 1) ? (CONFIG_CONTROL_FREQUENCY / 10) : 1;
 
         if (startup_delay_counter > num_wait_calls) {
             if (check_start_conditions() != 0) {

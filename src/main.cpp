@@ -12,8 +12,7 @@
 #include <drivers/gpio.h>
 
 #include "thingset.h"           // handles access to internal data via communication interfaces
-#include "pcb.h"                // hardware-specific settings
-#include "config.h"             // user-specific configuration
+#include "board.h"              // hardware-specific settings
 #include "setup.h"
 #include "helper.h"
 

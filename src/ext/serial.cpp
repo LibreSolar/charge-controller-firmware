@@ -6,8 +6,6 @@
 
 #ifndef UNIT_TEST
 
-#include "config.h"
-
 #if CONFIG_EXT_THINGSET_SERIAL   // otherwise don't compile code to reduce firmware size
 
 #include "ext.h"

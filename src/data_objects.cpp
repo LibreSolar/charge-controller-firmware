@@ -8,8 +8,7 @@
 
 #include "setup.h"
 
-#include "pcb.h"
-#include "config.h"
+#include "board.h"
 #include "version.h"
 
 // can be used to configure custom data objects in separate file instead

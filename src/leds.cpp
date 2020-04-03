@@ -6,7 +6,7 @@
 
 #include "leds.h"
 
-#include "pcb.h"
+#include "board.h"
 
 static int led_states[NUM_LEDS];                // must be one of enum LedState
 static int trigger_timeout[NUM_LEDS];           // seconds until trigger should end

@@ -7,20 +7,10 @@
 #ifndef MPPT_2420_HPX_0V1_H
 #define MPPT_2420_HPX_0V1_H
 
-#ifdef __MBED__
-#include "mbed.h"
-#elif defined(__ZEPHYR__)
 #include <zephyr.h>
-#endif
 
 #define DEVICE_TYPE "MPPT-2420-HPX"
 #define HARDWARE_VERSION "v0.1"
-
-// specify features of charge controller
-#define CONFIG_HAS_DCDC_CONVERTER  1
-#define CONFIG_HAS_PWM_SWITCH      0
-#define CONFIG_HAS_LOAD_OUTPUT     1
-#define CONFIG_HAS_USB_PWR_OUTPUT  0
 
 // DC/DC converter settings
 #define PWM_FREQUENCY 70 // kHz
@@ -29,6 +19,7 @@
 
 #define DCDC_CURRENT_MAX 20  // PCB maximum DCDC output current
 #define LOAD_CURRENT_MAX 20  // PCB maximum load switch current
+#define PWM_CURRENT_MAX  20  // PCB maximum PWM switch (solar) current
 
 #define LOW_SIDE_VOLTAGE_MAX    16  // Maximum voltage at battery port (V)
 #define HIGH_SIDE_VOLTAGE_MAX   55  // Maximum voltage at PV input port (V)

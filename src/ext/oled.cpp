@@ -6,8 +6,6 @@
 
 #ifndef UNIT_TEST
 
-#include "config.h"
-
 #if CONFIG_EXT_OLED_DISPLAY     // otherwise don't compile code to reduce firmware size
 
 #include "ext/ext.h"
@@ -21,7 +19,7 @@
 
 #include "setup.h"
 #include "half_bridge.h"
-#include "pcb.h"
+#include "board.h"
 #include "oled_ssd1306.h"
 
 // implement specific extension inherited from ExtInterface

@@ -6,8 +6,7 @@
 
 #include "load.h"
 
-#include "pcb.h"
-#include "config.h"
+#include "board.h"
 #include "leds.h"
 #include "device_status.h"
 #include "debug.h"
@@ -43,10 +42,10 @@ void LoadOutput::control()
                 dev_stat.internal_temp - junction_temperature +
                 current * current /
                 (LOAD_CURRENT_MAX * LOAD_CURRENT_MAX) *
-                (MOSFET_MAX_JUNCTION_TEMP - INTERNAL_MAX_REFERENCE_TEMP)
-            ) / (MOSFET_THERMAL_TIME_CONSTANT * CONTROL_FREQUENCY);
+                (CONFIG_MOSFET_MAX_JUNCTION_TEMP - CONFIG_INTERNAL_MAX_REFERENCE_TEMP)
+            ) / (CONFIG_MOSFET_THERMAL_TIME_CONSTANT * CONFIG_CONTROL_FREQUENCY);
 
-        if (junction_temperature > MOSFET_MAX_JUNCTION_TEMP || current > LOAD_CURRENT_MAX * 2) {
+        if (junction_temperature > CONFIG_MOSFET_MAX_JUNCTION_TEMP || current > LOAD_CURRENT_MAX * 2) {
             flags_set(&error_flags, ERR_LOAD_OVERCURRENT);
             oc_timestamp = uptime();
         }
@@ -65,7 +64,7 @@ void LoadOutput::control()
         // off the solar input instead of the load output)
         if (bus->voltage > overvoltage || bus->voltage > LOW_SIDE_VOLTAGE_MAX) {
             ov_debounce_counter++;
-            if (ov_debounce_counter > CONTROL_FREQUENCY) {      // waited 1s before setting the flag
+            if (ov_debounce_counter > CONFIG_CONTROL_FREQUENCY) {      // waited 1s before setting the flag
                 flags_set(&error_flags, ERR_LOAD_OVERVOLTAGE);
             }
         }

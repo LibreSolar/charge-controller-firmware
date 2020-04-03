@@ -32,7 +32,7 @@ It is suggested to use Visual Studio Code and PlatformIO for firmware developmen
 
 1. Install Visual Studio Code and [PlatformIO](https://platformio.org/platformio-ide) to build the firmware.
 
-2. Copy `src/config.h_template` to `src/config.h`, and adjust basic settings. `config.h` is ignored by git, so your changes are kept after software updates using `git pull`.
+2. Adjust configuration in `zephyr/prj.conf` if necessary.
 
 3. Select the correct board in `platformio.ini` by removing the comment before the board name under `[platformio]` or create a file `custom.ini` with your personal settings.
 

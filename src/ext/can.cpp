@@ -6,8 +6,6 @@
 
 #ifndef UNIT_TEST
 
-#include "config.h"
-
 #if CONFIG_EXT_THINGSET_CAN
 
 #include "ext.h"
@@ -22,7 +20,7 @@
 #include "mbed.h"
 #endif
 
-#include "pcb.h"
+#include "board.h"
 #include "thingset.h"
 #include "data_objects.h"
 #include "can_msg_queue.h"
