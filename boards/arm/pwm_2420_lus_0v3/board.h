@@ -63,8 +63,8 @@ enum pin_state_t { PIN_HIGH, PIN_LOW, PIN_FLOAT };
 #define NUM_LED_PINS 3
 
 // defined in board definition pinmux.c
-extern const char *led_ports[CONFIG_NUM_LED_PINS];
-extern const int led_pins[CONFIG_NUM_LED_PINS];
+extern const char *led_ports[NUM_LED_PINS];
+extern const int led_pins[NUM_LED_PINS];
 
 #ifndef LEDS_WRONG_POLARITY
 static const enum pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {

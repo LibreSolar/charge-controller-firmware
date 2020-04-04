@@ -91,9 +91,9 @@ SYS_INIT(pinmux_stm32_init, PRE_KERNEL_1,
 	 CONFIG_PINMUX_STM32_DEVICE_INITIALIZATION_PRIORITY);
 
 
-const char *led_ports[CONFIG_NUM_LED_PINS] = {
+const char *led_ports[] = {
     DT_GPIO_LEDS_PWR_GPIOS_CONTROLLER,
 };
-const int led_pins[CONFIG_NUM_LED_PINS] = {
+const int led_pins[] = {
     DT_GPIO_LEDS_PWR_GPIOS_PIN,
 };

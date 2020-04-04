@@ -12,9 +12,6 @@ config HAS_LOAD_OUTPUT
 config HAS_USB_PWR_OUTPUT
 	default y
 
-config NUM_LED_PINS
-	default 3
-
 if UART_CONSOLE
 
 config UART_2

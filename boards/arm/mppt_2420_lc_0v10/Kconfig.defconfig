@@ -9,9 +9,6 @@ config BOARD
 config HAS_LOAD_OUTPUT
 	default y
 
-config NUM_LED_PINS
-	default 2
-
 if UART_CONSOLE
 
 config UART_2

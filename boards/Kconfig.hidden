@@ -24,11 +24,6 @@ config HAS_USB_PWR_OUTPUT
 	help
 	  PCB has a USB power output.
 
-config NUM_LED_PINS
-	int
-	help
-	  Number of LED pins for charlieplexing.
-
 config CONTROL_FREQUENCY
 	int
 	default 10
