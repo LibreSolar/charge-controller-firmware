@@ -14,7 +14,12 @@
 #include "debug.h"
 #include "board.h"        // contains defines for pins
 
-static float solar_current_offset;
+#if CONFIG_HAS_DCDC_CONVERTER
+static float dcdc_current_offset;
+#endif
+#if CONFIG_HAS_PWM_SWITCH
+static float pwm_current_offset;
+#endif
 static float load_current_offset;
 
 // for ADC and DMA
@@ -83,11 +88,11 @@ static inline float ntc_temp(uint32_t channel, int32_t vref)
 void calibrate_current_sensors()
 {
     int vref = VREF;
-#if CONFIG_HAS_PWM_SWITCH
-    solar_current_offset = -adc_scaled(ADC_POS_I_PWM, vref, ADC_GAIN_I_PWM);
-#endif
 #if CONFIG_HAS_DCDC_CONVERTER
-    solar_current_offset = -adc_scaled(ADC_POS_I_DCDC, vref, ADC_GAIN_I_DCDC);
+    dcdc_current_offset = -adc_scaled(ADC_POS_I_DCDC, vref, ADC_GAIN_I_DCDC);
+#endif
+#if CONFIG_HAS_PWM_SWITCH
+    pwm_current_offset = -adc_scaled(ADC_POS_I_PWM, vref, ADC_GAIN_I_PWM);
 #endif
     load_current_offset = -adc_scaled(ADC_POS_I_LOAD, vref, ADC_GAIN_I_LOAD);
 }
@@ -164,7 +169,7 @@ void daq_update()
     // current multiplied with PWM duty cycle for PWM charger to get avg current for correct power
     // calculation
     pwm_switch.current = -pwm_switch.get_duty_cycle() * (
-        adc_scaled(ADC_POS_I_PWM, vref, ADC_GAIN_I_PWM) + solar_current_offset);
+        adc_scaled(ADC_POS_I_PWM, vref, ADC_GAIN_I_PWM) + pwm_current_offset);
 
     lv_terminal.current = -pwm_switch.current - load.current;
 
@@ -173,7 +178,7 @@ void daq_update()
 
 #if CONFIG_HAS_DCDC_CONVERTER
     dcdc_lv_port.current =
-        adc_scaled(ADC_POS_I_DCDC, vref, ADC_GAIN_I_DCDC) + solar_current_offset;
+        adc_scaled(ADC_POS_I_DCDC, vref, ADC_GAIN_I_DCDC) + dcdc_current_offset;
 
     lv_terminal.current = dcdc_lv_port.current - load.current;
 
