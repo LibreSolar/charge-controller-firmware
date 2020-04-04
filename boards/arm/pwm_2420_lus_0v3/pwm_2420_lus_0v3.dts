@@ -11,6 +11,20 @@
 	model = "Libre Solar PWM 2420 LUS v0.3";
 	compatible = "st,stm32l073";
 
+	charge-controller {
+		compatible = "charge-controller";
+		hs-voltage-max = <55>;
+		ls-voltage-max = <32>;
+	};
+
+	pwm-switch {
+		compatible = "pwm-switch";
+		pwm-frequency = <50>;
+		// Current reduced to 15A. Increase to 20A PCB max values
+		// only if attached to a big heat sink.
+		current-max = <15>;
+	};
+
 	chosen {
 		zephyr,console = &usart1;
 		zephyr,shell-uart = &usart1;

@@ -12,17 +12,7 @@
 #define DEVICE_TYPE "MPPT-2420-HPX"
 #define HARDWARE_VERSION "v0.1"
 
-// DC/DC converter settings
-#define PWM_FREQUENCY 70 // kHz
-#define PWM_DEADTIME 300 // ns
-#define PWM_TIM        1 // use TIM1 timer
-
-#define DCDC_CURRENT_MAX 20  // PCB maximum DCDC output current
 #define LOAD_CURRENT_MAX 20  // PCB maximum load switch current
-#define PWM_CURRENT_MAX  20  // PCB maximum PWM switch (solar) current
-
-#define LOW_SIDE_VOLTAGE_MAX    16  // Maximum voltage at battery port (V)
-#define HIGH_SIDE_VOLTAGE_MAX   55  // Maximum voltage at PV input port (V)
 
 #define PIN_UEXT_TX   PA_2
 #define PIN_UEXT_RX   PA_3

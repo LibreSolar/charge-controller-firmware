@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2020 Martin Jäger / Libre Solar
+
+description: DC/DC converter as part of MPPT charge controllers
+
+compatible: "dcdc"
+
+properties:
+  pwm-frequency:
+    type: int
+    required: true
+    description: PWM frequency in Hz
+  pwm-deadtime:
+    type: int
+    required: true
+    description: Dead time for synchronous PWM generation in nanoseconds
+  current-max:
+    type: int
+    required: true
+    description: Maximum inductor current in amps

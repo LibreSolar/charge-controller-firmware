@@ -6,6 +6,10 @@
 
 #include "dcdc.h"
 
+#ifndef UNIT_TEST
+#include <zephyr.h>
+#endif
+
 #include <math.h>       // for fabs function
 #include <stdlib.h>     // for min/max function
 #include <stdio.h>
@@ -19,7 +23,7 @@
 
 extern DeviceStatus dev_stat;
 
-#if CONFIG_HAS_DCDC_CONVERTER == 0
+#if !DT_COMPAT_DCDC
 
 Dcdc::Dcdc(PowerPort *hv_side, PowerPort *lv_side, DcdcOperationMode op_mode) {}
 
@@ -32,11 +36,11 @@ Dcdc::Dcdc(PowerPort *hv_side, PowerPort *lv_side, DcdcOperationMode op_mode)
     mode           = op_mode;
     enable         = true;
     state          = DCDC_STATE_OFF;
-    lvs->neg_current_limit = -DCDC_CURRENT_MAX;
-    lvs->pos_current_limit = DCDC_CURRENT_MAX;
-    ls_current_max = DCDC_CURRENT_MAX;
-    hs_voltage_max = HIGH_SIDE_VOLTAGE_MAX;
-    ls_voltage_max = LOW_SIDE_VOLTAGE_MAX;
+    lvs->neg_current_limit = -DT_INST_0_DCDC_CURRENT_MAX;
+    lvs->pos_current_limit = DT_INST_0_DCDC_CURRENT_MAX;
+    ls_current_max = DT_INST_0_DCDC_CURRENT_MAX;
+    hs_voltage_max = DT_INST_0_CHARGE_CONTROLLER_HS_VOLTAGE_MAX;
+    ls_voltage_max = DT_INST_0_CHARGE_CONTROLLER_LS_VOLTAGE_MAX;
     ls_voltage_min = 9.0;
     output_power_min = 1;         // switch off if power < 1 W
     restart_interval = 60;
@@ -44,7 +48,8 @@ Dcdc::Dcdc(PowerPort *hv_side, PowerPort *lv_side, DcdcOperationMode op_mode)
     pwm_delta = 1;                // start-condition of duty cycle pwr_inc_pwm_direction
 
     // lower duty limit might have to be adjusted dynamically depending on LS voltage
-    half_bridge_init(PWM_FREQUENCY, PWM_DEADTIME, 12 / hs_voltage_max, 0.97);
+    half_bridge_init(DT_INST_0_DCDC_PWM_FREQUENCY / 1000, DT_INST_0_DCDC_PWM_DEADTIME,
+        12 / hs_voltage_max, 0.97);
 }
 
 int Dcdc::duty_cycle_delta()
@@ -283,4 +288,4 @@ void Dcdc::fuse_destruction()
     counter++;
 }
 
-#endif /* CONFIG_HAS_DCDC_CONVERTER */
+#endif /* DT_COMPAT_DCDC */

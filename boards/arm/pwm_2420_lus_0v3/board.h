@@ -7,8 +7,6 @@
 #ifndef PWM_2420_LUS_H
 #define PWM_2420_LUS_H
 
-#include <zephyr.h>
-
 #define DEVICE_TYPE "PWM-2420-LUS"
 
 #ifdef CONFIG_BOARD_PWM_2420_LUS_0V2
@@ -17,15 +15,7 @@
 #define HARDWARE_VERSION "v0.3"
 #endif
 
-#define PWM_TIM        3    // use TIM3 timer
-#define PWM_FREQUENCY  50   // Hz
-
-// Current reduced to 15A. Increase to 20A PCB max values only if attached to a big heat sink.
-#define PWM_CURRENT_MAX     15  // PCB maximum PWM switch (solar) current
 #define LOAD_CURRENT_MAX    15  // PCB maximum load switch current
-
-#define LOW_SIDE_VOLTAGE_MAX    32  // Maximum voltage at battery port (V)
-#define HIGH_SIDE_VOLTAGE_MAX   55  // Maximum voltage at PV input port (V)
 
 // The MCU, where internal temperature is measured, is close to the MOSFETs. Tests showed that
 // temperature at heat sink is only 10-20°C above measured internal temp. As PWM CC doesn't

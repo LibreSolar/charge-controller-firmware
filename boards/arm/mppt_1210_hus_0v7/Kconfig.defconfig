@@ -6,15 +6,6 @@ if BOARD_MPPT_1210_HUS_0V7
 config BOARD
 	default "mppt_1210_hus_0v7"
 
-config HAS_DCDC_CONVERTER
-	default y
-
-config DCDC_PWM_FREQUENCY_KHZ
-	default 50
-
-config DCDC_PWM_DEADTIME_NS
-	default 230
-
 config HAS_LOAD_OUTPUT
 	default y
 

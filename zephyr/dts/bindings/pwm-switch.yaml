@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2020 Martin Jäger / Libre Solar
+
+description: MOSFETs of PWM charge controllers
+
+compatible: "pwm-switch"
+
+properties:
+  pwm-frequency:
+    type: int
+    required: true
+    description: PWM frequency in Hz
+  current-max:
+    type: int
+    required: true
+    description: Maximum inductor current in amps

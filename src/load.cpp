@@ -6,6 +6,10 @@
 
 #include "load.h"
 
+#ifndef UNIT_TEST
+#include <zephyr.h>
+#endif
+
 #include "board.h"
 #include "leds.h"
 #include "device_status.h"
@@ -45,7 +49,9 @@ void LoadOutput::control()
                 (CONFIG_MOSFET_MAX_JUNCTION_TEMP - CONFIG_INTERNAL_MAX_REFERENCE_TEMP)
             ) / (CONFIG_MOSFET_THERMAL_TIME_CONSTANT * CONFIG_CONTROL_FREQUENCY);
 
-        if (junction_temperature > CONFIG_MOSFET_MAX_JUNCTION_TEMP || current > LOAD_CURRENT_MAX * 2) {
+        if (junction_temperature > CONFIG_MOSFET_MAX_JUNCTION_TEMP ||
+            current > LOAD_CURRENT_MAX * 2)
+        {
             flags_set(&error_flags, ERR_LOAD_OVERCURRENT);
             oc_timestamp = uptime();
         }
@@ -62,9 +68,12 @@ void LoadOutput::control()
 
         // long-term overvoltage (overvoltage transients are detected as an ADC alert and switch
         // off the solar input instead of the load output)
-        if (bus->voltage > overvoltage || bus->voltage > LOW_SIDE_VOLTAGE_MAX) {
+        if (bus->voltage > overvoltage || bus->voltage >
+            DT_INST_0_CHARGE_CONTROLLER_LS_VOLTAGE_MAX)
+        {
             ov_debounce_counter++;
-            if (ov_debounce_counter > CONFIG_CONTROL_FREQUENCY) {      // waited 1s before setting the flag
+            if (ov_debounce_counter > CONFIG_CONTROL_FREQUENCY) {
+                // waited 1s before setting the flag
                 flags_set(&error_flags, ERR_LOAD_OVERVOLTAGE);
             }
         }
@@ -99,7 +108,7 @@ void LoadOutput::control()
 
         if (flags_check(&error_flags, ERR_LOAD_OVERVOLTAGE) &&
             bus->voltage < (overvoltage - ov_hysteresis) &&
-            bus->voltage < (LOW_SIDE_VOLTAGE_MAX - ov_hysteresis))
+            bus->voltage < (DT_INST_0_CHARGE_CONTROLLER_LS_VOLTAGE_MAX - ov_hysteresis))
         {
             flags_clear(&error_flags, ERR_LOAD_OVERVOLTAGE);
         }

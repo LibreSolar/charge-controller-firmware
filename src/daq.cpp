@@ -6,6 +6,10 @@
 
 #include "daq.h"
 
+#ifndef UNIT_TEST
+#include <zephyr.h>
+#endif
+
 #include <math.h>       // log for thermistor calculation
 #include <assert.h>
 
@@ -14,10 +18,10 @@
 #include "debug.h"
 #include "board.h"        // contains defines for pins
 
-#if CONFIG_HAS_DCDC_CONVERTER
+#if DT_COMPAT_DCDC
 static float dcdc_current_offset;
 #endif
-#if CONFIG_HAS_PWM_SWITCH
+#if DT_COMPAT_PWM_SWITCH
 static float pwm_current_offset;
 #endif
 static float load_current_offset;
@@ -88,10 +92,10 @@ static inline float ntc_temp(uint32_t channel, int32_t vref)
 void calibrate_current_sensors()
 {
     int vref = VREF;
-#if CONFIG_HAS_DCDC_CONVERTER
+#if DT_COMPAT_DCDC
     dcdc_current_offset = -adc_scaled(ADC_POS_I_DCDC, vref, ADC_GAIN_I_DCDC);
 #endif
-#if CONFIG_HAS_PWM_SWITCH
+#if DT_COMPAT_PWM_SWITCH
     pwm_current_offset = -adc_scaled(ADC_POS_I_PWM, vref, ADC_GAIN_I_PWM);
 #endif
     load_current_offset = -adc_scaled(ADC_POS_I_LOAD, vref, ADC_GAIN_I_LOAD);
@@ -103,7 +107,7 @@ void adc_update_value(unsigned int pos)
     // y(n) = c * x(n) + (c - 1) * y(n-1)
     // see also here: http://techteach.no/simview/lowpass_filter/doc/filter_algorithm.pdf
 
-#if CONFIG_HAS_PWM_SWITCH == 1
+#if DT_COMPAT_PWM_SWITCH
     if (pos == ADC_POS_V_PWM || pos == ADC_POS_I_PWM) {
         // only read input voltage and current when switch is on or permanently off
         if (pwm_switch.signal_high() || pwm_switch.active() == false) {
@@ -154,18 +158,18 @@ void daq_update()
     // calculate lower voltage first, as it is needed for PWM terminal voltage calculation
     lv_bus.voltage = adc_scaled(ADC_POS_V_LOW, vref, ADC_GAIN_V_LOW);
 
-#if CONFIG_HAS_DCDC_CONVERTER
+#if DT_COMPAT_DCDC
     hv_bus.voltage = adc_scaled(ADC_POS_V_HIGH, vref, ADC_GAIN_V_HIGH);
 #endif
 
-#if CONFIG_HAS_PWM_SWITCH
+#if DT_COMPAT_PWM_SWITCH
     pwm_switch.ext_voltage = lv_bus.voltage - vref * (ADC_OFFSET_V_PWM / 1000.0) -
         adc_scaled(ADC_POS_V_PWM, vref, ADC_GAIN_V_PWM);
 #endif
 
     load.current = adc_scaled(ADC_POS_I_LOAD, vref, ADC_GAIN_I_LOAD) + load_current_offset;
 
-#if CONFIG_HAS_PWM_SWITCH
+#if DT_COMPAT_PWM_SWITCH
     // current multiplied with PWM duty cycle for PWM charger to get avg current for correct power
     // calculation
     pwm_switch.current = -pwm_switch.get_duty_cycle() * (
@@ -176,7 +180,7 @@ void daq_update()
     pwm_switch.power = pwm_switch.bus->voltage * pwm_switch.current;
 #endif
 
-#if CONFIG_HAS_DCDC_CONVERTER
+#if DT_COMPAT_DCDC
     dcdc_lv_port.current =
         adc_scaled(ADC_POS_I_DCDC, vref, ADC_GAIN_I_DCDC) + dcdc_current_offset;
 
@@ -206,7 +210,7 @@ void daq_update()
     }
 #endif
 
-#ifdef PIN_ADC_TEMP_FETS
+#if DT_COMPAT_DCDC && defined(PIN_ADC_TEMP_FETS)
     // MOSFET temperature calculation
     dcdc.temp_mosfets = ntc_temp(ADC_POS_TEMP_FETS, vref);
 #endif
@@ -229,10 +233,10 @@ void daq_update()
 void high_voltage_alert()
 {
     // disable any sort of input
-#if CONFIG_HAS_DCDC_CONVERTER
+#if DT_COMPAT_DCDC
     dcdc.emergency_stop();
 #endif
-#if CONFIG_HAS_PWM_SWITCH
+#if DT_COMPAT_PWM_SWITCH
     pwm_switch.emergency_stop();
 #endif
     // do not use enter_state function, as we don't want to wait entire recharge delay

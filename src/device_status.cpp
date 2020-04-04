@@ -84,7 +84,7 @@ void DeviceStatus::update_min_max_values()
     }
 #endif
 
-#if CONFIG_HAS_DCDC_CONVERTER
+#if DT_COMPAT_DCDC
     if (dcdc.lvs->current > dcdc_current_max) {
         dcdc_current_max = dcdc.lvs->current;
     }

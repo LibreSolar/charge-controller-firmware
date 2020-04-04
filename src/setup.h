@@ -4,6 +4,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#ifndef UNIT_TEST
+#include <zephyr.h>
+#endif
+
 #include <stdio.h>
 
 #include "bat_charger.h"
@@ -17,14 +21,14 @@
 extern DcBus lv_bus;
 extern PowerPort lv_terminal;
 
-#if CONFIG_HAS_DCDC_CONVERTER
+#if DT_COMPAT_DCDC
 extern DcBus hv_bus;
 extern PowerPort hv_terminal;
 extern PowerPort dcdc_lv_port;
 extern Dcdc dcdc;
 #endif
 
-#if CONFIG_HAS_PWM_SWITCH
+#if DT_COMPAT_PWM_SWITCH
 extern PwmSwitch pwm_switch;
 #endif
 

@@ -99,12 +99,12 @@ void control_thread()
 
         lv_terminal.update_bus_current_margins();
 
-        #if CONFIG_HAS_PWM_SWITCH
+        #if DT_COMPAT_PWM_SWITCH
         //pwm_switch.control();
         leds_set_charging(pwm_switch.active());
         #endif
 
-        #if CONFIG_HAS_DCDC_CONVERTER
+        #if DT_COMPAT_DCDC
         hv_terminal.update_bus_current_margins();
         dcdc.control();     // control of DC/DC including MPPT algorithm
         leds_set_charging(half_bridge_enabled());
@@ -123,11 +123,11 @@ void control_thread()
             last_call = now;
 
             // energy + soc calculation must be called exactly once per second
-            #if CONFIG_HAS_DCDC_CONVERTER
+            #if DT_COMPAT_DCDC
             hv_terminal.energy_balance();
             #endif
 
-            #if CONFIG_HAS_PWM_SWITCH
+            #if DT_COMPAT_PWM_SWITCH
             pwm_switch.energy_balance();
             #endif
 
@@ -137,7 +137,7 @@ void control_thread()
             dev_stat.update_min_max_values();
             charger.update_soc(&bat_conf);
 
-            #if CONFIG_HS_MOSFET_FAIL_SAFE_PROTECTION && CONFIG_HAS_DCDC_CONVERTER
+            #if CONFIG_HS_MOSFET_FAIL_SAFE_PROTECTION && DT_COMPAT_DCDC
             if (dev_stat.has_error(ERR_DCDC_HS_MOSFET_SHORT)) {
                 dcdc.fuse_destruction();
             }

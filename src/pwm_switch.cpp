@@ -6,6 +6,10 @@
 
 #include "pwm_switch.h"
 
+#ifndef UNIT_TEST
+#include <zephyr.h>
+#endif
+
 #include <stdio.h>
 #include <time.h>
 
@@ -14,7 +18,7 @@
 #include "debug.h"
 #include "helper.h"
 
-#if CONFIG_HAS_PWM_SWITCH
+#if DT_COMPAT_PWM_SWITCH
 
 static bool _pwm_active;
 
@@ -160,7 +164,7 @@ PwmSwitch::PwmSwitch(DcBus *dc_bus) :
     offset_voltage_start = 2.0;     // V  charging switched on if Vsolar > Vbat + offset
     restart_interval = 60;          // s  When should we retry to start charging after low solar power cut-off?
 
-    pwm_signal_init_registers(PWM_FREQUENCY);
+    pwm_signal_init_registers(DT_INST_0_PWM_SWITCH_PWM_FREQUENCY);
 
     enable = true;     // enable charging in general
     _pwm_active = false;               // still disable actual switch
@@ -179,8 +183,8 @@ void PwmSwitch::control()
             print_info("PWM charger stop.\n");
         }
         else if (bus->voltage > bus->sink_control_voltage()   // bus voltage above target
-            || current < neg_current_limit                  // port current limit exceeded
-            || current < -PWM_CURRENT_MAX)                  // PCB current limit exceeded
+            || current < neg_current_limit                    // port current limit exceeded
+            || current < -DT_INST_0_PWM_SWITCH_CURRENT_MAX)   // PCB current limit exceeded
         {
             // decrease power, as limits were reached
 
@@ -238,4 +242,4 @@ float PwmSwitch::get_duty_cycle()
     return pwm_signal_get_duty_cycle();
 }
 
-#endif /* CONFIG_HAS_PWM_SWITCH */
+#endif /* DT_COMPAT_PWM_SWITCH */

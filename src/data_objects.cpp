@@ -4,6 +4,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#ifndef UNIT_TEST
+#include <zephyr.h>
+#endif
+
 #include <stdio.h>
 
 #include "setup.h"
@@ -190,12 +194,12 @@ const data_object_t data_objects[] = {
         TS_INPUT, TS_READ_ALL | TS_WRITE_ALL),
 #endif
 
-#if CONFIG_HAS_DCDC_CONVERTER
+#if DT_COMPAT_DCDC
     TS_DATA_OBJ_BOOL(0x62, "DcdcEn", &dcdc.enable,
         TS_INPUT, TS_READ_ALL | TS_WRITE_ALL),
 #endif
 
-#if CONFIG_HAS_PWM_SWITCH
+#if DT_COMPAT_PWM_SWITCH
     TS_DATA_OBJ_BOOL(0x63, "PwmEn", &pwm_switch.enable,
         TS_INPUT, TS_READ_ALL | TS_WRITE_ALL),
 #endif
@@ -247,7 +251,7 @@ const data_object_t data_objects[] = {
     TS_DATA_OBJ_FLOAT(0x76, "Int_degC", &dev_stat.internal_temp, 1,
         TS_OUTPUT, TS_READ_ALL),
 
-#if defined(PIN_ADC_TEMP_FETS) && CONFIG_HAS_DCDC_CONVERTER
+#if defined(PIN_ADC_TEMP_FETS) && DT_COMPAT_DCDC
     TS_DATA_OBJ_FLOAT(0x77, "Mosfet_degC", &dcdc.temp_mosfets, 1,
         TS_OUTPUT, TS_READ_ALL),
 #endif
@@ -255,7 +259,7 @@ const data_object_t data_objects[] = {
     TS_DATA_OBJ_UINT32(0x78, "ChgState", &charger.state,
         TS_OUTPUT, TS_READ_ALL),
 
-#if CONFIG_HAS_DCDC_CONVERTER
+#if DT_COMPAT_DCDC
     TS_DATA_OBJ_UINT16(0x79, "DCDCState", &dcdc.state,
         TS_OUTPUT, TS_READ_ALL),
 #endif
@@ -378,7 +382,7 @@ const data_object_t data_objects[] = {
     // CALIBRATION DATA ///////////////////////////////////////////////////////
     // using IDs >= 0xD0
 
-#if CONFIG_HAS_DCDC_CONVERTER
+#if DT_COMPAT_DCDC
     TS_DATA_OBJ_FLOAT(0xD0, "DcdcMin_W", &dcdc.output_power_min, 1,
         TS_CAL, TS_READ_ALL | TS_WRITE_MAKER),
 

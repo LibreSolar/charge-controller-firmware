@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2020 Martin Jäger / Libre Solar
+
+description: Generic charge controller device setup
+
+compatible: "charge-controller"
+
+properties:
+  hs-voltage-max:
+    type: int
+    required: true
+    description: Maximum voltage at high-side (typically PV input) in volts
+  ls-voltage-max:
+    type: int
+    required: true
+    description: Maximum voltage at low-side (typically battery) in volts

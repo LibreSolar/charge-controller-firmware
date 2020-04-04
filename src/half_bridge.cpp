@@ -253,9 +253,9 @@ uint32_t PWM_UT::m_ccr = 0;
 
 #endif /* UNIT_TEST */
 
-#if (PWM_TIM == 1)
+#if defined(STM32F0) || defined(STM32G4)
 typedef PWM_TIM1 PWM_TIM_HW;
-#elif (PWM_TIM == 3)
+#elif defined(STM32L0)
 typedef PWM_TIM3 PWM_TIM_HW;
 #else
 typedef PWM_UT PWM_TIM_HW;

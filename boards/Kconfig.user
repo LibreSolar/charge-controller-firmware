@@ -7,7 +7,7 @@
 
 choice
     prompt "High-voltage terminal"
-    depends on HAS_DCDC_CONVERTER
+    depends on $(dt_compat_enabled,dcdc)
     help
       Select the device connected to the high-voltage
       side terminal of the DC/DC converter.
@@ -44,7 +44,7 @@ endchoice
 
 choice
     prompt "PWM terminal"
-    depends on HAS_PWM_SWITCH
+    depends on $(dt_compat_enabled,pwm-switch)
     help
       Select the device connected to the PWM switch (currently
       only solar panel possible)

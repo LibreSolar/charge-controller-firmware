@@ -8,10 +8,10 @@
 #define PCB_STUB_H
 
 // PWM charge controller
-#define CONFIG_PWM_TERMINAL_SOLAR CONFIG_HAS_PWM_SWITCH
+#define CONFIG_PWM_TERMINAL_SOLAR DT_COMPAT_PWM_SWITCH
 
 // MPPT buck/boost or nanogrid mode
-#define CONFIG_HV_TERMINAL_SOLAR CONFIG_HAS_DCDC_CONVERTER
+#define CONFIG_HV_TERMINAL_SOLAR DT_COMPAT_DCDC
 #define CONFIG_HV_TERMINAL_NANOGRID 0
 
 // battery always assumed to be at low-voltage terminal (might need to be changed for boost mode)
@@ -28,8 +28,15 @@
 #define HARDWARE_VERSION "v0.1"
 
 // specify features of charge controller
-#define CONFIG_HAS_DCDC_CONVERTER  1
-#define CONFIG_HAS_PWM_SWITCH      1
+#define DT_COMPAT_DCDC  1
+#define DT_INST_0_DCDC_PWM_FREQUENCY 70000 // Hz
+#define DT_INST_0_DCDC_PWM_DEADTIME  300   // ns
+#define DT_INST_0_DCDC_CURRENT_MAX   20    // A
+
+#define DT_COMPAT_PWM_SWITCH 1
+#define DT_INST_0_PWM_SWITCH_PWM_FREQUENCY  50 // Hz
+#define DT_INST_0_PWM_SWITCH_CURRENT_MAX    20 // A
+
 #define CONFIG_HAS_LOAD_OUTPUT     1
 #define CONFIG_HAS_USB_PWR_OUTPUT  1
 
@@ -39,15 +46,10 @@
 #define CONFIG_INTERNAL_MAX_REFERENCE_TEMP 50
 #define CONFIG_MOSFET_THERMAL_TIME_CONSTANT  5
 
-#define PWM_FREQUENCY 50    // kHz
-#define PWM_DEADTIME 230    // ns
-
-#define PWM_CURRENT_MAX  15  // PCB maximum PWM switch (solar) current
-#define DCDC_CURRENT_MAX 20  // PCB maximum DCDC output current
 #define LOAD_CURRENT_MAX 20  // PCB maximum load switch current
 
-#define LOW_SIDE_VOLTAGE_MAX    32  // Maximum voltage at battery port (V)
-#define HIGH_SIDE_VOLTAGE_MAX   55  // Maximum voltage at PV input port (V)
+#define DT_INST_0_CHARGE_CONTROLLER_LS_VOLTAGE_MAX    32  // Maximum voltage at battery port (V)
+#define DT_INST_0_CHARGE_CONTROLLER_HS_VOLTAGE_MAX   55  // Maximum voltage at PV input port (V)
 
 #define PIN_UEXT_TX   0
 #define PIN_UEXT_RX   0

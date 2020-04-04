@@ -6,19 +6,7 @@ if BOARD_MPPT_2420_HPX
 config BOARD
 	default "mppt_2420_hpx"
 
-config HAS_DCDC_CONVERTER
-	default y
-
-config DCDC_PWM_FREQUENCY_KHZ
-	default 70
-
-config DCDC_PWM_DEADTIME_NS
-	default 300
-
 config HAS_LOAD_OUTPUT
-	default y
-
-config HAS_PWM_SWITCH
 	default y
 
 config NUM_LED_PINS

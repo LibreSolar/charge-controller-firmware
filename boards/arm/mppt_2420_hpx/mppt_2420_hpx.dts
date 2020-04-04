@@ -42,6 +42,25 @@
 		};
 	};
 
+	charge-controller {
+		compatible = "charge-controller";
+		hs-voltage-max = <80>;
+		ls-voltage-max = <32>;
+	};
+
+	dcdc {
+		compatible = "dcdc";
+		pwm-frequency = <70000>;
+		pwm-deadtime = <300>;
+		current-max = <20>;
+	};
+
+	pwm-switch {
+		compatible = "pwm-switch";
+		pwm-frequency = <50>;
+		current-max = <20>;
+	};
+
 	chosen {
 		zephyr,console = &usart1;
 		zephyr,shell-uart = &usart1;

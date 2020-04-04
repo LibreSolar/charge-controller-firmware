@@ -10,18 +10,7 @@
 #define DEVICE_TYPE "MPPT-2420-LC"
 #define HARDWARE_VERSION "v0.10"
 
-#include <zephyr.h>
-
-// DC/DC converter settings
-#define PWM_FREQUENCY 70 // kHz  70 = good compromise between output ripple and efficiency
-#define PWM_DEADTIME 300 // ns
-#define PWM_TIM        1 // use TIM1 timer
-
-#define DCDC_CURRENT_MAX 20  // PCB maximum DCDC output current
 #define LOAD_CURRENT_MAX 20  // PCB maximum load switch current
-
-#define LOW_SIDE_VOLTAGE_MAX    32  // Maximum voltage at battery port (V)
-#define HIGH_SIDE_VOLTAGE_MAX   55  // Maximum voltage at PV input port (V)
 
 #define PIN_UEXT_DIS  PC_14     // starting from rev. 0.10
 #define PIN_UEXT_TX   PA_2

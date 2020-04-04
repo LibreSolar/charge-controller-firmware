@@ -9,6 +9,10 @@
  * @brief Setup of ports and other essential charge controller objects
  */
 
+#ifndef UNIT_TEST
+#include <zephyr.h>
+#endif
+
 #include "thingset.h"           // handles access to internal data via communication interfaces
 #include "board.h"              // hardware-specific settings
 
@@ -28,7 +32,7 @@
 DcBus lv_bus;
 PowerPort lv_terminal(&lv_bus, true);   // low voltage terminal (battery for typical MPPT)
 
-#if CONFIG_HAS_DCDC_CONVERTER
+#if DT_COMPAT_DCDC
 DcBus hv_bus;
 PowerPort hv_terminal(&hv_bus, true);   // high voltage terminal (solar for typical MPPT)
 PowerPort dcdc_lv_port(&lv_bus);        // internal low voltage side of DC/DC converter
@@ -41,7 +45,7 @@ Dcdc dcdc(&hv_terminal, &dcdc_lv_port, MODE_MPPT_BUCK);
 #endif // CONFIG_HV_TERMINAL
 #endif
 
-#if CONFIG_HAS_PWM_SWITCH
+#if DT_COMPAT_PWM_SWITCH
 PwmSwitch pwm_switch(&lv_bus);
 #endif
 

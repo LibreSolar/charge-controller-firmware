@@ -14,30 +14,6 @@ config HARDWARE_VERSION
 	help
 	  Version of the PCB
 
-config HAS_DCDC_CONVERTER
-	bool
-	help
-	  Board has a DC/DC converter.
-
-config DCDC_PWM_FREQUENCY_KHZ
-	depends on HAS_DCDC_CONVERTER
-	int
-	range 30 100
-	help
-	  PWM frequency of DC/DC converter in kHz, range 30 to 100.
-
-config DCDC_PWM_DEADTIME_NS
-	depends on HAS_DCDC_CONVERTER
-	int
-	range 100 300
-	help
-	  Dead time for synchronous PWM generation in nanoseconds.
-
-config HAS_PWM_SWITCH
-	bool
-	help
-	  PCB has PWM power switch.
-
 config HAS_LOAD_OUTPUT
 	bool
 	help
@@ -52,16 +28,6 @@ config NUM_LED_PINS
 	int
 	help
 	  Number of LED pins for charlieplexing.
-
-config LOW_SIDE_VOLTAGE_MAX
-	int
-	help
-	  Low side (usually battery) voltage maximum.
-
-config HIGH_SIDE_VOLTAGE_MAX
-	int
-	help
-	  High side (usually solar panel) voltage maximum.
 
 config CONTROL_FREQUENCY
 	int
