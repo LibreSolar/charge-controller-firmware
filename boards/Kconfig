@@ -163,6 +163,16 @@ config EXT_THINGSET_CAN
     depends on CAN
     bool "ThingSet CAN interface"
 
+config THINGSET_USER_PASSWORD
+    depends on EXT_THINGSET_SERIAL || EXT_THINGSET_CAN
+    string "ThingSet user password"
+    default "user123"
+
+config THINGSET_MAKER_PASSWORD
+    depends on EXT_THINGSET_SERIAL || EXT_THINGSET_CAN
+    string "ThingSet maker password"
+    default "maker456"
+
 config DEVICE_ID
     int "Initial device ID for communication interfaces"
     default 0

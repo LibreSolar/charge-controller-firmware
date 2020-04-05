@@ -41,11 +41,13 @@ void main(void)
         CONFIG_BAT_DEFAULT_CAPACITY_AH);
     battery_conf_overwrite(&bat_conf, &bat_conf_user);  // initialize conf_user with same values
 
-    // Configuration from EEPROM
+    // read custom configuration from EEPROM
     data_objects_read_eeprom();
-    ts.set_conf_callback(data_objects_update_conf);     // after each configuration change, data should be written back to EEPROM
-    //ts.set_user_password(THINGSET_USER_PASSWORD);       // passwords defined in config.h (see template)
-    //ts.set_maker_password(THINGSET_MAKER_PASSWORD);
+
+    // after each configuration change, data should be written back to EEPROM
+    ts.set_conf_callback(data_objects_update_conf);
+    ts.set_user_password(CONFIG_THINGSET_USER_PASSWORD);
+    ts.set_maker_password(CONFIG_THINGSET_MAKER_PASSWORD);
 
     // Data Acquisition (DAQ) setup
     daq_setup();
