@@ -1,10 +1,10 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (c) 2019 Martin Jäger / Libre Solar
 
-if BOARD_MPPT_1210_HUS_0V4
+if BOARD_MPPT_1210_HUS
 
 config BOARD
-	default "mppt_1210_hus_0v4"
+	default "mppt_1210_hus"
 
 config HAS_LOAD_OUTPUT
 	default y
@@ -36,4 +36,4 @@ config SPI_STM32_INTERRUPT
 
 endif # SPI
 
-endif # BOARD_MPPT_1210_HUS_0V4
+endif # BOARD_MPPT_1210_HUS_0V7

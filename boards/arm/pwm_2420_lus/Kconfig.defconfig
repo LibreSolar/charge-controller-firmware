@@ -1,10 +1,10 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (c) 2019 Martin Jäger / Libre Solar
 
-if BOARD_PWM_2420_LUS_0V3
+if BOARD_PWM_2420_LUS
 
 config BOARD
-	default "pwm_2420_lus_0v3"
+	default "pwm_2420_lus"
 
 config HAS_LOAD_OUTPUT
 	default y
@@ -36,4 +36,4 @@ config SPI_STM32_INTERRUPT
 
 endif # SPI
 
-endif # BOARD_PWM_2420_LUS_0V3
+endif # BOARD_PWM_2420_LUS

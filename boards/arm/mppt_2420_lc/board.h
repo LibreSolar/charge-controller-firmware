@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef MPPT_2420_LC_0V10_H
-#define MPPT_2420_LC_0V10_H
+#ifndef MPPT_2420_LC_H
+#define MPPT_2420_LC_H
 
 #define LOAD_CURRENT_MAX 20  // PCB maximum load switch current
 

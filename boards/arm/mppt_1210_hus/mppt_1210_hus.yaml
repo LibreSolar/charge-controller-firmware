@@ -1,5 +1,5 @@
-identifier: mppt_1210_hus_0v4
-name: MPPT-1210-HUS-0V4
+identifier: mppt_1210_hus
+name: MPPT-1210-HUS
 type: mcu
 arch: arm
 toolchain:

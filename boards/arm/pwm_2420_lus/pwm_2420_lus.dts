@@ -8,7 +8,7 @@
 #include <st/l0/stm32l073Xz.dtsi>
 
 / {
-	model = "Libre Solar PWM 2420 LUS v0.3";
+	model = "Libre Solar PWM 2420 LUS";
 	compatible = "st,stm32l073";
 
 	pcb {

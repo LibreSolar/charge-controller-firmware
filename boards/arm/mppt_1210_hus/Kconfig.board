@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (c) 2019 Martin Jäger / Libre Solar
 
-config BOARD_PWM_2420_LUS_0V3
-	bool "Libre Solar PWM 2420 LUS v0.3"
+config BOARD_MPPT_1210_HUS
+	bool "Libre Solar MPPT 1210 HUS"
 	depends on SOC_STM32L073XX

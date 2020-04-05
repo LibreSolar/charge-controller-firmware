@@ -8,7 +8,7 @@
 #include <st/g4/stm32g431Xb.dtsi>
 
 / {
-	model = "Libre Solar MPPT 2420 HPX v0.1";
+	model = "Libre Solar MPPT 2420 HPX";
 	compatible = "st,stm32g431";
 
 	soc {

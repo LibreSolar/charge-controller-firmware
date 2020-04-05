@@ -8,7 +8,7 @@
 #include <st/f0/stm32f072Xb.dtsi>
 
 / {
-	model = "Libre Solar MPPT 2420 LC v0.10";
+	model = "Libre Solar MPPT 2420 LC";
 	compatible = "st,stm32f072";
 
 	pcb {

@@ -1,11 +1,11 @@
 /*
- * Copyright (c) 2018 Martin Jäger / Libre Solar
+ * Copyright (c) 2019 Martin Jäger / Libre Solar
  *
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef MPPT_1210_HUS_0V4_H
-#define MPPT_1210_HUS_0V4_H
+#ifndef MPPT_1210_HUS_H
+#define MPPT_1210_HUS_H
 
 #define LOAD_CURRENT_MAX 10  // PCB maximum load switch current
 
@@ -21,9 +21,6 @@
 #define PIN_SWD_TX    PA_9
 #define PIN_SWD_RX    PA_10
 
-#define PIN_LOAD_EN     PC_13
-#define PIN_USB_PWR_EN  PB_12
-
 #define PIN_REF_I_DCDC  PA_4
 
 enum pin_state_t { PIN_HIGH, PIN_LOW, PIN_FLOAT };
@@ -34,16 +31,26 @@ enum pin_state_t { PIN_HIGH, PIN_LOW, PIN_FLOAT };
 #define LED_SOC_1 0     // LED1
 #define LED_SOC_2 1     // LED2
 #define LED_SOC_3 2     // LED3
+#if DT_CHARGE_CONTROLLER_PCB_VERSION_NUM == 4
 #define LED_RXTX  3     // LED4, used to indicate when sending data
 #define LED_LOAD  4     // LED5
+#else
+#define LED_LOAD  3     // LED4
+#define LED_RXTX  4     // LED5, used to indicate when sending data
+#endif
 
 // LED pins and pin state configuration to switch above LEDs on
+#if DT_CHARGE_CONTROLLER_PCB_VERSION_NUM == 4
 #define NUM_LED_PINS 5
+#else
+#define NUM_LED_PINS 3
+#endif
 
 // defined in board definition pinmux.c
 extern const char *led_ports[NUM_LED_PINS];
 extern const int led_pins[NUM_LED_PINS];
 
+#if DT_CHARGE_CONTROLLER_PCB_VERSION_NUM == 4
 const enum pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
     { PIN_HIGH, PIN_LOW,  PIN_LOW,  PIN_LOW,  PIN_LOW  }, // LED1
     { PIN_LOW,  PIN_HIGH, PIN_LOW,  PIN_LOW,  PIN_LOW  }, // LED2
@@ -51,9 +58,22 @@ const enum pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
     { PIN_LOW,  PIN_LOW,  PIN_LOW,  PIN_HIGH, PIN_LOW  }, // LED4
     { PIN_LOW,  PIN_LOW,  PIN_LOW,  PIN_LOW,  PIN_HIGH }  // LED5
 };
+#else
+static const enum pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
+    { PIN_HIGH,  PIN_LOW,   PIN_FLOAT }, // LED1
+    { PIN_LOW,   PIN_HIGH,  PIN_FLOAT }, // LED2
+    { PIN_HIGH,  PIN_FLOAT, PIN_LOW   }, // LED3
+    { PIN_FLOAT, PIN_HIGH,  PIN_LOW   }, // LED4
+    { PIN_FLOAT, PIN_LOW,   PIN_HIGH  }  // LED5
+};
+#endif
 
 // pin definition only needed in adc_dma.cpp to detect if they are present on the PCB
+#if DT_CHARGE_CONTROLLER_PCB_VERSION_NUM == 4
 #define PIN_ADC_TEMP_FETS   PA_5
+#else
+#define PIN_ADC_TEMP_BAT
+#endif
 
 // typical value for Semitec 103AT-5 thermistor: 3435
 #define NTC_BETA_VALUE 3435
@@ -61,10 +81,16 @@ const enum pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
 
 #define ADC_GAIN_V_LOW  (105.6 / 5.6)   // both voltage dividers: 100k + 5.6k
 #define ADC_GAIN_V_HIGH (105.6 / 5.6)
+#if DT_CHARGE_CONTROLLER_PCB_VERSION_NUM == 4
 #define ADC_GAIN_I_LOAD (1000 / 4 / 50) // amp gain: 50, resistor: 4 mOhm
 #define ADC_GAIN_I_DCDC (1000 / 4 / 50)
+#else
+#define ADC_GAIN_I_LOAD (1000.0 / 3.0 / 50.0) // amp gain: 50, resistor: 3 mOhm
+#define ADC_GAIN_I_DCDC (1000.0 / 3.0 / 50.0)
+#endif
 
 // position in the array written by the DMA controller
+#if DT_CHARGE_CONTROLLER_PCB_VERSION_NUM == 4
 enum {
     ADC_POS_V_LOW,      // ADC 0 (PA_0)
     ADC_POS_V_HIGH,     // ADC 1 (PA_1)
@@ -80,11 +106,23 @@ enum {
 #endif
     NUM_ADC_CH          // trick to get the number of elements
 };
+#else
+enum {
+    ADC_POS_V_LOW,      // ADC 0 (PA_0)
+    ADC_POS_V_HIGH,     // ADC 1 (PA_1)
+    ADC_POS_I_LOAD,     // ADC 5 (PA_5)
+    ADC_POS_I_DCDC,     // ADC 6 (PA_6)
+    ADC_POS_TEMP_BAT,   // ADC 7 (PA_7)
+    ADC_POS_VREF_MCU,   // ADC 17
+    ADC_POS_TEMP_MCU,   // ADC 18
+    NUM_ADC_CH          // trick to get the number of elements
+};
+#endif
 
 #define NUM_ADC_1_CH NUM_ADC_CH
 
 // selected ADC channels (has to match with above enum)
-#if defined(STM32F0) || defined(CONFIG_SOC_SERIES_STM32F0X)
+#if defined(CONFIG_SOC_SERIES_STM32F0X)
 #define ADC_CHSEL ( \
     ADC_CHSELR_CHSEL0 | \
     ADC_CHSELR_CHSEL1 | \
@@ -94,7 +132,7 @@ enum {
     ADC_CHSELR_CHSEL16 | \
     ADC_CHSELR_CHSEL17 \
 )
-#elif defined(STM32L0) || defined(CONFIG_SOC_SERIES_STM32L0X)
+#elif defined(CONFIG_SOC_SERIES_STM32L0X)
 #define ADC_CHSEL ( \
     ADC_CHSELR_CHSEL0 | \
     ADC_CHSELR_CHSEL1 | \

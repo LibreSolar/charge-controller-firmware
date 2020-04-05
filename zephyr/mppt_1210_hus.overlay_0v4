@@ -1,0 +1,54 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Copyright (c) 2020 Martin Jäger / Libre Solar
+ */
+
+/ {
+	pcb {
+		version-str = "v0.4";
+		version-num = <4>;
+	};
+
+	leds {
+		compatible = "gpio-leds";
+		gnd {
+			gpios = <&gpiob 14 GPIO_ACTIVE_HIGH>;
+			label = "LED GND";
+		};
+		soc12 {
+			gpios = <&gpiob 13 GPIO_ACTIVE_HIGH>;
+			label = "LED SOC12";
+		};
+		soc3 {
+			gpios = <&gpiob 2 GPIO_ACTIVE_HIGH>;
+			label = "LED SOC3";
+		};
+		rxtx {
+			gpios = <&gpiob 11 GPIO_ACTIVE_HIGH>;
+			label = "LED RXTX";
+		};
+		load {
+			gpios = <&gpiob 10 GPIO_ACTIVE_HIGH>;
+			label = "LED Load";
+		};
+		/delete-node/ a;
+		/delete-node/ b;
+		/delete-node/ c;
+	};
+
+	switches {
+		compatible = "switch";
+		load {
+			gpios = <&gpioc 13 GPIO_ACTIVE_HIGH>;
+			label = "Load enable";
+		};
+		usb-pwr {
+			gpios = <&gpiob 12 GPIO_ACTIVE_HIGH>;
+			label = "USB charging port enable";
+		};
+		/delete-node/ v-solar;
+		/delete-node/ boot0;
+	};
+
+};

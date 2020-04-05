@@ -25,7 +25,7 @@
     "stm32cube",
     "zephyr"
   ],
-  "name": "Libre Solar MPPT 2420 HPX v0.1",
+  "name": "Libre Solar MPPT 2420 HPX",
   "upload": {
     "maximum_ram_size": 32768,
     "maximum_size": 131072,

@@ -11,19 +11,19 @@ if [ $? != 0 ]; then
 fi
 
 echo "---------- Running compile check -------------"
-platformio run -e mppt-2420-lc-v0.10 -e mppt-1210-hus-v0.7 -e pwm-2420-lus-v0.3
+platformio run -e mppt_2420_lc -e mppt_1210_hus -e mppt_2420_hpx -e pwm_2420_lus
 if [ $? != 0 ]; then
         exit 1;
 fi
 
 echo "---------- Running unit-tests -------------"
-platformio test -e unit-test-native
+platformio test -e unit_test
 if [ $? != 0 ]; then
         exit 1;
 fi
 
 echo "---------- Running static code checks -------------"
-platformio check -e mppt-1210-hus-v0.7 -e pwm-2420-lus-v0.3
+platformio check -e mppt_1210_hus -e pwm_2420_lus
 if [ $? != 0 ]; then
         exit 1;
 fi

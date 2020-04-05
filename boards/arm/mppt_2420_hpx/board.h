@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef MPPT_2420_HPX_0V1_H
-#define MPPT_2420_HPX_0V1_H
+#ifndef MPPT_2420_HPX_H
+#define MPPT_2420_HPX_H
 
 #include <zephyr.h>
 

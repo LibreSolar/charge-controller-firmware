@@ -24,7 +24,7 @@
     "stm32cube",
     "zephyr"
   ],
-  "name": "Libre Solar MPPT 2420 LC v0.10",
+  "name": "Libre Solar MPPT 2420 LC",
   "upload": {
     "maximum_ram_size": 16384,
     "maximum_size": 131072,
