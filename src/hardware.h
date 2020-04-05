@@ -13,15 +13,29 @@
  * Hardware-specific functions like timers, watchdog, bootloader
  */
 
-/** Initialization of IWDG
- *
- * @param timeout Timeout in seconds
- */
-void init_watchdog(float timeout);
+#include <stdint.h>
 
-/** Feeds/kicks the watchdog
+/**
+ * Initialization of IWDG
  */
-void feed_the_dog();
+void watchdog_init();
+
+/**
+ * Register watchdog for this thread
+ *
+ * @param timeout_ms Timeout in milliseconds
+ */
+int watchdog_register(uint32_t timeout_ms);
+
+/**
+ * Must be called after all channels have been registered
+ */
+void watchdog_start();
+
+/**
+ * Feed/kick the watchdog for given channel
+ */
+void watchdog_feed(int channel_id);
 
 /** Timer for system control (main DC/DC or PWM control loop) is started
  *

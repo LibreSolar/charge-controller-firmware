@@ -33,6 +33,8 @@ void main(void)
 {
     printf("Libre Solar Charge Controller: %s\n", CONFIG_BOARD);
 
+    watchdog_init();
+
     setup();
 
     battery_conf_init(&bat_conf, CONFIG_BAT_DEFAULT_TYPE,
@@ -71,7 +73,9 @@ void main(void)
         bat_conf.voltage_load_reconnect, bat_conf.voltage_absolute_max);
     #endif
 
-    k_sleep(2000);      // safety feature: be able to re-flash before starting
+    // wait until all threads are spawned before activating the watchdog
+    k_sleep(2500);
+    watchdog_start();
 
     while (1) {
         charger.discharge_control(&bat_conf);
@@ -89,7 +93,10 @@ void main(void)
 void control_thread()
 {
     uint32_t last_call = 0;
+    int wdt_channel = watchdog_register(200);
+
     while (1) {
+        watchdog_feed(wdt_channel);
 
         // convert ADC readings to meaningful measurement values
         daq_update();
@@ -150,7 +157,14 @@ void control_thread()
 void ext_mgr_thread()
 {
     uint32_t last_call = 0;
+
+    // quite long watchdog timeout as we might be dealing with slow communication (e.g. modems
+    // using AT commands via serial interface)
+    int wdt_channel = watchdog_register(3000);
+
     while (1) {
+        watchdog_feed(wdt_channel);
+
         uint32_t now = k_uptime_get() / 1000;
         ext_mgr.process_asap();     // approx. every millisecond
         if (now >= last_call + 1) {
@@ -161,9 +175,10 @@ void ext_mgr_thread()
     }
 }
 
+// 2s delay for control thread as a safety feature: be able to re-flash before starting
 K_THREAD_DEFINE(control_thread_id, 1024, control_thread, NULL, NULL, NULL, 2, 0, 2000);
 
-K_THREAD_DEFINE(leds_thread, 256, leds_update_thread, NULL, NULL, NULL,	4, 0, K_NO_WAIT);
+K_THREAD_DEFINE(leds_thread, 256, leds_update_thread, NULL, NULL, NULL,	4, 0, 100);
 
 K_THREAD_DEFINE(ext_thread, 1024, ext_mgr_thread, NULL, NULL, NULL, 6, 0, 1000);
 

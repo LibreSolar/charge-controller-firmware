@@ -6,6 +6,7 @@
 
 #include "leds.h"
 
+#include "hardware.h"
 #include "board.h"
 
 static int led_states[NUM_LEDS];                // must be one of enum LedState
@@ -28,6 +29,7 @@ void leds_update_thread()
     int flicker_count = 0;
     bool flicker_state = 1;
     struct device *led_devs[NUM_LED_PINS];
+    int wdt_channel = watchdog_register(1000);
 
     for (int pin = 0; pin < NUM_LED_PINS; pin++) {
         led_devs[pin] = device_get_binding(led_ports[pin]);
@@ -36,6 +38,7 @@ void leds_update_thread()
     leds_init();
 
     while (1) {
+        watchdog_feed(wdt_channel);
 
         // could be increased to value >NUM_LEDS to reduce on-time
         if (led_count >= NUM_LEDS) {

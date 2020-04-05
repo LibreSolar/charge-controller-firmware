@@ -28,6 +28,40 @@
 
 #include <power/reboot.h>
 #include <drivers/gpio.h>
+#include <drivers/watchdog.h>
+
+static struct device *wdt;
+
+void watchdog_init()
+{
+    wdt = device_get_binding(DT_INST_0_ST_STM32_WATCHDOG_LABEL);
+    if (!wdt) {
+        printk("Cannot get WDT device\n");
+        return;
+    }
+}
+
+int watchdog_register(uint32_t timeout_ms)
+{
+    struct wdt_timeout_cfg wdt_config;
+
+    wdt_config.flags = WDT_FLAG_RESET_SOC;
+    wdt_config.window.min = 0U;
+    wdt_config.window.max = timeout_ms;
+    wdt_config.callback = NULL;             // STM32 does not support callbacks
+
+    return wdt_install_timeout(wdt, &wdt_config);
+}
+
+void watchdog_start()
+{
+    wdt_setup(wdt, 0);
+}
+
+void watchdog_feed(int channel_id)
+{
+    wdt_feed(wdt, channel_id);
+}
 
 void start_stm32_bootloader()
 {
