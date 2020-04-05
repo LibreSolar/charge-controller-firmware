@@ -7,9 +7,6 @@
 #ifndef MPPT_2420_LC_0V10_H
 #define MPPT_2420_LC_0V10_H
 
-#define DEVICE_TYPE "MPPT-2420-LC"
-#define HARDWARE_VERSION "v0.10"
-
 #define LOAD_CURRENT_MAX 20  // PCB maximum load switch current
 
 #define PIN_UEXT_DIS  PC_14     // starting from rev. 0.10

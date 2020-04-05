@@ -24,8 +24,8 @@
 
 #define CONFIG_DEVICE_ID 12345678
 
-#define DEVICE_TYPE "PCB-STUB"
-#define HARDWARE_VERSION "v0.1"
+#define DT_CHARGE_CONTROLLER_PCB_TYPE "PCB-STUB"
+#define DT_CHARGE_CONTROLLER_PCB_VERSION_STR "v0.1"
 
 // specify features of charge controller
 #define DT_COMPAT_DCDC  1

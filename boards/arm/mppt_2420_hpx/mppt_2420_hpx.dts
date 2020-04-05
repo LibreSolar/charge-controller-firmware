@@ -44,6 +44,11 @@
 
 	pcb {
 		compatible = "charge-controller";
+
+		type = "MPPT 2420 HPX";
+		version-str = "v0.1";
+		version-num = <1>;
+
 		hs-voltage-max = <80>;
 		ls-voltage-max = <32>;
 	};

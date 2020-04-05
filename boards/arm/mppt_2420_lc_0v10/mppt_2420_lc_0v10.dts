@@ -13,6 +13,11 @@
 
 	pcb {
 		compatible = "charge-controller";
+
+		type = "MPPT 2420 LC";
+		version-str = "v0.10";
+		version-num = <10>;
+
 		hs-voltage-max = <55>;
 		ls-voltage-max = <32>;
 	};

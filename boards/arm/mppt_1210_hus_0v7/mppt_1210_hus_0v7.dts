@@ -13,6 +13,11 @@
 
 	pcb {
 		compatible = "charge-controller";
+
+		type = "MPPT 1210 HUS";
+		version-str = "v0.7.1";
+		version-num = <7>;		// minor version .1 includes no HW change
+
 		hs-voltage-max = <40>;
 		ls-voltage-max = <16>;
 	};

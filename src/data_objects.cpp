@@ -25,8 +25,8 @@
 #include "eeprom.h"
 
 const char* const manufacturer = "Libre Solar";
-const char* const device_type = DEVICE_TYPE;
-const char* const hardware_version = HARDWARE_VERSION;
+const char* const device_type = DT_CHARGE_CONTROLLER_PCB_TYPE;
+const char* const hardware_version = DT_CHARGE_CONTROLLER_PCB_VERSION_STR;
 const char* const firmware_version = "0.1";
 const char* const firmware_commit = COMMIT_HASH;
 uint32_t device_id = CONFIG_DEVICE_ID;

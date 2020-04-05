@@ -9,9 +9,6 @@
 
 #include <zephyr.h>
 
-#define DEVICE_TYPE "MPPT-2420-HPX"
-#define HARDWARE_VERSION "v0.1"
-
 #define LOAD_CURRENT_MAX 20  // PCB maximum load switch current
 
 #define PIN_UEXT_TX   PA_2

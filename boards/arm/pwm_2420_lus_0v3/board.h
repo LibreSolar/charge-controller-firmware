@@ -7,14 +7,6 @@
 #ifndef PWM_2420_LUS_H
 #define PWM_2420_LUS_H
 
-#define DEVICE_TYPE "PWM-2420-LUS"
-
-#ifdef CONFIG_BOARD_PWM_2420_LUS_0V2
-#define HARDWARE_VERSION "v0.2"
-#elif defined(CONFIG_BOARD_PWM_2420_LUS_0V3)
-#define HARDWARE_VERSION "v0.3"
-#endif
-
 #define LOAD_CURRENT_MAX    15  // PCB maximum load switch current
 
 #define PIN_UEXT_TX   PA_2
@@ -89,10 +81,10 @@ static const enum pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
 #define ADC_GAIN_V_LOW (132 / 12)
 #define ADC_GAIN_V_PWM (1 + 120/12 + 120/8.2)
 
-#ifdef CONFIG_BOARD_PWM_2420_LUS_0V2
+#if DT_CHARGE_CONTROLLER_PCB_VERSION_NUM == 2
 // op amp gain: 68/2.2, resistor: 2 mOhm
 #define ADC_GAIN_I_LOAD (1000 / 2 / (68/2.2))
-#elif defined(CONFIG_BOARD_PWM_2420_LUS_0V3)
+#elif DT_CHARGE_CONTROLLER_PCB_VERSION_NUM == 3
 // fix for hardware bug in overcurrent comparator voltage divider wiring
 #define ADC_GAIN_I_LOAD (1000 / 2 / (68/2.2) * (39+12+8.2) / (12+8.2))
 #endif

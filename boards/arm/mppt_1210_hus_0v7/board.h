@@ -7,9 +7,6 @@
 #ifndef MPPT_1210_HUS_0V7_H
 #define MPPT_1210_HUS_0V7_H
 
-#define DEVICE_TYPE "MPPT-1210-HUS"
-#define HARDWARE_VERSION "v0.7.1"
-
 #define LOAD_CURRENT_MAX 10  // PCB maximum load switch current
 
 #define PIN_UEXT_TX   PA_2

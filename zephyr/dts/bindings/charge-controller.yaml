@@ -6,6 +6,18 @@ description: Generic charge controller device setup
 compatible: "charge-controller"
 
 properties:
+  type:
+    type: string
+    required: true
+    description: Device type
+  version-str:
+    type: string
+    required: true
+    description: Hardware version number (human-readable)
+  version-num:
+    type: int
+    required: true
+    description: Hardware version number (usable in preprocessor defines)
   hs-voltage-max:
     type: int
     required: true
