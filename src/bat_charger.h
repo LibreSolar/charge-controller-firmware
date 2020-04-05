@@ -19,9 +19,13 @@
 
 #include "power_port.h"
 
-/** Battery cell types
+/**
+ * Battery cell types
  */
 enum BatType {
+    /*
+     * IMPORTANT: make sure to adjust also boards/Kconfig if enum is changed here!
+     */
     BAT_TYPE_NONE = 0,      ///< Safe standard settings
     BAT_TYPE_FLOODED,       ///< Old flooded (wet) lead-acid batteries
     BAT_TYPE_GEL,           ///< VRLA gel batteries (maintainance-free)
@@ -342,8 +346,14 @@ enum ChargerState {
  *
  * Configures battery based on settings defined in config.h and initializes
  * bat_user with same values
+ *
+ * @param bat Battery configuration that should be initialized
+ * @param type Battery type, one of enum BatType (declared as int instead of enum BatType because
+ *             configuration via Kconfig symbol cannot handle enums)
+ * @param num_cells Number of cells (e.g. 6 for 12V lead-acid battery)
+ * @param nominal_capacity Nominal capacity (Ah)
  */
-void battery_conf_init(BatConf *bat, BatType type, int num_cells, float nominal_capacity);
+void battery_conf_init(BatConf *bat, int type, int num_cells, float nominal_capacity);
 
 /** Checks battery user settings for plausibility
  */

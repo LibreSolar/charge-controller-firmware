@@ -16,7 +16,7 @@
 extern DeviceStatus dev_stat;
 extern LoadOutput load;
 
-void battery_conf_init(BatConf *bat, BatType type, int num_cells, float nominal_capacity)
+void battery_conf_init(BatConf *bat, int type, int num_cells, float nominal_capacity)
 {
     bat->nominal_capacity = nominal_capacity;
 

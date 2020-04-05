@@ -109,6 +109,16 @@ choice
 
 endchoice
 
+# values must match enum BatType in bat_charger.h
+config BAT_DEFAULT_TYPE
+    int
+    default 1 if BAT_DEFAULT_TYPE_FLOODED
+    default 2 if BAT_DEFAULT_TYPE_GEL
+    default 3 if BAT_DEFAULT_TYPE_AGM
+    default 4 if BAT_DEFAULT_TYPE_LFP
+    default 5 if BAT_DEFAULT_TYPE_NMC
+    default 6 if BAT_DEFAULT_TYPE_NMC_HV
+
 config BAT_DEFAULT_NUM_CELLS
 	int "Default number of battery cells"
 	default 6
