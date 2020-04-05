@@ -17,12 +17,6 @@
 
 #define LOAD_CURRENT_MAX    15  // PCB maximum load switch current
 
-// The MCU, where internal temperature is measured, is close to the MOSFETs. Tests showed that
-// temperature at heat sink is only 10-20°C above measured internal temp. As PWM CC doesn't
-// use electrolytic cap for core charging function, internal temperature of 70°C can be allowed.
-// This value is used for thermal overcurrent model.
-#define INTERNAL_MAX_REFERENCE_TEMP 70
-
 #define PIN_UEXT_TX   PA_2
 #define PIN_UEXT_RX   PA_3
 #define PIN_UEXT_SCL  PB_6

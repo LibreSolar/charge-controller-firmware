@@ -42,14 +42,14 @@
 
 // Values that are otherwise defined by Kconfig
 #define CONFIG_CONTROL_FREQUENCY   10   // Hz
-#define CONFIG_MOSFET_MAX_JUNCTION_TEMP    120
-#define CONFIG_INTERNAL_MAX_REFERENCE_TEMP 50
-#define CONFIG_MOSFET_THERMAL_TIME_CONSTANT  5
+#define DT_CHARGE_CONTROLLER_PCB_MOSFETS_TJ_MAX     120
+#define DT_CHARGE_CONTROLLER_PCB_INTERNAL_TREF_MAX  50
+#define DT_CHARGE_CONTROLLER_PCB_MOSFETS_TAU_JA     5
 
 #define LOAD_CURRENT_MAX 20  // PCB maximum load switch current
 
-#define DT_INST_0_CHARGE_CONTROLLER_LS_VOLTAGE_MAX    32  // Maximum voltage at battery port (V)
-#define DT_INST_0_CHARGE_CONTROLLER_HS_VOLTAGE_MAX   55  // Maximum voltage at PV input port (V)
+#define DT_CHARGE_CONTROLLER_PCB_LS_VOLTAGE_MAX    32  // Maximum voltage at battery port (V)
+#define DT_CHARGE_CONTROLLER_PCB_HS_VOLTAGE_MAX   55  // Maximum voltage at PV input port (V)
 
 #define PIN_UEXT_TX   0
 #define PIN_UEXT_RX   0

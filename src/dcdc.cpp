@@ -39,8 +39,8 @@ Dcdc::Dcdc(PowerPort *hv_side, PowerPort *lv_side, DcdcOperationMode op_mode)
     lvs->neg_current_limit = -DT_INST_0_DCDC_CURRENT_MAX;
     lvs->pos_current_limit = DT_INST_0_DCDC_CURRENT_MAX;
     ls_current_max = DT_INST_0_DCDC_CURRENT_MAX;
-    hs_voltage_max = DT_INST_0_CHARGE_CONTROLLER_HS_VOLTAGE_MAX;
-    ls_voltage_max = DT_INST_0_CHARGE_CONTROLLER_LS_VOLTAGE_MAX;
+    hs_voltage_max = DT_CHARGE_CONTROLLER_PCB_HS_VOLTAGE_MAX;
+    ls_voltage_max = DT_CHARGE_CONTROLLER_PCB_LS_VOLTAGE_MAX;
     ls_voltage_min = 9.0;
     output_power_min = 1;         // switch off if power < 1 W
     restart_interval = 60;

@@ -106,7 +106,7 @@ void control_on_to_off_overcurrent()
     TEST_ASSERT_EQUAL(LOAD_STATE_ON, load_out.state);
 
     // almost 2x current = 4x heat generation: Should definitely trigger after waiting one time constant
-    int trigger_steps = CONFIG_MOSFET_THERMAL_TIME_CONSTANT * CONFIG_CONTROL_FREQUENCY;
+    int trigger_steps = DT_CHARGE_CONTROLLER_PCB_MOSFETS_TAU_JA * CONFIG_CONTROL_FREQUENCY;
     for (int i = 0; i <= trigger_steps; i++) {
         load_out.control();
     }

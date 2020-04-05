@@ -43,13 +43,12 @@ void LoadOutput::control()
 
         // junction temperature calculation model for overcurrent detection
         junction_temperature = junction_temperature + (
-                dev_stat.internal_temp - junction_temperature +
-                current * current /
-                (LOAD_CURRENT_MAX * LOAD_CURRENT_MAX) *
-                (CONFIG_MOSFET_MAX_JUNCTION_TEMP - CONFIG_INTERNAL_MAX_REFERENCE_TEMP)
-            ) / (CONFIG_MOSFET_THERMAL_TIME_CONSTANT * CONFIG_CONTROL_FREQUENCY);
+            dev_stat.internal_temp - junction_temperature + current * current /
+            (LOAD_CURRENT_MAX * LOAD_CURRENT_MAX) *
+            (DT_CHARGE_CONTROLLER_PCB_MOSFETS_TJ_MAX - DT_CHARGE_CONTROLLER_PCB_INTERNAL_TREF_MAX)
+            ) / (DT_CHARGE_CONTROLLER_PCB_MOSFETS_TAU_JA * CONFIG_CONTROL_FREQUENCY);
 
-        if (junction_temperature > CONFIG_MOSFET_MAX_JUNCTION_TEMP ||
+        if (junction_temperature > DT_CHARGE_CONTROLLER_PCB_MOSFETS_TJ_MAX ||
             current > LOAD_CURRENT_MAX * 2)
         {
             flags_set(&error_flags, ERR_LOAD_OVERCURRENT);
@@ -69,7 +68,7 @@ void LoadOutput::control()
         // long-term overvoltage (overvoltage transients are detected as an ADC alert and switch
         // off the solar input instead of the load output)
         if (bus->voltage > overvoltage || bus->voltage >
-            DT_INST_0_CHARGE_CONTROLLER_LS_VOLTAGE_MAX)
+            DT_CHARGE_CONTROLLER_PCB_LS_VOLTAGE_MAX)
         {
             ov_debounce_counter++;
             if (ov_debounce_counter > CONFIG_CONTROL_FREQUENCY) {
@@ -108,7 +107,7 @@ void LoadOutput::control()
 
         if (flags_check(&error_flags, ERR_LOAD_OVERVOLTAGE) &&
             bus->voltage < (overvoltage - ov_hysteresis) &&
-            bus->voltage < (DT_INST_0_CHARGE_CONTROLLER_LS_VOLTAGE_MAX - ov_hysteresis))
+            bus->voltage < (DT_CHARGE_CONTROLLER_PCB_LS_VOLTAGE_MAX - ov_hysteresis))
         {
             flags_clear(&error_flags, ERR_LOAD_OVERVOLTAGE);
         }

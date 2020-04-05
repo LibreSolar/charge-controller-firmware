@@ -42,7 +42,7 @@
 		};
 	};
 
-	charge-controller {
+	pcb {
 		compatible = "charge-controller";
 		hs-voltage-max = <80>;
 		ls-voltage-max = <32>;
