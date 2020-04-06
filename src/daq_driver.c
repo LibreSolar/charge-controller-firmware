@@ -12,7 +12,6 @@
 #include <inttypes.h>
 
 #include <zephyr.h>
-#include <drivers/adc.h>
 #include <drivers/gpio.h>
 
 #if defined(CONFIG_SOC_SERIES_STM32L0X)
@@ -29,6 +28,7 @@
 #include <stm32f0xx_ll_bus.h>
 #elif defined(CONFIG_SOC_SERIES_STM32G4X)
 #include <stm32g4xx_ll_system.h>
+#include <stm32g4xx_ll_adc.h>
 #include <stm32g4xx_ll_dac.h>
 #include <stm32g4xx_ll_dma.h>
 #include <stm32g4xx_ll_bus.h>
@@ -119,57 +119,45 @@ static void dac_setup()
 
 static void adc_init(ADC_TypeDef *adc)
 {
-#if !defined(CONFIG_SOC_SERIES_STM32G4X)
-    struct device *dev_adc = device_get_binding(DT_ADC_1_NAME);
-    if (dev_adc == 0) {
-        printf("ADC device not found\n");
-        return;
-    }
-
-    struct adc_channel_cfg channel_cfg = {
-        .gain = ADC_GAIN_1,
-        .reference = ADC_REF_INTERNAL,
+    LL_ADC_Disable(adc);
 #if defined(CONFIG_SOC_SERIES_STM32F0X)
-        .acquisition_time = ADC_ACQ_TIME(ADC_ACQ_TIME_TICKS, 240),
+    LL_APB1_GRP2_EnableClock(LL_APB1_GRP2_PERIPH_ADC1);
+    LL_ADC_SetClock(adc, LL_ADC_CLOCK_SYNC_PCLK_DIV4);
 #elif defined(CONFIG_SOC_SERIES_STM32L0X)
-        .acquisition_time = ADC_ACQ_TIME(ADC_ACQ_TIME_TICKS, 161),
-#endif
-        .channel_id = LL_ADC_CHANNEL_0,
-        .differential = 0
-    };
-
-    int ret = adc_channel_setup(dev_adc, &channel_cfg);
-    if (ret) {
-        printk("ADC channel setup error.. \n");
-    }
-
+    LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_ADC1);
+    LL_ADC_EnableInternalRegulator(adc);
+    k_busy_wait(LL_ADC_DELAY_INTERNAL_REGUL_STAB_US);
+    LL_ADC_SetCommonClock(__LL_ADC_COMMON_INSTANCE(adc), LL_ADC_CLOCK_SYNC_PCLK_DIV4);
 #elif defined(CONFIG_SOC_SERIES_STM32G4X)
     LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_ADC12);
-
     // Prepare for ADC calibration
-    LL_ADC_Disable(adc);
     LL_ADC_DisableDeepPowerDown(adc);
     LL_ADC_EnableInternalRegulator(adc);
     k_busy_wait(LL_ADC_DELAY_INTERNAL_REGUL_STAB_US);
-
     LL_ADC_SetCommonClock(__LL_ADC_COMMON_INSTANCE(adc), LL_ADC_CLOCK_SYNC_PCLK_DIV4);
+#endif
 
+#if defined(CONFIG_SOC_SERIES_STM32G4X)
     LL_ADC_StartCalibration(adc, LL_ADC_SINGLE_ENDED);
+#elif defined(CONFIG_SOC_SERIES_STM32F0X) || defined(CONFIG_SOC_SERIES_STM32L0X)
+    LL_ADC_StartCalibration(adc);
+#endif
     while (LL_ADC_IsCalibrationOnGoing(adc)) {;}
 
     if (LL_ADC_IsActiveFlag_ADRDY(adc)) {
         LL_ADC_ClearFlag_ADRDY(adc);
     }
-#endif
 
-    // Now Initialize the ADCs
-    // enable internal reference voltage and temperature
+    // Enable internal reference voltage and temperature
     LL_ADC_SetCommonPathInternalCh(__LL_ADC_COMMON_INSTANCE(adc),
         LL_ADC_PATH_INTERNAL_VREFINT | LL_ADC_PATH_INTERNAL_TEMPSENSOR);
 
-#if defined(CONFIG_SOC_SERIES_STM32F0X) || defined(CONFIG_SOC_SERIES_STM32L0X)
+#if defined(CONFIG_SOC_SERIES_STM32F0X)
 	LL_ADC_REG_SetSequencerChannels(adc, ADC_CHSEL);
-
+    LL_ADC_SetSamplingTimeCommonChannels(adc, LL_ADC_SAMPLINGTIME_239CYCLES_5);
+#elif defined(CONFIG_SOC_SERIES_STM32L0X)
+	LL_ADC_REG_SetSequencerChannels(adc, ADC_CHSEL);
+    LL_ADC_SetSamplingTimeCommonChannels(adc, LL_ADC_SAMPLINGTIME_160CYCLES_5);
 #else // Others including CONFIG_SOC_SERIES_STM32G4X
     const uint32_t *adc_seq = (adc == ADC1) ? adc_1_sequence : adc_2_sequence;
     int num_ch = (adc == ADC1) ? NUM_ADC_1_CH : NUM_ADC_2_CH;
@@ -191,8 +179,8 @@ static void adc_init(ADC_TypeDef *adc)
         LL_ADC_REG_SetTriggerEdge(adc, LL_ADC_REG_TRIG_EXT_RISING);
         LL_ADC_REG_SetTriggerSource(adc, LL_ADC_REG_TRIG_EXT_TIM1_TRGO2);
     }
-    LL_ADC_Enable(adc);
 #endif
+    LL_ADC_Enable(adc);
 }
 
 static void adc_setup()

@@ -114,10 +114,6 @@
 	status = "okay";
 };
 
-&adc1 {
-	status = "okay";
-};
-
 &can1 {
 	bus-speed = <250000>;
 	status = "okay";
