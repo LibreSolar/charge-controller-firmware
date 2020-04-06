@@ -29,12 +29,6 @@
 		current-max = <20>;
 	};
 
-	pwm-switch {
-		compatible = "pwm-switch";
-		pwm-frequency = <50>;
-		current-max = <20>;
-	};
-
 	chosen {
 		zephyr,console = &usart1;
 		zephyr,shell-uart = &usart1;
@@ -52,6 +46,12 @@
 
 	outputs {
 		compatible = "outputs";
+		pwm_switch {
+			label = "PWM power switch (solar panel)";
+			pwms = <&pwm3 2 (20*1000*1000)>; /* 20 ms period = 50 Hz */
+			current-max = <20>;
+			kconfig-flag;	/* make node visible in Kconfig */
+		};
 		load {
 			label = "Load output";
 			gpios = <&gpiob 15 GPIO_ACTIVE_LOW>;

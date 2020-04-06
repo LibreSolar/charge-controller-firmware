@@ -45,7 +45,7 @@ Dcdc dcdc(&hv_terminal, &dcdc_lv_port, MODE_MPPT_BUCK);
 #endif // CONFIG_HV_TERMINAL
 #endif
 
-#if DT_COMPAT_PWM_SWITCH
+#if DT_OUTPUTS_PWM_SWITCH_PRESENT
 PwmSwitch pwm_switch(&lv_bus);
 #endif
 

@@ -21,7 +21,7 @@
 #if DT_COMPAT_DCDC
 static float dcdc_current_offset;
 #endif
-#if DT_COMPAT_PWM_SWITCH
+#if DT_OUTPUTS_PWM_SWITCH_PRESENT
 static float pwm_current_offset;
 #endif
 static float load_current_offset;
@@ -95,7 +95,7 @@ void calibrate_current_sensors()
 #if DT_COMPAT_DCDC
     dcdc_current_offset = -adc_scaled(ADC_POS_I_DCDC, vref, ADC_GAIN_I_DCDC);
 #endif
-#if DT_COMPAT_PWM_SWITCH
+#if DT_OUTPUTS_PWM_SWITCH_PRESENT
     pwm_current_offset = -adc_scaled(ADC_POS_I_PWM, vref, ADC_GAIN_I_PWM);
 #endif
     load_current_offset = -adc_scaled(ADC_POS_I_LOAD, vref, ADC_GAIN_I_LOAD);
@@ -107,7 +107,7 @@ void adc_update_value(unsigned int pos)
     // y(n) = c * x(n) + (c - 1) * y(n-1)
     // see also here: http://techteach.no/simview/lowpass_filter/doc/filter_algorithm.pdf
 
-#if DT_COMPAT_PWM_SWITCH
+#if DT_OUTPUTS_PWM_SWITCH_PRESENT
     if (pos == ADC_POS_V_PWM || pos == ADC_POS_I_PWM) {
         // only read input voltage and current when switch is on or permanently off
         if (pwm_switch.signal_high() || pwm_switch.active() == false) {
@@ -162,14 +162,14 @@ void daq_update()
     hv_bus.voltage = adc_scaled(ADC_POS_V_HIGH, vref, ADC_GAIN_V_HIGH);
 #endif
 
-#if DT_COMPAT_PWM_SWITCH
+#if DT_OUTPUTS_PWM_SWITCH_PRESENT
     pwm_switch.ext_voltage = lv_bus.voltage - vref * (ADC_OFFSET_V_PWM / 1000.0) -
         adc_scaled(ADC_POS_V_PWM, vref, ADC_GAIN_V_PWM);
 #endif
 
     load.current = adc_scaled(ADC_POS_I_LOAD, vref, ADC_GAIN_I_LOAD) + load_current_offset;
 
-#if DT_COMPAT_PWM_SWITCH
+#if DT_OUTPUTS_PWM_SWITCH_PRESENT
     // current multiplied with PWM duty cycle for PWM charger to get avg current for correct power
     // calculation
     pwm_switch.current = -pwm_switch.get_duty_cycle() * (
@@ -236,7 +236,7 @@ void high_voltage_alert()
 #if DT_COMPAT_DCDC
     dcdc.emergency_stop();
 #endif
-#if DT_COMPAT_PWM_SWITCH
+#if DT_OUTPUTS_PWM_SWITCH_PRESENT
     pwm_switch.emergency_stop();
 #endif
     // do not use enter_state function, as we don't want to wait entire recharge delay

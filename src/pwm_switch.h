@@ -15,6 +15,8 @@
 #include <stdbool.h>
 #include <time.h>
 
+#ifdef __cplusplus
+
 #include "power_port.h"
 
 /** PWM charger type
@@ -61,5 +63,23 @@ public:
     int restart_interval;           ///< Interval to wait before retrying charging after low solar power cut-off (s)
     time_t off_timestamp;           ///< Time when charger was switched off last time
 };
+#endif
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+float pwm_signal_get_duty_cycle();
+void pwm_signal_set_duty_cycle(float duty);
+void pwm_signal_duty_cycle_step(int delta);
+void pwm_signal_init_registers(int freq_Hz);
+void pwm_signal_start(float pwm_duty);
+void pwm_signal_stop();
+bool pwm_signal_high();
+bool pwm_active();
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* PWM_SWITCH_H */

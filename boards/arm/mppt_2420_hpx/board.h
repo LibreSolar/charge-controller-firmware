@@ -40,7 +40,7 @@ enum pin_state_t { PIN_HIGH, PIN_LOW, PIN_FLOAT };
 extern const char *led_ports[NUM_LED_PINS];
 extern const int led_pins[NUM_LED_PINS];
 
-const enum pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
+static const enum pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
     { PIN_HIGH }, // LED1
 };
 
@@ -85,7 +85,7 @@ enum {
 #define NUM_ADC_1_CH    7
 #define NUM_ADC_2_CH    3
 
-const uint32_t adc_1_sequence[] = {
+static const uint32_t adc_1_sequence[] = {
     LL_ADC_CHANNEL_12,      // V_LOW
     LL_ADC_CHANNEL_15,      // V_HIGH
     LL_ADC_CHANNEL_11,      // V_SC_SENSE
@@ -95,7 +95,7 @@ const uint32_t adc_1_sequence[] = {
     LL_ADC_CHANNEL_TEMPSENSOR_ADC1, // TEMP_MCU
 };
 
-const uint32_t adc_2_sequence[] = {
+static const uint32_t adc_2_sequence[] = {
     LL_ADC_CHANNEL_1,       // I_DCDC
     LL_ADC_CHANNEL_2,       // I_LOAD
     LL_ADC_CHANNEL_5,       // I_PWM

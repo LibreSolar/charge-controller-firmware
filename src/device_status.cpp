@@ -6,6 +6,10 @@
 
 #include "device_status.h"
 
+#ifndef UNIT_TEST
+#include <zephyr.h>
+#endif
+
 #include <math.h>       // for fabs function
 #include <stdio.h>
 

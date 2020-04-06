@@ -106,8 +106,8 @@ void control_thread()
 
         lv_terminal.update_bus_current_margins();
 
-        #if DT_COMPAT_PWM_SWITCH
-        //pwm_switch.control();
+        #if DT_OUTPUTS_PWM_SWITCH_PRESENT
+        pwm_switch.control();
         leds_set_charging(pwm_switch.active());
         #endif
 
@@ -134,7 +134,7 @@ void control_thread()
             hv_terminal.energy_balance();
             #endif
 
-            #if DT_COMPAT_PWM_SWITCH
+            #if DT_OUTPUTS_PWM_SWITCH_PRESENT
             pwm_switch.energy_balance();
             #endif
 

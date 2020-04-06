@@ -24,3 +24,6 @@ child-binding:
     present:
       type: int
       default: 1
+    kconfig-flag:
+      type: boolean
+      description: This value can be checked by Kconfig parser using dt_node_has_bool_prop function

@@ -199,7 +199,7 @@ const data_object_t data_objects[] = {
         TS_INPUT, TS_READ_ALL | TS_WRITE_ALL),
 #endif
 
-#if DT_COMPAT_PWM_SWITCH
+#if DT_OUTPUTS_PWM_SWITCH_PRESENT
     TS_DATA_OBJ_BOOL(0x63, "PwmEn", &pwm_switch.enable,
         TS_INPUT, TS_READ_ALL | TS_WRITE_ALL),
 #endif

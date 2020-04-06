@@ -28,7 +28,7 @@ extern PowerPort dcdc_lv_port;
 extern Dcdc dcdc;
 #endif
 
-#if DT_COMPAT_PWM_SWITCH
+#if DT_OUTPUTS_PWM_SWITCH_PRESENT
 extern PwmSwitch pwm_switch;
 #endif
 

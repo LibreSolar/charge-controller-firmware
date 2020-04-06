@@ -8,7 +8,7 @@
 #define PCB_STUB_H
 
 // PWM charge controller
-#define CONFIG_PWM_TERMINAL_SOLAR DT_COMPAT_PWM_SWITCH
+#define CONFIG_PWM_TERMINAL_SOLAR DT_OUTPUTS_PWM_SWITCH_PRESENT
 
 // MPPT buck/boost or nanogrid mode
 #define CONFIG_HV_TERMINAL_SOLAR DT_COMPAT_DCDC
@@ -33,9 +33,9 @@
 #define DT_INST_0_DCDC_PWM_DEADTIME  300   // ns
 #define DT_INST_0_DCDC_CURRENT_MAX   20    // A
 
-#define DT_COMPAT_PWM_SWITCH 1
-#define DT_INST_0_PWM_SWITCH_PWM_FREQUENCY  50 // Hz
-#define DT_INST_0_PWM_SWITCH_CURRENT_MAX    20 // A
+#define DT_OUTPUTS_PWM_SWITCH_PRESENT 1
+#define DT_OUTPUTS_PWM_SWITCH_PWMS_PERIOD   20*1000*1000
+#define DT_OUTPUTS_PWM_SWITCH_CURRENT_MAX    20 // A
 
 #define DT_OUTPUTS_LOAD_PRESENT     1
 #define DT_OUTPUTS_LOAD_CURRENT_MAX 20  // PCB maximum load switch current
@@ -83,7 +83,7 @@ static const int led_pins[NUM_LED_PINS] = {
     //  A         B         C
        0,    0,    0
 };
-static const pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
+static const enum pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
     { PIN_HIGH,  PIN_LOW,   PIN_FLOAT }, // LED1
     { PIN_LOW,   PIN_HIGH,  PIN_FLOAT }, // LED2
     { PIN_HIGH,  PIN_FLOAT, PIN_LOW   }, // LED3

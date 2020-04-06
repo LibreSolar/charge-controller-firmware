@@ -28,6 +28,7 @@ target_sources(app PRIVATE
         ../src/load_drv.cpp
         ../src/main.cpp
         ../src/power_port.cpp
+        ../src/pwm_switch_driver.c
         ../src/pwm_switch.cpp
         ../src/setup.cpp
         ../src/ext/ext.cpp
