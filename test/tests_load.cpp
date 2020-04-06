@@ -101,7 +101,7 @@ void control_on_to_off_overcurrent()
     LoadOutput load_out(&bus, &load_drv_set, &load_drv_init);
     load_init(&load_out, true);
 
-    load_out.current = LOAD_CURRENT_MAX * 1.9;  // with factor 2 it is switched off immediately
+    load_out.current = DT_OUTPUTS_LOAD_CURRENT_MAX * 1.9;  // with factor 2 it is switched off immediately
     load_out.control();
     TEST_ASSERT_EQUAL(LOAD_STATE_ON, load_out.state);
 

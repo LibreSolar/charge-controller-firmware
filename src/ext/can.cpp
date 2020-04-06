@@ -128,16 +128,16 @@ ThingSetCAN::ThingSetCAN(uint8_t can_node_id, const unsigned int c):
     node_id(can_node_id),
     channel(c)
 {
-    can_en_dev = device_get_binding(DT_SWITCH_CAN_GPIOS_CONTROLLER);
-    gpio_pin_configure(can_en_dev, DT_SWITCH_CAN_GPIOS_PIN,
-        DT_SWITCH_CAN_GPIOS_FLAGS | GPIO_OUTPUT_INACTIVE);
+    can_en_dev = device_get_binding(DT_OUTPUTS_CAN_EN_GPIOS_CONTROLLER);
+    gpio_pin_configure(can_en_dev, DT_OUTPUTS_CAN_EN_GPIOS_PIN,
+        DT_OUTPUTS_CAN_EN_GPIOS_FLAGS | GPIO_OUTPUT_INACTIVE);
 
     can_dev = device_get_binding("CAN_1");
 }
 
 void ThingSetCAN::enable()
 {
-    gpio_pin_set(can_en_dev, DT_SWITCH_CAN_GPIOS_PIN, 1);
+    gpio_pin_set(can_en_dev, DT_OUTPUTS_CAN_EN_GPIOS_PIN, 1);
 }
 
 #endif

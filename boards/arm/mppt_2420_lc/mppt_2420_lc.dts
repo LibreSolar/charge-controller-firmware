@@ -48,19 +48,20 @@
 		};
 	};
 
-	switches {
-		compatible = "switch";
+	outputs {
+		compatible = "outputs";
 		load {
+			label = "Load output";
 			gpios = <&gpiob 2 GPIO_ACTIVE_LOW>;
-			label = "Load disable";
+			current-max = <20>;
 		};
-		uext {
+		uext_en {
+			label = "UEXT enable";
 			gpios = <&gpioc 14 GPIO_ACTIVE_LOW>;
-			label = "UEXT disable";
 		};
-		can {
-			gpios = <&gpioa 15 GPIO_ACTIVE_LOW>;
+		can_en {
 			label = "CAN disable / standby";
+			gpios = <&gpioa 15 GPIO_ACTIVE_LOW>;
 		};
 	};
 

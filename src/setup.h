@@ -41,11 +41,11 @@ extern Charger charger;
 extern BatConf bat_conf;
 extern BatConf bat_conf_user;
 
-#if CONFIG_HAS_LOAD_OUTPUT
+#if DT_OUTPUTS_LOAD_PRESENT
 extern LoadOutput load;
 #endif
 
-#if CONFIG_HAS_USB_PWR_OUTPUT
+#if DT_OUTPUTS_USB_PWR_PRESENT
 extern LoadOutput usb_pwr;
 #endif
 

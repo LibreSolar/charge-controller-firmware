@@ -6,9 +6,9 @@
 
 #include "load.h"
 
-#include <inttypes.h>       // for PRIu32 in printf statements
-
 #ifndef UNIT_TEST
+
+#include <inttypes.h>       // for PRIu32 in printf statements
 
 #include <zephyr.h>
 #include <device.h>
@@ -23,11 +23,9 @@
 
 static struct device *dev_load;
 
-#ifdef DT_SWITCH_USB_PWR_GPIOS_CONTROLLER
+#ifdef DT_OUTPUTS_USB_PWR_PRESENT
 static struct device *dev_usb;
 #endif
-
-#endif // UNIT_TEST
 
 #include "board.h"
 #include "hardware.h"
@@ -158,53 +156,55 @@ void load_out_set(bool status)
     leds_set(LED_LOAD, status);
 #endif
 
-#ifdef DT_SWITCH_LOAD_GPIOS_CONTROLLER
-    gpio_pin_configure(dev_load, DT_SWITCH_LOAD_GPIOS_PIN,
-        DT_SWITCH_LOAD_GPIOS_FLAGS | GPIO_OUTPUT_INACTIVE);
+#ifdef DT_OUTPUTS_LOAD_PRESENT
+    gpio_pin_configure(dev_load, DT_OUTPUTS_LOAD_GPIOS_PIN,
+        DT_OUTPUTS_LOAD_GPIOS_FLAGS | GPIO_OUTPUT_INACTIVE);
     if (status == true) {
 #ifdef PIN_I_LOAD_COMP
         lptim_init();
 #else
-        gpio_pin_set(dev_load, DT_SWITCH_LOAD_GPIOS_PIN, 1);
+        gpio_pin_set(dev_load, DT_OUTPUTS_LOAD_GPIOS_PIN, 1);
 #endif
     }
     else {
-        gpio_pin_set(dev_load, DT_SWITCH_LOAD_GPIOS_PIN, 0);
+        gpio_pin_set(dev_load, DT_OUTPUTS_LOAD_GPIOS_PIN, 0);
     }
 #endif
 }
 
 void usb_out_set(bool status)
 {
-#ifdef DT_SWITCH_USB_PWR_GPIOS_CONTROLLER
-    gpio_pin_configure(dev_usb, DT_SWITCH_USB_PWR_GPIOS_PIN,
-        DT_SWITCH_USB_PWR_GPIOS_FLAGS | GPIO_OUTPUT_INACTIVE);
+#ifdef DT_OUTPUTS_USB_PWR_PRESENT
+    gpio_pin_configure(dev_usb, DT_OUTPUTS_USB_PWR_GPIOS_PIN,
+        DT_OUTPUTS_USB_PWR_GPIOS_FLAGS | GPIO_OUTPUT_INACTIVE);
     if (status == true) {
-        gpio_pin_set(dev_usb, DT_SWITCH_USB_PWR_GPIOS_PIN, 1);
+        gpio_pin_set(dev_usb, DT_OUTPUTS_USB_PWR_GPIOS_PIN, 1);
     }
     else {
-        gpio_pin_set(dev_usb, DT_SWITCH_USB_PWR_GPIOS_PIN, 0);
+        gpio_pin_set(dev_usb, DT_OUTPUTS_USB_PWR_GPIOS_PIN, 0);
     }
 #endif
 }
 
 void load_cp_enable()
 {
-#ifdef DT_PWM_OUT_CHARGE_PUMP_PWMS_CONTROLLER
+#ifdef DT_OUTPUTS_CHARGE_PUMP_PRESENT
 	struct device *pwm_dev;
-	pwm_dev = device_get_binding(DT_PWM_OUT_CHARGE_PUMP_PWMS_CONTROLLER);
+	pwm_dev = device_get_binding(DT_OUTPUTS_CHARGE_PUMP_PWMS_CONTROLLER);
 	if (!pwm_dev) {
-		print_error("Cannot find %s!\n", DT_PWM_OUT_CHARGE_PUMP_PWMS_CONTROLLER);
+		print_error("Cannot find %s!\n", DT_OUTPUTS_CHARGE_PUMP_PWMS_CONTROLLER);
 		return;
 	}
-    pwm_pin_set_usec(pwm_dev, DT_PWM_OUT_CHARGE_PUMP_PWMS_CHANNEL, 200, 100, 0);
+    // set to 50% duty cycle
+    pwm_pin_set_nsec(pwm_dev, DT_OUTPUTS_CHARGE_PUMP_PWMS_CHANNEL,
+        DT_OUTPUTS_CHARGE_PUMP_PWMS_PERIOD, DT_OUTPUTS_CHARGE_PUMP_PWMS_PERIOD / 2, 0);
 #endif
 }
 
 void load_out_init()
 {
-#ifdef DT_SWITCH_LOAD_GPIOS_CONTROLLER
-    dev_load = device_get_binding(DT_SWITCH_LOAD_GPIOS_CONTROLLER);
+#ifdef DT_OUTPUTS_LOAD_PRESENT
+    dev_load = device_get_binding(DT_OUTPUTS_LOAD_GPIOS_CONTROLLER);
 #endif
 
     // analog comparator to detect short circuits and trigger immediate load switch-off
@@ -220,7 +220,17 @@ void load_out_init()
 
 void usb_out_init()
 {
-#ifdef DT_SWITCH_USB_PWR_GPIOS_CONTROLLER
-    dev_usb = device_get_binding(DT_SWITCH_USB_PWR_GPIOS_CONTROLLER);
+#ifdef DT_OUTPUTS_USB_PWR_PRESENT
+    dev_usb = device_get_binding(DT_OUTPUTS_USB_PWR_GPIOS_CONTROLLER);
 #endif
 }
+
+#else // UNIT_TEST
+
+void load_out_init() {;}
+void usb_out_init() {;}
+
+void load_out_set(bool) {;}
+void usb_out_set(bool) {;}
+
+#endif

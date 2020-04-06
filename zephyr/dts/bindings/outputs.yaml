@@ -1,0 +1,26 @@
+# Copyright (c) 2020 Martin Jäger / Libre Solar
+# SPDX-License-Identifier: Apache-2.0
+
+description: GPIOs used for digital output (either on/off type or PWM signal)
+
+compatible: "outputs"
+
+child-binding:
+  description: GPIO digital outputs child node
+  properties:
+    gpios:
+      type: phandle-array
+      description: GPIO handle for on/off type output
+    pwms:
+      type: phandle-array
+      description: PWM handle for PWM type output
+    current-max:
+      type: int
+      description: Maximum current of driven power switch (A)
+    label:
+      type: string
+      required: true
+      description: Human readable string describing the device (used by Zephyr for API name)
+    present:
+      type: int
+      default: 1

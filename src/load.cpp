@@ -44,12 +44,12 @@ void LoadOutput::control()
         // junction temperature calculation model for overcurrent detection
         junction_temperature = junction_temperature + (
             dev_stat.internal_temp - junction_temperature + current * current /
-            (LOAD_CURRENT_MAX * LOAD_CURRENT_MAX) *
+            (DT_OUTPUTS_LOAD_CURRENT_MAX * DT_OUTPUTS_LOAD_CURRENT_MAX) *
             (DT_CHARGE_CONTROLLER_PCB_MOSFETS_TJ_MAX - DT_CHARGE_CONTROLLER_PCB_INTERNAL_TREF_MAX)
             ) / (DT_CHARGE_CONTROLLER_PCB_MOSFETS_TAU_JA * CONFIG_CONTROL_FREQUENCY);
 
         if (junction_temperature > DT_CHARGE_CONTROLLER_PCB_MOSFETS_TJ_MAX ||
-            current > LOAD_CURRENT_MAX * 2)
+            current > DT_OUTPUTS_LOAD_CURRENT_MAX * 2)
         {
             flags_set(&error_flags, ERR_LOAD_OVERCURRENT);
             oc_timestamp = uptime();

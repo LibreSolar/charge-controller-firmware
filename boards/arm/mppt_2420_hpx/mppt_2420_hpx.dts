@@ -50,22 +50,16 @@
 		};
 	};
 
-	pwmouts {
-		compatible = "pwm-out";
-
-		charge_pump: charge_pump {
-			pwms = <&{/soc/timers@40000400/pwm} 1 4>;	/* TIM3 */
-			/* originally planned TIM8 not working with current Zephyr driver */
-			/* pwms = <&{/soc/timers@40013400/pwm} 1 4>; */
-			label = "Charge pump for HS MOSFET drivers";
-		};
-	};
-
-	switches {
-		compatible = "switch";
+	outputs {
+		compatible = "outputs";
 		load {
+			label = "Load output";
 			gpios = <&gpiob 15 GPIO_ACTIVE_LOW>;
-			label = "Load disable";
+			current-max = <20>;
+		};
+		charge_pump {
+			label = "Charge pump for HS MOSFET drivers";
+			pwms = <&pwm3 1 200000>; /* 200 us period = 5 kHz */
 		};
 	};
 
@@ -74,7 +68,6 @@
 		uext-uart = &usart3;
 		spi-uext = &spi1;
 		i2c-uext = &i2c1;
-		pwm-cp = &charge_pump;
 	};
 };
 
@@ -126,11 +119,13 @@
 	status = "okay";
 };
 
-/* for charge pump and PWM solar input */
+/*
+ * TIM3 used for charge pump (CH1) and PWM power switch (CH2)
+ * (originally planned TIM8 for charge pump not working with current Zephyr driver)
+ */
 &timers3 {
 	status = "okay";
-
-	pwm {
+	pwm3: pwm {
 		status = "okay";
 	};
 };

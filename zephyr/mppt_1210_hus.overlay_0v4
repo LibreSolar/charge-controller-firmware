@@ -37,8 +37,8 @@
 		/delete-node/ c;
 	};
 
-	switches {
-		compatible = "switch";
+	outputs {
+		compatible = "outputs";
 		load {
 			gpios = <&gpioc 13 GPIO_ACTIVE_HIGH>;
 			label = "Load enable";

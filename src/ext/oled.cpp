@@ -57,10 +57,10 @@ OledSSD1306 oled(i2c_dev);
 
 void ExtOled::enable()
 {
-#ifdef DT_SWITCH_UEXT_GPIOS_CONTROLLER
-    struct device *dev_uext_dis = device_get_binding(DT_SWITCH_UEXT_GPIOS_CONTROLLER);
-    gpio_pin_configure(dev_uext_dis, DT_SWITCH_UEXT_GPIOS_PIN,
-        DT_SWITCH_UEXT_GPIOS_FLAGS | GPIO_OUTPUT_ACTIVE);
+#ifdef DT_OUTPUTS_UEXT_EN_PRESENT
+    struct device *dev_uext_en = device_get_binding(DT_OUTPUTS_UEXT_EN_GPIOS_CONTROLLER);
+    gpio_pin_configure(dev_uext_en, DT_OUTPUTS_UEXT_EN_GPIOS_PIN,
+        DT_OUTPUTS_UEXT_EN_GPIOS_FLAGS | GPIO_OUTPUT_ACTIVE);
 #endif
 
     oled.init(CONFIG_EXT_OLED_BRIGHTNESS);

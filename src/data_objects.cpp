@@ -155,7 +155,7 @@ const data_object_t data_objects[] = {
     TS_DATA_OBJ_BOOL(0x40, "LoadEnDefault", &load.enable,
         TS_CONF, TS_READ_ALL | TS_WRITE_ALL),
 
-#if CONFIG_HAS_USB_PWR_OUTPUT
+#if DT_OUTPUTS_USB_PWR_PRESENT
     TS_DATA_OBJ_BOOL(0x41, "UsbEnDefault", &usb_pwr.enable,
         TS_CONF, TS_READ_ALL | TS_WRITE_ALL),
 #endif
@@ -178,7 +178,7 @@ const data_object_t data_objects[] = {
     TS_DATA_OBJ_INT32(0x47, "LoadUVRecovery_s", &load.lvd_recovery_delay,
         TS_CONF, TS_READ_ALL | TS_WRITE_ALL),
 
-#if CONFIG_HAS_USB_PWR_OUTPUT
+#if DT_OUTPUTS_USB_PWR_PRESENT
     TS_DATA_OBJ_INT32(0x48, "UsbUVRecovery_s", &usb_pwr.lvd_recovery_delay,
         TS_CONF, TS_READ_ALL | TS_WRITE_ALL),
 #endif
@@ -189,7 +189,7 @@ const data_object_t data_objects[] = {
     TS_DATA_OBJ_BOOL(0x60, "LoadEn", &load.enable,
         TS_INPUT, TS_READ_ALL | TS_WRITE_ALL),
 
-#if CONFIG_HAS_USB_PWR_OUTPUT
+#if DT_OUTPUTS_USB_PWR_PRESENT
     TS_DATA_OBJ_BOOL(0x61, "UsbEn", &usb_pwr.enable,
         TS_INPUT, TS_READ_ALL | TS_WRITE_ALL),
 #endif
@@ -219,7 +219,7 @@ const data_object_t data_objects[] = {
     TS_DATA_OBJ_INT32(0x04, "LoadInfo", &load.info,
         TS_OUTPUT, TS_READ_ALL),
 
-#if CONFIG_HAS_USB_PWR_OUTPUT
+#if DT_OUTPUTS_USB_PWR_PRESENT
     TS_DATA_OBJ_INT32(0x05, "UsbInfo", &usb_pwr.info,
         TS_OUTPUT, TS_READ_ALL),
 #endif

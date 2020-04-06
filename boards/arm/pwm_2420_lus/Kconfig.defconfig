@@ -6,12 +6,6 @@ if BOARD_PWM_2420_LUS
 config BOARD
 	default "pwm_2420_lus"
 
-config HAS_LOAD_OUTPUT
-	default y
-
-config HAS_USB_PWR_OUTPUT
-	default y
-
 if UART_CONSOLE
 
 config UART_2

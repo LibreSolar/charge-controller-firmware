@@ -58,19 +58,20 @@
 		};
 	};
 
-	switches {
-		compatible = "switch";
+	outputs {
+		compatible = "outputs";
 		load {
+			label = "Load output";
 			gpios = <&gpiob 2 GPIO_ACTIVE_LOW>;
-			label = "Load disable";
+			current-max = <20>;
 		};
 		usb-pwr {
-			gpios = <&gpiob 5 GPIO_ACTIVE_LOW>;
 			label = "USB charging port disable";
+			gpios = <&gpiob 5 GPIO_ACTIVE_LOW>;
 		};
 		boot0 {
-			gpios = <&gpiob 12 GPIO_ACTIVE_HIGH>;
 			label = "BOOT0 pin trigger";
+			gpios = <&gpiob 12 GPIO_ACTIVE_HIGH>;
 		};
 	};
 

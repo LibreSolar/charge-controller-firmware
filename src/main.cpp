@@ -68,7 +68,7 @@ void main(void)
     load.set_voltage_limits(bat_conf.voltage_load_disconnect, bat_conf.voltage_load_reconnect,
         bat_conf.voltage_absolute_max);
 
-    #if CONFIG_HAS_USB_PWR_OUTPUT
+    #if DT_OUTPUTS_USB_PWR_PRESENT
     usb_pwr.set_voltage_limits(bat_conf.voltage_load_disconnect - 0.1, // keep on longer than load
         bat_conf.voltage_load_reconnect, bat_conf.voltage_absolute_max);
     #endif
@@ -117,11 +117,11 @@ void control_thread()
         leds_set_charging(half_bridge_enabled());
         #endif
 
-        #if CONFIG_HAS_LOAD_OUTPUT
+        #if DT_OUTPUTS_LOAD_PRESENT
         load.control();
         #endif
 
-        #if CONFIG_HAS_USB_PWR_OUTPUT
+        #if DT_OUTPUTS_USB_PWR_PRESENT
         usb_pwr.control();
         #endif
 

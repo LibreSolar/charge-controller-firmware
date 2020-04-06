@@ -52,23 +52,24 @@
 		};
 	};
 
-	switches {
-		compatible = "switch";
+	outputs {
+		compatible = "outputs";
 		load {
+			label = "Load output";
 			gpios = <&gpioc 13 GPIO_ACTIVE_HIGH>;
-			label = "Load enable";
+			current-max = <10>;
 		};
 		usb-pwr {
-			gpios = <&gpiob 10 GPIO_ACTIVE_HIGH>;
 			label = "USB charging port enable";
+			gpios = <&gpiob 10 GPIO_ACTIVE_HIGH>;
 		};
 		v-solar {
-			gpios = <&gpioc 14 GPIO_ACTIVE_HIGH>;
 			label = "Solar voltage measurement enable";
+			gpios = <&gpioc 14 GPIO_ACTIVE_HIGH>;
 		};
 		boot0 {
-			gpios = <&gpiob 12 GPIO_ACTIVE_HIGH>;
 			label = "BOOT0 pin trigger";
+			gpios = <&gpiob 12 GPIO_ACTIVE_HIGH>;
 		};
 	};
 

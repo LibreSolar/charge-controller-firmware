@@ -7,8 +7,6 @@
 #ifndef MPPT_1210_HUS_H
 #define MPPT_1210_HUS_H
 
-#define LOAD_CURRENT_MAX 10  // PCB maximum load switch current
-
 #define PIN_UEXT_TX   PA_2
 #define PIN_UEXT_RX   PA_3
 #define PIN_UEXT_SCL  PB_6

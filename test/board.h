@@ -37,16 +37,16 @@
 #define DT_INST_0_PWM_SWITCH_PWM_FREQUENCY  50 // Hz
 #define DT_INST_0_PWM_SWITCH_CURRENT_MAX    20 // A
 
-#define CONFIG_HAS_LOAD_OUTPUT     1
-#define CONFIG_HAS_USB_PWR_OUTPUT  1
+#define DT_OUTPUTS_LOAD_PRESENT     1
+#define DT_OUTPUTS_LOAD_CURRENT_MAX 20  // PCB maximum load switch current
+
+#define DT_OUTPUTS_USB_PWR_PRESENT  1
 
 // Values that are otherwise defined by Kconfig
 #define CONFIG_CONTROL_FREQUENCY   10   // Hz
 #define DT_CHARGE_CONTROLLER_PCB_MOSFETS_TJ_MAX     120
 #define DT_CHARGE_CONTROLLER_PCB_INTERNAL_TREF_MAX  50
 #define DT_CHARGE_CONTROLLER_PCB_MOSFETS_TAU_JA     5
-
-#define LOAD_CURRENT_MAX 20  // PCB maximum load switch current
 
 #define DT_CHARGE_CONTROLLER_PCB_LS_VOLTAGE_MAX    32  // Maximum voltage at battery port (V)
 #define DT_CHARGE_CONTROLLER_PCB_HS_VOLTAGE_MAX   55  // Maximum voltage at PV input port (V)

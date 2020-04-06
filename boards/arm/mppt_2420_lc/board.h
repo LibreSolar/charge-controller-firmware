@@ -7,8 +7,6 @@
 #ifndef MPPT_2420_LC_H
 #define MPPT_2420_LC_H
 
-#define LOAD_CURRENT_MAX 20  // PCB maximum load switch current
-
 #define PIN_UEXT_DIS  PC_14     // starting from rev. 0.10
 #define PIN_UEXT_TX   PA_2
 #define PIN_UEXT_RX   PA_3

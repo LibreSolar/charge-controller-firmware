@@ -6,9 +6,6 @@ if BOARD_MPPT_2420_LC
 config BOARD
 	default "mppt_2420_lc"
 
-config HAS_LOAD_OUTPUT
-	default y
-
 if UART_CONSOLE
 
 config UART_2

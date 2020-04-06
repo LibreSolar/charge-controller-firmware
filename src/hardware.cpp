@@ -65,11 +65,11 @@ void watchdog_feed(int channel_id)
 
 void start_stm32_bootloader()
 {
-#ifdef DT_SWITCH_BOOT0_GPIOS_CONTROLLER
+#ifdef DT_OUTPUTS_BOOT0_PRESENT
     // pin is connected to BOOT0 via resistor and capacitor
-    struct device *dev = device_get_binding(DT_SWITCH_BOOT0_GPIOS_CONTROLLER);
-    gpio_pin_configure(dev, DT_SWITCH_BOOT0_GPIOS_PIN,
-        DT_SWITCH_BOOT0_GPIOS_FLAGS | GPIO_OUTPUT_ACTIVE);
+    struct device *dev = device_get_binding(DT_OUTPUTS_BOOT0_GPIOS_CONTROLLER);
+    gpio_pin_configure(dev, DT_OUTPUTS_BOOT0_GPIOS_PIN,
+        DT_OUTPUTS_BOOT0_GPIOS_FLAGS | GPIO_OUTPUT_ACTIVE);
 
     k_sleep(100);   // wait for capacitor at BOOT0 pin to charge up
     reset_device();

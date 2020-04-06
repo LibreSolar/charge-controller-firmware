@@ -49,11 +49,11 @@ Dcdc dcdc(&hv_terminal, &dcdc_lv_port, MODE_MPPT_BUCK);
 PwmSwitch pwm_switch(&lv_bus);
 #endif
 
-#if CONFIG_HAS_LOAD_OUTPUT
+#if DT_OUTPUTS_LOAD_PRESENT
 LoadOutput load(&lv_bus, &load_out_set, &load_out_init);
 #endif
 
-#if CONFIG_HAS_USB_PWR_OUTPUT
+#if DT_OUTPUTS_USB_PWR_PRESENT
 LoadOutput usb_pwr(&lv_bus, &usb_out_set, &usb_out_init);
 #endif
 

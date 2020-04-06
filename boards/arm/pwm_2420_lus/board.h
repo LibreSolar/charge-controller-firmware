@@ -7,8 +7,6 @@
 #ifndef PWM_2420_LUS_H
 #define PWM_2420_LUS_H
 
-#define LOAD_CURRENT_MAX    15  // PCB maximum load switch current
-
 #define PIN_UEXT_TX   PA_2
 #define PIN_UEXT_RX   PA_3
 #define PIN_UEXT_SCL  PB_6

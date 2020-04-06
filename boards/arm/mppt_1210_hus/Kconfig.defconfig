@@ -6,12 +6,6 @@ if BOARD_MPPT_1210_HUS
 config BOARD
 	default "mppt_1210_hus"
 
-config HAS_LOAD_OUTPUT
-	default y
-
-config HAS_USB_PWR_OUTPUT
-	default y
-
 if UART_CONSOLE
 
 config UART_2
