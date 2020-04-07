@@ -100,6 +100,7 @@ static void vref_setup()
 static void dac_setup()
 {
 #if defined(CONFIG_SOC_SERIES_STM32F0X) || defined(CONFIG_SOC_SERIES_STM32L0X)
+    /* DAC1 at PA4 for load and DC/DC / PWM switch current measurement * VCC */
     LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_DAC1);
 	LL_DAC_SetOutputBuffer(DAC1, LL_DAC_CHANNEL_1, LL_DAC_OUTPUT_BUFFER_ENABLE);
 	LL_DAC_Enable(DAC1, LL_DAC_CHANNEL_1);

@@ -7,37 +7,6 @@
 #ifndef MPPT_2420_LC_H
 #define MPPT_2420_LC_H
 
-#define PIN_UEXT_DIS  PC_14     // starting from rev. 0.10
-#define PIN_UEXT_TX   PA_2
-#define PIN_UEXT_RX   PA_3
-#define PIN_UEXT_SCL  PB_6
-#define PIN_UEXT_SDA  PB_7
-#define PIN_UEXT_MISO PB_4
-#define PIN_UEXT_MOSI PB_5
-#define PIN_UEXT_SCK  PB_3
-#define PIN_UEXT_SSEL PC_13     // PCB rev 0.6: PA_0
-
-#define PIN_SWD_TX    PA_9
-#define PIN_SWD_RX    PA_10
-/*
-#define PIN_LED_PWR   PB_14
-#define PIN_LED_LOAD  PB_15
-*/
-#define PIN_LOAD_DIS    PB_2
-//#define PIN_5V_OUT_EN PB_12
-#define PIN_USB_PWR_EN  PB_12       // normally should be named 5V_OUT_EN, as no USB is existing here
-//#define PIN_USB_PWR_FLG PC_14
-#define PIN_CAN_RX    PB_8
-#define PIN_CAN_TX    PB_9
-#define PIN_CAN_STB   PA_15
-#define PIN_V_BUS_DIS PC_15     // bus power supply disable, starting from rev. 0.10
-
-#define PIN_REF_I_DCDC PA_4
-
-#define PIN_EEPROM_SCL PB_10
-#define PIN_EEPROM_SDA PB_11
-
-#define EEPROM_24AA32
 #define CONFIG_CAN 1
 
 enum pin_state_t { PIN_HIGH, PIN_LOW, PIN_FLOAT };

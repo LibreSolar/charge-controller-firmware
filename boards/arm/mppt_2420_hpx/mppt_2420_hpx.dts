@@ -65,7 +65,7 @@
 
 	aliases {
 		uart-dbg = &usart1;
-		uext-uart = &usart3;
+		uart-uext = &usart3;
 		spi-uext = &spi1;
 		i2c-uext = &i2c1;
 	};
@@ -86,6 +86,7 @@
 };
 
 &spi1 {
+	cs-gpios = <&gpiod 2 GPIO_ACTIVE_LOW>;
 	status = "okay";
 };
 

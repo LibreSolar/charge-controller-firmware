@@ -9,23 +9,6 @@
 
 #include <zephyr.h>
 
-#define PIN_UEXT_TX   PA_2
-#define PIN_UEXT_RX   PA_3
-#define PIN_UEXT_SCL  PB_6
-#define PIN_UEXT_SDA  PB_7
-#define PIN_UEXT_MISO PB_4
-#define PIN_UEXT_MOSI PB_5
-#define PIN_UEXT_SCK  PB_3
-#define PIN_UEXT_SSEL PA_15
-
-#define PIN_SWD_TX    PA_9
-#define PIN_SWD_RX    PA_10
-
-#define PIN_LOAD_EN     PC_13
-#define PIN_USB_PWR_EN  PB_12
-
-#define PIN_REF_I_DCDC  PA_4
-
 enum pin_state_t { PIN_HIGH, PIN_LOW, PIN_FLOAT };
 
 // assignment LED numbers on PCB to their meaning

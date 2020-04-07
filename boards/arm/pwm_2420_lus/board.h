@@ -7,30 +7,9 @@
 #ifndef PWM_2420_LUS_H
 #define PWM_2420_LUS_H
 
-#define PIN_UEXT_TX   PA_2
-#define PIN_UEXT_RX   PA_3
-#define PIN_UEXT_SCL  PB_6
-#define PIN_UEXT_SDA  PB_7
-#define PIN_UEXT_MISO PA_11
-#define PIN_UEXT_MOSI PA_12
-#define PIN_UEXT_SCK  PB_3
-#define PIN_UEXT_SSEL PA_15
-
-#define PIN_SWD_TX    PA_9
-#define PIN_SWD_RX    PA_10
-
-#define PIN_LOAD_DIS    PB_2
-#define PIN_USB_PWR_DIS PB_5
 #define PIN_I_LOAD_COMP PB_4
 
 #define PIN_EXT_BTN     PB_12
-#define PIN_BOOT0_EN    PB_12
-
-#define PIN_REF_I_DCDC  PA_4
-
-// Internal NTC temperature currently ignored by firmware as it is similar to MCU temperature and
-// does not reflect external battery temperature. Feature will be removed in future HW revisions.
-#define PIN_TEMP_INT_PD PA_8
 
 enum pin_state_t { PIN_HIGH, PIN_LOW, PIN_FLOAT };
 

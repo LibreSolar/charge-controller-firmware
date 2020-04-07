@@ -75,7 +75,7 @@
 
 	aliases {
 		uart-dbg = &usart1;
-		uext-uart = &usart2;
+		uart-uext = &usart2;
 		spi-uext = &spi1;
 		i2c-uext = &i2c1;
 	};
@@ -92,11 +92,12 @@
 };
 
 &i2c1 {
-	status = "okay";
 	clock-frequency = <I2C_BITRATE_FAST>;
+	status = "okay";
 };
 
 &spi1 {
+	cs-gpios = <&gpioa 15 GPIO_ACTIVE_LOW>;
 	status = "okay";
 };
 

@@ -12,17 +12,6 @@
 
 #include <pinmux/stm32/pinmux_stm32.h>
 
-// preliminary fix until PR for pinmux_stm32l0.h got accepted and merged to Zephyr master branch,
-// see also here: https://github.com/zephyrproject-rtos/zephyr/pull/20997
-#ifndef STM32L0_PINMUX_FUNC_PB6_I2C1_SCL
-#define STM32L0_PINMUX_FUNC_PB6_I2C1_SCL \
-	(STM32_PINMUX_ALT_FUNC_1 | STM32_OPENDRAIN_PULLUP)
-#endif
-#ifndef STM32L0_PINMUX_FUNC_PB7_I2C1_SDA
-#define STM32L0_PINMUX_FUNC_PB7_I2C1_SDA \
-	(STM32_PINMUX_ALT_FUNC_1 | STM32_OPENDRAIN_PULLUP)
-#endif
-
 /* pin assignments for NUCLEO-L073RZ board */
 static const struct pin_config pinconf[] = {
 #ifdef CONFIG_UART_1

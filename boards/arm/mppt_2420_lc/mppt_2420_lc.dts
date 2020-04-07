@@ -63,11 +63,19 @@
 			label = "CAN disable / standby";
 			gpios = <&gpioa 15 GPIO_ACTIVE_LOW>;
 		};
+		aux_en {
+			label = "5V output enable";
+			gpios = <&gpiob 12 GPIO_ACTIVE_HIGH>;
+		};
+		vbus_en {
+			label = "CAN bus power supply enable";
+			gpios = <&gpioc 15 GPIO_ACTIVE_LOW>;
+		};
 	};
 
 	aliases {
 		uart-dbg = &usart1;
-		uext-uart = &usart2;
+		uart-uext = &usart2;
 		spi-uext = &spi1;
 		i2c-uext = &i2c1;
 	};
@@ -108,6 +116,7 @@
 };
 
 &spi1 {
+	cs-gpios = <&gpioc 13 GPIO_ACTIVE_LOW>;
 	status = "okay";
 };
 
