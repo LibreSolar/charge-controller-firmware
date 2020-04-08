@@ -42,7 +42,11 @@ void DeviceStatus::update_energy()
     }
 
 #if CONFIG_HV_TERMINAL_SOLAR || CONFIG_LV_TERMINAL_SOLAR || CONFIG_PWM_TERMINAL_SOLAR
+#if CONFIG_HV_TERMINAL_SOLAR || CONFIG_LV_TERMINAL_SOLAR
     if (solar_terminal.bus->voltage < bat_terminal.bus->voltage) {
+#else
+    if (pwm_switch.ext_voltage < bat_terminal.bus->voltage) {
+#endif
         seconds_zero_solar += 1;
     }
     else {
@@ -82,9 +86,13 @@ void DeviceStatus::update_min_max_values()
         battery_voltage_max = bat_terminal.bus->voltage;
     }
 
-#if CONFIG_HV_TERMINAL_SOLAR || CONFIG_LV_TERMINAL_SOLAR || CONFIG_PWM_TERMINAL_SOLAR
+#if CONFIG_HV_TERMINAL_SOLAR || CONFIG_LV_TERMINAL_SOLAR
     if (solar_terminal.bus->voltage > solar_voltage_max) {
         solar_voltage_max = solar_terminal.bus->voltage;
+    }
+#elif CONFIG_PWM_TERMINAL_SOLAR
+    if (pwm_switch.ext_voltage > solar_voltage_max) {
+        solar_voltage_max = pwm_switch.ext_voltage;
     }
 #endif
 

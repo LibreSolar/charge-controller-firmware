@@ -231,8 +231,11 @@ const data_object_t data_objects[] = {
     TS_DATA_OBJ_FLOAT(0x70, "Bat_V", &bat_bus.voltage, 2,
         TS_OUTPUT, TS_READ_ALL),
 
-#if CONFIG_HV_TERMINAL_SOLAR || CONFIG_LV_TERMINAL_SOLAR || CONFIG_PWM_TERMINAL_SOLAR
+#if CONFIG_HV_TERMINAL_SOLAR || CONFIG_LV_TERMINAL_SOLAR
     TS_DATA_OBJ_FLOAT(0x71, "Solar_V", &solar_bus.voltage, 2,
+        TS_OUTPUT, TS_READ_ALL),
+#elif CONFIG_PWM_TERMINAL_SOLAR
+    TS_DATA_OBJ_FLOAT(0x71, "Solar_V", &pwm_switch.ext_voltage, 2,
         TS_OUTPUT, TS_READ_ALL),
 #endif
 
