@@ -5,11 +5,11 @@
  */
 
 /dts-v1/;
-#include <st/l0/stm32l073Xz.dtsi>
+#include <st/l0/stm32l072Xz.dtsi>
 
 / {
 	model = "Libre Solar MPPT 1210 HUS";
-	compatible = "st,stm32l073";
+	compatible = "st,stm32l072";
 
 	pcb {
 		compatible = "charge-controller";

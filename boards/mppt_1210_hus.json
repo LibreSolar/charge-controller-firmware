@@ -1,19 +1,19 @@
 {
   "build": {
     "cpu": "cortex-m0plus",
-    "extra_flags": "-DSTM32L073xx",
+    "extra_flags": "-DSTM32L072xx",
     "f_cpu": "32000000L",
     "framework_extra_flags": {
       "arduino": "-D__CORTEX_SC=0"
     },
-    "mcu": "stm32l073rz",
+    "mcu": "stm32l072rz",
     "variant": "MPPT-1210-HUS"
   },
   "debug": {
     "default_tools": [
       "stlink"
     ],
-    "jlink_device": "STM32L073RZ",
+    "jlink_device": "STM32L072RZ",
     "onboard_tools": [
       "stlink"
     ],

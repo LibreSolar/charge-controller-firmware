@@ -9,9 +9,9 @@
 
 // mbed defines STM32Fxx variables automatically, so we define them also for Zephyr
 
-#ifdef CONFIG_SOC_STM32L073XX
+#ifdef CONFIG_SOC_STM32L072XX
 #define STM32L0
-#define STM32L073
+#define STM32L072
 #endif
 
 #ifdef CONFIG_SOC_STM32F072XB
@@ -24,8 +24,8 @@
 #define STM32G431
 #endif
 
-#ifdef STM32L073
-#include "stm32l073xx.h"
+#ifdef STM32L072
+#include "stm32l072xx.h"
 #endif
 
 #ifdef STM32F072

@@ -10,7 +10,7 @@ Coding style is described [here](https://github.com/LibreSolar/coding-style).
 
 ## Supported devices
 
-The software is configurable to support different charge controller PCBs with STM32F072, low-power STM32L072/3 or most recent STM32G431 MCUs:
+The software is configurable to support different charge controller PCBs with STM32F072, low-power STM32L072 or most recent STM32G431 MCUs:
 
 - [Libre Solar MPPT 12/24V 20A with CAN](https://github.com/LibreSolar/MPPT-2420-LC)
 - [Libre Solar MPPT 12V 10A with USB](https://github.com/LibreSolar/MPPT-1210-HUS)
@@ -26,7 +26,7 @@ git clone --recursive https://github.com/LibreSolar/charge-controller-firmware
 
 Unfortunately, the green GitHub "Clone or download" button does not include submodules. If you cloned the repository already and want to pull the submodules, run `git submodule update --init --recursive`.
 
-### PlatfrormIO
+### PlatformIO
 
 It is suggested to use Visual Studio Code and PlatformIO for firmware development, as it simplifies compiling and uploading the code a lot:
 
@@ -97,9 +97,9 @@ st-flash 1.5.1
 
 check the connection between the programmer (for example the ST-Link of the Nucleo board) and the charge controller.
 
-## Bootloader Support (STM32L07x only)
+## Bootloader Support (STM32L072 only)
 
-The custom linker script file STM32L073XZ.ld.link_script.ld needs to be updated before generating the application firmware binary. For each application, the flash start address and the maximum code size need to be updated in this file. Currently, the locations 0x08001000 and 0x08018000 are used for applications 1 & 2 respectively.
+The custom linker script file STM32L072XZ.ld.link_script.ld needs to be updated before generating the application firmware binary. For each application, the flash start address and the maximum code size need to be updated in this file. Currently, the locations 0x08001000 and 0x08018000 are used for applications 1 & 2 respectively.
 
 ## API documentation
 

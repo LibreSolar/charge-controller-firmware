@@ -18,8 +18,8 @@
 #include "debug.h"
 #include "helper.h"
 
-#ifdef CONFIG_SOC_STM32L073XX
-#include "stm32l073xx.h"
+#ifdef CONFIG_SOC_STM32L072XX
+#include "stm32l072xx.h"
 #endif
 
 #ifdef CONFIG_SOC_STM32G431XX
