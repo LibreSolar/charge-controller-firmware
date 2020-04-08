@@ -42,9 +42,12 @@ extern DeviceStatus dev_stat;
 #define VREF (VREFINT_VALUE * VREFINT_CAL / adc_value(ADC_POS_VREF_MCU))
 #endif
 
+#define ADC_GAIN(name) (DT_ADC_GAIN_##name##_NUMERATOR / DT_ADC_GAIN_##name##_DENOMINATOR)
+
 /**
  * Average value for ADC channel
- * @param channel valid ADC channel pos ADC_POS_..., see adc_h.c
+ *
+ * @param channel valid ADC channel pos ADC_POS_..., see board.h
  */
 static inline uint32_t adc_value(uint32_t channel)
 {
@@ -54,27 +57,30 @@ static inline uint32_t adc_value(uint32_t channel)
 
 /**
  * Measured voltage for ADC channel after average
- * @param channel valid ADC channel pos ADC_POS_..., see adc_h.c
+ *
+ * @param channel valid ADC channel pos ADC_POS_..., see board.h
  * @param vref reference voltage in millivolts
+ * @param offset offset substracted from raw ADC value before applying gain
  *
  * @return voltage in millivolts
  */
-
-static inline float adc_voltage(uint32_t channel, int32_t vref)
+static inline float adc_voltage(uint32_t channel, int32_t vref, int32_t offset = 0)
 {
-    return (adc_value(channel) * vref) / 4096;
+    return (((int32_t)adc_value(channel) - offset) * vref) / 4096;
 }
 
 /**
  * Measured current/voltage for ADC channel after average and scaling
- * @param channel valid ADC channel pos ADC_POS_..., see adc_h.c
- * @param vref reference voltage in millivolts
  *
- * @return scaled final value
+ * @param channel valid ADC channel pos ADC_POS_..., see board.h
+ * @param vref reference voltage in millivolts
+ * @param offset offset added to raw ADC value before applying gain
+ *
+ * @return scaled final value in volts/amps
  */
-static inline float adc_scaled(uint32_t channel, int32_t vref, const float gain)
+static inline float adc_scaled(uint32_t channel, int32_t vref, const float gain, int32_t offset = 0)
 {
-    return adc_voltage(channel, vref) * (gain/1000.0);
+    return adc_voltage(channel, vref, offset) * (gain/1000.0);
 }
 
 static inline float ntc_temp(uint32_t channel, int32_t vref)
@@ -93,12 +99,12 @@ void calibrate_current_sensors()
 {
     int vref = VREF;
 #if DT_COMPAT_DCDC
-    dcdc_current_offset = -adc_scaled(ADC_POS_I_DCDC, vref, ADC_GAIN_I_DCDC);
+    dcdc_current_offset = -adc_scaled(ADC_POS_I_DCDC, vref, ADC_GAIN(I_DCDC));
 #endif
 #if DT_OUTPUTS_PWM_SWITCH_PRESENT
-    pwm_current_offset = -adc_scaled(ADC_POS_I_PWM, vref, ADC_GAIN_I_PWM);
+    pwm_current_offset = -adc_scaled(ADC_POS_I_PWM, vref, ADC_GAIN(I_PWM));
 #endif
-    load_current_offset = -adc_scaled(ADC_POS_I_LOAD, vref, ADC_GAIN_I_LOAD);
+    load_current_offset = -adc_scaled(ADC_POS_I_LOAD, vref, ADC_GAIN(I_LOAD));
 }
 
 void adc_update_value(unsigned int pos)
@@ -156,24 +162,24 @@ void daq_update()
     int vref = VREF;
 
     // calculate lower voltage first, as it is needed for PWM terminal voltage calculation
-    lv_bus.voltage = adc_scaled(ADC_POS_V_LOW, vref, ADC_GAIN_V_LOW);
+    lv_bus.voltage = adc_scaled(ADC_POS_V_LOW, vref, ADC_GAIN(V_LOW));
 
 #if DT_COMPAT_DCDC
-    hv_bus.voltage = adc_scaled(ADC_POS_V_HIGH, vref, ADC_GAIN_V_HIGH);
+    hv_bus.voltage = adc_scaled(ADC_POS_V_HIGH, vref, ADC_GAIN(V_HIGH));
 #endif
 
 #if DT_OUTPUTS_PWM_SWITCH_PRESENT
-    pwm_switch.ext_voltage = lv_bus.voltage - vref * (ADC_OFFSET_V_PWM / 1000.0) -
-        adc_scaled(ADC_POS_V_PWM, vref, ADC_GAIN_V_PWM);
+    pwm_switch.ext_voltage = lv_bus.voltage -
+        adc_scaled(ADC_POS_V_PWM, vref, ADC_GAIN(V_PWM), DT_ADC_GAIN_V_PWM_RAW_OFFSET);
 #endif
 
-    load.current = adc_scaled(ADC_POS_I_LOAD, vref, ADC_GAIN_I_LOAD) + load_current_offset;
+    load.current = adc_scaled(ADC_POS_I_LOAD, vref, ADC_GAIN(I_LOAD)) + load_current_offset;
 
 #if DT_OUTPUTS_PWM_SWITCH_PRESENT
     // current multiplied with PWM duty cycle for PWM charger to get avg current for correct power
     // calculation
     pwm_switch.current = -pwm_switch.get_duty_cycle() * (
-        adc_scaled(ADC_POS_I_PWM, vref, ADC_GAIN_I_PWM) + pwm_current_offset);
+        adc_scaled(ADC_POS_I_PWM, vref, ADC_GAIN(I_PWM)) + pwm_current_offset);
 
     lv_terminal.current = -pwm_switch.current - load.current;
 
@@ -182,7 +188,7 @@ void daq_update()
 
 #if DT_COMPAT_DCDC
     dcdc_lv_port.current =
-        adc_scaled(ADC_POS_I_DCDC, vref, ADC_GAIN_I_DCDC) + dcdc_current_offset;
+        adc_scaled(ADC_POS_I_DCDC, vref, ADC_GAIN(I_DCDC)) + dcdc_current_offset;
 
     lv_terminal.current = dcdc_lv_port.current - load.current;
 
@@ -277,7 +283,7 @@ uint16_t adc_get_alert_limit(float scale, float limit)
 void daq_set_lv_alerts(float upper, float lower)
 {
     int vref = VREF;
-    float scale =  ((4096* 1000) / (ADC_GAIN_V_LOW)) / vref;
+    float scale =  ((4096 * 1000) / ADC_GAIN(V_LOW)) / vref;
 
     // LV side (battery) overvoltage alert
     adc_alerts_upper[ADC_POS_V_LOW].limit = adc_get_alert_limit(scale, upper);
@@ -295,10 +301,14 @@ void daq_set_lv_alerts(float upper, float lower)
 void prepare_adc_readings(AdcValues values)
 {
     adc_readings[ADC_POS_VREF_MCU] = (uint16_t)(1.224 / 3.3 * 4096) << 4;
-    adc_readings[ADC_POS_V_HIGH] = (uint16_t)((values.solar_voltage / (ADC_GAIN_V_HIGH)) / 3.3 * 4096) << 4;
-    adc_readings[ADC_POS_V_LOW] = (uint16_t)((values.battery_voltage / (ADC_GAIN_V_LOW)) / 3.3 * 4096) << 4;
-    adc_readings[ADC_POS_I_DCDC] = (uint16_t)((values.dcdc_current / (ADC_GAIN_I_DCDC)) / 3.3 * 4096) << 4;
-    adc_readings[ADC_POS_I_LOAD] = (uint16_t)((values.load_current / (ADC_GAIN_I_LOAD)) / 3.3 * 4096) << 4;
+    adc_readings[ADC_POS_V_HIGH] =
+        (uint16_t)((values.solar_voltage / ADC_GAIN(V_HIGH)) / 3.3 * 4096) << 4;
+    adc_readings[ADC_POS_V_LOW] =
+        (uint16_t)((values.battery_voltage / ADC_GAIN(V_LOW)) / 3.3 * 4096) << 4;
+    adc_readings[ADC_POS_I_DCDC] =
+        (uint16_t)((values.dcdc_current / ADC_GAIN(I_DCDC)) / 3.3 * 4096) << 4;
+    adc_readings[ADC_POS_I_LOAD] =
+        (uint16_t)((values.load_current / ADC_GAIN(I_LOAD)) / 3.3 * 4096) << 4;
 }
 
 void prepare_adc_filtered()

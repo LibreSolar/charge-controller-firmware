@@ -34,7 +34,7 @@
 #define DT_INST_0_DCDC_CURRENT_MAX   20    // A
 
 #define DT_OUTPUTS_PWM_SWITCH_PRESENT 1
-#define DT_OUTPUTS_PWM_SWITCH_PWMS_PERIOD   20*1000*1000
+#define DT_OUTPUTS_PWM_SWITCH_PWMS_PERIOD   (20*1000*1000)
 #define DT_OUTPUTS_PWM_SWITCH_CURRENT_MAX    20 // A
 
 #define DT_OUTPUTS_LOAD_PRESENT     1
@@ -98,14 +98,21 @@ static const enum pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
 #define NTC_BETA_VALUE 3435
 #define NTC_SERIES_RESISTOR 8200.0
 
-#define ADC_GAIN_V_LOW  (105.6 / 5.6)   // both voltage dividers: 100k + 5.6k
-#define ADC_GAIN_V_HIGH (105.6 / 5.6)
-#define ADC_GAIN_V_PWM  (105.6 / 5.6)
-#define ADC_GAIN_I_LOAD (1000 / 4 / 50) // amp gain: 50, resistor: 4 mOhm
-#define ADC_GAIN_I_DCDC (1000 / 4 / 50)
-#define ADC_GAIN_I_PWM  (1000 / 4 / 50)
+#define DT_ADC_GAIN_V_HIGH_NUMERATOR 105600
+#define DT_ADC_GAIN_V_HIGH_DENOMINATOR 5600
+#define DT_ADC_GAIN_V_LOW_NUMERATOR 105600
+#define DT_ADC_GAIN_V_LOW_DENOMINATOR 5600
+#define DT_ADC_GAIN_V_PWM_NUMERATOR 25224   // see pwm_2420_lus.dtx
+#define DT_ADC_GAIN_V_PWM_DENOMINATOR 984
+#define DT_ADC_GAIN_V_PWM_RAW_OFFSET 2338
 
-#define ADC_OFFSET_V_PWM (-120.0 / 8.2)        // to be multiplied with VDDA to get absolute voltage offset
+// amp gain: 50, resistor: 4 mOhm
+#define DT_ADC_GAIN_I_LOAD_NUMERATOR 1000
+#define DT_ADC_GAIN_I_LOAD_DENOMINATOR (4 * 50)
+#define DT_ADC_GAIN_I_DCDC_NUMERATOR 1000
+#define DT_ADC_GAIN_I_DCDC_DENOMINATOR (4 * 50)
+#define DT_ADC_GAIN_I_PWM_NUMERATOR 1000
+#define DT_ADC_GAIN_I_PWM_DENOMINATOR (4 * 50)
 
 // position in the array written by the DMA controller
 enum {

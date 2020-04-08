@@ -63,16 +63,6 @@ static const enum pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
 #define NTC_BETA_VALUE 3435
 #define NTC_SERIES_RESISTOR 10000.0
 
-#define ADC_GAIN_V_LOW  (105.6 / 5.6)   // both voltage dividers: 100k + 5.6k
-#define ADC_GAIN_V_HIGH (105.6 / 5.6)
-#if DT_CHARGE_CONTROLLER_PCB_VERSION_NUM == 4
-#define ADC_GAIN_I_LOAD (1000 / 4 / 50) // amp gain: 50, resistor: 4 mOhm
-#define ADC_GAIN_I_DCDC (1000 / 4 / 50)
-#else
-#define ADC_GAIN_I_LOAD (1000.0 / 3.0 / 50.0) // amp gain: 50, resistor: 3 mOhm
-#define ADC_GAIN_I_DCDC (1000.0 / 3.0 / 50.0)
-#endif
-
 // position in the array written by the DMA controller
 #if DT_CHARGE_CONTROLLER_PCB_VERSION_NUM == 4
 enum {

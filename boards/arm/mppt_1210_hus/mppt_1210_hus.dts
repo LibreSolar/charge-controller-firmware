@@ -63,14 +63,41 @@
 			label = "USB charging port enable";
 			gpios = <&gpiob 10 GPIO_ACTIVE_HIGH>;
 		};
-		v-solar {
-			label = "Solar voltage measurement enable";
-			gpios = <&gpioc 14 GPIO_ACTIVE_HIGH>;
-		};
 		boot0 {
 			label = "BOOT0 pin trigger";
 			gpios = <&gpiob 12 GPIO_ACTIVE_HIGH>;
 		};
+	};
+
+	v-low {
+		compatible = "adc-gain";
+		io-channels = <&adc1 0>;
+		numerator = <105600>;
+		denominator = <5600>;
+	};
+
+	v-high {
+		compatible = "adc-gain";
+		io-channels = <&adc1 1>;
+		numerator = <105600>;
+		denominator = <5600>;
+		enable-gpios = <&gpioc 14 GPIO_ACTIVE_HIGH>;
+	};
+
+	i-load {
+		compatible = "adc-gain";
+		io-channels = <&adc1 5>;
+		// amp gain: 50, resistor: 3 mOhm
+		numerator = <1000>;
+		denominator = <150>;	// 3*50
+	};
+
+	i-dcdc {
+		compatible = "adc-gain";
+		io-channels = <&adc1 6>;
+		// amp gain: 50, resistor: 3 mOhm
+		numerator = <1000>;
+		denominator = <150>;	// 3*50
 	};
 
 	aliases {

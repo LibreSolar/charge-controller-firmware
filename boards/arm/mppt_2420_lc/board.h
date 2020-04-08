@@ -37,11 +37,6 @@ static const enum pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
 #define NTC_BETA_VALUE 3435
 #define NTC_SERIES_RESISTOR 10000.0
 
-#define ADC_GAIN_V_LOW  (110.0 / 10 )   // battery voltage divider 100k + 10k
-#define ADC_GAIN_V_HIGH (105.6 / 5.6)   // solar voltage divider: 100k + 5.6k
-#define ADC_GAIN_I_LOAD (1000 / 2 / (1500.0 / 22.0)) // op amp gain: 150/2.2 = 68.2, resistor: 2 mOhm
-#define ADC_GAIN_I_DCDC (1000 / 2 / (1500.0 / 22.0))
-
 // position in the array written by the DMA controller
 enum {
     ADC_POS_TEMP_BAT,   // ADC 0 (PA_0)

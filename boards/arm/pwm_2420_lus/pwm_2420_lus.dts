@@ -75,6 +75,38 @@
 		};
 	};
 
+	v-low {
+		compatible = "adc-gain";
+		io-channels = <&adc1 0>;
+		numerator = <132000>;
+		denominator = <12000>;
+	};
+
+	v-pwm {
+		compatible = "adc-gain";
+		io-channels = <&adc1 1>;
+		numerator = <25224>;	// (12*8.2 + 120*8.2 + 120*12) * 10
+		denominator = <984>;	// (8.2*12) * 10
+		raw-offset = <2338>;	// 4096 / (1 + 8.2/120 + 8.2/12)
+	};
+
+	i-load {
+		compatible = "adc-gain";
+		io-channels = <&adc1 5>;
+		// amp gain: 68/2.2, resistor: 2 mOhm
+		// fix for hardware bug in overcurrent comparator voltage divider wiring
+		numerator = <2931>;	// 1000 * (39+12+8.2) / (12+8.2) = 2930.69
+		denominator = <62>;	// 2*68/2.2 = 61.8181
+	};
+
+	i-pwm {
+		compatible = "adc-gain";
+		io-channels = <&adc1 6>;
+		// amp gain: 68/2.2, resistor: 2 mOhm
+		numerator = <2200>;	// 1000*2.2
+		denominator = <136>;	// 2*68
+	};
+
 	aliases {
 		uart-dbg = &usart1;
 		uart-uext = &usart2;

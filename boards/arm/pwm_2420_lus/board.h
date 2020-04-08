@@ -55,22 +55,6 @@ static const enum pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
 #define NTC_BETA_VALUE 3435
 #define NTC_SERIES_RESISTOR 8200.0
 
-#define ADC_GAIN_V_LOW (132 / 12)
-#define ADC_GAIN_V_PWM (1 + 120/12 + 120/8.2)
-
-#if DT_CHARGE_CONTROLLER_PCB_VERSION_NUM == 2
-// op amp gain: 68/2.2, resistor: 2 mOhm
-#define ADC_GAIN_I_LOAD (1000 / 2 / (68/2.2))
-#elif DT_CHARGE_CONTROLLER_PCB_VERSION_NUM == 3
-// fix for hardware bug in overcurrent comparator voltage divider wiring
-#define ADC_GAIN_I_LOAD (1000 / 2 / (68/2.2) * (39+12+8.2) / (12+8.2))
-#endif
-
-#define ADC_GAIN_I_PWM (1000 / 2 / (68/2.2))
-
-#define ADC_OFFSET_V_PWM (-120.0 / 8.2)        // to be multiplied with VDDA to get absolute voltage offset
-
-
 // position in the array written by the DMA controller
 enum {
     ADC_POS_V_LOW,      // ADC 0 (PA_0)

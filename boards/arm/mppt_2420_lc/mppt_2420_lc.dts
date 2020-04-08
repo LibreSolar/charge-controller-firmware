@@ -73,6 +73,36 @@
 		};
 	};
 
+	v-low {
+		compatible = "adc-gain";
+		io-channels = <&adc1 0>;
+		numerator = <110000>;
+		denominator = <10000>;
+	};
+
+	v-high {
+		compatible = "adc-gain";
+		io-channels = <&adc1 1>;
+		numerator = <105600>;
+		denominator = <5600>;
+	};
+
+	i-load {
+		compatible = "adc-gain";
+		io-channels = <&adc1 5>;
+		// amp gain: 150/2.2, resistor: 2 mOhm
+		numerator = <2200>;	// 1000*2.2
+		denominator = <300>;	// 2*150
+	};
+
+	i-dcdc {
+		compatible = "adc-gain";
+		io-channels = <&adc1 6>;
+		// amp gain: 150/2.2, resistor: 2 mOhm
+		numerator = <2200>;	// 1000*2.2
+		denominator = <300>;	// 2*150
+	};
+
 	aliases {
 		uart-dbg = &usart1;
 		uart-uext = &usart2;

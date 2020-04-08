@@ -63,6 +63,84 @@
 		};
 	};
 
+	v-low {
+		compatible = "adc-gain";
+		io-channels = <&adc1 12>;
+		numerator = <102200>;
+		denominator = <5600>;
+	};
+
+	v-high {
+		compatible = "adc-gain";
+		io-channels = <&adc1 15>;
+		numerator = <105600>;
+		denominator = <2200>;
+	};
+
+	v-pwm {
+		compatible = "adc-gain";
+		io-channels = <&adc1 4>;
+		numerator = <25224>;	// (12*8.2 + 120*8.2 + 120*12) * 10
+		denominator = <984>;	// (8.2*12) * 10
+		raw-offset = <2338>;	// 4096 / (1 + 8.2/120 + 8.2/12)
+	};
+
+	i-dcdc {
+		compatible = "adc-gain";
+		io-channels = <&adc2 1>;
+		// amp gain: 20, resistor: 2 mOhm
+		numerator = <1000>;	// 1000
+		denominator = <40>;	// 2*20
+	};
+
+	i-load {
+		compatible = "adc-gain";
+		io-channels = <&adc2 2>;
+		// amp gain: 68/2.2, resistor: 2 mOhm
+		numerator = <2200>;	// 1000*2.2
+		denominator = <136>;	// 2*68
+	};
+
+	i-pwm {
+		compatible = "adc-gain";
+		io-channels = <&adc2 5>;
+		// amp gain: 68/2.2, resistor: 2 mOhm
+		numerator = <2200>;	// 1000*2.2
+		denominator = <136>;	// 2*68
+	};
+
+	soc {
+		// ADC nodes not yet provided by Zephyr, but needed for adc-gain compatibles
+		adc1: adc@50000000 {
+			compatible = "st,stm32-adc";
+			reg = <0x50000000 0x400>;
+			clocks = <&rcc STM32_CLOCK_BUS_AHB2 0x00002000>;
+			interrupts = <18 0>;
+			status = "disabled";
+			label = "ADC_1";
+			#io-channel-cells = <1>;
+		};
+
+		adc2: adc@50000100 {
+			compatible = "st,stm32-adc";
+			reg = <0x50000100 0x400>;
+			clocks = <&rcc STM32_CLOCK_BUS_AHB2 0x00002000>;
+			interrupts = <18 0>;
+			status = "disabled";
+			label = "ADC_2";
+			#io-channel-cells = <1>;
+		};
+
+		dac1: dac@50000800 {
+			compatible = "st,stm32-dac";
+			reg = <0x50000800 0x400>;
+			clocks = <&rcc STM32_CLOCK_BUS_AHB2 0x00010000>;
+			status = "disabled";
+			label = "DAC_1";
+			#io-channel-cells = <1>;
+		};
+	};
+
 	aliases {
 		uart-dbg = &usart1;
 		uart-uext = &usart3;

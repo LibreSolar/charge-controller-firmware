@@ -51,4 +51,19 @@
 		/delete-node/ boot0;
 	};
 
+	i-load {
+		compatible = "adc-gain";
+		io-channels = <&adc1 6>;
+		// amp gain: 50, resistor: 4 mOhm
+		numerator = <1000>;
+		denominator = <200>;	// 4*50
+	};
+
+	i-dcdc {
+		compatible = "adc-gain";
+		io-channels = <&adc1 7>;
+		// amp gain: 50, resistor: 4 mOhm
+		numerator = <1000>;
+		denominator = <200>;	// 4*50
+	};
 };
