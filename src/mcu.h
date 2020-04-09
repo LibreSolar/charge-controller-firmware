@@ -7,52 +7,35 @@
 #ifndef MCU_H_
 #define MCU_H_
 
-// mbed defines STM32Fxx variables automatically, so we define them also for Zephyr
-
-#ifdef CONFIG_SOC_STM32L072XX
-#define STM32L0
-#define STM32L072
-#endif
-
-#ifdef CONFIG_SOC_STM32F072XB
-#define STM32F0
-#define STM32F072
-#endif
-
-#ifdef CONFIG_SOC_STM32G431XX
-#define STM32G4
-#define STM32G431
-#endif
-
-#ifdef STM32L072
-#include "stm32l072xx.h"
-#endif
-
-#ifdef STM32F072
+#ifdef CONFIG_SOC_SERIES_STM32F0X
 #include "stm32f072xb.h"
 #endif
 
-#ifdef STM32G431
+#ifdef CONFIG_SOC_SERIES_STM32L0X
+#include "stm32l072xx.h"
+#endif
+
+#ifdef CONFIG_SOC_SERIES_STM32G4X
 #include "stm32g431xx.h"
 #endif
 
 // factory calibration values for internal voltage reference and temperature sensor
 // (see MCU datasheet, not Reference Manual)
-#if defined(STM32F0)
+#if defined(CONFIG_SOC_SERIES_STM32F0X)
     const uint16_t VREFINT_CAL = *((uint16_t *)0x1FFFF7BA); // VREFINT @3.3V/30°C
     #define VREFINT_VALUE 3300 // mV
     const uint16_t TSENSE_CAL1 = *((uint16_t *)0x1FFFF7B8);
     const uint16_t TSENSE_CAL2 = *((uint16_t *)0x1FFFF7C2);
     #define TSENSE_CAL1_VALUE 30.0   // temperature of first calibration point
     #define TSENSE_CAL2_VALUE 110.0  // temperature of second calibration point
-#elif defined(STM32L0)
+#elif defined(CONFIG_SOC_SERIES_STM32L0X)
     const uint16_t VREFINT_CAL = *((uint16_t *)0x1FF80078);   // VREFINT @3.0V/25°C
     #define VREFINT_VALUE 3000 // mV
     const uint16_t TSENSE_CAL1 = *((uint16_t *)0x1FF8007A);
     const uint16_t TSENSE_CAL2 = *((uint16_t *)0x1FF8007E);
     #define TSENSE_CAL1_VALUE 30.0   // temperature of first calibration point
     #define TSENSE_CAL2_VALUE 130.0  // temperature of second calibration point
-#elif defined(STM32G4)
+#elif defined(CONFIG_SOC_SERIES_STM32G4X)
     const uint16_t VREFINT_CAL = *((uint16_t *)0x1FFF75AA);   // VREFINT @3.0V/30°C
     #define VREFINT_VALUE 3000 // mV
     const uint16_t TSENSE_CAL1 = *((uint16_t *)0x1FFF75A8);

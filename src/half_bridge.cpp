@@ -18,7 +18,7 @@ static uint8_t _deadtime_clocks;
 
 static bool _enabled;
 
-#if defined(STM32L0)
+#if defined(CONFIG_SOC_SERIES_STM32L0X)
 
 class PWM_TIM3
 {
@@ -100,7 +100,7 @@ class PWM_TIM3
     }
 };
 
-#elif defined(STM32F0) || defined(STM32G4)
+#elif defined(CONFIG_SOC_SERIES_STM32F0X) || defined(CONFIG_SOC_SERIES_STM32G4X)
 
 class PWM_TIM1
 {
@@ -109,9 +109,9 @@ class PWM_TIM1
     static void _init_registers(uint32_t pwm_resolution)
     {
         // Enable peripheral clock of GPIOA and GPIOB
-#ifdef STM32F0
+#ifdef CONFIG_SOC_SERIES_STM32F0X
         RCC->AHBENR |= RCC_AHBENR_GPIOAEN | RCC_AHBENR_GPIOBEN;
-#else // STM32G4
+#else // CONFIG_SOC_SERIES_STM32G4X
         RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN | RCC_AHB2ENR_GPIOBEN;
 #endif
 
@@ -122,10 +122,10 @@ class PWM_TIM1
         GPIOB->MODER = (GPIOB->MODER & ~(GPIO_MODER_MODER13)) | GPIO_MODER_MODER13_1;
 
         // Select AF2 on PA8 (TIM1_CH1) and PB13 (TIM1_CH1N)
-#ifdef STM32F0
+#ifdef CONFIG_SOC_SERIES_STM32F0X
         GPIOA->AFR[1] |= 0x2 << GPIO_AFRH_AFSEL8_Pos;
         GPIOB->AFR[1] |= 0x2 << GPIO_AFRH_AFSEL13_Pos;
-#else // STM32G4
+#else // CONFIG_SOC_SERIES_STM32G4X
         GPIOA->AFR[1] |= 0x6 << GPIO_AFRH_AFSEL8_Pos;
         GPIOB->AFR[1] |= 0x6 << GPIO_AFRH_AFSEL13_Pos;
 #endif
@@ -153,7 +153,7 @@ class PWM_TIM1
         // OIS1 = OIS1N = 0: Output Idle State is set to off
         //TIM1->CR2 |= ;
 
-#ifdef STM32G4
+#ifdef CONFIG_SOC_SERIES_STM32G4X
         // Boards with STM32G4 MCU use ADC2 for synchronized ADC sampling. We use OC2
         // for triggering, but but don't configure any pin for PWM mode
         TIM1->CCMR1 |= TIM_CCMR1_OC2M_2 | TIM_CCMR1_OC2M_1 | TIM_CCMR1_OC2PE;
@@ -253,9 +253,9 @@ uint32_t PWM_UT::m_ccr = 0;
 
 #endif /* UNIT_TEST */
 
-#if defined(STM32F0) || defined(STM32G4)
+#if defined(CONFIG_SOC_SERIES_STM32F0X) || defined(CONFIG_SOC_SERIES_STM32G4X)
 typedef PWM_TIM1 PWM_TIM_HW;
-#elif defined(STM32L0)
+#elif defined(CONFIG_SOC_SERIES_STM32L0X)
 typedef PWM_TIM3 PWM_TIM_HW;
 #else
 typedef PWM_UT PWM_TIM_HW;

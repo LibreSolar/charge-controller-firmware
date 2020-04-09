@@ -71,10 +71,10 @@ enum {
     ADC_POS_TEMP_FETS,  // ADC 5 (PA_5)
     ADC_POS_I_LOAD,     // ADC 6 (PA_6)
     ADC_POS_I_DCDC,     // ADC 7 (PA_7)
-#if defined(STM32F0) || defined(CONFIG_SOC_SERIES_STM32F0X)
+#if defined(CONFIG_SOC_SERIES_STM32F0X)
     ADC_POS_TEMP_MCU,   // ADC 16
     ADC_POS_VREF_MCU,   // ADC 17
-#elif defined(STM32L0) || defined(CONFIG_SOC_SERIES_STM32L0X)
+#elif defined(CONFIG_SOC_SERIES_STM32L0X)
     ADC_POS_VREF_MCU,   // ADC 17
     ADC_POS_TEMP_MCU,   // ADC 18
 #endif

@@ -13,10 +13,10 @@
 #include "leds.h"
 #include "setup.h"
 
-#if defined(STM32F0)
+#if defined(CONFIG_SOC_SERIES_STM32F0X)
 #define SYS_MEM_START       0x1FFFC800
 #define SRAM_END            0x20003FFF  // 16k
-#elif defined(STM32L0)
+#elif defined(CONFIG_SOC_SERIES_STM32L0X)
 #define SYS_MEM_START       0x1FF00000
 #define SRAM_END            0X20004FFF  // 20k
 #define FLASH_LAST_PAGE     0x0802FF80  // start address of last page (192 kbyte cat 5 devices)
@@ -73,7 +73,7 @@ void start_stm32_bootloader()
 
     k_sleep(100);   // wait for capacitor at BOOT0 pin to charge up
     reset_device();
-#elif defined (STM32F0)
+#elif defined (CONFIG_SOC_SERIES_STM32F0X)
     // place magic code at end of RAM and initiate reset
     *((uint32_t *)(MAGIC_CODE_ADDR)) = 0xDEADBEEF;
     reset_device();
