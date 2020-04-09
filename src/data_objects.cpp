@@ -112,7 +112,7 @@ const data_object_t data_objects[] = {
     TS_DATA_OBJ_INT32(0x39, "TrickleRecharge_s", &bat_conf_user.trickle_recharge_time,
         TS_CONF, TS_READ_ALL | TS_WRITE_ALL),
 
-    TS_DATA_OBJ_FLOAT(0x3F, "TempFactor", &bat_conf_user.temperature_compensation, 3,
+    TS_DATA_OBJ_FLOAT(0x3F, "BatTempComp_mV-K", &bat_conf_user.temperature_compensation, 3,
         TS_CONF, TS_READ_ALL | TS_WRITE_ALL),
 
     TS_DATA_OBJ_FLOAT(0x50, "BatInt_Ohm", &bat_conf_user.internal_resistance, 3,
@@ -224,7 +224,7 @@ const data_object_t data_objects[] = {
         TS_OUTPUT, TS_READ_ALL),
 #endif
 
-    TS_DATA_OBJ_UINT16(0x06, "SOC_%", &charger.soc, // output will be uint8_t
+    TS_DATA_OBJ_UINT16(0x06, "SOC_pct", &charger.soc, // output will be uint8_t
         TS_OUTPUT, TS_READ_ALL),
 
     // battery related data objects
@@ -348,7 +348,7 @@ const data_object_t data_objects[] = {
     TS_DATA_OBJ_FLOAT(0xA4, "Dis_Ah", &charger.discharged_Ah, 0,   // coulomb counter
         TS_REC, TS_READ_ALL | TS_WRITE_MAKER),
 
-    TS_DATA_OBJ_UINT16(0xA5, "SOH_%", &charger.soh,    // output will be uint8_t
+    TS_DATA_OBJ_UINT16(0xA5, "SOH_pct", &charger.soh,    // output will be uint8_t
         TS_REC, TS_READ_ALL | TS_WRITE_MAKER),
 
     TS_DATA_OBJ_UINT32(0xA6, "DayCount", &dev_stat.day_counter,
