@@ -59,7 +59,7 @@
 		};
 		charge_pump {
 			label = "Charge pump for HS MOSFET drivers";
-			pwms = <&pwm3 1 200000>; /* 200 us period = 5 kHz */
+			pwms = <&pwm8 1 200000>; /* 200 us period = 5 kHz */
 		};
 	};
 
@@ -198,13 +198,18 @@
 	status = "okay";
 };
 
-/*
- * TIM3 used for charge pump (CH1) and PWM power switch (CH2)
- * (originally planned TIM8 for charge pump not working with current Zephyr driver)
- */
+/* TIM3 (CH2) used for PWM power switch */
 &timers3 {
 	status = "okay";
 	pwm3: pwm {
+		status = "okay";
+	};
+};
+
+/* TIM8 (CH1) used for charge pump, but is currently not working with original Zephyr driver */
+&timers8 {
+	status = "okay";
+	pwm8: pwm {
 		status = "okay";
 	};
 };

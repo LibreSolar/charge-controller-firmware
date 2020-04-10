@@ -183,9 +183,53 @@ void usb_out_set(bool status)
 #endif
 }
 
+#ifdef DT_OUTPUTS_CHARGE_PUMP_PRESENT
+
+#if defined(CONFIG_SOC_STM32G431XX)
+#include <stm32g4xx_ll_tim.h>
+#include <stm32g4xx_ll_rcc.h>
+#include <stm32g4xx_ll_bus.h>
+#include "stm32g431xx.h"
+#endif
+
+/* Currently hard-coded for TIM8 as Zephyr driver doesn't work with this timer at the moment */
 void load_cp_enable()
 {
-#ifdef DT_OUTPUTS_CHARGE_PUMP_PRESENT
+    int freq_Hz = 1000*1000*1000 / DT_OUTPUTS_CHARGE_PUMP_PWMS_PERIOD;
+
+	LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_TIM8);
+
+    // Set timer clock to 100 kHz
+    LL_TIM_SetPrescaler(TIM8, SystemCoreClock / 100000 - 1);
+
+    LL_TIM_OC_SetMode(TIM8, LL_TIM_CHANNEL_CH1, LL_TIM_OCMODE_PWM1);
+    LL_TIM_OC_EnablePreload(TIM8, LL_TIM_CHANNEL_CH1);
+    LL_TIM_OC_SetPolarity(TIM8, LL_TIM_CHANNEL_CH1, LL_TIM_OCPOLARITY_HIGH);
+
+    // Interrupt on timer update
+    LL_TIM_EnableIT_UPDATE(TIM8);
+
+    // Force update generation (UG = 1)
+    LL_TIM_GenerateEvent_UPDATE(TIM8);
+
+    // set PWM frequency and resolution
+    int _pwm_resolution = 100000 / freq_Hz;
+
+    // Period goes from 0 to ARR (including ARR value), so substract 1 clock cycle
+    LL_TIM_SetAutoReload(TIM8, _pwm_resolution - 1);
+
+    LL_TIM_EnableCounter(TIM8);
+
+    LL_TIM_OC_SetCompareCH1(TIM8, _pwm_resolution / 2);    // 50% duty
+
+    LL_TIM_CC_EnableChannel(TIM8, LL_TIM_CHANNEL_CH1);
+
+    LL_TIM_EnableAllOutputs(TIM8);
+
+/*
+    This should do the same using the Zephyr driver, but there seems to be a bug in Zephyr v2.2
+    so that it doesn't work with advanced timer as TIM8. Keep it here until Zephyr bug was fixed.
+
 	struct device *pwm_dev;
 	pwm_dev = device_get_binding(DT_OUTPUTS_CHARGE_PUMP_PWMS_CONTROLLER);
 	if (!pwm_dev) {
@@ -195,8 +239,9 @@ void load_cp_enable()
     // set to 50% duty cycle
     pwm_pin_set_nsec(pwm_dev, DT_OUTPUTS_CHARGE_PUMP_PWMS_CHANNEL,
         DT_OUTPUTS_CHARGE_PUMP_PWMS_PERIOD, DT_OUTPUTS_CHARGE_PUMP_PWMS_PERIOD / 2, 0);
-#endif
+*/
 }
+#endif
 
 void load_out_init()
 {
@@ -207,8 +252,10 @@ void load_out_init()
     // analog comparator to detect short circuits and trigger immediate load switch-off
     short_circuit_comp_init();
 
+#ifdef DT_OUTPUTS_CHARGE_PUMP_PRESENT
     // enable charge pump for high-side switches (if existing)
     load_cp_enable();
+#endif
 }
 
 void usb_out_init()

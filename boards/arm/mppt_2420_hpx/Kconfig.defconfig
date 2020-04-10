@@ -26,6 +26,10 @@ config PWM_STM32_3
 	default y
 	depends on PWM
 
+config PWM_STM32_8
+	default y
+	depends on PWM
+
 endif # PWM
 
 if SPI
