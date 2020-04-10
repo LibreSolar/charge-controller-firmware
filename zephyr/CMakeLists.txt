@@ -25,7 +25,7 @@ target_sources(app PRIVATE
         ../src/helper.cpp
         ../src/leds.cpp
         ../src/load.cpp
-        ../src/load_drv.cpp
+        ../src/load_driver.c
         ../src/main.cpp
         ../src/power_port.cpp
         ../src/pwm_switch_driver.c

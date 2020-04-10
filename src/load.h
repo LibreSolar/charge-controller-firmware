@@ -17,6 +17,8 @@
 #include <stdbool.h>
 #include <time.h>
 
+#ifdef __cplusplus
+
 #include "power_port.h"
 
 /**
@@ -166,11 +168,23 @@ private:
      */
     int ov_debounce_counter = 0;
 };
+#endif
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 void load_out_init();
 void usb_out_init();
 
 void load_out_set(bool);
 void usb_out_set(bool);
+
+void load_short_circuit_stop();
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* LOAD_H */

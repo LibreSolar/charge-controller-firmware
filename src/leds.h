@@ -13,6 +13,10 @@
  * Control of status LEDs with charlieplexing
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** LED state type
  */
 enum LedState {
@@ -87,5 +91,9 @@ void leds_update_soc(int soc, bool load_off_low_soc = false);
  *  annoying flashing in case of an error.
  */
 void leds_toggle_error();
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* LEDS_H */

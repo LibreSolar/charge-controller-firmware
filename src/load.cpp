@@ -151,3 +151,10 @@ void LoadOutput::set_voltage_limits(float lvd, float lvr, float ov)
 
     overvoltage = ov;
 }
+
+extern LoadOutput load;
+
+void load_short_circuit_stop()
+{
+    load.stop(ERR_LOAD_SHORT_CIRCUIT);
+}

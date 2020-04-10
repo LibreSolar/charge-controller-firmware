@@ -29,11 +29,7 @@ static struct device *dev_usb;
 
 #include "board.h"
 #include "hardware.h"
-#include "leds.h"
-#include "device_status.h"
 #include "debug.h"
-
-extern LoadOutput load;     // necessary to call emergency stop function
 
 #if defined(PIN_I_LOAD_COMP) && PIN_LOAD_DIS == PB_2
 static void lptim_init()
@@ -85,6 +81,23 @@ static void lptim_init()
 }
 #endif
 
+#ifdef PIN_I_LOAD_COMP
+
+void ADC1_COMP_IRQHandler(void *args)
+{
+    // interrupt called because of COMP2?
+    if (COMP2->CSR & COMP_CSR_COMP2VALUE) {
+        // Load should be switched off by LPTIM trigger already. This interrupt
+        // is mainly used to indicate the failure.
+        load_short_circuit_stop();
+    }
+
+    // clear interrupt flag
+    EXTI->PR |= EXTI_PR_PIF22;
+}
+
+#endif // PIN_I_LOAD_COMP
+
 void short_circuit_comp_init()
 {
 #if defined(PIN_I_LOAD_COMP)
@@ -111,7 +124,8 @@ void short_circuit_comp_init()
     // normal polarity
     //COMP2->CSR |= COMP_CSR_COMP2POLARITY;
 
-    // set high-speed mode (1.2us instead of 2.5us propagation delay, but 3.5uA instead of 0.5uA current consumption)
+    // set high-speed mode (1.2us instead of 2.5us propagation delay, but 3.5uA instead of 0.5uA
+    // current consumption)
     //COMP2->CSR |= COMP_CSR_COMP2SPEED;
 
     // enable COMP2
@@ -125,35 +139,18 @@ void short_circuit_comp_init()
     EXTI->SWIER |= EXTI_SWIER_SWI22;
 
     // 1 = second-highest priority of STM32L0/F0
-#if defined(__MBED__)
-    NVIC_SetPriority(ADC1_COMP_IRQn, 1);
-    NVIC_EnableIRQ(ADC1_COMP_IRQn);
-#endif
+    IRQ_CONNECT(ADC1_COMP_IRQn, 1, ADC1_COMP_IRQHandler, 0, 0);
+    irq_enable(ADC1_COMP_IRQn);
 #endif
 }
 
-#ifdef PIN_I_LOAD_COMP
-
-extern "C" void ADC1_COMP_IRQHandler(void)
-{
-    // interrupt called because of COMP2?
-    if (COMP2->CSR & COMP_CSR_COMP2VALUE) {
-        // Load should be switched off by LPTIM trigger already. This interrupt
-        // is mainly used to indicate the failure.
-        load.stop(ERR_LOAD_SHORT_CIRCUIT);
-    }
-
-    // clear interrupt flag
-    EXTI->PR |= EXTI_PR_PIF22;
-}
-
-#endif // PIN_I_LOAD_COMP
-
+/* ToDo: dirty hack as C doesn't support functions with default values as in leds.h */
+void leds_set(int led, bool enabled, int timeout);
 
 void load_out_set(bool status)
 {
 #ifdef LED_LOAD
-    leds_set(LED_LOAD, status);
+    leds_set(LED_LOAD, status, -1);
 #endif
 
 #ifdef DT_OUTPUTS_LOAD_PRESENT
@@ -208,11 +205,7 @@ void load_out_init()
 #endif
 
     // analog comparator to detect short circuits and trigger immediate load switch-off
-#ifdef __MBED__
-    // The STM32L0 uses the same interrupt for ADC and COMP, which creates interference with the
-    // Zephyr ADC driver that need still to be resolved
     short_circuit_comp_init();
-#endif
 
     // enable charge pump for high-side switches (if existing)
     load_cp_enable();
@@ -230,7 +223,7 @@ void usb_out_init()
 void load_out_init() {;}
 void usb_out_init() {;}
 
-void load_out_set(bool) {;}
-void usb_out_set(bool) {;}
+void load_out_set(bool value) {;}
+void usb_out_set(bool value) {;}
 
 #endif
