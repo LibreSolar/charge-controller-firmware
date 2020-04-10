@@ -46,11 +46,26 @@ PwmSwitch::PwmSwitch(DcBus *dc_bus) :
     enable = true;     // enable charging in general
 }
 
+void PwmSwitch::test()
+{
+    if (pwm_active() && enable == false) {
+        pwm_signal_stop();
+        off_timestamp = uptime();
+        print_info("PWM test mode stop.\n");
+    }
+    else if (!pwm_active() && enable == true) {
+        // turning the PWM switch on creates a short voltage rise, so inhibit alerts by 50 ms
+        adc_upper_alert_inhibit(ADC_POS_V_LOW, 50);
+        pwm_signal_start(0.9);
+        print_info("PWM test mode start.\n");
+    }
+}
+
 void PwmSwitch::control()
 {
     if (pwm_active()) {
         if (neg_current_limit == 0
-            || current > 0           // discharging battery into solar panel --> stop
+            || current > -0.1        // discharging battery into solar panel --> stop
             || bus->voltage < 9.0    // not enough voltage for MOSFET drivers anymore
             || enable == false)
         {

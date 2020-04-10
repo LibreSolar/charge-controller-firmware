@@ -18,26 +18,60 @@
 #include "debug.h"
 #include "helper.h"
 
-#ifdef CONFIG_SOC_STM32L072XX
+#if defined(CONFIG_SOC_STM32L072XX)
+#include <stm32l0xx_ll_tim.h>
+#include <stm32l0xx_ll_rcc.h>
+#include <stm32l0xx_ll_bus.h>
 #include "stm32l072xx.h"
-#endif
-
-#ifdef CONFIG_SOC_STM32G431XX
+#elif defined(CONFIG_SOC_STM32G431XX)
+#include <stm32g4xx_ll_tim.h>
+#include <stm32g4xx_ll_rcc.h>
+#include <stm32g4xx_ll_bus.h>
 #include "stm32g431xx.h"
 #endif
 
 #if DT_OUTPUTS_PWM_SWITCH_PRESENT
 
-#if !defined(UNIT_TEST) && !defined(CONFIG_SOC_STM32G431XX)     // not yet working for STM32G431
+#ifndef UNIT_TEST
+
+// all PWM charge controllers use TIM3 at the moment
+static TIM_TypeDef *tim = TIM3;
+
+#if DT_OUTPUTS_PWM_SWITCH_PWMS_CHANNEL == 1
+#define LL_TIM_CHANNEL LL_TIM_CHANNEL_CH1
+#define LL_TIM_OC_SetCompare LL_TIM_OC_SetCompareCH1
+#define LL_TIM_OC_GetCompare LL_TIM_OC_GetCompareCH1
+#elif DT_OUTPUTS_PWM_SWITCH_PWMS_CHANNEL == 2
+#define LL_TIM_CHANNEL LL_TIM_CHANNEL_CH2
+#define LL_TIM_OC_SetCompare LL_TIM_OC_SetCompareCH2
+#define LL_TIM_OC_GetCompare LL_TIM_OC_GetCompareCH2
+#elif DT_OUTPUTS_PWM_SWITCH_PWMS_CHANNEL == 3
+#define LL_TIM_CHANNEL LL_TIM_CHANNEL_CH3
+#define LL_TIM_OC_SetCompare LL_TIM_OC_SetCompareCH3
+#define LL_TIM_OC_GetCompare LL_TIM_OC_GetCompareCH3
+#elif DT_OUTPUTS_PWM_SWITCH_PWMS_CHANNEL == 4
+#define LL_TIM_CHANNEL LL_TIM_CHANNEL_CH4
+#define LL_TIM_OC_SetCompare LL_TIM_OC_SetCompareCH4
+#define LL_TIM_OC_GetCompare LL_TIM_OC_GetCompareCH4
+#else
+#error "PWM Switch channel not defined properly!"
+#endif
+
+// to check if PWM signal is high or low (not sure how to get pin config from devicetree...)
+#if defined(CONFIG_BOARD_PWM_2420_LUS)
+#define PWM_GPIO_PIN_HIGH (GPIOB->IDR & GPIO_IDR_ID1)
+#elif defined(CONFIG_BOARD_MPPT_2420_HPX)
+#define PWM_GPIO_PIN_HIGH (GPIOC->IDR & GPIO_IDR_ID7)
+#endif
 
 static bool _pwm_active;
 static int _pwm_resolution;
 
 static void TIM3_IRQHandler(void *args)
 {
-    TIM3->SR &= ~TIM_SR_UIF;       // clear update interrupt flag
+    LL_TIM_ClearFlag_UPDATE(tim);
 
-    if ((int)TIM3->CCR4 < _pwm_resolution) {
+    if ((int)LL_TIM_OC_GetCompare(tim) < _pwm_resolution) {
         // turning the PWM switch on creates a short voltage rise, so inhibit alerts by 10 ms
         // at each rising edge if switch is not continuously on
         adc_upper_alert_inhibit(ADC_POS_V_LOW, 10);
@@ -46,97 +80,68 @@ static void TIM3_IRQHandler(void *args)
 
 void pwm_signal_init_registers(int freq_Hz)
 {
-    // Enable peripheral clock of GPIOB
-    RCC->IOPENR |= RCC_IOPENR_IOPBEN;
-
-    // Enable TIM3 clock
-    RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;
-
-    // Select alternate function mode on PB1 (first bit _1 = 1, second bit _0 = 0)
-    GPIOB->MODER = (GPIOB->MODER & ~(GPIO_MODER_MODE1)) | GPIO_MODER_MODE1_1;
-
-    // Select AF2 on PB1
-    GPIOB->AFR[0] |= 0x2 << GPIO_AFRL_AFSEL1_Pos;
+	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM3);
 
     // Set timer clock to 10 kHz
-    TIM3->PSC = SystemCoreClock / 10000 - 1;
+    LL_TIM_SetPrescaler(TIM3, SystemCoreClock / 10000 - 1);
 
-    // Capture/Compare Mode Register 1
-    // OCxM = 110: Select PWM mode 1 on OCx
-    // OCxPE = 1:  Enable preload register on OCx (reset value)
-    TIM3->CCMR2 |= TIM_CCMR2_OC4M_2 | TIM_CCMR2_OC4M_1 | TIM_CCMR2_OC4PE;
-
-    // Capture/Compare Enable Register
-    // CCxP: Active high polarity on OCx (default = 0)
-    TIM3->CCER &= ~(TIM_CCER_CC4P);     // PB1 / TIM3_CH4: high-side
+    LL_TIM_OC_SetMode(tim, LL_TIM_CHANNEL, LL_TIM_OCMODE_PWM1);
+    LL_TIM_OC_EnablePreload(tim, LL_TIM_CHANNEL);
+    LL_TIM_OC_SetPolarity(tim, LL_TIM_CHANNEL, LL_TIM_OCPOLARITY_HIGH);
 
     // Interrupt on timer update
-    TIM3->DIER |= TIM_DIER_UIE;
+    LL_TIM_EnableIT_UPDATE(tim);
 
-    // Auto Reload Register sets interrupt frequency
-    TIM3->ARR = 10000 / freq_Hz - 1;
+    // Force update generation (UG = 1)
+    LL_TIM_GenerateEvent_UPDATE(tim);
+
+    // set PWM frequency and resolution
+    _pwm_resolution = 10000 / freq_Hz;
+
+    // Period goes from 0 to ARR (including ARR value), so substract 1 clock cycle
+    LL_TIM_SetAutoReload(tim, _pwm_resolution - 1);
 
     // 1 = second-highest priority of STM32L0/F0
     IRQ_CONNECT(TIM3_IRQn, 1, TIM3_IRQHandler, 0, 0);
     irq_enable(TIM3_IRQn);
 
-    // Force update generation (UG = 1)
-    TIM3->EGR |= TIM_EGR_UG;
-
-    // set PWM frequency and resolution
-    _pwm_resolution = 10000 / freq_Hz;
-
-    // Auto Reload Register
-    // Period goes from 0 to ARR (including ARR value), so substract 1 clock cycle
-    TIM3->ARR = _pwm_resolution - 1;
+    LL_TIM_EnableCounter(tim);
 }
 
 void pwm_signal_set_duty_cycle(float duty)
 {
-    TIM3->CCR4 = _pwm_resolution * duty;
+    LL_TIM_OC_SetCompare(tim, _pwm_resolution * duty);
 }
 
 void pwm_signal_duty_cycle_step(int delta)
 {
-    if ((int)TIM3->CCR4 + delta <= _pwm_resolution && (int)TIM3->CCR4 + delta >= 0) {
-        TIM3->CCR4 += delta;
+    uint32_t ccr_new = (int)LL_TIM_OC_GetCompare(tim) + delta;
+    if (ccr_new <= _pwm_resolution && ccr_new >= 0) {
+        LL_TIM_OC_SetCompare(tim, ccr_new);
     }
 }
 
 float pwm_signal_get_duty_cycle()
 {
-    return (float)(TIM3->CCR4) / _pwm_resolution;
+    return (float)(LL_TIM_OC_GetCompare(tim)) / _pwm_resolution;
 }
 
 void pwm_signal_start(float pwm_duty)
 {
     pwm_signal_set_duty_cycle(pwm_duty);
-
-    // Control Register 1
-    // TIM_CR1_CEN =  1: Counter enable
-    TIM3->CR1 |= TIM_CR1_CEN;   // edge-aligned mode
-
-    // Capture/Compare Enable Register
-    // CCxE = 1: Enable the output on OCx
-    // CCxP = 0: Active high polarity on OCx (default)
-    // CCxNE = 1: Enable the output on OC1N
-    // CCxNP = 0: Active high polarity on OC1N (default)
-    TIM3->CCER |= TIM_CCER_CC4E;
-
+    LL_TIM_CC_EnableChannel(tim, LL_TIM_CHANNEL);
     _pwm_active = true;
 }
 
 void pwm_signal_stop()
 {
-    TIM3->CR1 &= ~(TIM_CR1_CEN);
-    TIM3->CCER &= ~(TIM_CCER_CC4E);
-    TIM3->CCR4 = 0;
+    LL_TIM_CC_DisableChannel(tim, LL_TIM_CHANNEL);
     _pwm_active = false;
 }
 
 bool pwm_signal_high()
 {
-    return (GPIOB->IDR & GPIO_IDR_ID1);
+    return PWM_GPIO_PIN_HIGH;
 }
 
 bool pwm_active()

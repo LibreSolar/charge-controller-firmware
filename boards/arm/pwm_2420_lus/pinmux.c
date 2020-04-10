@@ -12,7 +12,12 @@
 
 #include <pinmux/stm32/pinmux_stm32.h>
 
+/* this should normally go to drivers/pinmux/stm32/pinmux_stm32l0.h */
+#define STM32L0_PINMUX_FUNC_PB1_PWM3_CH4                                      \
+	(STM32_PINMUX_ALT_FUNC_2 | STM32_PUSHPULL_NOPULL)
+
 static const struct pin_config pinconf[] = {
+	{STM32_PIN_PB1, STM32L0_PINMUX_FUNC_PB1_PWM3_CH4},
 #ifdef CONFIG_UART_1
 	{STM32_PIN_PA9, STM32L0_PINMUX_FUNC_PA9_USART1_TX},
 	{STM32_PIN_PA10, STM32L0_PINMUX_FUNC_PA10_USART1_RX},

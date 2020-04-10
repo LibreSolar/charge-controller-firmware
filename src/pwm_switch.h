@@ -32,6 +32,12 @@ public:
      */
     void control();
 
+    /** Test mode for PWM switch
+     *
+     * Sets duty cycle to 90% and listens to enable/disable signal
+     */
+    void test();
+
     /** Fast emergency stop function
      *
      * May be called from an ISR which detected overvoltage / overcurrent conditions

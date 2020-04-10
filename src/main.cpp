@@ -96,6 +96,8 @@ void control_thread()
     int wdt_channel = watchdog_register(200);
 
     while (1) {
+        bool charging = false;
+
         watchdog_feed(wdt_channel);
 
         // convert ADC readings to meaningful measurement values
@@ -108,14 +110,16 @@ void control_thread()
 
         #if DT_OUTPUTS_PWM_SWITCH_PRESENT
         pwm_switch.control();
-        leds_set_charging(pwm_switch.active());
+        charging |= pwm_switch.active();
         #endif
 
         #if DT_COMPAT_DCDC
         hv_terminal.update_bus_current_margins();
         dcdc.control();     // control of DC/DC including MPPT algorithm
-        leds_set_charging(half_bridge_enabled());
+        charging |= half_bridge_enabled();
         #endif
+
+        leds_set_charging(charging);
 
         #if DT_OUTPUTS_LOAD_PRESENT
         load.control();
