@@ -42,7 +42,7 @@ extern DeviceStatus dev_stat;
 #define VREF (VREFINT_VALUE * VREFINT_CAL / adc_value(ADC_POS_VREF_MCU))
 #endif
 
-#define ADC_GAIN(name) (DT_ADC_GAIN_##name##_NUMERATOR / DT_ADC_GAIN_##name##_DENOMINATOR)
+#define ADC_GAIN(name) ((float)DT_ADC_GAIN_##name##_NUMERATOR / DT_ADC_GAIN_##name##_DENOMINATOR)
 
 /**
  * Average value for ADC channel
