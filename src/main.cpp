@@ -42,7 +42,7 @@ void main(void)
     battery_conf_overwrite(&bat_conf, &bat_conf_user);  // initialize conf_user with same values
 
     // read custom configuration from EEPROM
-    data_objects_read_eeprom();
+    data_nodes_init();
 
     // Data Acquisition (DAQ) setup
     daq_setup();

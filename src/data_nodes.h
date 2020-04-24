@@ -12,6 +12,9 @@
  * @brief Handling of ThingSet data nodes
  */
 
+#include <stdint.h>
+#include <string.h>
+
 /*
  * Categories / first layer node IDs
  */
@@ -46,9 +49,31 @@
 extern bool pub_serial_enable;
 extern bool pub_can_enable;
 
-void data_objects_update_conf();
-void data_objects_read_eeprom();
+/**
+ * Callback function to be called when conf values were changed
+ */
+void data_nodes_update_conf();
 
+/**
+ * Initializes and reads data nodes from EEPROM
+ */
+void data_nodes_init();
+
+/**
+ * Callback to provide authentication mechanism via ThingSet
+ */
 void thingset_auth();
+
+/**
+ * Alphabet used for base32 encoding
+ *
+ * https://en.wikipedia.org/wiki/Base32#Crockford's_Base32
+ */
+const char alphabet_crockford[] = "0123456789abcdefghjkmnpqrstvwxyz";
+
+/**
+ * Convert numeric device ID to base32 string
+ */
+void uint64_to_base32(uint64_t in, char *out, size_t size, const char *alphabet);
 
 #endif /* DATA_OBJECTS_H */

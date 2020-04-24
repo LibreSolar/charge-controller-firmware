@@ -24,6 +24,11 @@ config CONTROL_FREQUENCY
 	  Frequencies higher than 10 Hz caused issues with MPPT control during lab test with
 	  PV simulator. Might be different with actual solar panel.
 
+config LIBRE_SOLAR_TYPE_ID
+    int
+    help
+      Numeric Libre Solar hardware type ID
+
 
 #
 # Visible (user-configurable) Kconfig symbols

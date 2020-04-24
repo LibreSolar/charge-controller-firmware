@@ -6,6 +6,9 @@ if BOARD_PWM_2420_LUS
 config BOARD
 	default "pwm_2420_lus"
 
+config LIBRE_SOLAR_TYPE_ID
+	default 5
+
 if UART_CONSOLE
 
 config UART_2

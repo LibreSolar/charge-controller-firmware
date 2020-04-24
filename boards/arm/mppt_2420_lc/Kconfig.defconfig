@@ -6,6 +6,9 @@ if BOARD_MPPT_2420_LC
 config BOARD
 	default "mppt_2420_lc"
 
+config LIBRE_SOLAR_TYPE_ID
+	default 1
+
 if UART_CONSOLE
 
 config UART_2

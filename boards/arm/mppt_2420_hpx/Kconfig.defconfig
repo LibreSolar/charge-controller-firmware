@@ -6,6 +6,9 @@ if BOARD_MPPT_2420_HPX
 config BOARD
 	default "mppt_2420_hpx"
 
+config LIBRE_SOLAR_TYPE_ID
+	default 7
+
 if UART_CONSOLE
 
 config UART_1

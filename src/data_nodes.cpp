@@ -8,6 +8,8 @@
 
 #ifndef UNIT_TEST
 #include <zephyr.h>
+#include <drivers/hwinfo.h>
+#include <sys/crc.h>
 #endif
 
 #include <stdio.h>
@@ -32,7 +34,7 @@ const char* const device_type = DT_CHARGE_CONTROLLER_PCB_TYPE;
 const char* const hardware_version = DT_CHARGE_CONTROLLER_PCB_VERSION_STR;
 const char* const firmware_version = "0.1";
 const char* const firmware_commit = COMMIT_HASH;
-uint32_t device_id = CONFIG_DEVICE_ID;
+char device_id[9];
 
 static char auth_password[11];
 
@@ -66,7 +68,7 @@ static DataNode data_nodes[] = {
 
     TS_NODE_PATH(ID_INFO, "info", 0, NULL),
 
-    TS_NODE_UINT32(0x19, "DeviceID", &(device_id),
+    TS_NODE_STRING(0x19, "DeviceID", device_id, sizeof(device_id),
         ID_INFO, TS_ANY_R | TS_MKR_W, PUB_NVM),
 
     TS_NODE_STRING(0x1A, "Manufacturer", manufacturer, 0,
@@ -90,7 +92,7 @@ static DataNode data_nodes[] = {
     // CONFIGURATION //////////////////////////////////////////////////////////
     // using IDs >= 0x30 except for high priority data objects
 
-    TS_NODE_PATH(ID_CONF, "conf", 0, &data_objects_update_conf),
+    TS_NODE_PATH(ID_CONF, "conf", 0, &data_nodes_update_conf),
 
     // battery settings
 
@@ -441,7 +443,7 @@ static DataNode data_nodes[] = {
 
 ThingSet ts(data_nodes, sizeof(data_nodes)/sizeof(DataNode));
 
-void data_objects_update_conf()
+void data_nodes_update_conf()
 {
     bool changed;
     if (battery_conf_check(&bat_conf_user)) {
@@ -464,8 +466,18 @@ void data_objects_update_conf()
         eeprom_store_data();
 }
 
-void data_objects_read_eeprom()
+void data_nodes_init()
 {
+#ifndef UNIT_TEST
+    uint8_t buf[12];
+    hwinfo_get_device_id(buf, sizeof(buf));
+
+    uint64_t id64 = crc32_ieee(buf, sizeof(buf));
+    id64 += ((uint64_t)CONFIG_LIBRE_SOLAR_TYPE_ID) << 32;
+
+    uint64_to_base32(id64, device_id, sizeof(device_id), alphabet_crockford);
+#endif
+
     eeprom_restore_data();
     if (battery_conf_check(&bat_conf_user)) {
         battery_conf_overwrite(&bat_conf_user, &bat_conf, &charger);
@@ -497,5 +509,25 @@ void thingset_auth()
         ts.set_authentication(TS_USR_MASK);
     }
 }
+
+void uint64_to_base32(uint64_t in, char *out, size_t size, const char *alphabet)
+{
+    // 13 is the maximum number of characters needed to encode 64-bit variable to base32
+    int len = (size > 13) ? 13 : size;
+
+    // find out actual length of output string
+    for (int i = 0; i < len; i++) {
+        if ((in >> (i * 5)) == 0) {
+            len = i;
+            break;
+        }
+    }
+
+    for (int i = 0; i < len; i++) {
+        out[len-i-1] = alphabet[(in >> (i * 5)) % 32];
+    }
+    out[len] = '\0';
+}
+
 
 #endif /* CUSTOM_DATA_NODES_FILE */
