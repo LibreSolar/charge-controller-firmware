@@ -27,7 +27,7 @@
 #include "load.h"               // load and USB output management
 #include "leds.h"               // LED switching using charlieplexing
 #include "device_status.h"      // log data (error memory, min/max measurements, etc.)
-#include "data_objects.h"       // for access to internal data via ThingSet
+#include "data_nodes.h"         // for access to internal data via ThingSet
 
 DcBus lv_bus;
 PowerPort lv_terminal(&lv_bus, true);   // low voltage terminal (battery for typical MPPT)

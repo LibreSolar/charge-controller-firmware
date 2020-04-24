@@ -27,6 +27,9 @@
 #define DT_CHARGE_CONTROLLER_PCB_TYPE "PCB-STUB"
 #define DT_CHARGE_CONTROLLER_PCB_VERSION_STR "v0.1"
 
+#define CONFIG_THINGSET_EXPERT_PASSWORD "expert123"
+#define CONFIG_THINGSET_MAKER_PASSWORD "maker456"
+
 // specify features of charge controller
 #define DT_COMPAT_DCDC  1
 #define DT_INST_0_DCDC_PWM_FREQUENCY 70000 // Hz

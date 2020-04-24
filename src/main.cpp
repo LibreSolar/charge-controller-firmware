@@ -27,7 +27,7 @@
 #include "load.h"               // load and USB output management
 #include "leds.h"               // LED switching using charlieplexing
 #include "device_status.h"      // log data (error memory, min/max measurements, etc.)
-#include "data_objects.h"       // for access to internal data via ThingSet
+#include "data_nodes.h"         // for access to internal data via ThingSet
 
 void main(void)
 {
@@ -43,11 +43,6 @@ void main(void)
 
     // read custom configuration from EEPROM
     data_objects_read_eeprom();
-
-    // after each configuration change, data should be written back to EEPROM
-    ts.set_conf_callback(data_objects_update_conf);
-    ts.set_user_password(CONFIG_THINGSET_USER_PASSWORD);
-    ts.set_maker_password(CONFIG_THINGSET_MAKER_PASSWORD);
 
     // Data Acquisition (DAQ) setup
     daq_setup();

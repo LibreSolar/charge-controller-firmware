@@ -14,7 +14,7 @@ include_directories(../src)
 
 target_sources(app PRIVATE
         ../src/bat_charger.cpp
-        ../src/data_objects.cpp
+        ../src/data_nodes.cpp
         ../src/daq.cpp
         ../src/daq_driver.c
         ../src/device_status.cpp

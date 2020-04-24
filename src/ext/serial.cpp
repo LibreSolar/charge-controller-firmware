@@ -17,6 +17,7 @@
 #include <drivers/uart.h>
 
 #include "thingset.h"
+#include "data_nodes.h"
 
 #define TX_BUF_SIZE CONFIG_EXT_THINGSET_SERIAL_TX_BUF_SIZE
 #define RX_BUF_SIZE CONFIG_EXT_THINGSET_SERIAL_RX_BUF_SIZE
@@ -27,15 +28,13 @@ struct device *uart_dev = device_get_binding(UART_DEVICE_NAME);
 class ThingSetStream: public ExtInterface
 {
 public:
-    ThingSetStream(const unsigned int c): channel(c){};
+    ThingSetStream() {};
 
     virtual void process_asap();
     virtual void process_1s();
 
 protected:
     static void process_input(void*);
-
-    const unsigned int channel;
 
     static bool readable()
     {
@@ -71,7 +70,7 @@ private:
 class ThingSetSerial: public ThingSetStream
 {
 public:
-    ThingSetSerial(const int c): ThingSetStream(c){}
+    ThingSetSerial(): ThingSetStream(){}
 
     void enable() {
         /* Configure UART ISR: Configure a Callback function */
@@ -92,9 +91,7 @@ public:
 
 #ifdef CONFIG_EXT_THINGSET_SERIAL
 
-extern const int pub_channel_serial;
-
-ThingSetSerial ts_uart(pub_channel_serial);
+ThingSetSerial ts_uart;
 
 #endif /* CONFIG_EXT_THINGSET_SERIAL */
 
@@ -102,8 +99,8 @@ extern ThingSet ts;
 
 void ThingSetStream::process_1s()
 {
-    if (ts.get_pub_channel(channel)->enabled) {
-        int len = ts.pub_msg_json(buf_resp, sizeof(buf_resp), channel);
+    if (pub_serial_enable) {
+        int len = ts.txt_pub(buf_resp, sizeof(buf_resp), PUB_SER);
         for (int i = 0; i < len; i++) {
             uart_poll_out(uart_dev, buf_resp[i]);
         }
