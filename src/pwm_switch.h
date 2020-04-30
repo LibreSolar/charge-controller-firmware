@@ -68,6 +68,7 @@ public:
     float offset_voltage_start;     ///< Offset voltage of solar panel vs. battery to start charging (V)
     int restart_interval;           ///< Interval to wait before retrying charging after low solar power cut-off (s)
     time_t off_timestamp;           ///< Time when charger was switched off last time
+    time_t power_good_timestamp;   ///< Last time the current through the switch was above minimum
 };
 #endif
 

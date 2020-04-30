@@ -64,14 +64,19 @@ void PwmSwitch::test()
 void PwmSwitch::control()
 {
     if (pwm_active()) {
+        if (current < -0.1) {
+            power_good_timestamp = uptime();     // reset the time
+        }
+
         if (neg_current_limit == 0
-            || current > -0.1        // discharging battery into solar panel --> stop
+            || (uptime() - power_good_timestamp > 10)      // low power since 10s
+            || current > 0.5         // discharging battery into solar panel --> stop
             || bus->voltage < 9.0    // not enough voltage for MOSFET drivers anymore
             || enable == false)
         {
             pwm_signal_stop();
             off_timestamp = uptime();
-            print_info("PWM charger stop.\n");
+            print_info("PWM charger stop, current = %.3fA\n", current);
         }
         else if (bus->voltage > bus->sink_control_voltage()   // bus voltage above target
             || current < neg_current_limit                    // port current limit exceeded
@@ -117,6 +122,7 @@ void PwmSwitch::control()
             // turning the PWM switch on creates a short voltage rise, so inhibit alerts by 50 ms
             adc_upper_alert_inhibit(ADC_POS_V_LOW, 50);
             pwm_signal_start(1);
+            power_good_timestamp = uptime();
             print_info("PWM charger start.\n");
         }
     }
