@@ -66,14 +66,14 @@
 	v-low {
 		compatible = "adc-gain";
 		io-channels = <&adc1 12>;
-		numerator = <102200>;
+		numerator = <105600>;
 		denominator = <5600>;
 	};
 
 	v-high {
 		compatible = "adc-gain";
 		io-channels = <&adc1 15>;
-		numerator = <105600>;
+		numerator = <102200>;
 		denominator = <2200>;
 	};
 
