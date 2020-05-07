@@ -24,7 +24,9 @@ static float dcdc_current_offset;
 #if DT_OUTPUTS_PWM_SWITCH_PRESENT
 static float pwm_current_offset;
 #endif
+#if DT_OUTPUTS_LOAD_PRESENT
 static float load_current_offset;
+#endif
 
 // for ADC and DMA
 volatile uint16_t adc_readings[NUM_ADC_CH] = {};
@@ -104,7 +106,9 @@ void calibrate_current_sensors()
 #if DT_OUTPUTS_PWM_SWITCH_PRESENT
     pwm_current_offset = -adc_scaled(ADC_POS_I_PWM, vref, ADC_GAIN(I_PWM));
 #endif
+#if DT_OUTPUTS_LOAD_PRESENT
     load_current_offset = -adc_scaled(ADC_POS_I_LOAD, vref, ADC_GAIN(I_LOAD));
+#endif
 }
 
 void adc_update_value(unsigned int pos)
@@ -173,7 +177,12 @@ void daq_update()
         adc_scaled(ADC_POS_V_PWM, vref, ADC_GAIN(V_PWM), DT_ADC_GAIN_V_PWM_RAW_OFFSET);
 #endif
 
+#if DT_OUTPUTS_LOAD_PRESENT
     load.current = adc_scaled(ADC_POS_I_LOAD, vref, ADC_GAIN(I_LOAD)) + load_current_offset;
+    float load_current = load.current;
+#else
+    float load_current = 0;     // value used below, so we still need to define the variable
+#endif
 
 #if DT_OUTPUTS_PWM_SWITCH_PRESENT
     // current multiplied with PWM duty cycle for PWM charger to get avg current for correct power
@@ -181,7 +190,7 @@ void daq_update()
     pwm_switch.current = -pwm_switch.get_duty_cycle() * (
         adc_scaled(ADC_POS_I_PWM, vref, ADC_GAIN(I_PWM)) + pwm_current_offset);
 
-    lv_terminal.current = -pwm_switch.current - load.current;
+    lv_terminal.current = -pwm_switch.current - load_current;
 
     pwm_switch.power = pwm_switch.bus->voltage * pwm_switch.current;
 #endif
@@ -190,7 +199,7 @@ void daq_update()
     dcdc_lv_port.current =
         adc_scaled(ADC_POS_I_DCDC, vref, ADC_GAIN(I_DCDC)) + dcdc_current_offset;
 
-    lv_terminal.current = dcdc_lv_port.current - load.current;
+    lv_terminal.current = dcdc_lv_port.current - load_current;
 
     hv_terminal.current = -dcdc_lv_port.current * lv_terminal.bus->voltage / hv_terminal.bus->voltage;
 
@@ -198,7 +207,10 @@ void daq_update()
     hv_terminal.power   = hv_terminal.bus->voltage * hv_terminal.current;
 #endif
     lv_terminal.power   = lv_terminal.bus->voltage * lv_terminal.current;
+
+#if DT_OUTPUTS_LOAD_PRESENT
     load.power = load.bus->voltage * load.current;
+#endif
 
 #ifdef PIN_ADC_TEMP_BAT
     // battery temperature calculation
@@ -256,8 +268,10 @@ void high_voltage_alert()
 
 void low_voltage_alert()
 {
+#if DT_OUTPUTS_LOAD_PRESENT
     // the battery undervoltage must have been caused by a load current peak
     load.stop(ERR_LOAD_VOLTAGE_DIP);
+#endif
 
     print_error("Low voltage alert, ADC reading: %d limit: %d\n",
         adc_readings[ADC_POS_V_LOW], adc_alerts_lower[ADC_POS_V_LOW].limit);

@@ -21,9 +21,11 @@
 #include <stm32g4xx_ll_system.h>
 #endif
 
+#if DT_OUTPUTS_LOAD_PRESENT
 static struct device *dev_load;
+#endif
 
-#ifdef DT_OUTPUTS_USB_PWR_PRESENT
+#if DT_OUTPUTS_USB_PWR_PRESENT
 static struct device *dev_usb;
 #endif
 

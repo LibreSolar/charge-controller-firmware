@@ -10,6 +10,8 @@
 #include <zephyr.h>
 #endif
 
+#if DT_OUTPUTS_LOAD_PRESENT || UNIT_TEST
+
 #include "board.h"
 #include "leds.h"
 #include "device_status.h"
@@ -158,3 +160,5 @@ void load_short_circuit_stop()
 {
     load.stop(ERR_LOAD_SHORT_CIRCUIT);
 }
+
+#endif /* DT_OUTPUTS_LOAD_PRESENT */

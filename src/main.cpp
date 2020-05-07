@@ -60,8 +60,11 @@ void main(void)
 
     charger.detect_num_batteries(&bat_conf);     // check if we have 24V instead of 12V system
     charger.init_terminal(&bat_conf);
+
+    #if DT_OUTPUTS_LOAD_PRESENT
     load.set_voltage_limits(bat_conf.voltage_load_disconnect, bat_conf.voltage_load_reconnect,
         bat_conf.voltage_absolute_max);
+    #endif
 
     #if DT_OUTPUTS_USB_PWR_PRESENT
     usb_pwr.set_voltage_limits(bat_conf.voltage_load_disconnect - 0.1, // keep on longer than load
@@ -77,7 +80,12 @@ void main(void)
         charger.charge_control(&bat_conf);
 
         leds_update_1s();
+
+        #if DT_OUTPUTS_LOAD_PRESENT
         leds_update_soc(charger.soc, flags_check(&load.error_flags, ERR_LOAD_SHEDDING));
+        #else
+        leds_update_soc(charger.soc, false);
+        #endif
 
         eeprom_update();
 
@@ -138,7 +146,11 @@ void control_thread()
             #endif
 
             lv_terminal.energy_balance();
+
+            #if DT_OUTPUTS_LOAD_PRESENT
             load.energy_balance();
+            #endif
+
             dev_stat.update_energy();
             dev_stat.update_min_max_values();
             charger.update_soc(&bat_conf);

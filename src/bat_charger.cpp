@@ -20,6 +20,13 @@
 extern DeviceStatus dev_stat;
 extern LoadOutput load;
 
+// DISCHARGE_CURRENT_MAX used to estimate current-compensation of load disconnect voltage
+#ifdef DT_OUTPUTS_LOAD_CURRENT_MAX
+#define DISCHARGE_CURRENT_MAX DT_OUTPUTS_LOAD_CURRENT_MAX
+#else
+#define DISCHARGE_CURRENT_MAX DT_INST_0_DCDC_CURRENT_MAX
+#endif
+
 void battery_conf_init(BatConf *bat, int type, int num_cells, float nominal_capacity)
 {
     bat->nominal_capacity = nominal_capacity;
@@ -50,7 +57,7 @@ void battery_conf_init(BatConf *bat, int type, int num_cells, float nominal_capa
             bat->voltage_load_reconnect = num_cells * 2.10;
 
             // assumption: Battery selection matching charge controller
-            bat->internal_resistance = num_cells * (1.95 - 1.80) / DT_OUTPUTS_LOAD_CURRENT_MAX;
+            bat->internal_resistance = num_cells * (1.95 - 1.80) / DISCHARGE_CURRENT_MAX;
 
             bat->voltage_absolute_min = num_cells * 1.6;
 
@@ -88,8 +95,7 @@ void battery_conf_init(BatConf *bat, int type, int num_cells, float nominal_capa
             bat->voltage_load_reconnect  = num_cells * 3.15;
 
             // 5% voltage drop at max current
-            bat->internal_resistance = bat->voltage_load_disconnect * 0.05 /
-                DT_OUTPUTS_LOAD_CURRENT_MAX;
+            bat->internal_resistance = bat->voltage_load_disconnect * 0.05 / DISCHARGE_CURRENT_MAX;
             bat->voltage_absolute_min = num_cells * 2.0;
 
             bat->ocv_full = num_cells * 3.4;       // will give really nonlinear SOC calculation
@@ -114,8 +120,7 @@ void battery_conf_init(BatConf *bat, int type, int num_cells, float nominal_capa
             bat->voltage_load_reconnect  = num_cells * 3.6;
 
             // 5% voltage drop at max current
-            bat->internal_resistance = bat->voltage_load_disconnect * 0.05 /
-                DT_OUTPUTS_LOAD_CURRENT_MAX;
+            bat->internal_resistance = bat->voltage_load_disconnect * 0.05 / DISCHARGE_CURRENT_MAX;
 
             bat->voltage_absolute_min = num_cells * 2.5;
 
@@ -165,10 +170,9 @@ bool battery_conf_check(BatConf *bat_conf)
         bat_conf->voltage_load_disconnect > (bat_conf->voltage_absolute_min + 0.4) &&
         // max. 10% drop
         bat_conf->internal_resistance < bat_conf->voltage_load_disconnect * 0.1 /
-            DT_OUTPUTS_LOAD_CURRENT_MAX &&
+            DISCHARGE_CURRENT_MAX &&
         // max. 3% loss
-        bat_conf->wire_resistance < bat_conf->topping_voltage * 0.03 /
-            DT_OUTPUTS_LOAD_CURRENT_MAX &&
+        bat_conf->wire_resistance < bat_conf->topping_voltage * 0.03 / DISCHARGE_CURRENT_MAX &&
         // C/10 or lower current cutoff allowed
         bat_conf->topping_current_cutoff < (bat_conf->nominal_capacity / 10.0) &&
         bat_conf->topping_current_cutoff > 0.01 &&
@@ -298,6 +302,7 @@ void Charger::enter_state(int next_state)
 
 void Charger::discharge_control(BatConf *bat_conf)
 {
+#if DT_OUTPUTS_LOAD_PRESENT || DT_OUTPUTS_USB_PWR_PRESENT
     if (!empty) {
         // as we don't have a proper SOC estimation, we determine an empty battery by the main
         // load output being switched off
@@ -371,6 +376,7 @@ void Charger::discharge_control(BatConf *bat_conf)
 
         }
     }
+#endif // DT_OUTPUTS_LOAD_PRESENT || DT_OUTPUTS_USB_PWR_PRESENT
 }
 
 void Charger::charge_control(BatConf *bat_conf)
