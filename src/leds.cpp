@@ -81,7 +81,7 @@ void leds_update_thread()
         led_count++;
         flicker_count++;
 
-        k_sleep(SLEEP_TIME_MS);
+        k_sleep(K_MSEC(SLEEP_TIME_MS));
     }
 }
 

@@ -72,7 +72,7 @@ void main(void)
     #endif
 
     // wait until all threads are spawned before activating the watchdog
-    k_sleep(2500);
+    k_sleep(K_MSEC(2500));
     watchdog_start();
 
     while (1) {
@@ -89,7 +89,7 @@ void main(void)
 
         eeprom_update();
 
-        k_sleep(1000);
+        k_sleep(K_MSEC(1000));
     }
 }
 
@@ -161,7 +161,7 @@ void control_thread()
             }
             #endif
         }
-        k_sleep(100);
+        k_sleep(K_MSEC(100));
     }
 }
 
@@ -182,7 +182,7 @@ void ext_mgr_thread()
             last_call = now;
             ext_mgr.process_1s();
         }
-        k_sleep(1);
+        k_sleep(K_MSEC(1));
     }
 }
 

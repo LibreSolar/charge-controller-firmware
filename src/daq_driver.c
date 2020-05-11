@@ -314,7 +314,7 @@ void daq_setup()
     k_timer_init(&adc_trigger_timer, adc_trigger_conversion, NULL);
     k_timer_start(&adc_trigger_timer, K_MSEC(1), K_MSEC(1));        // 1 kHz
 
-    k_sleep(500);      // wait for ADC to collect some measurement values
+    k_sleep(K_MSEC(500));      // wait for ADC to collect some measurement values
     daq_update();
     calibrate_current_sensors();
 }

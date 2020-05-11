@@ -71,7 +71,7 @@ void start_stm32_bootloader()
     gpio_pin_configure(dev, DT_OUTPUTS_BOOT0_GPIOS_PIN,
         DT_OUTPUTS_BOOT0_GPIOS_FLAGS | GPIO_OUTPUT_ACTIVE);
 
-    k_sleep(100);   // wait for capacitor at BOOT0 pin to charge up
+    k_sleep(K_MSEC(100));   // wait for capacitor at BOOT0 pin to charge up
     reset_device();
 #elif defined (CONFIG_SOC_SERIES_STM32F0X)
     // place magic code at end of RAM and initiate reset
