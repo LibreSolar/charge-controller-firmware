@@ -309,7 +309,6 @@ void Charger::discharge_control(BatConf *bat_conf)
         if (flags_check(&load.error_flags, ERR_LOAD_SHEDDING)) {
             empty = true;
             num_deep_discharges++;
-            dev_stat.set_error(ERR_BAT_UNDERVOLTAGE);
 
             if (usable_capacity == 0.0F) {
                 // reset to measured value if discharged the first time
