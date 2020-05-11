@@ -14,19 +14,21 @@
 
 #include "setup.h"
 
-static void init_structs_buck()
+static void init_structs_buck(int num_batteries = 1)
 {
     dev_stat.error_flags = 0;
     hv_terminal.init_solar();
-    hv_terminal.bus->voltage = 20;
-    hv_terminal.bus->src_voltage_bound = 18;
+    hv_terminal.bus->voltage = 20 * num_batteries;
+    hv_terminal.bus->src_voltage_bound = 18 * num_batteries;
+    hv_terminal.bus->series_multiplier = 1;
     hv_terminal.current = 0;
     hv_terminal.update_bus_current_margins();
 
     battery_conf_init(&bat_conf, BAT_TYPE_GEL, 6, 100);
     charger.port = &dcdc_lv_port;
     charger.init_terminal(&bat_conf);
-    dcdc_lv_port.bus->voltage = 14;
+    dcdc_lv_port.bus->voltage = 14 * num_batteries;
+    dcdc_lv_port.bus->series_multiplier = num_batteries;
     dcdc_lv_port.current = 0;
     dcdc_lv_port.update_bus_current_margins();
 
@@ -49,21 +51,24 @@ static void start_buck()
     TEST_ASSERT_EQUAL(DCDC_STATE_MPPT, dcdc.state);
 }
 
-static void init_structs_boost()
+static void init_structs_boost(int num_batteries = 1)
 {
     half_bridge_stop();
 
     hv_terminal.init_solar();
     dcdc_lv_port.bus->voltage = 20;
     dcdc_lv_port.bus->src_voltage_bound = 18;
+    dcdc_lv_port.bus->series_multiplier = 1;
     dcdc_lv_port.current = 0;
     dcdc_lv_port.power = 0;
     dcdc_lv_port.update_bus_current_margins();
 
-    battery_conf_init(&bat_conf, BAT_TYPE_NMC, 10, 9);
+    int num_cells = (num_batteries == 1) ? 10 : 5;
+    battery_conf_init(&bat_conf, BAT_TYPE_NMC, num_cells, 9);
     charger.port = &hv_terminal;
     charger.init_terminal(&bat_conf);
-    hv_terminal.bus->voltage = 3.7 * 10;
+    hv_terminal.bus->voltage = 3.7 * num_cells * num_batteries;
+    hv_terminal.bus->series_multiplier = num_batteries;
     hv_terminal.current = 0;
     hv_terminal.power = 0;
     hv_terminal.update_bus_current_margins();
@@ -92,9 +97,21 @@ void start_valid_mppt_buck()
     TEST_ASSERT_EQUAL(1, dcdc.check_start_conditions());
 }
 
+void start_valid_mppt_buck_dual_battery()
+{
+    init_structs_buck(2);
+    TEST_ASSERT_EQUAL(1, dcdc.check_start_conditions());
+}
+
 void start_valid_mppt_boost()
 {
     init_structs_boost();
+    TEST_ASSERT_EQUAL(-1, dcdc.check_start_conditions());
+}
+
+void start_valid_mppt_boost_dual_battery()
+{
+    init_structs_boost(2);
     TEST_ASSERT_EQUAL(-1, dcdc.check_start_conditions());
 }
 
@@ -386,7 +403,9 @@ void dcdc_tests()
 
     // check if initialization of test is correct and we start at all
     RUN_TEST(start_valid_mppt_buck);
+    RUN_TEST(start_valid_mppt_buck_dual_battery);
     RUN_TEST(start_valid_mppt_boost);
+    RUN_TEST(start_valid_mppt_boost_dual_battery);
 
     RUN_TEST(no_start_before_restart_delay);
     RUN_TEST(no_start_if_dcdc_disabled);

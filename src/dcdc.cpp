@@ -102,7 +102,7 @@ int Dcdc::duty_cycle_delta()
         state = DCDC_STATE_DERATING;
         pwr_inc_goal = -1;  // decrease output power
     }
-    else if (out->power < output_power_min && out->bus->voltage < out->bus->src_voltage_bound) {
+    else if (out->power < output_power_min && out->bus->voltage < out->bus->src_control_voltage()) {
         // no load condition (e.g. start-up of nanogrid) --> raise voltage
         pwr_inc_goal = 1;   // increase output power
     }
@@ -141,18 +141,18 @@ int Dcdc::check_start_conditions()
     }
 
     if (lvs->bus->sink_current_margin > 0 &&
-        lvs->bus->voltage < lvs->bus->sink_voltage_bound &&
+        lvs->bus->voltage < lvs->bus->sink_control_voltage() &&
         hvs->bus->src_current_margin < 0 &&
-        hvs->bus->voltage > hvs->bus->src_voltage_bound &&
+        hvs->bus->voltage > hvs->bus->src_control_voltage() &&
         hvs->bus->voltage * 0.85 > lvs->bus->voltage)
     {
         return 1;       // start in buck mode allowed
     }
 
     if (hvs->bus->sink_current_margin > 0 &&
-        hvs->bus->voltage < hvs->bus->sink_voltage_bound &&
+        hvs->bus->voltage < hvs->bus->sink_control_voltage() &&
         lvs->bus->src_current_margin < 0 &&
-        lvs->bus->voltage > lvs->bus->src_voltage_bound)
+        lvs->bus->voltage > lvs->bus->src_control_voltage())
     {
         return -1;      // start in boost mode allowed
     }
