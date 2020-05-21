@@ -69,8 +69,8 @@ void LoadOutput::control()
 
         // long-term overvoltage (overvoltage transients are detected as an ADC alert and switch
         // off the solar input instead of the load output)
-        if (bus->voltage > overvoltage || bus->voltage >
-            DT_CHARGE_CONTROLLER_PCB_LS_VOLTAGE_MAX)
+        if (bus->voltage > bus->series_voltage(overvoltage) ||
+            bus->voltage > DT_CHARGE_CONTROLLER_PCB_LS_VOLTAGE_MAX)
         {
             ov_debounce_counter++;
             if (ov_debounce_counter > CONFIG_CONTROL_FREQUENCY) {
@@ -108,7 +108,7 @@ void LoadOutput::control()
         }
 
         if (flags_check(&error_flags, ERR_LOAD_OVERVOLTAGE) &&
-            bus->voltage < (overvoltage - ov_hysteresis) &&
+            bus->voltage < (bus->series_voltage(overvoltage) - ov_hysteresis) &&
             bus->voltage < (DT_CHARGE_CONTROLLER_PCB_LS_VOLTAGE_MAX - ov_hysteresis))
         {
             flags_clear(&error_flags, ERR_LOAD_OVERVOLTAGE);

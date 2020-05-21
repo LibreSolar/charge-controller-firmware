@@ -35,7 +35,7 @@ public:
      *
      * Used for automatic 12V/24V battery detection at start-up (can be 1 or 2 only)
      *
-     * This factur must be applied to all voltage setpoints
+     * This factor must be applied to all voltage setpoints
      */
     int16_t series_multiplier = 1;
 
@@ -119,6 +119,18 @@ public:
         else {
             return v0 * series_multiplier;
         }
+    }
+
+    /**
+     * Calculate voltage for series connected batteries based on setpoint for single battery
+     *
+     * @param single_voltage Voltage for single battery
+     *
+     * @returns Total voltage
+     */
+    inline float series_voltage(float single_voltage)
+    {
+        return single_voltage * series_multiplier;
     }
 };
 

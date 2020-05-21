@@ -26,12 +26,13 @@ static void load_drv_init()
     output_on = false;
 }
 
-static void load_init(LoadOutput *l, bool on = false)
+static void load_init(LoadOutput *l, bool on = false, int num_batteries = 1)
 {
     l->overvoltage = 14.6;
     l->current = 0;
     l->pos_current_limit = 10;
-    l->bus->voltage = 14;
+    l->bus->series_multiplier = num_batteries;
+    l->bus->voltage = 14 * num_batteries;
     l->bus->sink_voltage_bound = 14.4;
     l->bus->src_voltage_bound = 12;
     l->bus->sink_current_margin = 10;
@@ -62,6 +63,18 @@ static void control_off_to_on_if_everything_fine()
     TEST_ASSERT_EQUAL(LOAD_STATE_ON, load_out.state);
 }
 
+static void control_off_to_on_if_everything_fine_dual_battery()
+{
+    DcBus bus = {};
+    LoadOutput load_out(&bus, &load_drv_set, &load_drv_init);
+    load_init(&load_out, false, 2);
+
+    load_out.enable = true;
+    load_out.control();
+    TEST_ASSERT_EQUAL(0, load_out.error_flags);
+    TEST_ASSERT_EQUAL(LOAD_STATE_ON, load_out.state);
+}
+
 static void control_on_to_off_shedding()
 {
     DcBus bus = {};
@@ -81,6 +94,27 @@ void control_on_to_off_overvoltage()
     load_init(&load_out, true);
 
     bus.voltage = bus.sink_voltage_bound + 0.6;
+
+    // increase debounce counter to 1 before limit
+    for (int i = 0; i < CONFIG_CONTROL_FREQUENCY; i++) {
+        load_out.control();
+    }
+
+    TEST_ASSERT_EQUAL(0, load_out.error_flags);
+    TEST_ASSERT_EQUAL(LOAD_STATE_ON, load_out.state);
+
+    load_out.control();     // once more
+    TEST_ASSERT_EQUAL(ERR_LOAD_OVERVOLTAGE, load_out.error_flags);
+    TEST_ASSERT_EQUAL(LOAD_STATE_OFF, load_out.state);
+}
+
+void control_on_to_off_overvoltage_dual_battery()
+{
+    DcBus bus = {};
+    LoadOutput load_out(&bus, &load_drv_set, &load_drv_init);
+    load_init(&load_out, true, 2);
+
+    bus.voltage = (bus.sink_voltage_bound + 0.6) * bus.series_multiplier;
 
     // increase debounce counter to 1 before limit
     for (int i = 0; i < CONFIG_CONTROL_FREQUENCY; i++) {
@@ -209,6 +243,29 @@ void control_off_overvoltage_to_on_at_lower_voltage()
     TEST_ASSERT_EQUAL(LOAD_STATE_ON, load_out.state);
 }
 
+void control_off_overvoltage_to_on_at_lower_voltage_dual_battery()
+{
+    DcBus bus = {};
+    LoadOutput load_out(&bus, &load_drv_set, &load_drv_init);
+    load_init(&load_out, false, 2);
+    bus.voltage = (load_out.overvoltage + 0.1) * bus.series_multiplier;
+    load_out.error_flags = ERR_LOAD_OVERVOLTAGE;
+
+    load_out.control();
+    TEST_ASSERT_EQUAL(ERR_LOAD_OVERVOLTAGE, load_out.error_flags);
+    TEST_ASSERT_EQUAL(LOAD_STATE_OFF, load_out.state);
+
+    bus.voltage = (load_out.overvoltage - 0.1) * bus.series_multiplier;     // test hysteresis
+    load_out.control();
+    TEST_ASSERT_EQUAL(ERR_LOAD_OVERVOLTAGE, load_out.error_flags);
+    TEST_ASSERT_EQUAL(LOAD_STATE_OFF, load_out.state);
+
+    bus.voltage = (load_out.overvoltage - load_out.ov_hysteresis - 0.1) * bus.series_multiplier;
+    load_out.control();
+    TEST_ASSERT_EQUAL(0, load_out.error_flags);
+    TEST_ASSERT_EQUAL(LOAD_STATE_ON, load_out.state);
+}
+
 void control_off_short_circuit_flag_reset()
 {
     DcBus bus = {};
@@ -236,8 +293,10 @@ void load_tests()
 
     // control tests
     RUN_TEST(control_off_to_on_if_everything_fine);
+    RUN_TEST(control_off_to_on_if_everything_fine_dual_battery);
     RUN_TEST(control_on_to_off_shedding);
     RUN_TEST(control_on_to_off_overvoltage);
+    RUN_TEST(control_on_to_off_overvoltage_dual_battery);
     RUN_TEST(control_on_to_off_overcurrent);
     RUN_TEST(control_on_to_off_voltage_dip);
     RUN_TEST(control_on_to_off_bus_limit);
@@ -246,6 +305,7 @@ void load_tests()
     RUN_TEST(control_off_shedding_to_on_after_delay);
     RUN_TEST(control_off_overcurrent_to_on_after_delay);
     RUN_TEST(control_off_overvoltage_to_on_at_lower_voltage);
+    RUN_TEST(control_off_overvoltage_to_on_at_lower_voltage_dual_battery);
     RUN_TEST(control_off_short_circuit_flag_reset);
 
     // ToDo: What to do if port current is above the limit, but the hardware can still handle it?
