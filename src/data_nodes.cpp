@@ -22,7 +22,7 @@
 
 // can be used to configure custom data objects in separate file instead
 // (e.g. data_nodes_custom.cpp)
-#ifndef CUSTOM_DATA_NODES_FILE
+#ifndef CONFIG_CUSTOM_DATA_NODES_FILE
 
 #include "thingset.h"
 #include "hardware.h"
