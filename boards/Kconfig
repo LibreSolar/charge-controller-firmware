@@ -29,6 +29,11 @@ config LIBRE_SOLAR_TYPE_ID
     help
       Numeric Libre Solar hardware type ID
 
+config CUSTOM_DATA_NODES_FILE
+    bool
+    default n
+    help
+      Use the custom made data_nodes file
 
 #
 # Visible (user-configurable) Kconfig symbols

@@ -12,6 +12,8 @@ add_definitions(-D__ZEPHYR__ -DDEBUG_PRINT_FLAGS=7)
 
 include_directories(../src)
 
+target_sources_if_kconfig(CONFIG_CUSTOM_DATA_NODES_FILE, app PRIVATE ../src/data_nodes_custom.cpp)
+
 target_sources(app PRIVATE
         ../src/bat_charger.cpp
         ../src/data_nodes.cpp
