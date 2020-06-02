@@ -27,11 +27,48 @@
 void half_bridge_init(int freq_kHz, int deadtime_ns, float min_duty, float max_duty);
 
 /**
+ * Set raw timer capture/compare register
+ *
+ * This function allows to change the PWM with minimum step size.
+ *
+ * @param ccr Timer CCR value (between 0 and ARR)
+ */
+void half_bridge_set_ccr(uint16_t ccr);
+
+/**
+ * Get raw timer capture/compare register
+ *
+ * @returns Timer CCR value (between 0 and ARR)
+ */
+uint16_t half_bridge_get_ccr();
+
+/**
+ * Get raw timer auto-reload register
+ *
+ * @returns Timer ARR value
+ */
+uint16_t half_bridge_get_arr();
+
+/**
+ * Set the duty cycle of the PWM signal
+ *
+ * @param duty Duty cycle between 0.0 and 1.0
+ */
+void half_bridge_set_duty_cycle(float duty);
+
+/**
+ * Read the currently set duty cycle
+ *
+ * @returns Duty cycle between 0.0 and 1.0
+ */
+float half_bridge_get_duty_cycle();
+
+/**
  * Start the PWM generation
  *
- * @param pwm_duty Duty cycle between 0.0 and 1.0
+ * Important: Valid duty cycle / CCR has to be set before starting
  */
-void half_bridge_start(float pwm_duty);
+void half_bridge_start();
 
 /**
  * Stop the PWM generation
@@ -44,26 +81,5 @@ void half_bridge_stop();
  * @returns True if PWM output enabled
  */
 bool half_bridge_enabled();
-
-/**
- * Set the duty cycle of the PWM signal
- *
- * @param duty Duty cycle between 0.0 and 1.0
- */
-void half_bridge_set_duty_cycle(float duty);
-
-/**
- * Adjust the duty cycle with minimum step size
- *
- * @param delta Number of steps (positive or negative)
- */
-void half_bridge_duty_cycle_step(int delta);
-
-/**
- * Read the currently set duty cycle
- *
- * @returns Duty cycle between 0.0 and 1.0
- */
-float half_bridge_get_duty_cycle();
 
 #endif /* HALF_BRIDGE_H_ */

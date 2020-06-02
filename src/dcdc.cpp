@@ -176,7 +176,8 @@ void Dcdc::control()
                 stop_reason =  "low power";
             }
             else {
-                half_bridge_duty_cycle_step(step);
+                // change duty cycle by single minimum step
+                half_bridge_set_ccr(half_bridge_get_ccr() + step);
             }
         }
 
@@ -221,14 +222,15 @@ void Dcdc::control()
                         mode_name = "buck";
                         // Don't start directly at Vmpp (approx. 0.8 * Voc) to prevent high inrush
                         // currents and stress on MOSFETs
-                        half_bridge_start(lvs->bus->voltage / (hvs->bus->voltage - 1));
+                        half_bridge_set_duty_cycle(lvs->bus->voltage / (hvs->bus->voltage - 1));
                     }
                     else {
                         mode_name = "boost";
                         // Will automatically start with max. duty (0.97) if connected to a
                         // nanogrid not yet started up (zero voltage)
-                        half_bridge_start(lvs->bus->voltage / (hvs->bus->voltage + 1));
+                        half_bridge_set_duty_cycle(lvs->bus->voltage / (hvs->bus->voltage + 1));
                     }
+                    half_bridge_start();
                     power_good_timestamp = uptime();
                     print_info("DC/DC %s mode start (HV: %.2fV, LV: %.2fV, PWM: %.1f).\n", mode_name,
                         hvs->bus->voltage, lvs->bus->voltage, half_bridge_get_duty_cycle() * 100);
@@ -243,7 +245,7 @@ void Dcdc::test()
 {
     if (half_bridge_enabled()) {
         if (half_bridge_get_duty_cycle() > 0.5) {
-            half_bridge_duty_cycle_step(-1);
+            half_bridge_set_ccr(half_bridge_get_ccr() - 1);
         }
     }
     else {
@@ -255,7 +257,8 @@ void Dcdc::test()
 
         if (startup_delay_counter > num_wait_calls) {
             if (check_start_conditions() != 0) {
-                half_bridge_start(lvs->bus->voltage / hvs->bus->voltage);
+                half_bridge_set_duty_cycle(lvs->bus->voltage / hvs->bus->voltage);
+                half_bridge_start();
                 print_info("DC/DC test mode start (HV: %.2fV, LV: %.2fV, PWM: %.1f).\n",
                     hvs->bus->voltage, lvs->bus->voltage, half_bridge_get_duty_cycle() * 100);
             }
@@ -282,7 +285,8 @@ void Dcdc::fuse_destruction()
         eeprom_store_data();
         half_bridge_stop();
         half_bridge_init(50, 0, 0, 0.98);   // reset safety limits to allow 0% duty cycle
-        half_bridge_start(0);
+        half_bridge_set_duty_cycle(0);
+        half_bridge_start();
         // now the fuse should be triggered and we disappear
     }
     counter++;

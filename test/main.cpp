@@ -21,7 +21,7 @@ int main()
     daq_tests();
     bat_charger_tests();
     power_port_tests();
-    half_brigde_tests();
+    half_bridge_tests();
     dcdc_tests();
     device_status_tests();
     load_tests();

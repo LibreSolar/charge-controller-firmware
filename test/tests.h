@@ -13,7 +13,7 @@ void daq_tests();
 
 void power_port_tests();
 
-void half_brigde_tests();
+void half_bridge_tests();
 
 void dcdc_tests();
 

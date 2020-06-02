@@ -255,27 +255,35 @@ void half_bridge_init(int freq_kHz, int deadtime_ns, float min_duty, float max_d
     pwm_enabled = false;
 }
 
-static void _half_bridge_set_ccr(int ccr_target)
+void half_bridge_set_ccr(uint16_t ccr_target)
 {
     // protection against wrong settings which could destroy the hardware
     if (ccr_target < tim_ccr_min) {
-        ccr_target = tim_ccr_min;
+        pwm_set_ccr(tim_ccr_min);
     }
     else if (ccr_target > tim_ccr_max) {
-        ccr_target = tim_ccr_max;
+        pwm_set_ccr(tim_ccr_max);
     }
+    else {
+        pwm_set_ccr(ccr_target);
+    }
+}
 
-    pwm_set_ccr(ccr_target);
+uint16_t half_bridge_get_ccr()
+{
+    return pwm_get_ccr();
+}
+
+uint16_t half_bridge_get_arr()
+{
+    return tim_arr;
 }
 
 void half_bridge_set_duty_cycle(float duty)
 {
-    _half_bridge_set_ccr(tim_arr * duty);
-}
-
-void half_bridge_duty_cycle_step(int delta)
-{
-    _half_bridge_set_ccr(pwm_get_ccr() + delta);
+    if (duty >= 0.0 && duty <= 1.0) {
+        half_bridge_set_ccr(tim_arr * duty);
+    }
 }
 
 float half_bridge_get_duty_cycle()
@@ -283,12 +291,12 @@ float half_bridge_get_duty_cycle()
     return (float)(pwm_get_ccr()) / tim_arr;
 }
 
-void half_bridge_start(float pwm_duty)
+void half_bridge_start()
 {
-    half_bridge_set_duty_cycle(pwm_duty);
-
-    pwm_start();
-    pwm_enabled = true;
+    if (pwm_get_ccr() >= tim_ccr_min && pwm_get_ccr() <= tim_ccr_max) {
+        pwm_start();
+        pwm_enabled = true;
+    }
 }
 
 void half_bridge_stop()
