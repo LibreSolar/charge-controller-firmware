@@ -50,7 +50,7 @@ Dcdc::Dcdc(PowerPort *hv_side, PowerPort *lv_side, DcdcOperationMode op_mode)
         12 / hs_voltage_max, 0.97);
 }
 
-int Dcdc::duty_cycle_delta()
+int Dcdc::perturb_observe_controller()
 {
     int pwr_inc_pwm_direction;      // direction of PWM duty cycle change for increasing power
     PowerPort *in;
@@ -123,7 +123,11 @@ int Dcdc::duty_cycle_delta()
         half_bridge_get_duty_cycle() * 100.0, state, pwr_inc_goal, pwr_inc_pwm_direction);
 
     power_prev = out->power;
-    return pwr_inc_goal * pwr_inc_pwm_direction;
+
+    // change duty cycle by single minimum step
+    half_bridge_set_ccr(half_bridge_get_ccr() + pwr_inc_goal * pwr_inc_pwm_direction);
+
+    return (pwr_inc_goal == 0);
 }
 
 int Dcdc::check_start_conditions()
@@ -169,13 +173,9 @@ void Dcdc::control()
             stop_reason = "disabled";
         }
         else {
-            int step = duty_cycle_delta();
-            if (step == 0) {
+            int err = perturb_observe_controller();
+            if (err != 0) {
                 stop_reason =  "low power";
-            }
-            else {
-                // change duty cycle by single minimum step
-                half_bridge_set_ccr(half_bridge_get_ccr() + step);
             }
         }
 

@@ -119,11 +119,15 @@ public:
                                 ///< charging after low output power cut-off?
 
 private:
-    /** Calculates the duty cycle change depending on operating mode and actual measurements
+    /**
+     * MPPT perturb & observe control
      *
-     * @returns duty cycle step (-1 or 1) or 0 if DC/DC should be switched off
+     * Calculates the duty cycle change depending on operating mode and actual measurements and
+     * changes the half bridge PWM signal accordingly
+     *
+     * @returns 0 if everything is fine, error number otherwise
      */
-    int duty_cycle_delta();
+    int perturb_observe_controller();
 };
 
 #endif /* DCDC_H */
