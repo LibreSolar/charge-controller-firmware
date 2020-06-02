@@ -30,7 +30,7 @@ extern "C" {
 typedef struct {
     void (*callback)();         ///< Function to be called when limits are exceeded
     uint16_t limit;             ///< ADC reading for lower limit
-    int debounce_ms;            ///< Milliseconds delay for triggering alert
+    int16_t debounce_ms;        ///< Milliseconds delay for triggering alert
 } AdcAlert;
 
 /**
