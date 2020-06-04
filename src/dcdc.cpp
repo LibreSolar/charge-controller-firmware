@@ -6,9 +6,7 @@
 
 #include "dcdc.h"
 
-#ifndef UNIT_TEST
 #include <zephyr.h>
-#endif
 
 #include <math.h>       // for fabs function
 #include <stdlib.h>     // for min/max function

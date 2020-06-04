@@ -9,9 +9,7 @@
  * @brief Setup of ports and other essential charge controller objects
  */
 
-#ifndef UNIT_TEST
 #include <zephyr.h>
-#endif
 
 #include "thingset.h"           // handles access to internal data via communication interfaces
 #include "board.h"              // hardware-specific settings

@@ -8,13 +8,11 @@
 
 #include <time.h>
 
-#ifndef UNIT_TEST
 #include <zephyr.h>
-#endif
 
 uint32_t uptime()
 {
-#ifndef UNIT_TEST
+#ifdef __ZEPHYR__
     return k_uptime_get() / 1000;
 #else
     return time(NULL);

@@ -6,9 +6,7 @@
 
 #include "bat_charger.h"
 
-#ifndef UNIT_TEST
 #include <zephyr.h>
-#endif
 
 #include <math.h>       // for fabs function
 #include <stdio.h>

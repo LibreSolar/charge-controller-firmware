@@ -6,9 +6,7 @@
 
 #include "pwm_switch.h"
 
-#ifndef UNIT_TEST
 #include <zephyr.h>
-#endif
 
 #include <stdio.h>
 #include <time.h>

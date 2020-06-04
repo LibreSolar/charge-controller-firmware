@@ -6,9 +6,7 @@
 
 #include "daq.h"
 
-#ifndef UNIT_TEST
 #include <zephyr.h>
-#endif
 
 #include <math.h>       // log for thermistor calculation
 #include <assert.h>

@@ -6,9 +6,7 @@
 
 #include "load.h"
 
-#ifndef UNIT_TEST
 #include <zephyr.h>
-#endif
 
 #if DT_OUTPUTS_LOAD_PRESENT || UNIT_TEST
 
