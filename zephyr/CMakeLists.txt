@@ -40,6 +40,12 @@ target_sources(app PRIVATE
         ../src/ext/can_msg_queue.cpp
 )
 
+# Using this option enables user-specific customization of the firmware. The
+# src/custom subfolder should have its own CMakeLists.txt file.
+if(${CONFIG_CUSTOMIZATION})
+        add_subdirectory(../src/custom build/custom)
+endif()
+
 add_subdirectory(../lib/thingset build/thingset)
 add_subdirectory(../lib/oled-display build/oled-display)
 #add_subdirectory_ifdef(CONFIG_EXT_OLED_DISPLAY ../lib/oled-display)
