@@ -19,12 +19,6 @@ config LIBRE_SOLAR_TYPE_ID
     help
       Numeric Libre Solar hardware type ID
 
-config CUSTOM_DATA_NODES_FILE
-    bool
-    default n
-    help
-      Use the custom made data_nodes file
-
 #
 # Visible (user-configurable) Kconfig symbols
 #
@@ -183,3 +177,23 @@ config THINGSET_MAKER_PASSWORD
     default "maker456"
 
 endmenu
+
+
+menuconfig CUSTOMIZATION
+    bool "Firmware customization"
+    help
+      Activating this option allows to overwrite existing firmware functions
+      or add customizations independent of the master branch.
+      Custom implementations should be stored in the
+      src/custom subdirectory.
+
+if CUSTOMIZATION
+
+config CUSTOM_DATA_NODES_FILE
+    bool "Use custom data nodes file"
+    default n
+    help
+      Use a custom file instead of default data_nodes.cpp for
+      ThingSet configuration.
+
+endif

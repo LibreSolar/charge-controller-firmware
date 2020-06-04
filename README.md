@@ -97,6 +97,36 @@ st-flash 1.5.1
 
 check the connection between the programmer (for example the ST-Link of the Nucleo board) and the charge controller.
 
+## Firmware customization
+
+This firmware is developed to allow easy customization for individual use-cases. Below options based on the Zephyr devicetree and Kconfig systems try to allow customization without changing any of the files tracked by git, so that a `git pull` does not lead to conflicts with local changes.
+
+### Hardware-specific changes
+
+In Zephyr, all hardware-specific configuration is described in the [devicetree](https://docs.zephyrproject.org/latest/guides/dts/index.html).
+
+The file `boards/arm/board_name/board_name.dts` contains the default devicetree specification (DTS) for a board. It is based on the DTS of the used MCU, which is included from the main Zephyr repository.
+
+In order to overwrite the default configuration, so-called overlays can be used. An overlay file can be specified via the west command line. If it is stored as `board_name.overlay` in the `zephyr` subfolder, it will be recognized automatically when building the firmware for that board (also with PlatformIO).
+
+In order to support older board versions (e.g. with changed pins), some overlays with appended version numbers are already existing as a template. Remove the version number (e.g. `_0v4`) to "activate" them.
+
+### Application firmware configuration
+
+For configuration of the application-specific features, Zephyr uses the [Kconfig system](https://docs.zephyrproject.org/latest/guides/kconfig/index.html).
+
+The configuration can be changed using `west build -t menuconfig` command or manually by changing the prj.conf file.
+
+Similar to DTS overlays, the Kconfig can also be customized for each board. Copy the default `prj.conf` to a file `prj_board_name.conf` to use this file instead of `prj.conf`. Please not that, in contrast to overlays, the board-specific Kconfig files are not **added** to the default `prj.conf`, but they **replace** the default configuration instead.
+
+### Custom functions (separate C/C++ files)
+
+If you want experiment with some completely new functions for the charge controller, new files should be stored in a subfolder `src/custom`.
+
+To add the files to the firmware build, create an own CMakeLists.txt in the folder and enable the Kconfig option `CONFIG_CUSTOMIZATION`.
+
+If you think the customization could be relevant for others, please consider sending a pull request. Integrating features into the upstream charge controller firmware guarantees that the feature stays up-to-date and that it will not accidentally break after changes in the original firmware.
+
 ## Bootloader Support (STM32L072 only)
 
 The custom linker script file STM32L072XZ.ld.link_script.ld needs to be updated before generating the application firmware binary. For each application, the flash start address and the maximum code size need to be updated in this file. Currently, the locations 0x08001000 and 0x08018000 are used for applications 1 & 2 respectively.
