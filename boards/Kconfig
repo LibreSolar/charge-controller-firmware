@@ -5,16 +5,6 @@
 # Invisible (board-specific) Kconfig symbols
 #
 
-config HAS_LOAD_OUTPUT
-	bool
-	help
-	  PCB has a load output.
-
-config HAS_USB_PWR_OUTPUT
-	bool
-	help
-	  PCB has a USB power output.
-
 config CONTROL_FREQUENCY
 	int
 	default 10
@@ -116,7 +106,6 @@ choice
 
     config BAT_DEFAULT_TYPE_NMC_HV
         bool "NMC/Graphite High Voltage Li-ion, 3.7V nominal, 4.35 max"
-
 endchoice
 
 # values must match enum BatType in bat_charger.h
@@ -192,9 +181,5 @@ config THINGSET_MAKER_PASSWORD
     depends on EXT_THINGSET_SERIAL || EXT_THINGSET_CAN
     string "ThingSet maker password"
     default "maker456"
-
-config DEVICE_ID
-    int "Initial device ID for communication interfaces"
-    default 0
 
 endmenu
