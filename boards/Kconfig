@@ -19,6 +19,14 @@ config LIBRE_SOLAR_TYPE_ID
     help
       Numeric Libre Solar hardware type ID
 
+config HS_MOSFET_FAIL_SAFE_PROTECTION
+    bool
+    default y
+    help
+      If enabled, the DC/DC control function will will detect if the high-side MOSFET has failed
+      short and trip the fuse by switching the low-side MOSFET continuously on. This will prevent
+      accidental overcharging of the battery.
+
 #
 # Visible (user-configurable) Kconfig symbols
 #
