@@ -15,6 +15,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#ifdef __cplusplus
+
 #include "power_port.h"
 
 /** DC/DC basic operation mode
@@ -129,5 +131,30 @@ private:
      */
     int perturb_observe_controller();
 };
+
+#endif // __cplusplus
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#ifdef CONFIG_CUSTOM_DCDC_CONTROLLER
+
+/**
+ * Low-level control function
+ *
+ * Implement this function e.g. for cycle-by-cylce current limitation.
+ *
+ * It is called from the DMA after each new current reading, i.e. it runs in ISR context with
+ * high frequency and must be VERY fast!
+ */
+void dcdc_low_level_controller();
+
+#endif // CONFIG_CUSTOM_DCDC_CONTROLLER
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* DCDC_H */

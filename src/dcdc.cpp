@@ -162,7 +162,7 @@ int Dcdc::check_start_conditions()
     return 0;
 }
 
-void Dcdc::control()
+__weak void Dcdc::control()
 {
     if (half_bridge_enabled()) {
         const char *stop_reason = NULL;

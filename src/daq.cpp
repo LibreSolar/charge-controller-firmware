@@ -34,16 +34,6 @@ static volatile AdcAlert adc_alerts_lower[NUM_ADC_CH] = {};
 
 extern DeviceStatus dev_stat;
 
-#ifdef CONFIG_SOC_SERIES_STM32G4X
-// Using internal reference buffer at VREF+ pin, set to 2048 mV
-#define VREF (2048)
-#else
-// internal STM reference voltage
-#define VREF (VREFINT_VALUE * VREFINT_CAL / adc_value(ADC_POS_VREF_MCU))
-#endif
-
-#define ADC_GAIN(name) ((float)DT_ADC_GAIN_##name##_NUMERATOR / DT_ADC_GAIN_##name##_DENOMINATOR)
-
 /**
  * Average value for ADC channel
  *

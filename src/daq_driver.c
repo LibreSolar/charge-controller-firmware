@@ -34,6 +34,7 @@
 #include <stm32g4xx_ll_bus.h>
 #endif
 
+#include "dcdc.h"       // for low-level control function called by DMA
 #include "board.h"
 #include "debug.h"
 
@@ -226,6 +227,12 @@ static void DMA2_Channel1_IRQHandler(void *args)
         }
     }
     DMA2->IFCR |= 0x0FFFFFFF;       // clear all interrupt registers
+
+#ifdef CONFIG_CUSTOM_DCDC_CONTROLLER
+    // Implement this function e.g. for cycle-by-cylce current limitation.
+    // As it runs in an ISR with high frequency, it must be VERY fast!
+    dcdc_low_level_controller();
+#endif
 }
 #endif // CONFIG_SOC_SERIES_STM32G4X
 

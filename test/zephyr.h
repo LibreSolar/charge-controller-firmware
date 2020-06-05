@@ -10,3 +10,10 @@
  * @brief Mock necessary functions and generated Devicetree or Kconfig defines from Zephyr
  *        for unit tests
  */
+
+#ifndef __deprecated
+#define __deprecated	__attribute__((deprecated))
+#endif
+#ifndef __weak
+#define __weak __attribute__((__weak__))
+#endif

@@ -196,4 +196,12 @@ config CUSTOM_DATA_NODES_FILE
       Use a custom file instead of default data_nodes.cpp for
       ThingSet configuration.
 
+config CUSTOM_DCDC_CONTROLLER
+    bool "Custom implementation of DC/DC controller"
+    depends on $(dt_compat_enabled,dcdc)
+    default n
+    help
+      Use a custom implementation instead of the default perturb & observe
+      MPPT control.
+
 endif
