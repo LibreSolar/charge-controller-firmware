@@ -25,4 +25,8 @@ int main()
     dcdc_tests();
     device_status_tests();
     load_tests();
+
+#ifdef CUSTOM_TESTS
+    custom_tests();
+#endif
 }
