@@ -20,3 +20,8 @@ void dcdc_tests();
 void device_status_tests();
 
 void load_tests();
+
+// activate this via build_flags in platformio.ini or custom.ini
+#ifdef CUSTOM_TESTS
+void custom_tests();
+#endif
