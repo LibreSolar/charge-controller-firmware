@@ -140,7 +140,7 @@ void ThingSetCAN::process_asap()
 #endif
 }
 
-void can_pub_isr(u32_t err_flags, void *arg)
+void can_pub_isr(uint32_t err_flags, void *arg)
 {
 	// Do nothing. Publication messages are fire and forget.
 }

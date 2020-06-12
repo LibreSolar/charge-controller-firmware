@@ -28,6 +28,14 @@ config HS_MOSFET_FAIL_SAFE_PROTECTION
       accidental overcharging of the battery.
 
 #
+# Temporary solution to support building with Zephyr 2.2 and 2.3
+#
+
+config LEGACY_DEVICETREE_MACROS
+    bool "Allow use of legacy devicetree macros (fix for Zephyr 2.2)"
+    default y
+
+#
 # Visible (user-configurable) Kconfig symbols
 #
 

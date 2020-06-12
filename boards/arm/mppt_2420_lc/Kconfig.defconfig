@@ -12,6 +12,7 @@ config LIBRE_SOLAR_TYPE_ID
 if UART_CONSOLE
 
 config UART_2
+	bool
 	default y
 
 endif # UART_CONSOLE

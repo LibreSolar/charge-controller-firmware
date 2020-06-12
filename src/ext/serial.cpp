@@ -133,7 +133,7 @@ void ThingSetStream::process_asap()
  */
 void ThingSetStream::process_input(void* user_data)
 {
-    u8_t c;
+    uint8_t c;
     DataStreamStruct *data_stream_ptr = (DataStreamStruct *)user_data;
     bool command_flag = *(data_stream_ptr->command_flag_ptr);
     char *buf_req = data_stream_ptr->buf_req_ptr;

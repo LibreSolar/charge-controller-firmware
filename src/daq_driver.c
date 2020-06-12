@@ -42,7 +42,7 @@
 // Rank and sequence definitions for STM32G4 from adc_stm32.c Zephyr driver
 
 #define RANK(n)		LL_ADC_REG_RANK_##n
-static const u32_t table_rank[] = {
+static const uint32_t table_rank[] = {
 	RANK(1),
 	RANK(2),
 	RANK(3),
@@ -62,7 +62,7 @@ static const u32_t table_rank[] = {
 };
 
 #define SEQ_LEN(n)	LL_ADC_REG_SEQ_SCAN_ENABLE_##n##RANKS
-static const u32_t table_seq_len[] = {
+static const uint32_t table_seq_len[] = {
 	LL_ADC_REG_SEQ_SCAN_DISABLE,
 	SEQ_LEN(2),
 	SEQ_LEN(3),

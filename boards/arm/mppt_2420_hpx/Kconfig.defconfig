@@ -12,6 +12,7 @@ config LIBRE_SOLAR_TYPE_ID
 if UART_CONSOLE
 
 config UART_1
+	bool
 	default y
 
 endif # UART_CONSOLE
@@ -26,10 +27,12 @@ endif # I2C
 if PWM
 
 config PWM_STM32_3
+	bool
 	default y
 	depends on PWM
 
 config PWM_STM32_8
+	bool
 	default y
 	depends on PWM
 
