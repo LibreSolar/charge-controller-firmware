@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2019 Martin Jäger / Libre Solar
+
+if BOARD_MPPT_2420_RC
+
+config BOARD
+	default "mppt_2420_rc"
+
+config LIBRE_SOLAR_TYPE_ID
+	default 0
+
+if UART_CONSOLE
+
+#config UART_1
+#	bool
+#	default y
+
+endif # UART_CONSOLE
+
+if I2C
+
+config I2C_1
+	default y
+
+endif # I2C
+
+if SPI
+
+config SPI_1
+	default y
+
+config SPI_STM32_INTERRUPT
+	default y
+
+endif # SPI
+
+endif # BOARD_MPPT_2420_RC

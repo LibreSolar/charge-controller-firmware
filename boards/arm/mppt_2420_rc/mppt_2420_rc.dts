@@ -1,0 +1,168 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Copyright (c) 2020 Martin Jäger / Libre Solar
+ */
+
+/dts-v1/;
+#include <st/g4/stm32g431Xb.dtsi>
+
+/ {
+	model = "Libre Solar MPPT 2420 RC";
+	compatible = "st,stm32g431";
+
+	pcb {
+		compatible = "charge-controller";
+
+		type = "MPPT 2420 RC";
+		version-str = "v0.1";
+		version-num = <1>;
+
+		hs-voltage-max = <80>;
+		ls-voltage-max = <32>;
+	};
+
+	dcdc {
+		compatible = "dcdc";
+		pwm-frequency = <70000>;
+		pwm-deadtime = <300>;
+		current-max = <20>;
+	};
+
+	chosen {
+		zephyr,console = &usart2;
+		zephyr,shell-uart = &usart2;
+		zephyr,sram = &sram0;
+		zephyr,flash = &flash0;
+	};
+
+	leds {
+		compatible = "gpio-leds";
+		pwr {
+			gpios = <&gpiob 15 GPIO_ACTIVE_HIGH>;
+			label = "Power LED";
+		};
+	};
+
+	v-low {
+		compatible = "adc-gain";
+		io-channels = <&adc1 12>;
+		numerator = <105600>;
+		denominator = <5600>;
+	};
+
+	v-high {
+		compatible = "adc-gain";
+		io-channels = <&adc1 15>;
+		numerator = <102200>;
+		denominator = <2200>;
+	};
+
+	i-dcdc {
+		compatible = "adc-gain";
+		io-channels = <&adc2 1>;
+		// amp gain: 68/2.2, resistor: 2 mOhm
+		numerator = <2200>;	// 1000*2.2
+		denominator = <136>;	// 2*68
+	};
+
+	soc {
+		// ADC nodes not yet provided by Zephyr, but needed for adc-gain compatibles
+		adc1: adc@50000000 {
+			compatible = "st,stm32-adc";
+			reg = <0x50000000 0x400>;
+			clocks = <&rcc STM32_CLOCK_BUS_AHB2 0x00002000>;
+			interrupts = <18 0>;
+			status = "disabled";
+			label = "ADC_1";
+			#io-channel-cells = <1>;
+		};
+
+		adc2: adc@50000100 {
+			compatible = "st,stm32-adc";
+			reg = <0x50000100 0x400>;
+			clocks = <&rcc STM32_CLOCK_BUS_AHB2 0x00002000>;
+			interrupts = <18 0>;
+			status = "disabled";
+			label = "ADC_2";
+			#io-channel-cells = <1>;
+		};
+
+		dac1: dac@50000800 {
+			compatible = "st,stm32-dac";
+			reg = <0x50000800 0x400>;
+			clocks = <&rcc STM32_CLOCK_BUS_AHB2 0x00010000>;
+			status = "disabled";
+			label = "DAC_1";
+			#io-channel-cells = <1>;
+		};
+	};
+
+	aliases {
+		uart-dbg = &usart2;
+		uart-uext = &usart2;
+		spi-uext = &spi1;
+		i2c-uext = &i2c1;
+	};
+};
+
+&usart1 {
+	current-speed = <115200>;
+	status = "okay";
+};
+
+&usart2 {
+	current-speed = <115200>;
+	status = "okay";
+};
+
+&spi1 {
+	cs-gpios = <&gpiob 6 GPIO_ACTIVE_LOW>;
+	status = "okay";
+};
+
+&rtc {
+	status = "okay";
+};
+
+&flash0 {
+	/*
+	 * For more information, see:
+	 * http://docs.zephyrproject.org/latest/guides/dts/index.html#flash-partitions
+	 */
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		/* Set 4Kb of storage at the end of the 128Kb of flash */
+		storage_partition: partition@1f000 {
+			label = "storage";
+			reg = <0x0001f000 0x00001000>;
+		};
+	};
+};
+
+&iwdg {
+	status = "okay";
+};
+
+&i2c1 {
+	/* shared between UEXT and EEPROM */
+	status = "okay";
+	clock-frequency = <I2C_BITRATE_STANDARD>;
+	eeprom@50 {
+		// Microchip 24AA32A
+		compatible = "atmel,at24";
+		reg = <0x50>;
+		label = "EEPROM_0";
+		size = <32768>;
+		pagesize = <32>;
+		address-width = <16>;
+		/*
+		 * timeout of 5 ms as suggested in datasheet seems too optimistic
+		 * (several write errors occured during testing)
+		 */
+		timeout = <7>;
+	};
+};

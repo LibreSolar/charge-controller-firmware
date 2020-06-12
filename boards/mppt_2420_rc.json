@@ -1,0 +1,42 @@
+{
+  "build": {
+    "cpu": "cortex-m4",
+    "extra_flags": "-DSTM32G4xx -DSTM32G431xx",
+    "f_cpu": "150000000L",
+    "mcu": "stm32g431rb",
+    "variant": "MPPT-2420-RC"
+  },
+  "connectivity": [
+    "can"
+  ],
+  "debug": {
+    "default_tools": [
+      "jlink"
+    ],
+    "jlink_device": "STM32G431RB",
+    "onboard_tools": [
+      "stlink"
+    ],
+    "openocd_board": "st_nucleo_g431rb",
+    "svd_path": "STM32G431xx.svd"
+  },
+  "frameworks": [
+    "arduino",
+    "stm32cube",
+    "zephyr"
+  ],
+  "name": "Libre Solar MPPT 2420 RC",
+  "upload": {
+    "maximum_ram_size": 32768,
+    "maximum_size": 131072,
+    "protocol": "jlink",
+    "protocols": [
+      "jlink",
+      "stlink",
+      "blackmagic",
+      "mbed"
+    ]
+  },
+  "url": "http://libre.solar/",
+  "vendor": "Libre Solar"
+}
