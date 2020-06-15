@@ -34,7 +34,7 @@ extern "C" {
 #define VREF (VREFINT_VALUE * VREFINT_CAL / adc_value(ADC_POS_VREF_MCU))
 #endif
 
-#define ADC_GAIN(name) ((float)DT_ADC_GAIN_##name##_NUMERATOR / DT_ADC_GAIN_##name##_DENOMINATOR)
+#define ADC_GAIN(name) ((float)DT_ADC_INPUTS_##name##_MULTIPLIER / DT_ADC_INPUTS_##name##_DIVIDER)
 
 /**
  * Struct to definie upper and lower limit alerts for any ADC channel

@@ -1,33 +1,32 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (c) 2020 Martin Jäger / Libre Solar
 
-# Based on official Zephyr binding "voltage-divider" by Peter Bigot
+description: Description for an ADC input including gain (multiplier/divider) and offset
 
-description: |
-    Description for a gain (voltage divider or amplifier) at an ADC input
+compatible: "adc-inputs"
 
-compatible: "adc-gain"
-
-properties:
+child-binding:
+  description: ADC inputs child node
+  properties:
     io-channels:
       type: phandle-array
       required: true
       description: |
-        Channels available with this divider configuration.
+        ADC channel for this input.
 
-    numerator:
+    multiplier:
       type: int
       required: true
       description: |
-        Resistance of the lower leg of the voltage divider
+        Resistance of the lower leg of the voltage divider.
 
-    denominator:
+    divider:
       type: int
       required: true
       description: |
         Resistance of the full path through the voltage divider.
 
-    raw-offset:
+    offset:
       type: int
       required: false
       description: |

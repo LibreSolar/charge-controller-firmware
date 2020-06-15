@@ -69,35 +69,35 @@
 		};
 	};
 
-	v-low {
-		compatible = "adc-gain";
-		io-channels = <&adc1 0>;
-		numerator = <105600>;
-		denominator = <5600>;
-	};
+	adc-inputs {
+		compatible = "adc-inputs";
 
-	v-high {
-		compatible = "adc-gain";
-		io-channels = <&adc1 1>;
-		numerator = <105600>;
-		denominator = <5600>;
-		enable-gpios = <&gpioc 14 GPIO_ACTIVE_HIGH>;
-	};
+		v-low {
+			io-channels = <&adc1 0>;
+			multiplier = <105600>;
+			divider = <5600>;
+		};
 
-	i-load {
-		compatible = "adc-gain";
-		io-channels = <&adc1 5>;
-		// amp gain: 50, resistor: 3 mOhm
-		numerator = <1000>;
-		denominator = <150>;	// 3*50
-	};
+		v-high {
+			io-channels = <&adc1 1>;
+			multiplier = <105600>;
+			divider = <5600>;
+			enable-gpios = <&gpioc 14 GPIO_ACTIVE_HIGH>;
+		};
 
-	i-dcdc {
-		compatible = "adc-gain";
-		io-channels = <&adc1 6>;
-		// amp gain: 50, resistor: 3 mOhm
-		numerator = <1000>;
-		denominator = <150>;	// 3*50
+		i-load {
+			io-channels = <&adc1 5>;
+			// amp gain: 50, resistor: 3 mOhm
+			multiplier = <1000>;
+			divider = <150>;	// 3*50
+		};
+
+		i-dcdc {
+			io-channels = <&adc1 6>;
+			// amp gain: 50, resistor: 3 mOhm
+			multiplier = <1000>;
+			divider = <150>;	// 3*50
+		};
 	};
 
 	aliases {

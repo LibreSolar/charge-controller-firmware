@@ -187,10 +187,10 @@ static void adc_init(ADC_TypeDef *adc)
 
 static void adc_setup()
 {
-#ifdef DT_ADC_GAIN_V_HIGH_ENABLE_GPIOS_PIN
-    struct device *dev = device_get_binding(DT_ADC_GAIN_V_HIGH_ENABLE_GPIOS_CONTROLLER);
-    gpio_pin_configure(dev, DT_ADC_GAIN_V_HIGH_ENABLE_GPIOS_PIN,
-        DT_ADC_GAIN_V_HIGH_ENABLE_GPIOS_FLAGS | GPIO_OUTPUT_ACTIVE);
+#ifdef DT_ADC_INPUTS_V_HIGH_ENABLE_GPIOS_PIN
+    struct device *dev = device_get_binding(DT_ADC_INPUTS_V_HIGH_ENABLE_GPIOS_CONTROLLER);
+    gpio_pin_configure(dev, DT_ADC_INPUTS_V_HIGH_ENABLE_GPIOS_PIN,
+        DT_ADC_INPUTS_V_HIGH_ENABLE_GPIOS_FLAGS | GPIO_OUTPUT_ACTIVE);
 #endif
 
     adc_init(ADC1);

@@ -63,50 +63,48 @@
 		};
 	};
 
-	v-low {
-		compatible = "adc-gain";
-		io-channels = <&adc1 12>;
-		numerator = <105600>;
-		denominator = <5600>;
-	};
+	adc-inputs {
+		compatible = "adc-inputs";
 
-	v-high {
-		compatible = "adc-gain";
-		io-channels = <&adc1 15>;
-		numerator = <102200>;
-		denominator = <2200>;
-	};
+		v-low {
+			io-channels = <&adc1 12>;
+			multiplier = <105600>;
+			divider = <5600>;
+		};
 
-	v-pwm {
-		compatible = "adc-gain";
-		io-channels = <&adc1 4>;
-		numerator = <25224>;	// (12*8.2 + 120*8.2 + 120*12) * 10
-		denominator = <984>;	// (8.2*12) * 10
-		raw-offset = <2338>;	// 4096 / (1 + 8.2/120 + 8.2/12)
-	};
+		v-high {
+			io-channels = <&adc1 15>;
+			multiplier = <102200>;
+			divider = <2200>;
+		};
 
-	i-dcdc {
-		compatible = "adc-gain";
-		io-channels = <&adc2 1>;
-		// amp gain: 20, resistor: 2 mOhm
-		numerator = <1000>;	// 1000
-		denominator = <40>;	// 2*20
-	};
+		v-pwm {
+			io-channels = <&adc1 4>;
+			multiplier = <25224>;	// (12*8.2 + 120*8.2 + 120*12) * 10
+			divider = <984>;	// (8.2*12) * 10
+			offset =  <2338>;	// 4096 / (1 + 8.2/120 + 8.2/12)
+		};
 
-	i-load {
-		compatible = "adc-gain";
-		io-channels = <&adc2 2>;
-		// amp gain: 68/2.2, resistor: 2 mOhm
-		numerator = <2200>;	// 1000*2.2
-		denominator = <136>;	// 2*68
-	};
+		i-dcdc {
+			io-channels = <&adc2 1>;
+			// amp gain: 20, resistor: 2 mOhm
+			multiplier = <1000>;	// 1000
+			divider = <40>;	// 2*20
+		};
 
-	i-pwm {
-		compatible = "adc-gain";
-		io-channels = <&adc2 5>;
-		// amp gain: 68/2.2, resistor: 2 mOhm
-		numerator = <2200>;	// 1000*2.2
-		denominator = <136>;	// 2*68
+		i-load {
+			io-channels = <&adc2 2>;
+			// amp gain: 68/2.2, resistor: 2 mOhm
+			multiplier = <2200>;	// 1000*2.2
+			divider = <136>;	// 2*68
+		};
+
+		i-pwm {
+			io-channels = <&adc2 5>;
+			// amp gain: 68/2.2, resistor: 2 mOhm
+			multiplier = <2200>;	// 1000*2.2
+			divider = <136>;	// 2*68
+		};
 	};
 
 	soc {

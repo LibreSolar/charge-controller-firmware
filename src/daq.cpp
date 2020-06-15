@@ -162,7 +162,7 @@ void daq_update()
 
 #if DT_OUTPUTS_PWM_SWITCH_PRESENT
     pwm_switch.ext_voltage = lv_bus.voltage -
-        adc_scaled(ADC_POS_V_PWM, vref, ADC_GAIN(V_PWM), DT_ADC_GAIN_V_PWM_RAW_OFFSET);
+        adc_scaled(ADC_POS_V_PWM, vref, ADC_GAIN(V_PWM), DT_ADC_INPUTS_V_PWM_OFFSET);
 #endif
 
 #if DT_OUTPUTS_LOAD_PRESENT

@@ -10,11 +10,14 @@
 		version-num = <2>;
 	};
 
-	i-load {
-		compatible = "adc-gain";
-		io-channels = <&adc1 5>;
-		// amp gain: 68/2.2, resistor: 2 mOhm
-		numerator = <1000>;
-		denominator = <62>;	// 2*68/2.2 = 61.8181
+	adc-inputs {
+		compatible = "adc-inputs";
+
+		i-load {
+			io-channels = <&adc1 5>;
+			// amp gain: 68/2.2, resistor: 2 mOhm
+			multiplier = <1000>;
+			divider = <62>;	// 2*68/2.2 = 61.8181
+		};
 	};
 };
