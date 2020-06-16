@@ -138,17 +138,23 @@ void control_thread()
 
             // energy + soc calculation must be called exactly once per second
             #if DT_COMPAT_DCDC
-            hv_terminal.energy_balance();
+            if  (dcdc.state != DCDC_STATE_OFF) {
+                hv_terminal.energy_balance();
+            }
             #endif
 
             #if DT_OUTPUTS_PWM_SWITCH_PRESENT
-            pwm_switch.energy_balance();
+            if (pwm_switch.active() == 1) {
+                pwm_switch.energy_balance();
+            }
             #endif
 
             lv_terminal.energy_balance();
 
             #if DT_OUTPUTS_LOAD_PRESENT
-            load.energy_balance();
+            if (load.state == 1) {
+                load.energy_balance();
+            }
             #endif
 
             dev_stat.update_energy();
