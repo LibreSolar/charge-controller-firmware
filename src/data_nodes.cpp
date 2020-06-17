@@ -260,7 +260,7 @@ static DataNode data_nodes[] = {
     TS_NODE_FLOAT(0x78, "Int_degC", &dev_stat.internal_temp, 1,
         ID_OUTPUT, TS_ANY_R, 0),
 
-#if defined(PIN_ADC_TEMP_FETS) && DT_COMPAT_DCDC
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(adc_inputs), temp_fets))
     TS_NODE_FLOAT(0x79, "Mosfet_degC", &dcdc.temp_mosfets, 1,
         ID_OUTPUT, TS_ANY_R, 0),
 #endif

@@ -11,6 +11,8 @@
  *        for unit tests
  */
 
+#include "devicetree_mock.h"
+
 #ifndef __deprecated
 #define __deprecated	__attribute__((deprecated))
 #endif

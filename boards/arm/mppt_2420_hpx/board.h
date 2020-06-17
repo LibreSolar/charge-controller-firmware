@@ -28,12 +28,12 @@ static const enum pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
 };
 
 // pin definition only needed in adc_dma.cpp to detect if they are present on the PCB
-#define PIN_ADC_TEMP_FETS   PA_5
+//#define PIN_ADC_TEMP_FETS   PA_5
 
 // typical value for Semitec 103AT-5 thermistor: 3435
 #define NTC_BETA_VALUE 3435
 #define NTC_SERIES_RESISTOR 10000.0
-
+/*
 // position in the array written by the DMA controller
 enum {
     // ADC1
@@ -70,5 +70,5 @@ static const uint32_t adc_2_sequence[] = {
     LL_ADC_CHANNEL_2,       // I_LOAD
     LL_ADC_CHANNEL_5,       // I_PWM
 };
-
+*/
 #endif

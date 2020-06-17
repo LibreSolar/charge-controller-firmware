@@ -59,6 +59,30 @@
 			divider = <2200>;
 		};
 
+		hv-ext-sense {
+			io-channels = <&adc1 11>;
+			multiplier = <1>;
+			divider = <1>;
+		};
+
+		temp-fets {
+			io-channels = <&adc1 2>;
+			multiplier = <1>;
+			divider = <1>;
+		};
+
+		vref-mcu {
+			io-channels = <&adc1 18>;
+			multiplier = <1>;
+			divider = <1>;
+		};
+
+		temp-mcu {
+			io-channels = <&adc1 16>;
+			multiplier = <1>;
+			divider = <1>;
+		};
+
 		i-dcdc {
 			io-channels = <&adc2 1>;
 			// amp gain: 68/2.2, resistor: 2 mOhm

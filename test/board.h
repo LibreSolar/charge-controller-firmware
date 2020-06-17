@@ -101,36 +101,4 @@ static const enum pin_state_t led_pin_setup[NUM_LEDS][NUM_LED_PINS] = {
 #define NTC_BETA_VALUE 3435
 #define NTC_SERIES_RESISTOR 8200.0
 
-#define DT_ADC_INPUTS_V_HIGH_MULTIPLIER 105600
-#define DT_ADC_INPUTS_V_HIGH_DIVIDER 5600
-#define DT_ADC_INPUTS_V_LOW_MULTIPLIER 105600
-#define DT_ADC_INPUTS_V_LOW_DIVIDER 5600
-#define DT_ADC_INPUTS_V_PWM_MULTIPLIER 25224   // see pwm_2420_lus.dtx
-#define DT_ADC_INPUTS_V_PWM_DIVIDER 984
-#define DT_ADC_INPUTS_V_PWM_OFFSET 2338
-
-// amp gain: 50, resistor: 4 mOhm
-#define DT_ADC_INPUTS_I_LOAD_MULTIPLIER 1000
-#define DT_ADC_INPUTS_I_LOAD_DIVIDER (4 * 50)
-#define DT_ADC_INPUTS_I_DCDC_MULTIPLIER 1000
-#define DT_ADC_INPUTS_I_DCDC_DIVIDER (4 * 50)
-#define DT_ADC_INPUTS_I_PWM_MULTIPLIER 1000
-#define DT_ADC_INPUTS_I_PWM_DIVIDER (4 * 50)
-
-// position in the array written by the DMA controller
-enum {
-    ADC_POS_V_LOW,      // ADC 0 (PA_0)
-    ADC_POS_V_HIGH,     // ADC 1 (PA_1)
-    ADC_POS_V_PWM,      // ADC 3 (PA_2)
-    ADC_POS_I_PWM,      // ADC 4 (PA_4)
-    ADC_POS_I_LOAD,     // ADC 5 (PA_5)
-    ADC_POS_I_DCDC,     // ADC 6 (PA_6)
-    ADC_POS_TEMP_BAT,   // ADC 7 (PA_7)
-    ADC_POS_VREF_MCU,   // ADC 17
-    ADC_POS_TEMP_MCU,   // ADC 18
-    NUM_ADC_CH          // trick to get the number of elements
-};
-
-#define NUM_ADC_1_CH NUM_ADC_CH
-
 #endif

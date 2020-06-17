@@ -105,6 +105,24 @@
 			multiplier = <2200>;	// 1000*2.2
 			divider = <136>;	// 2*68
 		};
+
+		temp-bat {
+			io-channels = <&adc1 7>;
+			multiplier = <1>;
+			divider = <1>;
+		};
+
+		vref-mcu {
+			io-channels = <&adc1 17>;
+			multiplier = <1>;
+			divider = <1>;
+		};
+
+		temp-mcu {
+			io-channels = <&adc1 18>;
+			multiplier = <1>;
+			divider = <1>;
+		};
 	};
 
 	aliases {

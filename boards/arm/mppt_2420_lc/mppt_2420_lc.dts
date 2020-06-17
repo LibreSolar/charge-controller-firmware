@@ -76,30 +76,60 @@
 	adc-inputs {
 		compatible = "adc-inputs";
 
-		v-low {
+		temp-bat {
 			io-channels = <&adc1 0>;
+			multiplier = <1>;
+			divider = <1>;
+		};
+
+		temp-fets {
+			io-channels = <&adc1 1>;
+			multiplier = <1>;
+			divider = <1>;
+		};
+
+		vref {
+			io-channels = <&adc1 5>;
+			multiplier = <1>;
+			divider = <1>;
+		};
+
+		v-low {
+			io-channels = <&adc1 6>;
 			multiplier = <110000>;
 			divider = <10000>;
 		};
 
 		v-high {
-			io-channels = <&adc1 1>;
+			io-channels = <&adc1 7>;
 			multiplier = <105600>;
 			divider = <5600>;
 		};
 
 		i-load {
-			io-channels = <&adc1 5>;
+			io-channels = <&adc1 8>;
 			// amp gain: 150/2.2, resistor: 2 mOhm
 			multiplier = <2200>;	// 1000*2.2
 			divider = <300>;	// 2*150
 		};
 
 		i-dcdc {
-			io-channels = <&adc1 6>;
+			io-channels = <&adc1 9>;
 			// amp gain: 150/2.2, resistor: 2 mOhm
 			multiplier = <2200>;	// 1000*2.2
 			divider = <300>;	// 2*150
+		};
+
+		temp-mcu {
+			io-channels = <&adc1 16>;
+			multiplier = <1>;
+			divider = <1>;
+		};
+
+		vref-mcu {
+			io-channels = <&adc1 17>;
+			multiplier = <1>;
+			divider = <1>;
 		};
 	};
 

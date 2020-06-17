@@ -38,7 +38,56 @@
 #include "board.h"
 #include "debug.h"
 
-#if !defined(CONFIG_SOC_SERIES_STM32F0X) && !defined(CONFIG_SOC_SERIES_STM32L0X)
+#if defined(CONFIG_SOC_SERIES_STM32F0X) || defined(CONFIG_SOC_SERIES_STM32L0X)
+
+// automatich channel selection based on devicetree settings
+#define ADC_CHSEL_FN(node_id) (1UL << DT_PHA(node_id, io_channels, input)) |
+#define ADC_CHSEL (DT_FOREACH_CHILD(DT_PATH(adc_inputs), ADC_CHSEL_FN) 0)
+
+int num_adc1_ch = NUM_ADC_CH;
+
+#elif defined(CONFIG_SOC_SERIES_STM32G4X)
+
+// create array with selected channel for each ADC input
+#define ADC_CH_NUM_(node_id) DT_PHA(node_id, io_channels, input),
+static const uint32_t adc_ch_numbers[] = {
+    DT_FOREACH_CHILD(DT_PATH(adc_inputs), ADC_CH_NUM_)
+};
+
+// create array with ADC instance register address for each ADC input
+#define ADC_REG_(node_id) DT_REG_ADDR_BY_IDX(DT_PHANDLE(node_id, io_channels), 0),
+static const uint32_t adc_registers[] = {
+    DT_FOREACH_CHILD(DT_PATH(adc_inputs), ADC_REG_)
+};
+
+// number of channels per ADC peripheral will be calculated in adc_init function
+int num_adc1_ch = 0;
+int num_adc2_ch = 0;
+
+// Depending on the channel, not just a single bit has to be set in the right location. So we need
+// a map to get correct bit settings for each channel.
+static const uint32_t table_channel[] = {
+    LL_ADC_CHANNEL_0,
+    LL_ADC_CHANNEL_1,
+    LL_ADC_CHANNEL_2,
+    LL_ADC_CHANNEL_3,
+    LL_ADC_CHANNEL_4,
+    LL_ADC_CHANNEL_5,
+    LL_ADC_CHANNEL_6,
+    LL_ADC_CHANNEL_7,
+    LL_ADC_CHANNEL_8,
+    LL_ADC_CHANNEL_9,
+    LL_ADC_CHANNEL_10,
+    LL_ADC_CHANNEL_11,
+    LL_ADC_CHANNEL_12,
+    LL_ADC_CHANNEL_13,
+    LL_ADC_CHANNEL_14,
+    LL_ADC_CHANNEL_15,
+    LL_ADC_CHANNEL_TEMPSENSOR_ADC1,
+    LL_ADC_CHANNEL_VBAT,
+    LL_ADC_CHANNEL_VREFINT,
+};
+
 // Rank and sequence definitions for STM32G4 from adc_stm32.c Zephyr driver
 
 #define RANK(n)		LL_ADC_REG_RANK_##n
@@ -80,7 +129,8 @@ static const uint32_t table_seq_len[] = {
 	SEQ_LEN(15),
 	SEQ_LEN(16),
 };
-#endif /* !STM32F0X && !STM32L0X */
+
+#endif /* STM32G4X */
 
 // for ADC and DMA
 extern uint16_t adc_readings[];
@@ -160,15 +210,24 @@ static void adc_init(ADC_TypeDef *adc)
 #elif defined(CONFIG_SOC_SERIES_STM32L0X)
 	LL_ADC_REG_SetSequencerChannels(adc, ADC_CHSEL);
     LL_ADC_SetSamplingTimeCommonChannels(adc, LL_ADC_SAMPLINGTIME_160CYCLES_5);
-#else // Others including CONFIG_SOC_SERIES_STM32G4X
-    const uint32_t *adc_seq = (adc == ADC1) ? adc_1_sequence : adc_2_sequence;
-    int num_ch = (adc == ADC1) ? NUM_ADC_1_CH : NUM_ADC_2_CH;
-    for (int i = 0; i < num_ch; i++) {
-        LL_ADC_REG_SetSequencerRanks(adc, table_rank[i], adc_seq[i]);
-        LL_ADC_SetChannelSamplingTime(adc, adc_seq[i], LL_ADC_SAMPLINGTIME_47CYCLES_5);
+#elif defined(CONFIG_SOC_SERIES_STM32G4X)
+    // more complicated sequencer allows to define the sequence independent
+    // of the channel number (using ranks)
+    int *num_ch = (adc == ADC1) ? &num_adc1_ch : &num_adc2_ch;
+    for (int i = 0; i < NUM_ADC_CH; i++) {
+        if (adc_registers[i] == (uint32_t)adc) {
+            uint32_t ch_number = adc_ch_numbers[i];
+            if (ch_number < sizeof(table_channel)) {
+                LL_ADC_REG_SetSequencerRanks(adc,
+                    table_rank[*num_ch], table_channel[ch_number]);
+                LL_ADC_SetChannelSamplingTime(adc,
+                    table_channel[ch_number], LL_ADC_SAMPLINGTIME_47CYCLES_5);
+                (*num_ch)++;
+            }
+        }
     }
-    LL_ADC_REG_SetSequencerLength(adc, table_seq_len[num_ch - 1]);
-#endif // defined(CONFIG_SOC_SERIES_STM32F0X) || defined(CONFIG_SOC_SERIES_STM32L0X)
+    LL_ADC_REG_SetSequencerLength(adc, table_seq_len[*num_ch - 1]);
+#endif
 
     LL_ADC_SetDataAlignment(adc, LL_ADC_DATA_ALIGN_LEFT);
     LL_ADC_SetResolution(adc, LL_ADC_RESOLUTION_12B);
@@ -211,7 +270,7 @@ static void DMA1_Channel1_IRQHandler(void *args)
 {
     if ((DMA1->ISR & DMA_ISR_TCIF1) != 0) // Test if transfer completed on DMA channel 1
     {
-        for (unsigned int i = 0; i < NUM_ADC_1_CH; i++) {
+        for (unsigned int i = 0; i < num_adc1_ch; i++) {
             adc_update_value(i);
         }
     }
@@ -222,7 +281,7 @@ static void DMA1_Channel1_IRQHandler(void *args)
 static void DMA2_Channel1_IRQHandler(void *args)
 {
     if ((DMA2->ISR & DMA_ISR_TCIF1) != 0) { // Test if transfer completed on DMA channel 2
-        for (unsigned int i = NUM_ADC_1_CH; i < NUM_ADC_1_CH + NUM_ADC_2_CH; i++) {
+        for (unsigned int i = num_adc1_ch; i < num_adc1_ch + num_adc2_ch; i++) {
             adc_update_value(i);
         }
     }
@@ -258,7 +317,7 @@ static void dma_init(DMA_TypeDef *dma)
             LL_DMA_DIRECTION_PERIPH_TO_MEMORY);
 
         // Configure the number of DMA transfers (data length in multiples of size per transfer)
-        LL_DMA_SetDataLength(dma, LL_DMA_CHANNEL_1, NUM_ADC_1_CH);
+        LL_DMA_SetDataLength(dma, LL_DMA_CHANNEL_1, num_adc1_ch);
     }
 #if defined(CONFIG_SOC_SERIES_STM32G4X)
     else if (dma == DMA2) {
@@ -268,11 +327,11 @@ static void dma_init(DMA_TypeDef *dma)
         LL_DMA_ConfigAddresses(dma, LL_DMA_CHANNEL_1,
             LL_ADC_DMA_GetRegAddr(ADC2, LL_ADC_DMA_REG_REGULAR_DATA),   // source address
             // destination address = position behind ADC_1 values
-            (uint32_t)(&(adc_readings[NUM_ADC_1_CH])),
+            (uint32_t)(&(adc_readings[num_adc1_ch])),
             LL_DMA_DIRECTION_PERIPH_TO_MEMORY);
 
         // Configure the number of DMA transfers (data length in multiples of size per transfer)
-        LL_DMA_SetDataLength(dma, LL_DMA_CHANNEL_1, NUM_ADC_2_CH);
+        LL_DMA_SetDataLength(dma, LL_DMA_CHANNEL_1, num_adc2_ch);
     }
 #endif // CONFIG_SOC_SERIES_STM32G4X
 

@@ -78,11 +78,35 @@
 			divider = <2200>;
 		};
 
+		hv-ext-sense {
+			io-channels = <&adc1 11>;
+			multiplier = <1>;
+			divider = <1>;
+		};
+
 		v-pwm {
 			io-channels = <&adc1 4>;
 			multiplier = <25224>;	// (12*8.2 + 120*8.2 + 120*12) * 10
 			divider = <984>;	// (8.2*12) * 10
 			offset =  <2338>;	// 4096 / (1 + 8.2/120 + 8.2/12)
+		};
+
+		temp-fets {
+			io-channels = <&adc1 6>;
+			multiplier = <1>;
+			divider = <1>;
+		};
+
+		vref-mcu {
+			io-channels = <&adc1 18>;
+			multiplier = <1>;
+			divider = <1>;
+		};
+
+		temp-mcu {
+			io-channels = <&adc1 16>;
+			multiplier = <1>;
+			divider = <1>;
 		};
 
 		i-dcdc {

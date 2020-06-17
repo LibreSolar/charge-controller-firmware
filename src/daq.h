@@ -20,6 +20,8 @@
 extern "C" {
 #endif
 
+#include <zephyr.h>
+
 #include <stdint.h>
 
 #define ADC_FILTER_CONST 5          // filter multiplier = 1/(2^ADC_FILTER_CONST)
@@ -31,10 +33,33 @@ extern "C" {
 #define VREF (3300)
 #else
 // internal STM reference voltage
-#define VREF (VREFINT_VALUE * VREFINT_CAL / adc_value(ADC_POS_VREF_MCU))
+#define VREF (VREFINT_VALUE * VREFINT_CAL / adc_value(ADC_POS(vref_mcu)))
 #endif
 
-#define ADC_GAIN(name) ((float)DT_ADC_INPUTS_##name##_MULTIPLIER / DT_ADC_INPUTS_##name##_DIVIDER)
+#define ADC_GAIN(name) ((float)DT_PROP(DT_CHILD(DT_PATH(adc_inputs), name), multiplier) / \
+    DT_PROP(DT_CHILD(DT_PATH(adc_inputs), name), divider))
+
+#define ADC_OFFSET(name) (DT_PROP(DT_CHILD(DT_PATH(adc_inputs), name), offset))
+
+/*
+ * Find out the position in the ADC reading array for a channel identified by its Devicetree node
+ */
+#define ADC_POS(node) DT_N_S_adc_inputs_S_##node##_ADC_POS
+
+/*
+ * Creates a unique name for below enum
+ */
+#define ADC_ENUM(node) node##_ADC_POS,
+
+/*
+ * Enum for numbering of ADC channels as they are written by the DMA controller
+ *
+ * The channels must be specified in ascending order in the board.dts file.
+ */
+enum {
+    DT_FOREACH_CHILD(DT_PATH(adc_inputs), ADC_ENUM)
+    NUM_ADC_CH          // trick to get the number of elements
+};
 
 /**
  * Struct to definie upper and lower limit alerts for any ADC channel

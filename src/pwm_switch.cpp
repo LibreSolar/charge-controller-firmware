@@ -53,7 +53,7 @@ void PwmSwitch::test()
     }
     else if (!pwm_active() && enable == true) {
         // turning the PWM switch on creates a short voltage rise, so inhibit alerts by 50 ms
-        adc_upper_alert_inhibit(ADC_POS_V_LOW, 50);
+        adc_upper_alert_inhibit(ADC_POS(v_low), 50);
         pwm_signal_start(0.9);
         print_info("PWM test mode start.\n");
     }
@@ -118,7 +118,7 @@ void PwmSwitch::control()
             && enable == true)
         {
             // turning the PWM switch on creates a short voltage rise, so inhibit alerts by 50 ms
-            adc_upper_alert_inhibit(ADC_POS_V_LOW, 50);
+            adc_upper_alert_inhibit(ADC_POS(v_low), 50);
             pwm_signal_start(1);
             power_good_timestamp = uptime();
             print_info("PWM charger start.\n");

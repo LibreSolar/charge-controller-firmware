@@ -67,5 +67,7 @@
 			multiplier = <1000>;
 			divider = <200>;	// 4*50
 		};
+
+		/delete-node/ temp-bat;
 	};
 };
