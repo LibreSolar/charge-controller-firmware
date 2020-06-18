@@ -30,7 +30,14 @@
 #include <drivers/gpio.h>
 #include <drivers/watchdog.h>
 
+#define MAX_SW_WDT_CHANNELS 3
+
 static struct device *wdt;
+struct k_timer sw_wtchdg_timer;
+struct sw_wdt_channel sw_wdt_channels[MAX_SW_WDT_CHANNELS];
+
+int sw_wdt_channel_count = 0;
+int hw_wdt_channel;
 
 void watchdog_init()
 {
@@ -53,14 +60,41 @@ int watchdog_register(uint32_t timeout_ms)
     return wdt_install_timeout(wdt, &wdt_config);
 }
 
+int sw_watchdog_register(uint32_t timeout_ms)
+{
+    sw_wdt_channels[sw_wdt_channel_count].timeout = timeout_ms;
+    return sw_wdt_channel_count++;
+}
+
+void sw_watchdog_feed(int thread_id)
+{
+    sw_wdt_channels[thread_id].check_in_time = k_uptime_get();
+}
+
 void watchdog_start()
 {
     wdt_setup(wdt, 0);
 }
 
-void watchdog_feed(int channel_id)
+void sw_watchdog(struct k_timer *timer_id)
 {
-    wdt_feed(wdt, channel_id);
+    wdt_feed(wdt, hw_wdt_channel);
+
+    int64_t current_time = k_uptime_get();
+
+    for (int i = 0; i < MAX_SW_WDT_CHANNELS; i++) {
+        if ((current_time - sw_wdt_channels[i].check_in_time) > sw_wdt_channels[i].timeout) {
+            reset_device();
+        }
+    }
+
+}
+
+void sw_watchdog_start()
+{
+    k_timer_init(&sw_wtchdg_timer, sw_watchdog, NULL);
+    k_timer_start(&sw_wtchdg_timer, K_MSEC(10), K_MSEC(10));
+    hw_wdt_channel = watchdog_register(100);
 }
 
 void start_stm32_bootloader()
