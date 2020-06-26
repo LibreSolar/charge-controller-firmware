@@ -11,7 +11,7 @@ config LIBRE_SOLAR_TYPE_ID
 
 if UART_CONSOLE
 
-config UART_2
+config UART_1
 	bool
 	default y
 
