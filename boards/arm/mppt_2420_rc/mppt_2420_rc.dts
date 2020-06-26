@@ -44,6 +44,15 @@
 		};
 	};
 
+	outputs {
+		compatible = "outputs";
+
+		can_en {
+			label = "CAN disable / standby";
+			gpios = <&gpiob 14 GPIO_ACTIVE_LOW>;
+		};
+	};
+
 	adc-inputs {
 		compatible = "adc-inputs";
 
@@ -191,3 +200,16 @@
 		timeout = <7>;
 	};
 };
+
+/*
+// This requires https://github.com/zephyrproject-rtos/zephyr/pull/22832
+&can1 {
+	bus-speed = <250000>;
+	bus-speed-data = <250000>;
+	sjw = <1>;
+	sjw-data = <1>;
+	sample-point = <875>;
+	sample-point-data = <875>;
+	status = "okay";
+};
+*/

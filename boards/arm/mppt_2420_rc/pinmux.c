@@ -30,6 +30,13 @@ static const struct pin_config pinconf[] = {
 	{STM32_PIN_PA11, STM32G4X_PINMUX_FUNC_PA11_USB_DM},
 	{STM32_PIN_PA12, STM32G4X_PINMUX_FUNC_PA12_USB_DP},
 #endif	/* CONFIG_USB_DC_STM32 */
+#if DT_NODE_HAS_STATUS(DT_NODELABEL(can1), okay)
+	{STM32_PIN_PA11, STM32G4X_PINMUX_FUNC_PA11_FDCAN1_RX},
+	{STM32_PIN_PA12, STM32G4X_PINMUX_FUNC_PA12_FDCAN1_TX},
+#endif
+#if defined(CONFIG_USB_DC_STM32) && DT_NODE_HAS_STATUS(DT_NODELABEL(can1), okay)
+#error "PINMUX does not allow concurrent USB and CAN."
+#endif
 };
 
 static int pinmux_stm32_init(struct device *port)

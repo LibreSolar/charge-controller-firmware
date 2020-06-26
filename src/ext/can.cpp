@@ -14,7 +14,6 @@
 #include <device.h>
 #include <drivers/gpio.h>
 #include <drivers/can.h>
-#include <stm32f0xx_ll_system.h>        // needed for debug printing of register contents
 
 #include "board.h"
 #include "thingset.h"
@@ -114,11 +113,9 @@ int ThingSetCAN::pub()
         int start_pos = 0;
         while ((data_len = ts.bin_pub_can(start_pos, PUB_CAN, node_id, can_id, can_data)) != -1) {
 
-            struct zcan_frame frame = {
-                .id_type = CAN_EXTENDED_IDENTIFIER,
-                .rtr = CAN_DATAFRAME
-            };
-
+            struct zcan_frame frame = {0};
+            frame.id_type = CAN_STANDARD_IDENTIFIER;
+            frame.rtr     = CAN_DATAFRAME;
             frame.ext_id = can_id;
             memcpy(frame.data, can_data, 8);
 

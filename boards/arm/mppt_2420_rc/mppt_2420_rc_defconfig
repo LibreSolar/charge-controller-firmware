@@ -60,3 +60,7 @@ CONFIG_I2C=y
 CONFIG_I2C_1=y
 CONFIG_EEPROM=y
 CONFIG_EEPROM_AT24=y
+
+# don't enable CAN by default until PR #22832 is merged to upstream Zephyr
+#CONFIG_CAN=y
+#CONFIG_EXT_THINGSET_CAN=y
