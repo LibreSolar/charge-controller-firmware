@@ -4,36 +4,118 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef UNIT_TEST
-
 #if CONFIG_EXT_THINGSET_CAN
 
-#include "ext.h"
-
+#include "ext/ext.h"
 #include <zephyr.h>
 #include <device.h>
 #include <drivers/gpio.h>
 #include <drivers/can.h>
 
-#include "board.h"
+#ifdef CONFIG_ISOTP
+#include <canbus/isotp.h>
+#endif
+
 #include "thingset.h"
 #include "data_nodes.h"
 #include "can_msg_queue.h"
 
-#ifndef CONFIG_CAN
-#error The hardware does not support CAN, please disable CONFIG_EXT_THINGSET_CAN
-#endif
-
-#ifndef CAN_SPEED
-#define CAN_SPEED 250000    // 250 kHz
+#ifndef CAN_NODE_ID
+#define CAN_NODE_ID 20
 #endif
 
 extern ThingSet ts;
 
+struct device *can_dev;
+
+#ifdef CONFIG_ISOTP
+
+#define RX_THREAD_STACK_SIZE 512
+#define RX_THREAD_PRIORITY 2
+
+const struct isotp_fc_opts fc_opts = {.bs = 8, .stmin = 0};
+
+const struct isotp_msg_id rx_addr = {
+    .std_id = 0x80,
+    .id_type = CAN_STANDARD_IDENTIFIER,
+    .use_ext_addr = 0
+};
+
+const struct isotp_msg_id tx_addr = {
+    .std_id = 0x180,
+    .id_type = CAN_STANDARD_IDENTIFIER,
+    .use_ext_addr = 0
+};
+
+struct isotp_recv_ctx recv_ctx;
+
+K_THREAD_STACK_DEFINE(rx_thread_stack, RX_THREAD_STACK_SIZE);
+struct k_thread rx_thread_data;
+
+void send_complette_cb(int error_nr, void *arg)
+{
+    ARG_UNUSED(arg);
+    printk("TX complete cb [%d]\n", error_nr);
+}
+
+void rx_thread(void *arg1, void *arg2, void *arg3)
+{
+    ARG_UNUSED(arg1);
+    ARG_UNUSED(arg2);
+    ARG_UNUSED(arg3);
+    int ret, rem_len;
+    unsigned int received_len;
+    struct net_buf *buf;
+    static u8_t rx_buffer[100];
+    static u8_t tx_buffer[500];
+
+    ret = isotp_bind(&recv_ctx, can_dev, &tx_addr, &rx_addr, &fc_opts, K_FOREVER);
+    if (ret != ISOTP_N_OK) {
+        printk("Failed to bind to rx ID %d [%d]\n", rx_addr.std_id, ret);
+        return;
+    }
+
+    while (1) {
+        received_len = 0;
+        do {
+            rem_len = isotp_recv_net(&recv_ctx, &buf, K_FOREVER);
+            if (rem_len < 0) {
+                printk("Receiving error [%d]\n", rem_len);
+                break;
+            }
+            if (received_len + buf->len <= sizeof(rx_buffer)) {
+                memcpy(&rx_buffer[received_len], buf->data, buf->len);
+                received_len += buf->len;
+            }
+            else {
+                printk("RX buffer too small\n");
+                break;
+            }
+            net_buf_unref(buf);
+        } while (rem_len);
+
+        if (received_len > 0) {
+            printk("Got %d bytes in total. Processing ThingSet message.\n", received_len);
+            int resp_len = ts.process(rx_buffer, received_len, tx_buffer, sizeof(tx_buffer));
+
+            if (resp_len > 0) {
+                static struct isotp_send_ctx send_ctx;
+                int ret = isotp_send(&send_ctx, can_dev, tx_buffer, resp_len,
+                            &tx_addr, &rx_addr, send_complette_cb, NULL);
+                if (ret != ISOTP_N_OK) {
+                    printk("Error while sending data to ID %d [%d]\n", tx_addr.std_id, ret);
+                }
+            }
+        }
+    }
+}
+
+#endif /* CONFIG_ISOTP */
+
 class ThingSetCAN: public ExtInterface
 {
 public:
-    ThingSetCAN(uint8_t can_node_id);
+    ThingSetCAN(uint8_t can_node_id, const unsigned int c);
 
     void process_asap();
     void process_1s();
@@ -42,9 +124,14 @@ public:
 
 private:
     /**
-     * Enqueues all data nodes of CAN publication channel
+     * Generate CAN frame for data object and put it into TX queue
+     */
+    bool pub_object(const DataNode& data_obj);
+
+    /**
+     * Retrieves all data objects of configured channel and calls pub_object to enqueue them
      *
-     * @returns number of data nodes added to queue
+     * \returns number of can objects added to queue
      */
     int pub();
 
@@ -53,36 +140,25 @@ private:
      */
     void process_outbox();
 
-#if defined(CAN_RECEIVE) && defined(__MBED__)
-    void process_inbox();
-    void process_input();
-    void send_object_name(int data_node_id, uint8_t can_dest_id);
-    CanMsgQueue rx_queue;
-#endif
-
     CanMsgQueue tx_queue;
     uint8_t node_id;
+    const uint16_t channel;
 
-    struct device *can_dev;
     struct device *can_en_dev;
 };
 
-#ifndef CAN_NODE_ID
-#define CAN_NODE_ID 10
-#endif
-
-ThingSetCAN ts_can(CAN_NODE_ID);
+ThingSetCAN ts_can(CAN_NODE_ID, PUB_CAN);
 
 //----------------------------------------------------------------------------
 // preliminary simple CAN functions to send data to the bus for logging
 // Data format based on CBOR specification (except for first byte, which uses
 // only 6 bit to specify type and transport protocol)
 //
-// Protocol details:
-// https://libre.solar/thingset/
+// Protocol details: https://libre.solar/thingset/
 
-ThingSetCAN::ThingSetCAN(uint8_t can_node_id):
-    node_id(can_node_id)
+ThingSetCAN::ThingSetCAN(uint8_t can_node_id, const unsigned int c):
+    node_id(can_node_id),
+    channel(c)
 {
     can_en_dev = device_get_binding(DT_OUTPUTS_CAN_EN_GPIOS_CONTROLLER);
     gpio_pin_configure(can_en_dev, DT_OUTPUTS_CAN_EN_GPIOS_PIN,
@@ -94,6 +170,16 @@ ThingSetCAN::ThingSetCAN(uint8_t can_node_id):
 void ThingSetCAN::enable()
 {
     gpio_pin_set(can_en_dev, DT_OUTPUTS_CAN_EN_GPIOS_PIN, 1);
+
+#ifdef CONFIG_ISOTP
+    k_tid_t tid = k_thread_create(&rx_thread_data, rx_thread_stack,
+                  K_THREAD_STACK_SIZEOF(rx_thread_stack),
+                  rx_thread, NULL, NULL, NULL,
+                  RX_THREAD_PRIORITY, 0, K_NO_WAIT);
+    if (!tid) {
+        printk("ERROR spawning rx thread\n");
+    }
+#endif /* CONFIG_ISOTP */
 }
 
 void ThingSetCAN::process_1s()
@@ -111,7 +197,7 @@ int ThingSetCAN::pub()
     if (pub_can_enable) {
         int data_len = 0;
         int start_pos = 0;
-        while ((data_len = ts.bin_pub_can(start_pos, PUB_CAN, node_id, can_id, can_data)) != -1) {
+        while ((data_len = ts.bin_pub_can(start_pos, channel, node_id, can_id, can_data)) != -1) {
 
             struct zcan_frame frame = {0};
             frame.id_type = CAN_STANDARD_IDENTIFIER;
@@ -132,9 +218,6 @@ int ThingSetCAN::pub()
 void ThingSetCAN::process_asap()
 {
     process_outbox();
-#if defined(CAN_RECEIVE)
-    process_inbox();
-#endif
 }
 
 void can_pub_isr(uint32_t err_flags, void *arg)
@@ -158,125 +241,4 @@ void ThingSetCAN::process_outbox()
     }
 }
 
-/**
- * CAN receive currently only working with mbed
- */
-#if defined(CAN_RECEIVE) && defined(__MBED__)
-
-// TODO: Move encoding to ThingSet class
-void ThingSetCAN::send_object_name(int data_node_id, uint8_t can_dest_id)
-{
-    uint8_t msg_priority = 7;   // low priority service message
-    uint8_t function_id = 0x84;
-    CanFrame msg;
-    msg.format = CANExtended;
-    msg.type = CANData;
-    msg.id = msg_priority << 26 | function_id << 16 |(can_dest_id << 8)| node_id;      // TODO: add destination node ID
-
-    const DataNode *dop = ts.get_data_nodeect(data_node_id);
-
-    if (dop != NULL) {
-        if (dop->access & TS_ACCESS_READ) {
-            msg.data[2] = TS_T_STRING;
-            int len = strlen(dop->name);
-            for (int i = 0; i < len && i < (8-3); i++) {
-                msg.data[i+3] = *(dop->name + i);
-            }
-            msg.len = ((len < 5) ? 3 + len : 8);
-            // serial.printf("TS Send Object Name: %s (id = %d)\n", dataObjects[arr_id].name, data_node_id);
-        }
-    }
-    else {
-        // send error message
-        // data[0] : ISO-TP header
-        msg.data[1] = 1;    // TODO: Define error code numbers
-        msg.len = 2;
-    }
-
-    tx_queue.enqueue(msg);
-}
-
-void ThingSetCAN::process_inbox()
-{
-    int max_attempts = 15;
-    while (!rx_queue.empty() && max_attempts >0) {
-        CanFrame msg;
-        rx_queue.dequeue(msg);
-
-        if (!(msg.id & (0x1U<<25))) {
-            // serial.printf("CAN ID bit 25 = 1 --> ignored\n");
-            continue;  // might be SAE J1939 or NMEA 2000 message --> ignore
-        }
-
-        if (msg.id & (0x1U<<24)) {
-            // serial.printf("Data object publication frame\n");
-            // data object publication frame
-        } else {
-            // serial.printf("Service frame\n");
-            // service frame
-            int function_id = (msg.id >> 16) & (int)0xFF;
-            uint8_t can_dest_id = msg.id & (int)0xFF;
-            int data_node_id;
-
-            switch (function_id) {
-                case TS_OUTPUT:
-                {
-                    if (msg.len >= 2) {
-                        data_node_id = msg.data[1] + (msg.data[2] << 8);
-                        const DataNode *dop = ts.get_data_node(data_node_id);
-                        pub_object(*dop);
-                    }
-                    break;
-                }
-                case TS_INPUT:
-                {
-                    if (msg.len >= 8)
-                    {
-                        data_node_id = msg.data[1] + (msg.data[2] << 8);
-                        // int value = msg.data[6] + (msg.data[7] << 8);
-                        const DataNode *dop = ts.get_data_node(data_node_id);
-
-                        if (dop != NULL)
-                        {
-                            if (dop->access & TS_ACCESS_WRITE)
-                            {
-                                // TODO: write data
-                                // serial.printf("ThingSet Write: %d to %s (id = %d)\n", value, dataObjects[i].name, data_node_id);
-                            }
-                            else
-                            {
-                                // serial.printf("No write allowed to data object %s (id = %d)\n", dataObjects[i].name, data_node_id);
-                            }
-                        }
-                    }
-                    break;
-                }
-                case TS_NAME:
-                    data_node_id = msg.data[1] + (msg.data[2] << 8);
-                    send_object_name(data_node_id, can_dest_id);
-                    // serial.printf("Get Data Object Name: %d\n", data_node_id);
-                    break;
-            }
-        }
-        max_attempts--;
-    }
-}
-
-void ThingSetCAN::process_input()
-{
-    CanFrame msg;
-    while (can.read(msg)) {
-        if (!rx_queue.full()) {
-            rx_queue.enqueue(msg);
-            // serial.printf("Message received. id: %d, data: %d\n", msg.id, msg.data[0]);
-        } else {
-            // serial.printf("CAN rx queue full\n");
-        }
-    }
-}
-
-#endif /* CAN_RECEIVE */
-
 #endif /* CONFIG_EXT_THINGSET_CAN */
-
-#endif /* UNIT_TEST */
