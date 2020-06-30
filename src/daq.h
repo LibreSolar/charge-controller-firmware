@@ -33,7 +33,7 @@ extern "C" {
 #define VREF (3300)
 #else
 // internal STM reference voltage
-#define VREF (VREFINT_VALUE * VREFINT_CAL / adc_value(ADC_POS(vref_mcu)))
+#define VREF (VREFINT_VALUE * VREFINT_CAL / adc_raw_filtered(ADC_POS(vref_mcu)))
 #endif
 
 #define ADC_GAIN(name) ((float)DT_PROP(DT_CHILD(DT_PATH(adc_inputs), name), multiplier) / \
@@ -62,13 +62,39 @@ enum {
 };
 
 /**
- * Struct to definie upper and lower limit alerts for any ADC channel
+ * Struct to define upper and lower limit alerts for any ADC channel
  */
 typedef struct {
     void (*callback)();         ///< Function to be called when limits are exceeded
     uint16_t limit;             ///< ADC reading for lower limit
     int16_t debounce_ms;        ///< Milliseconds delay for triggering alert
 } AdcAlert;
+
+/**
+ * Convert raw ADC reading to voltage
+ *
+ * @param raw 12-bit ADC reading (right-aligned)
+ * @param vref_mV Reference voltage in millivolts
+ *
+ * @return Voltage in Volts
+ */
+static inline float adc_raw_to_voltage(int32_t raw, int32_t vref_mV)
+{
+    return (raw * vref_mV) / (4096.0F * 1000);
+}
+
+/**
+ * Convert voltage to raw ADC reading
+ *
+ * @param voltage Voltage in Volts
+ * @param vref_mV Reference voltage in millivolts
+ *
+ * @return 12-bit ADC reading (right-aligned)
+ */
+static inline int32_t adc_voltage_to_raw(float voltage, int32_t vref_mV)
+{
+    return voltage / vref_mV * 4096.0F * 1000;
+}
 
 /**
  * Set offset vs. actual measured value, i.e. sets zero current point.

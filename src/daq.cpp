@@ -37,26 +37,12 @@ extern DeviceStatus dev_stat;
 /**
  * Average value for ADC channel
  *
- * @param channel valid ADC channel pos ADC_POS_..., see board.h
+ * @param channel valid ADC channel position using ADC_POS() macro
  */
-static inline uint32_t adc_value(uint32_t channel)
+static inline uint32_t adc_raw_filtered(uint32_t channel)
 {
     assert(channel < NUM_ADC_CH);
     return adc_filtered[channel] >> (4 + ADC_FILTER_CONST);
-}
-
-/**
- * Measured voltage for ADC channel after average
- *
- * @param channel valid ADC channel position using ADC_POS() macro
- * @param vref reference voltage in millivolts
- * @param offset offset substracted from raw ADC value before applying gain
- *
- * @return voltage in millivolts
- */
-static inline float adc_voltage(uint32_t channel, int32_t vref, int32_t offset = 0)
-{
-    return (((int32_t)adc_value(channel) - offset) * vref) / 4096;
 }
 
 /**
@@ -70,7 +56,7 @@ static inline float adc_voltage(uint32_t channel, int32_t vref, int32_t offset =
  */
 static inline float adc_scaled(uint32_t channel, int32_t vref, const float gain, int32_t offset = 0)
 {
-    return adc_voltage(channel, vref, offset) * (gain/1000.0);
+    return adc_raw_to_voltage(adc_raw_filtered(channel) - offset, vref) * gain;
 }
 
 static inline float ntc_temp(uint32_t channel, int32_t vref)
@@ -79,7 +65,7 @@ static inline float ntc_temp(uint32_t channel, int32_t vref)
        https://www.embeddedrelated.com/showarticle/91.php
     */
 
-    float v_temp = adc_voltage(channel, vref);  // voltage read by ADC (mV)
+    float v_temp = adc_raw_to_voltage(adc_raw_filtered(channel), vref) * 1000;  // voltage read by ADC (mV)
     float rts = NTC_SERIES_RESISTOR * v_temp / (vref - v_temp); // resistance of NTC (Ohm)
 
     return 1.0/(1.0/(273.15+25) + 1.0/NTC_BETA_VALUE*log(rts/10000.0)) - 273.15; // °C
@@ -222,7 +208,7 @@ void daq_update()
 #endif
 
     // internal MCU temperature
-    uint16_t adcval = adc_value(ADC_POS(temp_mcu)) * vref / VREFINT_VALUE;
+    uint16_t adcval = adc_raw_filtered(ADC_POS(temp_mcu)) * vref / VREFINT_VALUE;
     dev_stat.internal_temp = (TSENSE_CAL2_VALUE - TSENSE_CAL1_VALUE) /
         (TSENSE_CAL2 - TSENSE_CAL1) * (adcval - TSENSE_CAL1) + TSENSE_CAL1_VALUE;
 
@@ -330,7 +316,7 @@ void clear_adc_filtered()
 }
 uint32_t get_adc_filtered(uint32_t channel)
 {
-    return adc_value(channel);
+    return adc_raw_filtered(channel);
 }
 
 #endif /* UNIT_TEST */

@@ -14,6 +14,34 @@
 
 static AdcValues adcval;
 
+void test_adc_voltage_to_raw()
+{
+    int32_t raw;
+
+    raw = adc_voltage_to_raw(0.0, 3300);
+    TEST_ASSERT_EQUAL_INT32(0, raw);
+
+    raw = adc_voltage_to_raw(3.3, 3300);
+    TEST_ASSERT_EQUAL_INT32(4095, raw);
+
+    raw = adc_voltage_to_raw(1.65, 3300);
+    TEST_ASSERT_EQUAL_INT32(2047, raw);
+}
+
+void test_adc_raw_to_voltage()
+{
+    float voltage;
+
+    voltage = adc_raw_to_voltage(0, 3300);
+    TEST_ASSERT_EQUAL_FLOAT(0.0, voltage);
+
+    voltage = adc_raw_to_voltage(4095, 3300);
+    TEST_ASSERT_FLOAT_WITHIN(0.01, 3.3, voltage);
+
+    voltage = adc_raw_to_voltage(2048, 3300);
+    TEST_ASSERT_FLOAT_WITHIN(0.01, 1.65, voltage);
+}
+
 // testing only for 2 values
 void check_filtering()
 {
@@ -151,6 +179,9 @@ void daq_tests()
     prepare_adc_readings(adcval);
 
     UNITY_BEGIN();
+
+    RUN_TEST(test_adc_voltage_to_raw);
+    RUN_TEST(test_adc_raw_to_voltage);
 
     RUN_TEST(check_filtering);
 
