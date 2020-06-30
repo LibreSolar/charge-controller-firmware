@@ -8,6 +8,10 @@
 
 #include <zephyr.h>
 
+#ifndef UNIT_TEST
+#include <drivers/gpio.h>
+#endif
+
 #include <math.h>       // for fabs function
 #include <stdlib.h>     // for min/max function
 #include <stdio.h>
@@ -288,6 +292,24 @@ void Dcdc::fuse_destruction()
         // now the fuse should be triggered and we disappear
     }
     counter++;
+}
+
+void Dcdc::output_hvs_enable()
+{
+#ifdef DT_OUTPUTS_HV_EXT_SENSE_GPIOS_CONTROLLER
+    struct device *dev_hv_ext = device_get_binding(DT_OUTPUTS_HV_EXT_SENSE_GPIOS_CONTROLLER);
+    gpio_pin_configure(dev_hv_ext, DT_OUTPUTS_HV_EXT_SENSE_GPIOS_PIN,
+        DT_OUTPUTS_HV_EXT_SENSE_GPIOS_FLAGS | GPIO_OUTPUT_ACTIVE);
+#endif
+}
+
+void Dcdc::output_hvs_disable()
+{
+#ifdef DT_OUTPUTS_HV_EXT_SENSE_GPIOS_CONTROLLER
+    struct device *dev_hv_ext = device_get_binding(DT_OUTPUTS_HV_EXT_SENSE_GPIOS_CONTROLLER);
+    gpio_pin_configure(dev_hv_ext, DT_OUTPUTS_HV_EXT_SENSE_GPIOS_PIN,
+        DT_OUTPUTS_HV_EXT_SENSE_GPIOS_FLAGS | GPIO_OUTPUT_INACTIVE);
+#endif
 }
 
 #endif /* DT_COMPAT_DCDC */

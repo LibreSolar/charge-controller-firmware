@@ -130,6 +130,17 @@ private:
      * @returns 0 if everything is fine, error number otherwise
      */
     int perturb_observe_controller();
+
+    /**
+     * If manual control of the reverse polarity MOSFET on the high-side is available, this
+     * function enables it to use the high voltage side as output.
+     */
+    void output_hvs_enable();
+
+    /**
+     * Disable the reverse polarity MOSFET on the high-sied (if option available)
+     */
+    void output_hvs_disable();
 };
 
 #endif // __cplusplus

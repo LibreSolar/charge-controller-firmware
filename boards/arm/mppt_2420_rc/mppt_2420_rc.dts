@@ -51,6 +51,11 @@
 			label = "CAN disable / standby";
 			gpios = <&gpiob 14 GPIO_ACTIVE_LOW>;
 		};
+
+		hv-ext-sense {
+			label = "HV external sense and switch";
+			gpios = <&gpiob 12 GPIO_ACTIVE_LOW>;
+		};
 	};
 
 	adc-inputs {
