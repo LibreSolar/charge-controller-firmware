@@ -23,7 +23,7 @@ if [ $? != 0 ]; then
 fi
 
 echo "---------- Running static code checks -------------"
-platformio check -e mppt_1210_hus -e pwm_2420_lus
+platformio check -e mppt_1210_hus -e pwm_2420_lus --skip-packages --fail-on-defect high
 if [ $? != 0 ]; then
         exit 1;
 fi

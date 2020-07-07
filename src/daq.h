@@ -56,6 +56,7 @@ extern "C" {
  *
  * The channels must be specified in ascending order in the board.dts file.
  */
+// cppcheck-suppress syntaxError
 enum {
     DT_FOREACH_CHILD(DT_PATH(adc_inputs), ADC_ENUM)
     NUM_ADC_CH          // trick to get the number of elements

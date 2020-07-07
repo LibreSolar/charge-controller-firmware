@@ -25,7 +25,7 @@ if errorlevel 1 (
 )
 
 echo "---------- Running static code checks -------------"
-platformio check -e mppt_1210_hus -e pwm_2420_lus
+platformio check -e mppt_1210_hus -e pwm_2420_lus --skip-packages --fail-on-defect high
 if errorlevel 1 (
     echo Failure Reason is %errorlevel%
     exit /b %errorlevel%

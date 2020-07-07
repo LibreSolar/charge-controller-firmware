@@ -23,7 +23,7 @@ script:
     - git diff --check `git rev-list HEAD | tail -n 1`..$TRAVIS_BRANCH
     - platformio run -e mppt_2420_lc -e mppt_1210_hus -e mppt_2420_hpx -e pwm_2420_lus
     - platformio test -e unit_test
-    - platformio check -e mppt_1210_hus -e pwm_2420_lus
+    - platformio check -e mppt_1210_hus -e pwm_2420_lus --skip-packages --fail-on-defect high
     - doxygen Doxyfile
 
 deploy:
