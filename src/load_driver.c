@@ -21,11 +21,13 @@
 #include <stm32g4xx_ll_system.h>
 #endif
 
-#if DT_OUTPUTS_LOAD_PRESENT
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
+#define LOAD_GPIO DT_CHILD(DT_PATH(outputs), load)
 static struct device *dev_load;
 #endif
 
-#if DT_OUTPUTS_USB_PWR_PRESENT
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), usb_pwr))
+#define USB_GPIO DT_CHILD(DT_PATH(outputs), usb_pwr)
 static struct device *dev_usb;
 #endif
 
@@ -155,37 +157,37 @@ void load_out_set(bool status)
     leds_set(LED_LOAD, status, -1);
 #endif
 
-#ifdef DT_OUTPUTS_LOAD_PRESENT
-    gpio_pin_configure(dev_load, DT_OUTPUTS_LOAD_GPIOS_PIN,
-        DT_OUTPUTS_LOAD_GPIOS_FLAGS | GPIO_OUTPUT_INACTIVE);
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
+    gpio_pin_configure(dev_load, DT_GPIO_PIN(LOAD_GPIO, gpios),
+        DT_GPIO_FLAGS(LOAD_GPIO, gpios) | GPIO_OUTPUT_INACTIVE);
     if (status == true) {
 #ifdef PIN_I_LOAD_COMP
         lptim_init();
 #else
-        gpio_pin_set(dev_load, DT_OUTPUTS_LOAD_GPIOS_PIN, 1);
+        gpio_pin_set(dev_load, DT_GPIO_PIN(LOAD_GPIO, gpios), 1);
 #endif
     }
     else {
-        gpio_pin_set(dev_load, DT_OUTPUTS_LOAD_GPIOS_PIN, 0);
+        gpio_pin_set(dev_load, DT_GPIO_PIN(LOAD_GPIO, gpios), 0);
     }
 #endif
 }
 
 void usb_out_set(bool status)
 {
-#ifdef DT_OUTPUTS_USB_PWR_PRESENT
-    gpio_pin_configure(dev_usb, DT_OUTPUTS_USB_PWR_GPIOS_PIN,
-        DT_OUTPUTS_USB_PWR_GPIOS_FLAGS | GPIO_OUTPUT_INACTIVE);
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), usb_pwr))
+    gpio_pin_configure(dev_usb, DT_GPIO_PIN(USB_GPIO, gpios),
+        DT_GPIO_FLAGS(USB_GPIO, gpios) | GPIO_OUTPUT_INACTIVE);
     if (status == true) {
-        gpio_pin_set(dev_usb, DT_OUTPUTS_USB_PWR_GPIOS_PIN, 1);
+        gpio_pin_set(dev_usb, DT_GPIO_PIN(USB_GPIO, gpios), 1);
     }
     else {
-        gpio_pin_set(dev_usb, DT_OUTPUTS_USB_PWR_GPIOS_PIN, 0);
+        gpio_pin_set(dev_usb, DT_GPIO_PIN(USB_GPIO, gpios), 0);
     }
 #endif
 }
 
-#ifdef DT_OUTPUTS_CHARGE_PUMP_PRESENT
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), charge_pump))
 
 #if defined(CONFIG_SOC_STM32G431XX)
 #include <stm32g4xx_ll_tim.h>
@@ -194,10 +196,13 @@ void usb_out_set(bool status)
 #include "stm32g431xx.h"
 #endif
 
+#define CP_PWM_PERIOD (DT_PHA(DT_CHILD(DT_PATH(outputs), charge_pump), pwms, period))
+#define CP_PWM_CHANNEL (DT_PHA(DT_CHILD(DT_PATH(outputs), charge_pump), pwms, channel))
+
 /* Currently hard-coded for TIM8 as Zephyr driver doesn't work with this timer at the moment */
 void load_cp_enable()
 {
-    int freq_Hz = 1000*1000*1000 / DT_OUTPUTS_CHARGE_PUMP_PWMS_PERIOD;
+    int freq_Hz = 1000*1000*1000 / CP_PWM_PERIOD;
 
 	LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_TIM8);
 
@@ -239,22 +244,21 @@ void load_cp_enable()
 		return;
 	}
     // set to 50% duty cycle
-    pwm_pin_set_nsec(pwm_dev, DT_OUTPUTS_CHARGE_PUMP_PWMS_CHANNEL,
-        DT_OUTPUTS_CHARGE_PUMP_PWMS_PERIOD, DT_OUTPUTS_CHARGE_PUMP_PWMS_PERIOD / 2, 0);
+    pwm_pin_set_nsec(pwm_dev, CP_PWM_CHANNEL, CP_PWM_PERIOD, CP_PWM_PERIOD / 2, 0);
 */
 }
 #endif
 
 void load_out_init()
 {
-#ifdef DT_OUTPUTS_LOAD_PRESENT
-    dev_load = device_get_binding(DT_OUTPUTS_LOAD_GPIOS_CONTROLLER);
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
+    dev_load = device_get_binding(DT_GPIO_LABEL(LOAD_GPIO, gpios));
 #endif
 
     // analog comparator to detect short circuits and trigger immediate load switch-off
     short_circuit_comp_init();
 
-#ifdef DT_OUTPUTS_CHARGE_PUMP_PRESENT
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), charge_pump))
     // enable charge pump for high-side switches (if existing)
     load_cp_enable();
 #endif
@@ -262,8 +266,8 @@ void load_out_init()
 
 void usb_out_init()
 {
-#ifdef DT_OUTPUTS_USB_PWR_PRESENT
-    dev_usb = device_get_binding(DT_OUTPUTS_USB_PWR_GPIOS_CONTROLLER);
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), usb_pwr))
+    dev_usb = device_get_binding(DT_GPIO_LABEL(USB_GPIO, gpios));
 #endif
 }
 

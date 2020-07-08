@@ -16,13 +16,13 @@
 #include "debug.h"
 #include "board.h"        // contains defines for pins
 
-#if DT_COMPAT_DCDC
+#if DT_NODE_EXISTS(DT_PATH(dcdc))
 static float dcdc_current_offset;
 #endif
-#if DT_OUTPUTS_PWM_SWITCH_PRESENT
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), pwm_switch))
 static float pwm_current_offset;
 #endif
-#if DT_OUTPUTS_LOAD_PRESENT
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
 static float load_current_offset;
 #endif
 
@@ -72,13 +72,13 @@ static inline float ntc_temp(uint32_t channel, int32_t vref)
 void calibrate_current_sensors()
 {
     int vref = VREF;
-#if DT_COMPAT_DCDC
+#if DT_NODE_EXISTS(DT_PATH(dcdc))
     dcdc_current_offset = -adc_scaled(ADC_POS(i_dcdc), vref, ADC_GAIN(i_dcdc));
 #endif
-#if DT_OUTPUTS_PWM_SWITCH_PRESENT
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), pwm_switch))
     pwm_current_offset = -adc_scaled(ADC_POS(i_pwm), vref, ADC_GAIN(i_pwm));
 #endif
-#if DT_OUTPUTS_LOAD_PRESENT
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
     load_current_offset = -adc_scaled(ADC_POS(i_load), vref, ADC_GAIN(i_load));
 #endif
 }
@@ -89,7 +89,7 @@ void adc_update_value(unsigned int pos)
     // y(n) = c * x(n) + (c - 1) * y(n-1)
     // see also here: http://techteach.no/simview/lowpass_filter/doc/filter_algorithm.pdf
 
-#if DT_OUTPUTS_PWM_SWITCH_PRESENT
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), pwm_switch))
     if (pos == ADC_POS(v_pwm) || pos == ADC_POS(i_pwm)) {
         // only read input voltage and current when switch is on or permanently off
         if (pwm_switch.signal_high() || pwm_switch.active() == false) {
@@ -140,23 +140,23 @@ void daq_update()
     // calculate lower voltage first, as it is needed for PWM terminal voltage calculation
     lv_bus.voltage = adc_scaled(ADC_POS(v_low), vref, ADC_GAIN(v_low));
 
-#if DT_COMPAT_DCDC
+#if DT_NODE_EXISTS(DT_PATH(dcdc))
     hv_bus.voltage = adc_scaled(ADC_POS(v_high), vref, ADC_GAIN(v_high));
 #endif
 
-#if DT_OUTPUTS_PWM_SWITCH_PRESENT
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), pwm_switch))
     pwm_switch.ext_voltage = lv_bus.voltage -
         adc_scaled(ADC_POS(v_pwm), vref, ADC_GAIN(v_pwm), ADC_OFFSET(v_pwm));
 #endif
 
-#if DT_OUTPUTS_LOAD_PRESENT
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
     load.current = adc_scaled(ADC_POS(i_load), vref, ADC_GAIN(i_load)) + load_current_offset;
     float load_current = load.current;
 #else
     float load_current = 0;     // value used below, so we still need to define the variable
 #endif
 
-#if DT_OUTPUTS_PWM_SWITCH_PRESENT
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), pwm_switch))
     // current multiplied with PWM duty cycle for PWM charger to get avg current for correct power
     // calculation
     pwm_switch.current = -pwm_switch.get_duty_cycle() * (
@@ -167,7 +167,7 @@ void daq_update()
     pwm_switch.power = pwm_switch.bus->voltage * pwm_switch.current;
 #endif
 
-#if DT_COMPAT_DCDC
+#if DT_NODE_EXISTS(DT_PATH(dcdc))
     dcdc_lv_port.current =
         adc_scaled(ADC_POS(i_dcdc), vref, ADC_GAIN(i_dcdc)) + dcdc_current_offset;
 
@@ -180,7 +180,7 @@ void daq_update()
 #endif
     lv_terminal.power   = lv_terminal.bus->voltage * lv_terminal.current;
 
-#if DT_OUTPUTS_LOAD_PRESENT
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
     load.power = load.bus->voltage * load.current;
 #endif
 
@@ -223,10 +223,10 @@ void daq_update()
 void high_voltage_alert()
 {
     // disable any sort of input
-#if DT_COMPAT_DCDC
+#if DT_NODE_EXISTS(DT_PATH(dcdc))
     dcdc.emergency_stop();
 #endif
-#if DT_OUTPUTS_PWM_SWITCH_PRESENT
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), pwm_switch))
     pwm_switch.emergency_stop();
 #endif
     // do not use enter_state function, as we don't want to wait entire recharge delay
@@ -240,7 +240,7 @@ void high_voltage_alert()
 
 void low_voltage_alert()
 {
-#if DT_OUTPUTS_LOAD_PRESENT
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
     // the battery undervoltage must have been caused by a load current peak
     load.stop(ERR_LOAD_VOLTAGE_DIP);
 #endif

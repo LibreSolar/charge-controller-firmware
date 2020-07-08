@@ -28,26 +28,26 @@
 #include "stm32g431xx.h"
 #endif
 
-#if DT_OUTPUTS_PWM_SWITCH_PRESENT
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), pwm_switch))
 
 #ifndef UNIT_TEST
 
 // all PWM charge controllers use TIM3 at the moment
 static TIM_TypeDef *tim = TIM3;
 
-#if DT_OUTPUTS_PWM_SWITCH_PWMS_CHANNEL == 1
+#if DT_PWMS_CHANNEL(DT_CHILD(DT_PATH(outputs), pwm_switch)) == 1
 #define LL_TIM_CHANNEL LL_TIM_CHANNEL_CH1
 #define LL_TIM_OC_SetCompare LL_TIM_OC_SetCompareCH1
 #define LL_TIM_OC_GetCompare LL_TIM_OC_GetCompareCH1
-#elif DT_OUTPUTS_PWM_SWITCH_PWMS_CHANNEL == 2
+#elif DT_PWMS_CHANNEL(DT_CHILD(DT_PATH(outputs), pwm_switch)) == 2
 #define LL_TIM_CHANNEL LL_TIM_CHANNEL_CH2
 #define LL_TIM_OC_SetCompare LL_TIM_OC_SetCompareCH2
 #define LL_TIM_OC_GetCompare LL_TIM_OC_GetCompareCH2
-#elif DT_OUTPUTS_PWM_SWITCH_PWMS_CHANNEL == 3
+#elif DT_PWMS_CHANNEL(DT_CHILD(DT_PATH(outputs), pwm_switch)) == 3
 #define LL_TIM_CHANNEL LL_TIM_CHANNEL_CH3
 #define LL_TIM_OC_SetCompare LL_TIM_OC_SetCompareCH3
 #define LL_TIM_OC_GetCompare LL_TIM_OC_GetCompareCH3
-#elif DT_OUTPUTS_PWM_SWITCH_PWMS_CHANNEL == 4
+#elif DT_PWMS_CHANNEL(DT_CHILD(DT_PATH(outputs), pwm_switch)) == 4
 #define LL_TIM_CHANNEL LL_TIM_CHANNEL_CH4
 #define LL_TIM_OC_SetCompare LL_TIM_OC_SetCompareCH4
 #define LL_TIM_OC_GetCompare LL_TIM_OC_GetCompareCH4
@@ -161,4 +161,4 @@ bool pwm_active() { return false; }
 
 #endif
 
-#endif /* DT_OUTPUTS_PWM_SWITCH_PRESENT */
+#endif /* DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), pwm_switch)) */

@@ -61,12 +61,12 @@ void main(void)
     charger.detect_num_batteries(&bat_conf);     // check if we have 24V instead of 12V system
     charger.init_terminal(&bat_conf);
 
-    #if DT_OUTPUTS_LOAD_PRESENT
+    #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
     load.set_voltage_limits(bat_conf.voltage_load_disconnect, bat_conf.voltage_load_reconnect,
         bat_conf.voltage_absolute_max);
     #endif
 
-    #if DT_OUTPUTS_USB_PWR_PRESENT
+    #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), usb_pwr))
     usb_pwr.set_voltage_limits(bat_conf.voltage_load_disconnect - 0.1, // keep on longer than load
         bat_conf.voltage_load_reconnect, bat_conf.voltage_absolute_max);
     #endif
@@ -82,7 +82,7 @@ void main(void)
 
         leds_update_1s();
 
-        #if DT_OUTPUTS_LOAD_PRESENT
+        #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
         leds_update_soc(charger.soc, flags_check(&load.error_flags, ERR_LOAD_SHEDDING));
         #else
         leds_update_soc(charger.soc, false);
@@ -113,12 +113,12 @@ void control_thread()
 
         lv_terminal.update_bus_current_margins();
 
-        #if DT_OUTPUTS_PWM_SWITCH_PRESENT
+        #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), pwm_switch))
         pwm_switch.control();
         charging |= pwm_switch.active();
         #endif
 
-        #if DT_COMPAT_DCDC
+        #if DT_NODE_EXISTS(DT_PATH(dcdc))
         hv_terminal.update_bus_current_margins();
         dcdc.control();     // control of DC/DC including MPPT algorithm
         charging |= half_bridge_enabled();
@@ -126,11 +126,11 @@ void control_thread()
 
         leds_set_charging(charging);
 
-        #if DT_OUTPUTS_LOAD_PRESENT
+        #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
         load.control();
         #endif
 
-        #if DT_OUTPUTS_USB_PWR_PRESENT
+        #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), usb_pwr))
         usb_pwr.control();
         #endif
 
@@ -139,13 +139,13 @@ void control_thread()
             last_call = now;
 
             // energy + soc calculation must be called exactly once per second
-            #if DT_COMPAT_DCDC
+            #if DT_NODE_EXISTS(DT_PATH(dcdc))
             if  (dcdc.state != DCDC_STATE_OFF) {
                 hv_terminal.energy_balance();
             }
             #endif
 
-            #if DT_OUTPUTS_PWM_SWITCH_PRESENT
+            #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), pwm_switch))
             if (pwm_switch.active() == 1) {
                 pwm_switch.energy_balance();
             }
@@ -153,7 +153,7 @@ void control_thread()
 
             lv_terminal.energy_balance();
 
-            #if DT_OUTPUTS_LOAD_PRESENT
+            #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
             if (load.state == 1) {
                 load.energy_balance();
             }
@@ -163,7 +163,7 @@ void control_thread()
             dev_stat.update_min_max_values();
             charger.update_soc(&bat_conf);
 
-            #if CONFIG_HS_MOSFET_FAIL_SAFE_PROTECTION && DT_COMPAT_DCDC
+            #if CONFIG_HS_MOSFET_FAIL_SAFE_PROTECTION && DT_NODE_EXISTS(DT_PATH(dcdc))
             if (dev_stat.has_error(ERR_DCDC_HS_MOSFET_SHORT)) {
                 dcdc.fuse_destruction();
             }

@@ -26,6 +26,10 @@
 
 #ifndef UNIT_TEST
 
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), boot0))
+#define BOOT0_GPIO DT_CHILD(DT_PATH(outputs), boot0)
+#endif
+
 #include <power/reboot.h>
 #include <drivers/gpio.h>
 #include <drivers/watchdog.h>
@@ -41,7 +45,7 @@ int hw_wdt_channel;
 
 void watchdog_init()
 {
-    wdt = device_get_binding(DT_INST_0_ST_STM32_WATCHDOG_LABEL);
+    wdt = device_get_binding(DT_LABEL(DT_NODELABEL(iwdg)));
     if (!wdt) {
         printk("Cannot get WDT device\n");
         return;
@@ -99,15 +103,16 @@ void sw_watchdog_start()
 
 void start_stm32_bootloader()
 {
-#ifdef DT_OUTPUTS_BOOT0_PRESENT
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), boot0))
+
     // pin is connected to BOOT0 via resistor and capacitor
-    struct device *dev = device_get_binding(DT_OUTPUTS_BOOT0_GPIOS_CONTROLLER);
-    gpio_pin_configure(dev, DT_OUTPUTS_BOOT0_GPIOS_PIN,
-        DT_OUTPUTS_BOOT0_GPIOS_FLAGS | GPIO_OUTPUT_ACTIVE);
+    struct device *dev = device_get_binding(DT_GPIO_LABEL(BOOT0_GPIO, gpios));
+    gpio_pin_configure(dev, DT_GPIO_PIN(BOOT0_GPIO, gpios),
+        DT_GPIO_FLAGS(BOOT0_GPIO, gpios) | GPIO_OUTPUT_ACTIVE);
 
     k_sleep(K_MSEC(100));   // wait for capacitor at BOOT0 pin to charge up
     reset_device();
-#elif defined (CONFIG_SOC_SERIES_STM32F0X)
+#elif defined(CONFIG_SOC_SERIES_STM32F0X)
     // place magic code at end of RAM and initiate reset
     *((uint32_t *)(MAGIC_CODE_ADDR)) = 0xDEADBEEF;
     reset_device();

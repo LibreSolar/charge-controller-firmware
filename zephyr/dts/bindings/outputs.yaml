@@ -21,9 +21,6 @@ child-binding:
       type: string
       required: true
       description: Human readable string describing the device (used by Zephyr for API name)
-    present:
-      type: int
-      default: 1
     kconfig-flag:
       type: boolean
       description: This value can be checked by Kconfig parser using dt_node_has_bool_prop function

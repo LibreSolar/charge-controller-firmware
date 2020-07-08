@@ -24,6 +24,10 @@
 #define CAN_NODE_ID 20
 #endif
 
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), can_en))
+#define CAN_EN_GPIO DT_CHILD(DT_PATH(outputs), can_en)
+#endif
+
 extern ThingSet ts;
 
 struct device *can_dev;
@@ -160,16 +164,16 @@ ThingSetCAN::ThingSetCAN(uint8_t can_node_id, const unsigned int c):
     node_id(can_node_id),
     channel(c)
 {
-    can_en_dev = device_get_binding(DT_OUTPUTS_CAN_EN_GPIOS_CONTROLLER);
-    gpio_pin_configure(can_en_dev, DT_OUTPUTS_CAN_EN_GPIOS_PIN,
-        DT_OUTPUTS_CAN_EN_GPIOS_FLAGS | GPIO_OUTPUT_INACTIVE);
+    can_en_dev = device_get_binding(DT_GPIO_LABEL(CAN_EN_GPIO, gpios));
+    gpio_pin_configure(can_en_dev, DT_GPIO_PIN(CAN_EN_GPIO, gpios),
+        DT_GPIO_FLAGS(CAN_EN_GPIO, gpios) | GPIO_OUTPUT_INACTIVE);
 
     can_dev = device_get_binding("CAN_1");
 }
 
 void ThingSetCAN::enable()
 {
-    gpio_pin_set(can_en_dev, DT_OUTPUTS_CAN_EN_GPIOS_PIN, 1);
+    gpio_pin_set(can_en_dev, DT_GPIO_PIN(CAN_EN_GPIO, gpios), 1);
 
 #ifdef CONFIG_ISOTP
     k_tid_t tid = k_thread_create(&rx_thread_data, rx_thread_stack,

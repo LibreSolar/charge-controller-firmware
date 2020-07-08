@@ -52,15 +52,18 @@ const unsigned char bmp_disconnected [] = {
     0x08, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
-const char i2c_dev[] = DT_ALIAS_I2C_UEXT_LABEL;
-OledSSD1306 oled(i2c_dev);
+OledSSD1306 oled(DT_LABEL(DT_ALIAS(i2c_uext)));
+
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), uext_en))
+#define UEXT_EN_GPIO DT_CHILD(DT_PATH(outputs), uext_en)
+#endif
 
 void ExtOled::enable()
 {
-#ifdef DT_OUTPUTS_UEXT_EN_PRESENT
-    struct device *dev_uext_en = device_get_binding(DT_OUTPUTS_UEXT_EN_GPIOS_CONTROLLER);
-    gpio_pin_configure(dev_uext_en, DT_OUTPUTS_UEXT_EN_GPIOS_PIN,
-        DT_OUTPUTS_UEXT_EN_GPIOS_FLAGS | GPIO_OUTPUT_ACTIVE);
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), uext_en))
+    struct device *dev_uext_en = device_get_binding(DT_GPIO_LABEL(UEXT_EN_GPIO, gpios));
+    gpio_pin_configure(dev_uext_en, DT_GPIO_PIN(UEXT_EN_GPIO, gpios),
+        DT_GPIO_FLAGS(UEXT_EN_GPIO, gpios) | GPIO_OUTPUT_ACTIVE);
 #endif
 
     oled.init(CONFIG_EXT_OLED_BRIGHTNESS);
@@ -116,8 +119,8 @@ void ExtOled::process_1s()
     }
 
     // solar panel data
-#ifdef CHARGER_TYPE_PWM
-    if (pwm_switch_enabled()) {
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), pwm_switch))
+    if (pwm_switch.active()) {
 #else
     if (half_bridge_enabled()) {
 #endif
@@ -131,7 +134,7 @@ void ExtOled::process_1s()
         len = snprintf(buf, sizeof(buf), "n/a");
         oled.writeString(buf, len);
     }
-#ifndef CHARGER_TYPE_PWM
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), pwm_switch))
     if (in_terminal.bus->voltage > bat_terminal.bus->voltage)
 #endif
     {
@@ -169,8 +172,8 @@ void ExtOled::process_1s()
 
     oled.setTextCursor(0, 56);
 
-#ifdef CHARGER_TYPE_PWM
-    bool pwm_enabled = pwm_switch.active()();
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), pwm_switch))
+    bool pwm_enabled = pwm_switch.active();
     float duty_cycle = pwm_switch.get_duty_cycle();
 #else
     bool pwm_enabled = half_bridge_enabled();

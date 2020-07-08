@@ -25,11 +25,11 @@
 
 extern DeviceStatus dev_stat;
 
-#if !DT_COMPAT_DCDC
+#if DT_NODE_EXISTS(DT_PATH(dcdc))
 
-Dcdc::Dcdc(PowerPort *hv_side, PowerPort *lv_side, DcdcOperationMode op_mode) {}
-
-#else
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), hv_ext_sense))
+#define HV_EXT_SENSE_GPIO DT_CHILD(DT_PATH(outputs), hv_ext_sense)
+#endif
 
 Dcdc::Dcdc(PowerPort *hv_side, PowerPort *lv_side, DcdcOperationMode op_mode)
 {
@@ -38,11 +38,11 @@ Dcdc::Dcdc(PowerPort *hv_side, PowerPort *lv_side, DcdcOperationMode op_mode)
     mode           = op_mode;
     enable         = true;
     state          = DCDC_STATE_OFF;
-    lvs->neg_current_limit = -DT_INST_0_DCDC_CURRENT_MAX;
-    lvs->pos_current_limit = DT_INST_0_DCDC_CURRENT_MAX;
-    ls_current_max = DT_INST_0_DCDC_CURRENT_MAX;
-    hs_voltage_max = DT_CHARGE_CONTROLLER_PCB_HS_VOLTAGE_MAX;
-    ls_voltage_max = DT_CHARGE_CONTROLLER_PCB_LS_VOLTAGE_MAX;
+    lvs->neg_current_limit = -DT_PROP(DT_PATH(dcdc), current_max);
+    lvs->pos_current_limit = DT_PROP(DT_PATH(dcdc), current_max);
+    ls_current_max = DT_PROP(DT_PATH(dcdc), current_max);
+    hs_voltage_max = DT_PROP(DT_PATH(pcb), hs_voltage_max);
+    ls_voltage_max = DT_PROP(DT_PATH(pcb), hs_voltage_max);
     ls_voltage_min = 9.0;
     output_power_min = 1;         // switch off if power < 1 W
     restart_interval = 60;
@@ -50,8 +50,8 @@ Dcdc::Dcdc(PowerPort *hv_side, PowerPort *lv_side, DcdcOperationMode op_mode)
     pwm_delta = 1;                // start-condition of duty cycle pwr_inc_pwm_direction
 
     // lower duty limit might have to be adjusted dynamically depending on LS voltage
-    half_bridge_init(DT_INST_0_DCDC_PWM_FREQUENCY / 1000, DT_INST_0_DCDC_PWM_DEADTIME,
-        12 / hs_voltage_max, 0.97);
+    half_bridge_init(DT_PROP(DT_PATH(dcdc), pwm_frequency) / 1000,
+        DT_PROP(DT_PATH(dcdc), pwm_deadtime), 12 / hs_voltage_max, 0.97);
 }
 
 int Dcdc::perturb_observe_controller()
@@ -198,7 +198,8 @@ __weak void Dcdc::control()
             // high-side MOSFET must be broken --> set flag and let main() decide
             // what to do... (e.g. call dcdc_self_destruction)
             current_debounce_counter++;
-            if (current_debounce_counter > CONFIG_CONTROL_FREQUENCY) {      // waited 1s before setting the flag
+            // waited 1s before setting the flag
+            if (current_debounce_counter > CONFIG_CONTROL_FREQUENCY) {
                 dev_stat.set_error(ERR_DCDC_HS_MOSFET_SHORT);
             }
         }
@@ -296,20 +297,24 @@ void Dcdc::fuse_destruction()
 
 void Dcdc::output_hvs_enable()
 {
-#ifdef DT_OUTPUTS_HV_EXT_SENSE_GPIOS_CONTROLLER
-    struct device *dev_hv_ext = device_get_binding(DT_OUTPUTS_HV_EXT_SENSE_GPIOS_CONTROLLER);
-    gpio_pin_configure(dev_hv_ext, DT_OUTPUTS_HV_EXT_SENSE_GPIOS_PIN,
-        DT_OUTPUTS_HV_EXT_SENSE_GPIOS_FLAGS | GPIO_OUTPUT_ACTIVE);
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), hv_ext_sense))
+    struct device *dev_hv_ext = device_get_binding(DT_GPIO_LABEL(HV_EXT_SENSE_GPIO, gpios));
+    gpio_pin_configure(dev_hv_ext, DT_GPIO_PIN(HV_EXT_SENSE_GPIO, gpios),
+        DT_GPIO_FLAGS(HV_EXT_SENSE_GPIO, gpios) | GPIO_OUTPUT_ACTIVE);
 #endif
 }
 
 void Dcdc::output_hvs_disable()
 {
-#ifdef DT_OUTPUTS_HV_EXT_SENSE_GPIOS_CONTROLLER
-    struct device *dev_hv_ext = device_get_binding(DT_OUTPUTS_HV_EXT_SENSE_GPIOS_CONTROLLER);
-    gpio_pin_configure(dev_hv_ext, DT_OUTPUTS_HV_EXT_SENSE_GPIOS_PIN,
-        DT_OUTPUTS_HV_EXT_SENSE_GPIOS_FLAGS | GPIO_OUTPUT_INACTIVE);
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), hv_ext_sense))
+    struct device *dev_hv_ext = device_get_binding(DT_GPIO_LABEL(HV_EXT_SENSE_GPIO, gpios));
+    gpio_pin_configure(dev_hv_ext, DT_GPIO_PIN(HV_EXT_SENSE_GPIO, gpios),
+        DT_GPIO_FLAGS(HV_EXT_SENSE_GPIO, gpios) | GPIO_OUTPUT_INACTIVE);
 #endif
 }
 
-#endif /* DT_COMPAT_DCDC */
+#else
+
+Dcdc::Dcdc(PowerPort *hv_side, PowerPort *lv_side, DcdcOperationMode op_mode) {}
+
+#endif /* DT_NODE_EXISTS(DT_PATH(dcdc)) */

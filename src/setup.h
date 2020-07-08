@@ -19,14 +19,14 @@
 extern DcBus lv_bus;
 extern PowerPort lv_terminal;
 
-#if DT_COMPAT_DCDC
+#if DT_NODE_EXISTS(DT_PATH(dcdc))
 extern DcBus hv_bus;
 extern PowerPort hv_terminal;
 extern PowerPort dcdc_lv_port;
 extern Dcdc dcdc;
 #endif
 
-#if DT_OUTPUTS_PWM_SWITCH_PRESENT
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), pwm_switch))
 extern PwmSwitch pwm_switch;
 #endif
 
@@ -39,11 +39,11 @@ extern Charger charger;
 extern BatConf bat_conf;
 extern BatConf bat_conf_user;
 
-#if DT_OUTPUTS_LOAD_PRESENT
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
 extern LoadOutput load;
 #endif
 
-#if DT_OUTPUTS_USB_PWR_PRESENT
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), usb_pwr))
 extern LoadOutput usb_pwr;
 #endif
 

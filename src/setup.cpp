@@ -30,7 +30,7 @@
 DcBus lv_bus;
 PowerPort lv_terminal(&lv_bus, true);   // low voltage terminal (battery for typical MPPT)
 
-#if DT_COMPAT_DCDC
+#if DT_NODE_EXISTS(DT_PATH(dcdc))
 DcBus hv_bus;
 PowerPort hv_terminal(&hv_bus, true);   // high voltage terminal (solar for typical MPPT)
 PowerPort dcdc_lv_port(&lv_bus);        // internal low voltage side of DC/DC converter
@@ -43,15 +43,15 @@ Dcdc dcdc(&hv_terminal, &dcdc_lv_port, MODE_MPPT_BUCK);
 #endif // CONFIG_HV_TERMINAL
 #endif
 
-#if DT_OUTPUTS_PWM_SWITCH_PRESENT
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), pwm_switch))
 PwmSwitch pwm_switch(&lv_bus);
 #endif
 
-#if DT_OUTPUTS_LOAD_PRESENT
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
 LoadOutput load(&lv_bus, &load_out_set, &load_out_init);
 #endif
 
-#if DT_OUTPUTS_USB_PWR_PRESENT
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), usb_pwr))
 LoadOutput usb_pwr(&lv_bus, &usb_out_set, &usb_out_init);
 #endif
 

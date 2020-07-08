@@ -19,10 +19,10 @@ extern DeviceStatus dev_stat;
 extern LoadOutput load;
 
 // DISCHARGE_CURRENT_MAX used to estimate current-compensation of load disconnect voltage
-#ifdef DT_OUTPUTS_LOAD_CURRENT_MAX
-#define DISCHARGE_CURRENT_MAX DT_OUTPUTS_LOAD_CURRENT_MAX
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
+#define DISCHARGE_CURRENT_MAX DT_PROP(DT_CHILD(DT_PATH(outputs), load), current_max)
 #else
-#define DISCHARGE_CURRENT_MAX DT_INST_0_DCDC_CURRENT_MAX
+#define DISCHARGE_CURRENT_MAX DT_PROP(DT_PATH(dcdc), current_max)
 #endif
 
 void battery_conf_init(BatConf *bat, int type, int num_cells, float nominal_capacity)
@@ -304,7 +304,9 @@ void Charger::enter_state(int next_state)
 
 void Charger::discharge_control(BatConf *bat_conf)
 {
-#if DT_OUTPUTS_LOAD_PRESENT || DT_OUTPUTS_USB_PWR_PRESENT
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load)) || \
+    DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), usb_pwr))
+
     if (!empty) {
         // as we don't have a proper SOC estimation, we determine an empty battery by the main
         // load output being switched off
@@ -377,7 +379,7 @@ void Charger::discharge_control(BatConf *bat_conf)
 
         }
     }
-#endif // DT_OUTPUTS_LOAD_PRESENT || DT_OUTPUTS_USB_PWR_PRESENT
+#endif
 }
 
 void Charger::charge_control(BatConf *bat_conf)

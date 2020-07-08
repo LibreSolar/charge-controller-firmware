@@ -8,10 +8,10 @@
 #define PCB_STUB_H
 
 // PWM charge controller
-#define CONFIG_PWM_TERMINAL_SOLAR DT_OUTPUTS_PWM_SWITCH_PRESENT
+#define CONFIG_PWM_TERMINAL_SOLAR DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), pwm_switch))
 
 // MPPT buck/boost or nanogrid mode
-#define CONFIG_HV_TERMINAL_SOLAR DT_COMPAT_DCDC
+#define CONFIG_HV_TERMINAL_SOLAR DT_NODE_EXISTS(DT_PATH(dcdc))
 #define CONFIG_HV_TERMINAL_NANOGRID 0
 
 // battery always assumed to be at low-voltage terminal (might need to be changed for boost mode)
@@ -24,50 +24,11 @@
 
 #define CONFIG_DEVICE_ID 12345678
 
-#define DT_CHARGE_CONTROLLER_PCB_TYPE "PCB-STUB"
-#define DT_CHARGE_CONTROLLER_PCB_VERSION_STR "v0.1"
-
 #define CONFIG_THINGSET_EXPERT_PASSWORD "expert123"
 #define CONFIG_THINGSET_MAKER_PASSWORD "maker456"
 
-// specify features of charge controller
-#define DT_COMPAT_DCDC  1
-#define DT_INST_0_DCDC_PWM_FREQUENCY 70000 // Hz
-#define DT_INST_0_DCDC_PWM_DEADTIME  300   // ns
-#define DT_INST_0_DCDC_CURRENT_MAX   20    // A
-
-#define DT_OUTPUTS_PWM_SWITCH_PRESENT 1
-#define DT_OUTPUTS_PWM_SWITCH_PWMS_PERIOD   (20*1000*1000)
-#define DT_OUTPUTS_PWM_SWITCH_CURRENT_MAX    20 // A
-
-#define DT_OUTPUTS_LOAD_PRESENT     1
-#define DT_OUTPUTS_LOAD_CURRENT_MAX 20  // PCB maximum load switch current
-
-#define DT_OUTPUTS_USB_PWR_PRESENT  1
-
 // Values that are otherwise defined by Kconfig
 #define CONFIG_CONTROL_FREQUENCY   10   // Hz
-#define DT_CHARGE_CONTROLLER_PCB_MOSFETS_TJ_MAX     120
-#define DT_CHARGE_CONTROLLER_PCB_INTERNAL_TREF_MAX  50
-#define DT_CHARGE_CONTROLLER_PCB_MOSFETS_TAU_JA     5
-
-#define DT_CHARGE_CONTROLLER_PCB_LS_VOLTAGE_MAX    32  // Maximum voltage at battery port (V)
-#define DT_CHARGE_CONTROLLER_PCB_HS_VOLTAGE_MAX   55  // Maximum voltage at PV input port (V)
-
-#define PIN_UEXT_TX   0
-#define PIN_UEXT_RX   0
-#define PIN_UEXT_SCL  0
-#define PIN_UEXT_SDA  0
-#define PIN_UEXT_MISO 0
-#define PIN_UEXT_MOSI 0
-#define PIN_UEXT_SCK  0
-#define PIN_UEXT_SSEL 0
-
-#define PIN_SWD_TX    0
-#define PIN_SWD_RX    0
-
-//#define PIN_LOAD_DIS    0
-//#define PIN_USB_PWR_DIS 0
 
 enum pin_state_t { PIN_HIGH, PIN_LOW, PIN_FLOAT };
 

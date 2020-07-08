@@ -30,8 +30,8 @@
 #include "eeprom.h"
 
 const char* const manufacturer = "Libre Solar";
-const char* const device_type = DT_CHARGE_CONTROLLER_PCB_TYPE;
-const char* const hardware_version = DT_CHARGE_CONTROLLER_PCB_VERSION_STR;
+const char* const device_type = DT_PROP(DT_PATH(pcb), type);
+const char* const hardware_version = DT_PROP(DT_PATH(pcb), version_str);
 const char* const firmware_version = "0.1";
 const char* const firmware_commit = COMMIT_HASH;
 char device_id[9];
@@ -166,7 +166,7 @@ static DataNode data_nodes[] = {
         ID_CONF, TS_ANY_R | TS_ANY_W, PUB_NVM),
 
     // load settings
-#if DT_OUTPUTS_LOAD_PRESENT
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
     TS_NODE_BOOL(0x50, "LoadEnDefault", &load.enable,
         ID_CONF, TS_ANY_R | TS_ANY_W, PUB_NVM),
 
@@ -183,7 +183,7 @@ static DataNode data_nodes[] = {
         ID_CONF, TS_ANY_R | TS_ANY_W, PUB_NVM),
 #endif
 
-#if DT_OUTPUTS_USB_PWR_PRESENT
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), usb_pwr))
     TS_NODE_BOOL(0x55, "UsbEnDefault", &usb_pwr.enable,
         ID_CONF, TS_ANY_R | TS_ANY_W, PUB_NVM),
 
@@ -202,22 +202,22 @@ static DataNode data_nodes[] = {
 
     TS_NODE_PATH(ID_INPUT, "input", 0, NULL),
 
-#if DT_OUTPUTS_LOAD_PRESENT
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
     TS_NODE_BOOL(0x61, "LoadEn", &load.enable,
         ID_INPUT, TS_ANY_R | TS_ANY_W, 0),
 #endif
 
-#if DT_OUTPUTS_USB_PWR_PRESENT
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), usb_pwr))
     TS_NODE_BOOL(0x62, "UsbEn", &usb_pwr.enable,
         ID_INPUT, TS_ANY_R | TS_ANY_W, 0),
 #endif
 
-#if DT_COMPAT_DCDC
+#if DT_NODE_EXISTS(DT_PATH(dcdc))
     TS_NODE_BOOL(0x63, "DcdcEn", &dcdc.enable,
         ID_INPUT, TS_ANY_R | TS_ANY_W, 0),
 #endif
 
-#if DT_OUTPUTS_PWM_SWITCH_PRESENT
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), pwm_switch))
     TS_NODE_BOOL(0x64, "PwmEn", &pwm_switch.enable,
         ID_INPUT, TS_ANY_R | TS_ANY_W, 0),
 #endif
@@ -274,7 +274,7 @@ static DataNode data_nodes[] = {
     TS_NODE_UINT32(0x7C, "ChgState", &charger.state,
         ID_OUTPUT, TS_ANY_R, PUB_SER | PUB_CAN),
 
-#if DT_COMPAT_DCDC
+#if DT_NODE_EXISTS(DT_PATH(dcdc))
     TS_NODE_UINT16(0x7D, "DCDCState", &dcdc.state,
         ID_OUTPUT, TS_ANY_R, PUB_SER | PUB_CAN),
 #endif
@@ -297,7 +297,7 @@ static DataNode data_nodes[] = {
         ID_OUTPUT, TS_ANY_R, 0),
 #endif
 
-#if DT_OUTPUTS_LOAD_PRESENT
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
     TS_NODE_FLOAT(0x89, "Load_A", &load.current, 2,
         ID_OUTPUT, TS_ANY_R, PUB_SER | PUB_CAN),
 
@@ -308,7 +308,7 @@ static DataNode data_nodes[] = {
         ID_OUTPUT, TS_ANY_R, PUB_SER | PUB_CAN),
 #endif
 
-#if DT_OUTPUTS_USB_PWR_PRESENT
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), usb_pwr))
     TS_NODE_INT32(0x8C, "UsbInfo", &usb_pwr.info,
         ID_OUTPUT, TS_ANY_R, PUB_SER | PUB_CAN),
 #endif
@@ -330,7 +330,7 @@ static DataNode data_nodes[] = {
     TS_NODE_UINT32(0x08, "SolarInTotal_Wh", &dev_stat.solar_in_total_Wh,
         ID_REC, TS_ANY_R | TS_MKR_W, PUB_NVM),
 
-#if DT_OUTPUTS_LOAD_PRESENT
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
     TS_NODE_UINT32(0x09, "LoadOutTotal_Wh", &dev_stat.load_out_total_Wh,
         ID_REC, TS_ANY_R | TS_MKR_W, PUB_NVM),
 #endif
@@ -353,7 +353,7 @@ static DataNode data_nodes[] = {
     TS_NODE_UINT16(0x0F, "SolarMaxDay_W", &dev_stat.solar_power_max_day,
         ID_REC, TS_ANY_R | TS_MKR_W, 0),
 
-#if DT_OUTPUTS_LOAD_PRESENT
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
     TS_NODE_UINT16(0x10, "LoadMaxDay_W", &dev_stat.load_power_max_day,
         ID_REC, TS_ANY_R | TS_MKR_W, 0),
 #endif
@@ -363,7 +363,7 @@ static DataNode data_nodes[] = {
         ID_REC, TS_ANY_R | TS_MKR_W, PUB_SER | PUB_CAN),
 #endif
 
-#if DT_OUTPUTS_LOAD_PRESENT
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
     TS_NODE_FLOAT(0xA2, "LoadOutDay_Wh", &load.pos_energy_Wh, 2,
         ID_REC, TS_ANY_R | TS_MKR_W, PUB_SER | PUB_CAN),
 #endif
@@ -387,7 +387,7 @@ static DataNode data_nodes[] = {
     TS_NODE_UINT16(0xB1, "SolarMaxTotal_W", &dev_stat.solar_power_max_total,
         ID_REC, TS_ANY_R | TS_MKR_W, PUB_NVM),
 
-#if DT_OUTPUTS_LOAD_PRESENT
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
     TS_NODE_UINT16(0xB2, "LoadMaxTotal_W", &dev_stat.load_power_max_total,
         ID_REC, TS_ANY_R | TS_MKR_W, PUB_NVM),
 #endif
@@ -401,7 +401,7 @@ static DataNode data_nodes[] = {
     TS_NODE_FLOAT(0xB5, "DcdcMaxTotal_A", &dev_stat.dcdc_current_max, 2,
         ID_REC, TS_ANY_R | TS_MKR_W, PUB_NVM),
 
-#if DT_OUTPUTS_LOAD_PRESENT
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
     TS_NODE_FLOAT(0xB6, "LoadMaxTotal_A", &dev_stat.load_current_max, 2,
         ID_REC, TS_ANY_R | TS_MKR_W, PUB_NVM),
 #endif
@@ -420,7 +420,7 @@ static DataNode data_nodes[] = {
 
     TS_NODE_PATH(ID_CAL, "cal", 0, NULL),
 
-#if DT_COMPAT_DCDC
+#if DT_NODE_EXISTS(DT_PATH(dcdc))
     TS_NODE_FLOAT(0xD1, "DcdcMin_W", &dcdc.output_power_min, 1,
         ID_CAL, TS_ANY_R | TS_MKR_W, PUB_NVM),
 
@@ -465,7 +465,7 @@ void data_nodes_update_conf()
     if (battery_conf_check(&bat_conf_user)) {
         printf("New config valid and activated.\n");
         battery_conf_overwrite(&bat_conf_user, &bat_conf, &charger);
-#if DT_OUTPUTS_LOAD_PRESENT
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
         load.set_voltage_limits(bat_conf.voltage_load_disconnect, bat_conf.voltage_load_reconnect,
             bat_conf.voltage_absolute_max);
 #endif

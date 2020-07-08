@@ -244,12 +244,14 @@ static void adc_init(ADC_TypeDef *adc)
     LL_ADC_Enable(adc);
 }
 
+#define V_HIGH_ENABLE_GPIO DT_CHILD(DT_PATH(adc_inputs), v_high)
+
 static void adc_setup()
 {
-#ifdef DT_ADC_INPUTS_V_HIGH_ENABLE_GPIOS_PIN
-    struct device *dev = device_get_binding(DT_ADC_INPUTS_V_HIGH_ENABLE_GPIOS_CONTROLLER);
-    gpio_pin_configure(dev, DT_ADC_INPUTS_V_HIGH_ENABLE_GPIOS_PIN,
-        DT_ADC_INPUTS_V_HIGH_ENABLE_GPIOS_FLAGS | GPIO_OUTPUT_ACTIVE);
+#if DT_NODE_EXISTS(DT_PROP(V_HIGH_ENABLE_GPIO, enable_gpios))
+    struct device *dev = device_get_binding(DT_GPIO_LABEL(V_HIGH_ENABLE_GPIO, enable_gpios));
+    gpio_pin_configure(dev, DT_GPIO_PIN(V_HIGH_ENABLE_GPIO, enable_gpios),
+        DT_GPIO_FLAGS(V_HIGH_ENABLE_GPIO, enable_gpios) | GPIO_OUTPUT_ACTIVE);
 #endif
 
     adc_init(ADC1);

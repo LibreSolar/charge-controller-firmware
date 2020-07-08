@@ -17,7 +17,10 @@
 #include "debug.h"
 #include "helper.h"
 
-#if DT_OUTPUTS_PWM_SWITCH_PRESENT
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), pwm_switch))
+
+#define PWM_CURRENT_MAX (DT_PROP(DT_CHILD(DT_PATH(outputs), pwm_switch), current_max))
+#define PWM_PERIOD (DT_PHA(DT_CHILD(DT_PATH(outputs), pwm_switch), pwms, period))
 
 bool PwmSwitch::active()
 {
@@ -39,7 +42,7 @@ PwmSwitch::PwmSwitch(DcBus *dc_bus) :
     restart_interval = 60;          // s  When should we retry to start charging after low solar power cut-off?
 
     // period stored in nanoseconds
-    pwm_signal_init_registers(1000*1000*1000/DT_OUTPUTS_PWM_SWITCH_PWMS_PERIOD);
+    pwm_signal_init_registers(1000 * 1000 * 1000 / PWM_PERIOD);
 
     enable = true;     // enable charging in general
 }
@@ -78,7 +81,7 @@ void PwmSwitch::control()
         }
         else if (bus->voltage > bus->sink_control_voltage()   // bus voltage above target
             || current < neg_current_limit                    // port current limit exceeded
-            || current < -DT_OUTPUTS_LOAD_CURRENT_MAX)        // PCB current limit exceeded
+            || current < -PWM_CURRENT_MAX)                    // PCB current limit exceeded
         {
             // decrease power, as limits were reached
 
@@ -137,4 +140,4 @@ float PwmSwitch::get_duty_cycle()
     return pwm_signal_get_duty_cycle();
 }
 
-#endif /* DT_OUTPUTS_PWM_SWITCH_PRESENT */
+#endif /* DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), pwm_switch)) */

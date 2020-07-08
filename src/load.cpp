@@ -8,13 +8,20 @@
 
 #include <zephyr.h>
 
-#if DT_OUTPUTS_LOAD_PRESENT || UNIT_TEST
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load)) || UNIT_TEST
 
 #include "board.h"
 #include "leds.h"
 #include "device_status.h"
 #include "debug.h"
 #include "helper.h"
+
+#define LOAD_CURRENT_MAX        DT_PROP(DT_CHILD(DT_PATH(outputs), load), current_max)
+
+#define PCB_LS_VOLTAGE_MAX      DT_PROP(DT_PATH(pcb), ls_voltage_max)
+#define PCB_MOSFETS_TJ_MAX      DT_PROP(DT_PATH(pcb), mosfets_tj_max)
+#define PCB_MOSFETS_TAU_JA      DT_PROP(DT_PATH(pcb), mosfets_tau_ja)
+#define PCB_INTERNAL_TREF_MAX   DT_PROP(DT_PATH(pcb), internal_tref_max)
 
 extern DeviceStatus dev_stat;
 
@@ -42,14 +49,13 @@ void LoadOutput::control()
     if (state == LOAD_STATE_ON) {
 
         // junction temperature calculation model for overcurrent detection
-        junction_temperature = junction_temperature + (
-            dev_stat.internal_temp - junction_temperature + current * current /
-            (DT_OUTPUTS_LOAD_CURRENT_MAX * DT_OUTPUTS_LOAD_CURRENT_MAX) *
-            (DT_CHARGE_CONTROLLER_PCB_MOSFETS_TJ_MAX - DT_CHARGE_CONTROLLER_PCB_INTERNAL_TREF_MAX)
-            ) / (DT_CHARGE_CONTROLLER_PCB_MOSFETS_TAU_JA * CONFIG_CONTROL_FREQUENCY);
+        junction_temperature = junction_temperature +
+            (dev_stat.internal_temp - junction_temperature + current * current /
+            (LOAD_CURRENT_MAX * LOAD_CURRENT_MAX) * (PCB_MOSFETS_TJ_MAX - PCB_INTERNAL_TREF_MAX))
+            / (PCB_MOSFETS_TAU_JA * CONFIG_CONTROL_FREQUENCY);
 
-        if (junction_temperature > DT_CHARGE_CONTROLLER_PCB_MOSFETS_TJ_MAX ||
-            current > DT_OUTPUTS_LOAD_CURRENT_MAX * 2)
+        if (junction_temperature > PCB_MOSFETS_TJ_MAX ||
+            current > LOAD_CURRENT_MAX * 2)
         {
             flags_set(&error_flags, ERR_LOAD_OVERCURRENT);
             oc_timestamp = uptime();
@@ -68,7 +74,7 @@ void LoadOutput::control()
         // long-term overvoltage (overvoltage transients are detected as an ADC alert and switch
         // off the solar input instead of the load output)
         if (bus->voltage > bus->series_voltage(overvoltage) ||
-            bus->voltage > DT_CHARGE_CONTROLLER_PCB_LS_VOLTAGE_MAX)
+            bus->voltage > PCB_LS_VOLTAGE_MAX)
         {
             ov_debounce_counter++;
             if (ov_debounce_counter > CONFIG_CONTROL_FREQUENCY) {
@@ -107,7 +113,7 @@ void LoadOutput::control()
 
         if (flags_check(&error_flags, ERR_LOAD_OVERVOLTAGE) &&
             bus->voltage < (bus->series_voltage(overvoltage) - ov_hysteresis) &&
-            bus->voltage < (DT_CHARGE_CONTROLLER_PCB_LS_VOLTAGE_MAX - ov_hysteresis))
+            bus->voltage < (PCB_LS_VOLTAGE_MAX - ov_hysteresis))
         {
             flags_clear(&error_flags, ERR_LOAD_OVERVOLTAGE);
         }
@@ -159,4 +165,4 @@ void load_short_circuit_stop()
     load.stop(ERR_LOAD_SHORT_CIRCUIT);
 }
 
-#endif /* DT_OUTPUTS_LOAD_PRESENT */
+#endif /* DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load)) */

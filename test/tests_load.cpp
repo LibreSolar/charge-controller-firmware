@@ -135,12 +135,13 @@ void control_on_to_off_overcurrent()
     LoadOutput load_out(&bus, &load_drv_set, &load_drv_init);
     load_init(&load_out, true);
 
-    load_out.current = DT_OUTPUTS_LOAD_CURRENT_MAX * 1.9;  // with factor 2 it is switched off immediately
+    // current slightly below factor 2 so that it is not switched off immediately
+    load_out.current = DT_PROP(DT_CHILD(DT_PATH(outputs), load), current_max) * 1.9;
     load_out.control();
     TEST_ASSERT_EQUAL(LOAD_STATE_ON, load_out.state);
 
     // almost 2x current = 4x heat generation: Should definitely trigger after waiting one time constant
-    int trigger_steps = DT_CHARGE_CONTROLLER_PCB_MOSFETS_TAU_JA * CONFIG_CONTROL_FREQUENCY;
+    int trigger_steps = DT_PROP(DT_PATH(pcb), mosfets_tau_ja) * CONFIG_CONTROL_FREQUENCY;
     for (int i = 0; i <= trigger_steps; i++) {
         load_out.control();
     }
