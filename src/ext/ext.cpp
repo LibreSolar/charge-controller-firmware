@@ -11,13 +11,13 @@
 // necessary for PlatformIO debug session
 void std::__throw_bad_alloc()
 {
-    while (1) {}
+    while (true) {}
 }
 
 // necessary to compile Zephyr v2.2
 void std::__throw_length_error(char const*)
 {
-    while (1) {}
+    while (true) {}
 }
 
 // we use code to self register objects at construction time.

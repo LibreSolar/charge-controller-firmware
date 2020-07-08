@@ -88,7 +88,11 @@ uint32_t timestamp;
 
 #include <zephyr.h>
 
-static inline void timestamp_inc(struct k_timer *timer_id) { timestamp++; }
+static inline void timestamp_inc(struct k_timer *timer_id)
+{
+    ARG_UNUSED(timer_id);
+    timestamp++;
+}
 
 void setup()
 {

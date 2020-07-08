@@ -110,8 +110,8 @@ public:
     int32_t power_good_timestamp;   ///< Last time the DC/DC reached above minimum output power
 
     // maximum allowed values
-    float ls_current_max;       ///< Maximum low-side (inductor) current
-    float hs_voltage_max;       ///< Maximum high-side voltage
+    float ls_current_max = 0;   ///< Maximum low-side (inductor) current
+    float hs_voltage_max = 0;       ///< Maximum high-side voltage
     float ls_voltage_max;       ///< Maximum low-side voltage
     float ls_voltage_min;       ///< Minimum low-side voltage, e.g. for driver supply
     float output_power_min;     ///< Minimum output power (if lower, DC/DC is switched off)

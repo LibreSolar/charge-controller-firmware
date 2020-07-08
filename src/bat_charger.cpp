@@ -30,15 +30,15 @@ void battery_conf_init(BatConf *bat, int type, int num_cells, float nominal_capa
     bat->nominal_capacity = nominal_capacity;
 
     // 1C should be safe for all batteries
-    bat->charge_current_max = bat->nominal_capacity;
+    bat->charge_current_max    = bat->nominal_capacity;
     bat->discharge_current_max = bat->nominal_capacity;
 
     bat->time_limit_recharge = 60;              // sec
-    bat->topping_duration = 120*60;                // sec
+    bat->topping_duration    = 120*60;          // sec
 
-    bat->charge_temp_max = 50;
-    bat->charge_temp_min = -10;
-    bat->discharge_temp_max = 50;
+    bat->charge_temp_max    =  50;
+    bat->charge_temp_min    = -10;
+    bat->discharge_temp_max =  50;
     bat->discharge_temp_min = -10;
 
     switch (type)
@@ -46,91 +46,100 @@ void battery_conf_init(BatConf *bat, int type, int num_cells, float nominal_capa
         case BAT_TYPE_FLOODED:
         case BAT_TYPE_AGM:
         case BAT_TYPE_GEL:
-            bat->voltage_absolute_max = num_cells * 2.45;
-            bat->topping_voltage = num_cells * 2.4;
-            bat->voltage_recharge = num_cells * 2.3;
+            bat->voltage_absolute_max    = static_cast<float>(num_cells) * 2.45F;
+            bat->topping_voltage         = static_cast<float>(num_cells) * 2.4F;
+            bat->voltage_recharge        = static_cast<float>(num_cells) * 2.3F;
 
             // Cell-level thresholds based on EN 62509:2011 (both thresholds current-compensated)
-            bat->voltage_load_disconnect = num_cells * 1.95;
-            bat->voltage_load_reconnect = num_cells * 2.10;
+            bat->voltage_load_disconnect = static_cast<float>(num_cells) * 1.95F;
+            bat->voltage_load_reconnect  = static_cast<float>(num_cells) * 2.10F;
 
             // assumption: Battery selection matching charge controller
-            bat->internal_resistance = num_cells * (1.95 - 1.80) / DISCHARGE_CURRENT_MAX;
+            bat->internal_resistance     = static_cast<float>(num_cells) * (1.95F - 1.80F) /
+                DISCHARGE_CURRENT_MAX;
 
-            bat->voltage_absolute_min = num_cells * 1.6;
+            bat->voltage_absolute_min    = static_cast<float>(num_cells) * 1.6F;
 
             // Voltages during idle (no charging/discharging current)
-            bat->ocv_full = num_cells * ((type == BAT_TYPE_FLOODED) ? 2.10 : 2.15);
-            bat->ocv_empty = num_cells * 1.90;
+            bat->ocv_full                = static_cast<float>(num_cells) *
+                ((type == BAT_TYPE_FLOODED) ? 2.10F : 2.15F);
+            bat->ocv_empty               = static_cast<float>(num_cells) * 1.90F;
 
             // https://batteryuniversity.com/learn/article/charging_the_lead_acid_battery
-            bat->topping_current_cutoff = bat->nominal_capacity * 0.04;  // 3-5 % of C/1
+            bat->topping_current_cutoff  = bat->nominal_capacity * 0.04F;  // 3-5 % of C/1
 
-            bat->trickle_enabled = true;
-            bat->trickle_recharge_time = 30*60;
+            bat->trickle_enabled         = true;
+            bat->trickle_recharge_time   = 30*60;
             // Values as suggested in EN 62509:2011
-            bat->trickle_voltage = num_cells * ((type == BAT_TYPE_FLOODED) ? 2.35 : 2.3);
+            bat->trickle_voltage         = static_cast<float>(num_cells) *
+                ((type == BAT_TYPE_FLOODED) ? 2.35F : 2.3F);
 
             // Enable for flooded batteries only, according to
             // https://discoverbattery.com/battery-101/equalizing-flooded-batteries-only
-            bat->equalization_enabled = false;
+            bat->equalization_enabled    = false;
             // Values as suggested in EN 62509:2011
-            bat->equalization_voltage = num_cells * ((type == BAT_TYPE_FLOODED) ? 2.50 : 2.45);
-            bat->equalization_duration = 60*60;
-            bat->equalization_current_limit = (1.0 / 7.0) * bat->nominal_capacity;
+            bat->equalization_voltage    = static_cast<float>(num_cells) *
+                ((type == BAT_TYPE_FLOODED) ? 2.50F : 2.45F);
+            bat->equalization_duration   = 60*60;
+            bat->equalization_current_limit = (1.0F / 7.0F) * bat->nominal_capacity;
             bat->equalization_trigger_days = 60;
             bat->equalization_trigger_deep_cycles = 10;
 
-            bat->temperature_compensation = -0.003;     // -3 mV/°C/cell
+            bat->temperature_compensation = -0.003F;     // -3 mV/°C/cell
             break;
 
         case BAT_TYPE_LFP:
-            bat->voltage_absolute_max = num_cells * 3.60;
-            bat->topping_voltage = num_cells * 3.55;               // CV voltage
-            bat->voltage_recharge = num_cells * 3.35;
+            bat->voltage_absolute_max    = static_cast<float>(num_cells) * 3.60F;
+            bat->topping_voltage         = static_cast<float>(num_cells) * 3.55F;    // CV voltage
+            bat->voltage_recharge        = static_cast<float>(num_cells) * 3.35F;
 
-            bat->voltage_load_disconnect = num_cells * 3.0;
-            bat->voltage_load_reconnect  = num_cells * 3.15;
+            bat->voltage_load_disconnect = static_cast<float>(num_cells) * 3.00F;
+            bat->voltage_load_reconnect  = static_cast<float>(num_cells) * 3.15F;
 
             // 5% voltage drop at max current
-            bat->internal_resistance = bat->voltage_load_disconnect * 0.05 / DISCHARGE_CURRENT_MAX;
-            bat->voltage_absolute_min = num_cells * 2.0;
+            bat->internal_resistance    = bat->voltage_load_disconnect * 0.05F /
+                                          DISCHARGE_CURRENT_MAX;
+            bat->voltage_absolute_min   = static_cast<float>(num_cells) * 2.0F;
 
-            bat->ocv_full = num_cells * 3.4;       // will give really nonlinear SOC calculation
-            bat->ocv_empty = num_cells * 3.0;      // because of flat OCV of LFP cells...
+            // will give really nonlinear SOC calculation because of flat OCV of LFP cells...
+            bat->ocv_full   = static_cast<float>(num_cells) * 3.4F;
+            bat->ocv_empty  = static_cast<float>(num_cells) * 3.0F;
 
             // C/10 cut-off at end of CV phase by default
             bat->topping_current_cutoff = bat->nominal_capacity / 10;
 
             bat->trickle_enabled = false;
             bat->equalization_enabled = false;
-            bat->temperature_compensation = 0.0;
+            bat->temperature_compensation = 0;
             bat->charge_temp_min = 0;
             break;
 
         case BAT_TYPE_NMC:
         case BAT_TYPE_NMC_HV:
-            bat->topping_voltage = num_cells * ((type == BAT_TYPE_NMC_HV) ? 4.35 : 4.20);
-            bat->voltage_absolute_max = bat->topping_voltage + num_cells * 0.05;
-            bat->voltage_recharge = num_cells * 3.9;
+            bat->topping_voltage         = static_cast<float>(num_cells) *
+                ((type == BAT_TYPE_NMC_HV) ? 4.35F : 4.20F);
+            bat->voltage_absolute_max    = bat->topping_voltage +
+                static_cast<float>(num_cells) * 0.05F;
+            bat->voltage_recharge        = static_cast<float>(num_cells) * 3.9F;
 
-            bat->voltage_load_disconnect = num_cells * 3.3;
-            bat->voltage_load_reconnect  = num_cells * 3.6;
+            bat->voltage_load_disconnect = static_cast<float>(num_cells) * 3.3F;
+            bat->voltage_load_reconnect  = static_cast<float>(num_cells) * 3.6F;
 
             // 5% voltage drop at max current
-            bat->internal_resistance = bat->voltage_load_disconnect * 0.05 / DISCHARGE_CURRENT_MAX;
+            bat->internal_resistance     = bat->voltage_load_disconnect * 0.05F /
+                DISCHARGE_CURRENT_MAX;
 
-            bat->voltage_absolute_min = num_cells * 2.5;
+            bat->voltage_absolute_min    = static_cast<float>(num_cells) * 2.5F;
 
-            bat->ocv_full = num_cells * 4.0;
-            bat->ocv_empty = num_cells * 3.0;
+            bat->ocv_full                = static_cast<float>(num_cells) * 4.0F;
+            bat->ocv_empty               = static_cast<float>(num_cells) * 3.0F;
 
             // C/10 cut-off at end of CV phase by default
-            bat->topping_current_cutoff = bat->nominal_capacity / 10;
+            bat->topping_current_cutoff  = bat->nominal_capacity / 10;
 
             bat->trickle_enabled = false;
             bat->equalization_enabled = false;
-            bat->temperature_compensation = 0.0;
+            bat->temperature_compensation = 0;
             bat->charge_temp_min = 0;
             break;
 
@@ -161,8 +170,8 @@ bool battery_conf_check(BatConf *bat_conf)
     );
     */
 
-    return
-       (bat_conf->voltage_load_reconnect > (bat_conf->voltage_load_disconnect + 0.4) &&
+    return (
+        bat_conf->voltage_load_reconnect > (bat_conf->voltage_load_disconnect + 0.4) &&
         bat_conf->voltage_recharge < (bat_conf->topping_voltage - 0.4) &&
         bat_conf->voltage_recharge > (bat_conf->voltage_load_disconnect + 1) &&
         bat_conf->voltage_load_disconnect > (bat_conf->voltage_absolute_min + 0.4) &&
@@ -177,7 +186,7 @@ bool battery_conf_check(BatConf *bat_conf)
         (bat_conf->trickle_enabled == false ||
             (bat_conf->trickle_voltage < bat_conf->topping_voltage &&
              bat_conf->trickle_voltage > bat_conf->voltage_load_disconnect))
-       );
+    );
 }
 
 void battery_conf_overwrite(BatConf *source, BatConf *destination, Charger *charger)
@@ -221,7 +230,7 @@ void battery_conf_overwrite(BatConf *source, BatConf *destination, Charger *char
 
 bool battery_conf_changed(BatConf *a, BatConf *b)
 {
-    if (
+    return (
         a->topping_voltage                != b->topping_voltage ||
         a->voltage_recharge               != b->voltage_recharge ||
         a->voltage_load_reconnect         != b->voltage_load_reconnect ||
@@ -241,15 +250,10 @@ bool battery_conf_changed(BatConf *a, BatConf *b)
         a->temperature_compensation       != b->temperature_compensation ||
         a->internal_resistance            != b->internal_resistance ||
         a->wire_resistance                != b->wire_resistance
-    ) {
-        return true;
-    }
-    else {
-        return false;
-    }
+    );
 }
 
-void Charger::detect_num_batteries(BatConf *bat)
+void Charger::detect_num_batteries(BatConf *bat) const
 {
     if (port->bus->voltage > bat->voltage_absolute_min * 2 &&
         port->bus->voltage < bat->voltage_absolute_max * 2)
@@ -288,7 +292,7 @@ void Charger::update_soc(BatConf *bat_conf)
         soc = soc_filtered / 100;
     }
 
-    discharged_Ah += -port->current / 3600.0;   // charged current is positive: change sign
+    discharged_Ah += -port->current / 3600.0F;   // charged current is positive: change sign
 }
 
 void Charger::enter_state(int next_state)
@@ -315,8 +319,8 @@ void Charger::discharge_control(BatConf *bat_conf)
             else {
                 // slowly adapt new measurements with low-pass filter
                 usable_capacity =
-                    0.8 * usable_capacity +
-                    0.2 * discharged_Ah;
+                    0.8F * usable_capacity +
+                    0.2F * discharged_Ah;
             }
 
             // simple SOH estimation
@@ -353,7 +357,7 @@ void Charger::discharge_control(BatConf *bat_conf)
         // discharging currently not allowed. should we allow it?
 
         if (port->bus->voltage >=
-            port->bus->src_control_voltage(bat_conf->voltage_absolute_min + 0.1))
+            port->bus->src_control_voltage(bat_conf->voltage_absolute_min + 0.1F))
         {
             dev_stat.clear_error(ERR_BAT_UNDERVOLTAGE);
         }
@@ -391,7 +395,7 @@ void Charger::charge_control(BatConf *bat_conf)
     }
 
     if (dev_stat.has_error(ERR_BAT_OVERVOLTAGE) &&
-        port->bus->voltage < (bat_conf->voltage_absolute_max - 0.5) * port->bus->series_multiplier)
+        port->bus->voltage < (bat_conf->voltage_absolute_max - 0.5F) * port->bus->series_multiplier)
     {
         dev_stat.clear_error(ERR_BAT_OVERVOLTAGE);
     }
@@ -523,7 +527,7 @@ void Charger::charge_control(BatConf *bat_conf)
     }
 }
 
-void Charger::init_terminal(BatConf *bat)
+void Charger::init_terminal(BatConf *bat) const
 {
     port->bus->sink_voltage_bound = bat->topping_voltage;
     port->bus->src_voltage_bound = bat->voltage_load_disconnect;
@@ -537,12 +541,14 @@ void Charger::init_terminal(BatConf *bat)
      * droop_res is multiplied with number of series connected batteries to calculate control
      * voltage, so we need to divide by number of batteries here for correction
     */
-    port->bus->sink_droop_res = -bat->wire_resistance / port->bus->series_multiplier;
+    port->bus->sink_droop_res = -bat->wire_resistance /
+        static_cast<float>(port->bus->series_multiplier);
 
     /*
      * In discharging direction also include battery internal resistance for current-compensation
      * of voltage setpoints
      */
-    port->bus->src_droop_res = -bat->wire_resistance / port->bus->series_multiplier
+    port->bus->src_droop_res = -bat->wire_resistance /
+        static_cast<float>(port->bus->series_multiplier)
         - bat->internal_resistance;
 }

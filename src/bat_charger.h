@@ -362,7 +362,7 @@ public:
     /**
      * Detect if two batteries are connected in series (12V/24V auto-detection)
      */
-    void detect_num_batteries(BatConf *bat);
+    void detect_num_batteries(BatConf *bat) const;
 
     /**
      * Discharging control update (for load output), should be called once per second
@@ -386,7 +386,7 @@ public:
      *
      * @param bat Configuration to be used for terminal setpoints
      */
-    void init_terminal(BatConf *bat);
+    void init_terminal(BatConf *bat) const;
 
 private:
     void enter_state(int next_state);

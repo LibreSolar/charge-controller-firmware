@@ -10,7 +10,7 @@
 static int led_states[NUM_LEDS];                // must be one of enum LedState
 static int trigger_timeout[NUM_LEDS];           // seconds until trigger should end
 
-static int blink_state = 1;                     // global state of all blinking LEDs
+static bool blink_state = true;                 // global state of all blinking LEDs
 
 static bool charging = false;
 
@@ -26,7 +26,7 @@ void leds_update_thread()
 {
     int led_count = 0;
     int flicker_count = 0;
-    bool flicker_state = 1;
+    bool flicker_state = true;
     struct device *led_devs[NUM_LED_PINS];
 
     int wdt_channel = sw_watchdog_register(1000);
@@ -37,7 +37,7 @@ void leds_update_thread()
 
     leds_init();
 
-    while (1) {
+    while (true) {
 
         sw_watchdog_feed(wdt_channel);
 

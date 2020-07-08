@@ -134,11 +134,11 @@ void DeviceStatus::update_min_max_values()
     }
 #endif
 
-    if (charger.bat_temperature > bat_temp_max) {
+    if (charger.bat_temperature > static_cast<float>(bat_temp_max)) {
         bat_temp_max = charger.bat_temperature;
     }
 
-    if (internal_temp > int_temp_max) {
+    if (internal_temp > static_cast<float>(int_temp_max)) {
         int_temp_max = internal_temp;
     }
 }

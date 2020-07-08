@@ -268,6 +268,8 @@ static inline void adc_trigger_conversion(struct k_timer *timer_id)
 
 static void DMA1_Channel1_IRQHandler(void *args)
 {
+    ARG_UNUSED(args);
+
     if ((DMA1->ISR & DMA_ISR_TCIF1) != 0) // Test if transfer completed on DMA channel 1
     {
         for (unsigned int i = 0; i < num_adc1_ch; i++) {

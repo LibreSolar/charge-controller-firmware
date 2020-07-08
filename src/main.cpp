@@ -76,7 +76,7 @@ void main(void)
     watchdog_start();
     sw_watchdog_start();
 
-    while (1) {
+    while (true) {
         charger.discharge_control(&bat_conf);
         charger.charge_control(&bat_conf);
 
@@ -99,7 +99,7 @@ void control_thread()
     uint32_t last_call = 0;
     int wdt_channel = sw_watchdog_register(200);
 
-    while (1) {
+    while (true) {
 
         bool charging = false;
 
@@ -109,7 +109,7 @@ void control_thread()
         daq_update();
 
         // alerts should trigger only for transients, so update based on actual voltage
-        daq_set_lv_alerts(lv_terminal.bus->voltage * 1.2, lv_terminal.bus->voltage * 0.8);
+        daq_set_lv_alerts(lv_terminal.bus->voltage * 1.2F, lv_terminal.bus->voltage * 0.8F);
 
         lv_terminal.update_bus_current_margins();
 
@@ -181,7 +181,7 @@ void ext_mgr_thread()
     // quite long watchdog timeout as we might be dealing with slow communication (e.g. modems
     // using AT commands via serial interface)
 
-    while (1) {
+    while (true) {
 
         sw_watchdog_feed(wdt_channel);
 

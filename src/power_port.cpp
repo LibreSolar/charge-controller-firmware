@@ -30,14 +30,14 @@ void PowerPort::energy_balance()
 {
     // remark: timespan = 1s, so no multiplication with time necessary for energy calculation
     if (current >= 0.0F) {
-        pos_energy_Wh += bus->voltage * current / 3600.0;
+        pos_energy_Wh += bus->voltage * current / 3600.0F;
     }
     else {
-        neg_energy_Wh -= bus->voltage * current / 3600.0;
+        neg_energy_Wh -= bus->voltage * current / 3600.0F;
     }
 }
 
-void PowerPort::update_bus_current_margins()
+void PowerPort::update_bus_current_margins() const
 {
     // charging direction of battery
     bus->sink_current_margin = pos_current_limit - current;

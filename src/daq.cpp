@@ -32,8 +32,6 @@ static volatile uint32_t adc_filtered[NUM_ADC_CH] = {};
 static volatile AdcAlert adc_alerts_upper[NUM_ADC_CH] = {};
 static volatile AdcAlert adc_alerts_lower[NUM_ADC_CH] = {};
 
-extern DeviceStatus dev_stat;
-
 /**
  * Average value for ADC channel
  *

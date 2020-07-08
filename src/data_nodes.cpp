@@ -480,8 +480,9 @@ void data_nodes_update_conf()
     // TODO: check also for changes in Load/USB EnDefault
     changed = true; // temporary hack
 
-    if (changed)
+    if (changed) {
         eeprom_store_data();
+    }
 }
 
 void data_nodes_init()

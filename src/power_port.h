@@ -176,32 +176,32 @@ public:
     /**
      * Measured current through this port (positive sign = current into the external device)
      */
-    float current;
+    float current = 0;
 
     /**
      * Product of port current and bus voltage
      */
-    float power;
+    float power = 0;
 
     /**
      * Maximum positive current (valid values >= 0.0)
      */
-    float pos_current_limit;
+    float pos_current_limit = 0;
 
     /**
      * Maximum negative current (valid values <= 0.0)
      */
-    float neg_current_limit;
+    float neg_current_limit = 0;
 
     /**
      * Cumulated energy in positive current direction since last counter reset (Wh)
      */
-    float pos_energy_Wh;
+    float pos_energy_Wh = 0;
 
     /**
      * Cumulated energy in negative current direction since last counter reset (Wh)
      */
-    float neg_energy_Wh;
+    float neg_energy_Wh = 0;
 
     /**
      * Constructor assigning the port to a DC bus
@@ -241,7 +241,7 @@ public:
      * This function has to be called using the port defining the bus control targets, i.e.
      * the battery, the solar panel or the DC grid.
      */
-    void update_bus_current_margins();
+    void update_bus_current_margins() const;
 };
 
 #endif /* POWER_PORT_H */
