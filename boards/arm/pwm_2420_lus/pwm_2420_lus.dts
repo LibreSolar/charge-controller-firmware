@@ -35,23 +35,35 @@
 	};
 
 	leds {
-		compatible = "gpio-leds";
-		a {
-			gpios = <&gpiob 13 GPIO_ACTIVE_HIGH>;
-			label = "LED pin A";
+		compatible = "charlieplexing-leds";
+		gpios = <&gpiob 13 GPIO_ACTIVE_HIGH>,	/* Pin A */
+			<&gpiob 14 GPIO_ACTIVE_HIGH>,	/* Pin B */
+			<&gpiob 15 GPIO_ACTIVE_HIGH>;	/* Pin C */
+
+		soc_1 {
+			states = <1 0 2>;
 		};
-		b {
-			gpios = <&gpiob 14 GPIO_ACTIVE_HIGH>;
-			label = "LED pin B";
+
+		soc_2 {
+			states = <0 1 2>;
 		};
-		c {
-			gpios = <&gpiob 15 GPIO_ACTIVE_HIGH>;
-			label = "LED pin C";
+
+		soc_3 {
+			states = <1 2 0>;
+		};
+
+		load {
+			states = <2 1 0>;
+		};
+
+		rxtx {
+			states = <2 0 1>;
 		};
 	};
 
 	outputs {
 		compatible = "outputs";
+
 		pwm_switch {
 			label = "PWM power switch (solar panel)";
 			pwms = <&pwm3 4 (20*1000*1000)>; /* 20 ms period = 50 Hz */
@@ -60,15 +72,18 @@
 			current-max = <15>;
 			kconfig-flag;	/* make node visible in Kconfig */
 		};
+
 		load {
 			label = "Load output";
 			gpios = <&gpiob 2 GPIO_ACTIVE_LOW>;
 			current-max = <15>;
 		};
+
 		usb-pwr {
 			label = "USB charging port disable";
 			gpios = <&gpiob 5 GPIO_ACTIVE_LOW>;
 		};
+
 		boot0 {
 			label = "BOOT0 pin trigger";
 			gpios = <&gpiob 12 GPIO_ACTIVE_HIGH>;

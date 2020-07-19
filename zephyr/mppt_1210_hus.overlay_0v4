@@ -11,42 +11,47 @@
 	};
 
 	leds {
-		compatible = "gpio-leds";
-		gnd {
-			gpios = <&gpiob 14 GPIO_ACTIVE_HIGH>;
-			label = "LED GND";
+		compatible = "charlieplexing-leds";
+		gpios = <&gpiob 14 GPIO_ACTIVE_HIGH>,	/* GND */
+			<&gpiob 13 GPIO_ACTIVE_HIGH>,	/* SOC_12 */
+			<&gpiob  2 GPIO_ACTIVE_HIGH>,	/* SOC_3 */
+			<&gpiob 11 GPIO_ACTIVE_HIGH>,	/* RXTX */
+			<&gpiob 10 GPIO_ACTIVE_HIGH>;	/* LOAD */
+
+		soc_1 {
+			states = <1 0 0 0 0>;
 		};
-		soc12 {
-			gpios = <&gpiob 13 GPIO_ACTIVE_HIGH>;
-			label = "LED SOC12";
+
+		soc_2 {
+			states = <0 1 0 0 0>;
 		};
-		soc3 {
-			gpios = <&gpiob 2 GPIO_ACTIVE_HIGH>;
-			label = "LED SOC3";
+
+		soc_3 {
+			states = <0 0 1 0 0>;
 		};
+
 		rxtx {
-			gpios = <&gpiob 11 GPIO_ACTIVE_HIGH>;
-			label = "LED RXTX";
+			states = <0 0 0 1 0>;
 		};
+
 		load {
-			gpios = <&gpiob 10 GPIO_ACTIVE_HIGH>;
-			label = "LED Load";
+			states = <0 0 0 0 1>;
 		};
-		/delete-node/ a;
-		/delete-node/ b;
-		/delete-node/ c;
 	};
 
 	outputs {
 		compatible = "outputs";
+
 		load {
 			gpios = <&gpioc 13 GPIO_ACTIVE_HIGH>;
 			label = "Load enable";
 		};
+
 		usb-pwr {
 			gpios = <&gpiob 12 GPIO_ACTIVE_HIGH>;
 			label = "USB charging port enable";
 		};
+
 		/delete-node/ v-solar;
 		/delete-node/ boot0;
 	};

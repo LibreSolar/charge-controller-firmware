@@ -37,10 +37,11 @@
 	};
 
 	leds {
-		compatible = "gpio-leds";
+		compatible = "charlieplexing-leds";
+		gpios = <&gpiob 15 GPIO_ACTIVE_HIGH>;
+
 		pwr {
-			gpios = <&gpiob 15 GPIO_ACTIVE_HIGH>;
-			label = "Power LED";
+			states = <1>;
 		};
 	};
 

@@ -37,36 +37,43 @@
 	};
 
 	leds {
-		compatible = "gpio-leds";
+		compatible = "charlieplexing-leds";
+		gpios = <&gpiob 14 GPIO_ACTIVE_HIGH>,
+			<&gpiob 15 GPIO_ACTIVE_HIGH>;
+
 		pwr {
-			gpios = <&gpiob 14 GPIO_ACTIVE_HIGH>;
-			label = "LED GND";
+			states = <1 0>;
 		};
+
 		load {
-			gpios = <&gpiob 15 GPIO_ACTIVE_HIGH>;
-			label = "LED Load";
+			states = <0 1>;
 		};
 	};
 
 	outputs {
 		compatible = "outputs";
+
 		load {
 			label = "Load output";
 			gpios = <&gpiob 2 GPIO_ACTIVE_LOW>;
 			current-max = <20>;
 		};
+
 		uext_en {
 			label = "UEXT enable";
 			gpios = <&gpioc 14 GPIO_ACTIVE_LOW>;
 		};
+
 		can_en {
 			label = "CAN disable / standby";
 			gpios = <&gpioa 15 GPIO_ACTIVE_LOW>;
 		};
+
 		aux_en {
 			label = "5V output enable";
 			gpios = <&gpiob 12 GPIO_ACTIVE_HIGH>;
 		};
+
 		vbus_en {
 			label = "CAN bus power supply enable";
 			gpios = <&gpioc 15 GPIO_ACTIVE_LOW>;

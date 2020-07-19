@@ -34,6 +34,7 @@ static struct device *dev_usb;
 #include "board.h"
 #include "hardware.h"
 #include "debug.h"
+#include "leds.h"
 
 #if defined(PIN_I_LOAD_COMP) && PIN_LOAD_DIS == PB_2
 static void lptim_init()
@@ -148,13 +149,10 @@ void short_circuit_comp_init()
 #endif
 }
 
-/* ToDo: dirty hack as C doesn't support functions with default values as in leds.h */
-void leds_set(int led, bool enabled, int timeout);
-
 void load_out_set(bool status)
 {
-#ifdef LED_LOAD
-    leds_set(LED_LOAD, status, -1);
+#if LED_EXISTS(load)
+    leds_set(LED_POS(load), status, LED_TIMEOUT_INFINITE);
 #endif
 
 #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))

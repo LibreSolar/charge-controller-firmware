@@ -143,8 +143,8 @@ void LoadOutput::stop(uint32_t flag)
     if (flags_check(&error_flags,
         ERR_LOAD_OVERCURRENT | ERR_LOAD_VOLTAGE_DIP | ERR_LOAD_SHORT_CIRCUIT))
     {
-#ifdef LED_LOAD
-        leds_flicker(LED_LOAD);
+#if LED_EXISTS(load)
+        leds_flicker(LED_POS(load), LED_TIMEOUT_INFINITE);
 #endif
         oc_timestamp = uptime();
     }

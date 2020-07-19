@@ -48,14 +48,3 @@ static int pinmux_stm32_init(struct device *port)
 
 SYS_INIT(pinmux_stm32_init, PRE_KERNEL_1,
 	 CONFIG_PINMUX_STM32_DEVICE_INITIALIZATION_PRIORITY);
-
-const char *led_ports[] = {
-    DT_GPIO_LEDS_A_GPIOS_CONTROLLER,
-    DT_GPIO_LEDS_B_GPIOS_CONTROLLER,
-    DT_GPIO_LEDS_C_GPIOS_CONTROLLER,
-};
-const int led_pins[] = {
-    DT_GPIO_LEDS_A_GPIOS_PIN,
-    DT_GPIO_LEDS_B_GPIOS_PIN,
-    DT_GPIO_LEDS_C_GPIOS_PIN,
-};

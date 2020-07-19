@@ -32,6 +32,9 @@
 
 #define DT_N_S_outputs_S_usb_pwr_EXISTS 1
 
+/*
+ * ADC
+ */
 #define DT_N_S_adc_inputs_S_temp_bat_EXISTS 1
 
 #define DT_N_S_adc_inputs_S_v_high_P_multiplier 105600
@@ -60,3 +63,18 @@
         fn(DT_N_S_adc_inputs_S_temp_bat) \
         fn(DT_N_S_adc_inputs_S_vref_mcu) \
         fn(DT_N_S_adc_inputs_S_temp_mcu)
+
+/*
+ * LEDs
+ */
+#define DT_N_S_leds_FOREACH_CHILD(fn) \
+        fn(DT_N_S_leds_S_pwr)
+
+#define DT_N_S_leds_P_gpios_IDX_0_PH DT_N_S_soc_S_pin_controller_48000000_S_gpio_48000800
+#define DT_N_S_leds_P_gpios_IDX_0_VAL_pin 15
+#define DT_N_S_leds_P_gpios_LEN 1
+
+#define DT_N_S_soc_S_pin_controller_48000000_S_gpio_48000800_P_label "GPIOC"
+
+#define DT_N_S_leds_S_pwr_EXISTS 1
+#define DT_N_S_leds_S_pwr_P_states {1 /* 0x1 */}

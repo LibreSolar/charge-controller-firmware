@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2020 Martin Jäger / Libre Solar
+
+description: Description for an ADC input including gain (multiplier/divider) and offset
+
+compatible: "charlieplexing-leds"
+
+properties:
+  gpios:
+    type: phandle-array
+    description: GPIO handle of pin
+
+child-binding:
+  description: GPIO child node
+  properties:
+    states:
+      type: array
+      description: |
+        Pin states to switch on LED identified by child node. 1=on, 0=off, 2=floating
