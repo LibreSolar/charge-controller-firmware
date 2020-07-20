@@ -5,5 +5,4 @@ target_sources(app PRIVATE
     oled.cpp
     serial.cpp
     can.cpp
-    can_msg_queue.cpp
 )

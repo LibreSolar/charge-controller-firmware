@@ -16,9 +16,11 @@
 #include <canbus/isotp.h>
 #endif
 
+#include <logging/log.h>
+LOG_MODULE_REGISTER(ext_can, CONFIG_LOG_DEFAULT_LEVEL);
+
 #include "thingset.h"
 #include "data_nodes.h"
-#include "can_msg_queue.h"
 
 #ifndef CAN_NODE_ID
 #define CAN_NODE_ID 20
@@ -121,30 +123,11 @@ class ThingSetCAN: public ExtInterface
 public:
     ThingSetCAN(uint8_t can_node_id, const unsigned int c);
 
-    void process_asap();
     void process_1s();
 
     void enable();
 
 private:
-    /**
-     * Generate CAN frame for data object and put it into TX queue
-     */
-    bool pub_object(const DataNode& data_obj);
-
-    /**
-     * Retrieves all data objects of configured channel and calls pub_object to enqueue them
-     *
-     * \returns number of can objects added to queue
-     */
-    int pub();
-
-    /**
-     * Try to send out all data in TX queue
-     */
-    void process_outbox();
-
-    CanMsgQueue tx_queue;
     uint8_t node_id;
     const uint16_t channel;
 
@@ -152,13 +135,6 @@ private:
 };
 
 ThingSetCAN ts_can(CAN_NODE_ID, PUB_CAN);
-
-//----------------------------------------------------------------------------
-// preliminary simple CAN functions to send data to the bus for logging
-// Data format based on CBOR specification (except for first byte, which uses
-// only 6 bit to specify type and transport protocol)
-//
-// Protocol details: https://libre.solar/thingset/
 
 ThingSetCAN::ThingSetCAN(uint8_t can_node_id, const unsigned int c):
     node_id(can_node_id),
@@ -186,15 +162,13 @@ void ThingSetCAN::enable()
 #endif /* CONFIG_ISOTP */
 }
 
-void ThingSetCAN::process_1s()
+void can_pub_isr(uint32_t err_flags, void *arg)
 {
-    pub();
-    process_asap();
+	// Do nothing. Publication messages are fire and forget.
 }
 
-int ThingSetCAN::pub()
+void ThingSetCAN::process_1s()
 {
-    int retval = 0;
     unsigned int can_id;
     uint8_t can_data[8];
 
@@ -211,37 +185,12 @@ int ThingSetCAN::pub()
 
             if (data_len >= 0) {
                 frame.dlc = data_len;
-                tx_queue.enqueue(frame);
+
+                if (can_send(can_dev, &frame, K_MSEC(10), can_pub_isr, NULL) != CAN_TX_OK) {
+                    LOG_DBG("Error sending CAN frame\n");
+                }
             }
-            retval++;
         }
-    }
-    return retval;
-}
-
-void ThingSetCAN::process_asap()
-{
-    process_outbox();
-}
-
-void can_pub_isr(uint32_t err_flags, void *arg)
-{
-	// Do nothing. Publication messages are fire and forget.
-}
-
-void ThingSetCAN::process_outbox()
-{
-    int max_attempts = 15;
-    while (!tx_queue.empty() && max_attempts > 0) {
-        CanFrame msg;
-        tx_queue.first(msg);
-        if (can_send(can_dev, &msg, K_MSEC(10), can_pub_isr, NULL) == CAN_TX_OK) {
-            tx_queue.dequeue();
-        }
-        else {
-            //printk("Sending CAN message failed");
-        }
-        max_attempts--;
     }
 }
 
