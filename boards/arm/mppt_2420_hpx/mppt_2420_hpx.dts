@@ -102,7 +102,7 @@
 
 		temp-fets {
 			io-channels = <&adc1 6>;
-			multiplier = <1>;
+			multiplier = <10000>;	// 10k NTC series resistor
 			divider = <1>;
 		};
 

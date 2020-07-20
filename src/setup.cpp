@@ -12,7 +12,6 @@
 #include <zephyr.h>
 
 #include "thingset.h"           // handles access to internal data via communication interfaces
-#include "board.h"              // hardware-specific settings
 
 #include "half_bridge.h"        // PWM generation for DC/DC converter
 #include "hardware.h"           // hardware-related functions like load switch, LED control, watchdog, etc.

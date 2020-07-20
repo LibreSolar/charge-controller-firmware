@@ -36,6 +36,8 @@
  * ADC
  */
 #define DT_N_S_adc_inputs_S_temp_bat_EXISTS 1
+#define DT_N_S_adc_inputs_S_temp_bat_P_multiplier 10000
+#define DT_N_S_adc_inputs_S_temp_bat_P_divider 1
 
 #define DT_N_S_adc_inputs_S_v_high_P_multiplier 105600
 #define DT_N_S_adc_inputs_S_v_high_P_divider 5600

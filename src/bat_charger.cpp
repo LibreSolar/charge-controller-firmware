@@ -11,7 +11,6 @@
 #include <math.h>       // for fabs function
 #include <stdio.h>
 
-#include "board.h"
 #include "helper.h"
 #include "device_status.h"
 

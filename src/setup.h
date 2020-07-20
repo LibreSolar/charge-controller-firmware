@@ -14,7 +14,6 @@
 #include "power_port.h"
 #include "pwm_switch.h"
 #include "thingset.h"
-#include "board.h"
 
 extern DcBus lv_bus;
 extern PowerPort lv_terminal;

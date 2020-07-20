@@ -10,7 +10,6 @@
 
 #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load)) || UNIT_TEST
 
-#include "board.h"
 #include "leds.h"
 #include "device_status.h"
 #include "debug.h"

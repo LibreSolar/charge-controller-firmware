@@ -11,7 +11,6 @@
 #include <stdio.h>
 #include <time.h>
 
-#include "board.h"
 #include "mcu.h"
 #include "daq.h"
 #include "debug.h"

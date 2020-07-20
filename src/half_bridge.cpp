@@ -9,7 +9,6 @@
 #include <stdio.h>
 
 #include "mcu.h"
-#include "board.h"
 
 static uint16_t tim_arr;            // auto-reload register (defines PWM frequency)
 static uint16_t tim_ccr_min;        // capture/compare register min/max

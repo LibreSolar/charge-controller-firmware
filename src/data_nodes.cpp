@@ -17,7 +17,6 @@
 
 #include "setup.h"
 
-#include "board.h"
 #include "version.h"
 
 // can be used to configure custom data objects in separate file instead

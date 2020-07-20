@@ -13,6 +13,7 @@
 
 #include "devicetree.h"
 #include "devicetree_unfixed.h"
+#include "autoconf.h"
 
 #ifndef __deprecated
 #define __deprecated	__attribute__((deprecated))

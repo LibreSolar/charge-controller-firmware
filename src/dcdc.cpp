@@ -16,7 +16,6 @@
 #include <stdlib.h>     // for min/max function
 #include <stdio.h>
 
-#include "board.h"
 #include "device_status.h"
 #include "debug.h"
 #include "helper.h"

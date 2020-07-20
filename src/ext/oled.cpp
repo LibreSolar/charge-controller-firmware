@@ -19,7 +19,6 @@
 
 #include "setup.h"
 #include "half_bridge.h"
-#include "board.h"
 #include "oled_ssd1306.h"
 
 // implement specific extension inherited from ExtInterface

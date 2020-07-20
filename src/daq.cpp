@@ -14,7 +14,9 @@
 #include "mcu.h"
 #include "setup.h"
 #include "debug.h"
-#include "board.h"        // contains defines for pins
+
+// typical value for Semitec 103AT-5 thermistor: 3435
+#define NTC_BETA_VALUE 3435
 
 #if DT_NODE_EXISTS(DT_PATH(dcdc))
 static float dcdc_current_offset;
@@ -57,14 +59,17 @@ static inline float adc_scaled(uint32_t channel, int32_t vref, const float gain,
     return adc_raw_to_voltage(adc_raw_filtered(channel) - offset, vref) * gain;
 }
 
-static inline float ntc_temp(uint32_t channel, int32_t vref)
+static inline float ntc_temp(uint32_t channel, int32_t vref, float ntc_series_resistor)
 {
     /** \todo Improved (faster) temperature calculation:
        https://www.embeddedrelated.com/showarticle/91.php
     */
 
-    float v_temp = adc_raw_to_voltage(adc_raw_filtered(channel), vref) * 1000;  // voltage read by ADC (mV)
-    float rts = NTC_SERIES_RESISTOR * v_temp / (vref - v_temp); // resistance of NTC (Ohm)
+    // voltage read by ADC (mV)
+    float v_temp = adc_raw_to_voltage(adc_raw_filtered(channel), vref) * 1000;
+
+    // resistance of NTC (Ohm)
+    float rts = ntc_series_resistor * v_temp / (vref - v_temp);
 
     return 1.0/(1.0/(273.15+25) + 1.0/NTC_BETA_VALUE*log(rts/10000.0)) - 273.15; // °C
 }
@@ -186,7 +191,7 @@ void daq_update()
 
 #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(adc_inputs), temp_bat))
     // battery temperature calculation
-    float bat_temp = ntc_temp(ADC_POS(temp_bat), vref);
+    float bat_temp = ntc_temp(ADC_POS(temp_bat), vref, ADC_GAIN(temp_bat));
 
     if (bat_temp > -50) {
         // external sensor connected: take measured value
@@ -202,7 +207,7 @@ void daq_update()
 
 #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(adc_inputs), temp_fets))
     // MOSFET temperature calculation
-    dcdc.temp_mosfets = ntc_temp(ADC_POS(temp_fets), vref);
+    dcdc.temp_mosfets = ntc_temp(ADC_POS(temp_fets), vref, ADC_GAIN(temp_fets));
 #endif
 
     // internal MCU temperature

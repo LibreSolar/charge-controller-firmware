@@ -31,10 +31,11 @@ static struct device *dev_load;
 static struct device *dev_usb;
 #endif
 
-#include "board.h"
 #include "hardware.h"
 #include "debug.h"
 #include "leds.h"
+
+/* TODO: porting and testing of comparator copied from mbed */
 
 #if defined(PIN_I_LOAD_COMP) && PIN_LOAD_DIS == PB_2
 static void lptim_init()

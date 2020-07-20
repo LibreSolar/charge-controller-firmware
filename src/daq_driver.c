@@ -35,7 +35,6 @@
 #endif
 
 #include "dcdc.h"       // for low-level control function called by DMA
-#include "board.h"
 #include "debug.h"
 
 #if defined(CONFIG_SOC_SERIES_STM32F0X) || defined(CONFIG_SOC_SERIES_STM32L0X)

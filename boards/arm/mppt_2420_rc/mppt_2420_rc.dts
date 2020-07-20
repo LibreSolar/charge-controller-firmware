@@ -82,13 +82,13 @@
 
 		temp-fets {
 			io-channels = <&adc1 2>;
-			multiplier = <1>;
+			multiplier = <10000>;	// 10k NTC series resistor
 			divider = <1>;
 		};
 
 		temp-bat {
 			io-channels = <&adc1 14>;
-			multiplier = <1>;
+			multiplier = <10000>;	// 10k NTC series resistor
 			divider = <1>;
 		};
 
