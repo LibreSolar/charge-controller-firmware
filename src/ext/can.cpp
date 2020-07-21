@@ -23,15 +23,12 @@ LOG_MODULE_REGISTER(ext_can, CONFIG_LOG_DEFAULT_LEVEL);
 #include "thingset.h"
 #include "data_nodes.h"
 
-#ifndef CAN_NODE_ID
-#define CAN_NODE_ID 20
-#endif
-
 #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), can_en))
 #define CAN_EN_GPIO DT_CHILD(DT_PATH(outputs), can_en)
 #endif
 
 extern ThingSet ts;
+extern uint16_t ts_can_node_id;
 
 struct device *can_dev;
 
@@ -42,16 +39,14 @@ struct device *can_dev;
 
 const struct isotp_fc_opts fc_opts = {.bs = 8, .stmin = 0};
 
-const struct isotp_msg_id rx_addr = {
-    .std_id = 0x80,
-    .id_type = CAN_STANDARD_IDENTIFIER,
-    .use_ext_addr = 0
+struct isotp_msg_id rx_addr = {
+    .id_type = CAN_EXTENDED_IDENTIFIER,
+    .use_ext_addr = 0   // Normal ISO-TP addressing (using only CAN ID)
 };
 
-const struct isotp_msg_id tx_addr = {
-    .std_id = 0x180,
-    .id_type = CAN_STANDARD_IDENTIFIER,
-    .use_ext_addr = 0
+struct isotp_msg_id tx_addr = {
+    .id_type = CAN_EXTENDED_IDENTIFIER,
+    .use_ext_addr = 0   // Normal ISO-TP addressing (using only CAN ID)
 };
 
 struct isotp_recv_ctx recv_ctx;
@@ -59,7 +54,7 @@ struct isotp_recv_ctx recv_ctx;
 void send_complette_cb(int error_nr, void *arg)
 {
     ARG_UNUSED(arg);
-    printk("TX complete cb [%d]\n", error_nr);
+    LOG_DBG("TX complete cb [%d]\n", error_nr);
 }
 
 void can_rx_thread()
@@ -70,9 +65,13 @@ void can_rx_thread()
     static u8_t rx_buffer[100];
     static u8_t tx_buffer[500];
 
+    // CAN node ID retrieved from EEPROM --> reset necessary after change via ThingSet serial
+    rx_addr.ext_id = ts_can_node_id << 8;
+    tx_addr.ext_id = ts_can_node_id;
+
     ret = isotp_bind(&recv_ctx, can_dev, &tx_addr, &rx_addr, &fc_opts, K_FOREVER);
     if (ret != ISOTP_N_OK) {
-        printk("Failed to bind to rx ID %d [%d]\n", rx_addr.std_id, ret);
+        LOG_DBG("Failed to bind to rx ID %d [%d]\n", rx_addr.ext_id, ret);
         return;
     }
 
@@ -81,7 +80,7 @@ void can_rx_thread()
         do {
             rem_len = isotp_recv_net(&recv_ctx, &buf, K_FOREVER);
             if (rem_len < 0) {
-                printk("Receiving error [%d]\n", rem_len);
+                LOG_DBG("Receiving error [%d]\n", rem_len);
                 break;
             }
             if (received_len + buf->len <= sizeof(rx_buffer)) {
@@ -89,14 +88,14 @@ void can_rx_thread()
                 received_len += buf->len;
             }
             else {
-                printk("RX buffer too small\n");
+                LOG_DBG("RX buffer too small\n");
                 break;
             }
             net_buf_unref(buf);
         } while (rem_len);
 
         if (received_len > 0) {
-            printk("Got %d bytes in total. Processing ThingSet message.\n", received_len);
+            LOG_DBG("Got %d bytes via ISO-TP. Processing ThingSet message.\n", received_len);
             int resp_len = ts.process(rx_buffer, received_len, tx_buffer, sizeof(tx_buffer));
 
             if (resp_len > 0) {
@@ -104,7 +103,7 @@ void can_rx_thread()
                 int ret = isotp_send(&send_ctx, can_dev, tx_buffer, resp_len,
                             &tx_addr, &rx_addr, send_complette_cb, NULL);
                 if (ret != ISOTP_N_OK) {
-                    printk("Error while sending data to ID %d [%d]\n", tx_addr.std_id, ret);
+                    LOG_DBG("Error while sending data to ID %d [%d]\n", tx_addr.ext_id, ret);
                 }
             }
         }
@@ -140,7 +139,7 @@ void can_pub_thread()
         if (pub_can_enable) {
             int data_len = 0;
             int start_pos = 0;
-            while ((data_len = ts.bin_pub_can(start_pos, PUB_CAN, CAN_NODE_ID, can_id, can_data))
+            while ((data_len = ts.bin_pub_can(start_pos, PUB_CAN, ts_can_node_id, can_id, can_data))
                      != -1)
             {
                 struct zcan_frame frame = {0};
