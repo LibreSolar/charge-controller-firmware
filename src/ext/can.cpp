@@ -6,7 +6,6 @@
 
 #if CONFIG_EXT_THINGSET_CAN
 
-#include "ext/ext.h"
 #include <zephyr.h>
 #include <device.h>
 #include <drivers/gpio.h>
@@ -18,6 +17,8 @@
 
 #include <logging/log.h>
 LOG_MODULE_REGISTER(ext_can, CONFIG_LOG_DEFAULT_LEVEL);
+
+#include "hardware.h"   // for software watchdog
 
 #include "thingset.h"
 #include "data_nodes.h"
@@ -55,20 +56,14 @@ const struct isotp_msg_id tx_addr = {
 
 struct isotp_recv_ctx recv_ctx;
 
-K_THREAD_STACK_DEFINE(rx_thread_stack, RX_THREAD_STACK_SIZE);
-struct k_thread rx_thread_data;
-
 void send_complette_cb(int error_nr, void *arg)
 {
     ARG_UNUSED(arg);
     printk("TX complete cb [%d]\n", error_nr);
 }
 
-void rx_thread(void *arg1, void *arg2, void *arg3)
+void can_rx_thread()
 {
-    ARG_UNUSED(arg1);
-    ARG_UNUSED(arg2);
-    ARG_UNUSED(arg3);
     int ret, rem_len;
     unsigned int received_len;
     struct net_buf *buf;
@@ -116,82 +111,58 @@ void rx_thread(void *arg1, void *arg2, void *arg3)
     }
 }
 
+K_THREAD_DEFINE(can_rx, RX_THREAD_STACK_SIZE, can_rx_thread, NULL, NULL, NULL,
+    RX_THREAD_PRIORITY, 0, 1500);
+
 #endif /* CONFIG_ISOTP */
-
-class ThingSetCAN: public ExtInterface
-{
-public:
-    ThingSetCAN(uint8_t can_node_id, const unsigned int c);
-
-    void process_1s();
-
-    void enable();
-
-private:
-    uint8_t node_id;
-    const uint16_t channel;
-
-    struct device *can_en_dev;
-};
-
-ThingSetCAN ts_can(CAN_NODE_ID, PUB_CAN);
-
-ThingSetCAN::ThingSetCAN(uint8_t can_node_id, const unsigned int c):
-    node_id(can_node_id),
-    channel(c)
-{
-    can_en_dev = device_get_binding(DT_GPIO_LABEL(CAN_EN_GPIO, gpios));
-    gpio_pin_configure(can_en_dev, DT_GPIO_PIN(CAN_EN_GPIO, gpios),
-        DT_GPIO_FLAGS(CAN_EN_GPIO, gpios) | GPIO_OUTPUT_INACTIVE);
-
-    can_dev = device_get_binding("CAN_1");
-}
-
-void ThingSetCAN::enable()
-{
-    gpio_pin_set(can_en_dev, DT_GPIO_PIN(CAN_EN_GPIO, gpios), 1);
-
-#ifdef CONFIG_ISOTP
-    k_tid_t tid = k_thread_create(&rx_thread_data, rx_thread_stack,
-                  K_THREAD_STACK_SIZEOF(rx_thread_stack),
-                  rx_thread, NULL, NULL, NULL,
-                  RX_THREAD_PRIORITY, 0, K_NO_WAIT);
-    if (!tid) {
-        printk("ERROR spawning rx thread\n");
-    }
-#endif /* CONFIG_ISOTP */
-}
 
 void can_pub_isr(uint32_t err_flags, void *arg)
 {
 	// Do nothing. Publication messages are fire and forget.
 }
 
-void ThingSetCAN::process_1s()
+void can_pub_thread()
 {
+    int wdt_channel = watchdog_register(1100);
+
     unsigned int can_id;
     uint8_t can_data[8];
 
-    if (pub_can_enable) {
-        int data_len = 0;
-        int start_pos = 0;
-        while ((data_len = ts.bin_pub_can(start_pos, channel, node_id, can_id, can_data)) != -1) {
+    struct device *can_en_dev = device_get_binding(DT_GPIO_LABEL(CAN_EN_GPIO, gpios));
+    gpio_pin_configure(can_en_dev, DT_GPIO_PIN(CAN_EN_GPIO, gpios),
+        DT_GPIO_FLAGS(CAN_EN_GPIO, gpios) | GPIO_OUTPUT_ACTIVE);
 
-            struct zcan_frame frame = {0};
-            frame.id_type = CAN_STANDARD_IDENTIFIER;
-            frame.rtr     = CAN_DATAFRAME;
-            frame.ext_id = can_id;
-            memcpy(frame.data, can_data, 8);
+    can_dev = device_get_binding("CAN_1");
 
-            if (data_len >= 0) {
-                frame.dlc = data_len;
+    while (true) {
+        watchdog_feed(wdt_channel);
 
-                if (can_send(can_dev, &frame, K_MSEC(10), can_pub_isr, NULL) != CAN_TX_OK) {
-                    LOG_DBG("Error sending CAN frame\n");
+        if (pub_can_enable) {
+            int data_len = 0;
+            int start_pos = 0;
+            while ((data_len = ts.bin_pub_can(start_pos, PUB_CAN, CAN_NODE_ID, can_id, can_data))
+                     != -1)
+            {
+                struct zcan_frame frame = {0};
+                frame.id_type = CAN_EXTENDED_IDENTIFIER;
+                frame.rtr     = CAN_DATAFRAME;
+                frame.ext_id  = can_id;
+                memcpy(frame.data, can_data, 8);
+
+                if (data_len >= 0) {
+                    frame.dlc = data_len;
+
+                    if (can_send(can_dev, &frame, K_MSEC(10), can_pub_isr, NULL) != CAN_TX_OK) {
+                        LOG_DBG("Error sending CAN frame\n");
+                    }
                 }
             }
         }
+
+        k_sleep(K_MSEC(1000));
     }
 }
+
+K_THREAD_DEFINE(can_pub, 1024, can_pub_thread, NULL, NULL, NULL, 6, 0, 1000);
 
 #endif /* CONFIG_EXT_THINGSET_CAN */
