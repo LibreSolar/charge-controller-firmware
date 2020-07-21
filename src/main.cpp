@@ -73,7 +73,6 @@ void main(void)
     // wait until all threads are spawned before activating the watchdog
     k_sleep(K_MSEC(2500));
     watchdog_start();
-    sw_watchdog_start();
 
     while (true) {
         charger.discharge_control(&bat_conf);
@@ -96,13 +95,13 @@ void main(void)
 void control_thread()
 {
     uint32_t last_call = 0;
-    int wdt_channel = sw_watchdog_register(200);
+    int wdt_channel = watchdog_register(200);
 
     while (true) {
 
         bool charging = false;
 
-        sw_watchdog_feed(wdt_channel);
+        watchdog_feed(wdt_channel);
 
         // convert ADC readings to meaningful measurement values
         daq_update();
@@ -175,14 +174,14 @@ void control_thread()
 void ext_mgr_thread()
 {
     uint32_t last_call = 0;
-    int wdt_channel = sw_watchdog_register(3000);
+    int wdt_channel = watchdog_register(3000);
 
     // quite long watchdog timeout as we might be dealing with slow communication (e.g. modems
     // using AT commands via serial interface)
 
     while (true) {
 
-        sw_watchdog_feed(wdt_channel);
+        watchdog_feed(wdt_channel);
 
         uint32_t now = k_uptime_get() / 1000;
         ext_mgr.process_asap();     // approx. every millisecond

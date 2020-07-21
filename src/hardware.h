@@ -15,11 +15,6 @@
 
 #include <stdint.h>
 
-struct sw_wdt_channel {
-	int64_t check_in_time;  ///< most recent check-in/feed-in time of a thread for sw_watchdog
-	int32_t timeout;        ///< timeout of corresponding thread for sw_watchdog
-};
-
 /**
  * Initialization of IWDG
  */
@@ -29,6 +24,8 @@ void watchdog_init();
  * Register watchdog for this thread
  *
  * @param timeout_ms Timeout in milliseconds
+ *
+ * @returns Assigned channel number or -1 in case of error
  */
 int watchdog_register(uint32_t timeout_ms);
 
@@ -36,6 +33,13 @@ int watchdog_register(uint32_t timeout_ms);
  * Must be called after all channels have been registered
  */
 void watchdog_start();
+
+/**
+ * Feed/Check-in watchdog for given channel
+ *
+ * @param channel Channel number assigned by watchdog_register function
+ */
+void watchdog_feed(int channel);
 
 /** Timer for system control (main DC/DC or PWM control loop) is started
  *
@@ -55,28 +59,5 @@ void start_stm32_bootloader();
  * Reset device
  */
 void reset_device();
-
-/**
- * Implements watchdog for multiple threads in software
- */
-void sw_watchdog(struct k_timer *timer_id);
-
-/**
- * Configure timer for software watchdog and
- * configure actual watchdog
- */
-void sw_watchdog_start();
-
-/**
- * Register sw_watchdog
- *
- * @param timeout_ms Timeout in milliseconds
- */
-int sw_watchdog_register(uint32_t timeout_ms);
-
-/**
- * Feed/Check-in sw_watchdog for given thread
- */
-void sw_watchdog_feed(int thread_id);
 
 #endif /* HARDWARE_H */

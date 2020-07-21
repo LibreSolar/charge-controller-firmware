@@ -33,71 +33,90 @@
 #include <drivers/gpio.h>
 #include <drivers/watchdog.h>
 
-#define MAX_SW_WDT_CHANNELS 3
+#include <logging/log.h>
+LOG_MODULE_REGISTER(hardware, CONFIG_LOG_DEFAULT_LEVEL);
+
+#define MAX_SW_WDT_CHANNELS 5
+
+struct sw_wdt_channel {
+	int64_t check_in_time;  // most recent check-in/feed-in time of a thread for sw_watchdog
+	uint32_t timeout;       // timeout of corresponding thread for sw_watchdog
+};
 
 static struct device *wdt;
-struct k_timer sw_wtchdg_timer;
+struct k_timer sw_wdt_timer;
 struct sw_wdt_channel sw_wdt_channels[MAX_SW_WDT_CHANNELS];
 
 int sw_wdt_channel_count = 0;
 int hw_wdt_channel;
 
+/*
+ * Main software watchdog function called by kernel timer
+ */
+static void sw_watchdog(struct k_timer *timer_id);
+
 void watchdog_init()
 {
     wdt = device_get_binding(DT_LABEL(DT_NODELABEL(iwdg)));
     if (!wdt) {
-        printk("Cannot get WDT device\n");
+        LOG_DBG("Cannot get IWDG device\n");
         return;
     }
 }
 
 int watchdog_register(uint32_t timeout_ms)
 {
-    struct wdt_timeout_cfg wdt_config;
-
-    wdt_config.flags = WDT_FLAG_RESET_SOC;
-    wdt_config.window.min = 0U;
-    wdt_config.window.max = timeout_ms;
-    wdt_config.callback = NULL;             // STM32 does not support callbacks
-
-    return wdt_install_timeout(wdt, &wdt_config);
-}
-
-int sw_watchdog_register(uint32_t timeout_ms)
-{
-    sw_wdt_channels[sw_wdt_channel_count].timeout = timeout_ms;
-    return sw_wdt_channel_count++;
-}
-
-void sw_watchdog_feed(int thread_id)
-{
-    sw_wdt_channels[thread_id].check_in_time = k_uptime_get();
+    if (sw_wdt_channel_count < MAX_SW_WDT_CHANNELS) {
+        sw_wdt_channels[sw_wdt_channel_count].timeout = timeout_ms;
+        return sw_wdt_channel_count++;
+    }
+    else {
+        return -1;
+    }
 }
 
 void watchdog_start()
 {
+    struct wdt_timeout_cfg wdt_config;
+    wdt_config.flags = WDT_FLAG_RESET_SOC;
+    wdt_config.window.min = 0U;
+    wdt_config.window.max = 1000U;          // initialize with long timeout
+    wdt_config.callback = NULL;             // STM32 does not support callbacks
+
+    // look for smallest timeout in software watchdog channels
+    for (int i = 0; i < sw_wdt_channel_count; i++) {
+        if (sw_wdt_channels[i].timeout < wdt_config.window.max) {
+            wdt_config.window.max = sw_wdt_channels[i].timeout;
+        }
+    }
+
+    // start timer for software watchdog
+    k_timer_init(&sw_wdt_timer, sw_watchdog, NULL);
+    k_timer_start(&sw_wdt_timer, K_MSEC(10), K_MSEC(10));
+
+    // finally start hardware watchdog
     wdt_setup(wdt, 0);
+    hw_wdt_channel = wdt_install_timeout(wdt, &wdt_config);
 }
 
-void sw_watchdog(struct k_timer *timer_id)
+void watchdog_feed(int thread_id)
 {
+    sw_wdt_channels[thread_id].check_in_time = k_uptime_get();
+}
+
+static void sw_watchdog(struct k_timer *timer_id)
+{
+    // feed also hardware watchdog
     wdt_feed(wdt, hw_wdt_channel);
 
     int64_t current_time = k_uptime_get();
 
-    for (int i = 0; i < MAX_SW_WDT_CHANNELS; i++) {
+    for (int i = 0; i < sw_wdt_channel_count; i++) {
         if ((current_time - sw_wdt_channels[i].check_in_time) > sw_wdt_channels[i].timeout) {
+            LOG_ERR("Watchdog channel %d triggered!\n", i);
             reset_device();
         }
     }
-
-}
-
-void sw_watchdog_start()
-{
-    k_timer_init(&sw_wtchdg_timer, sw_watchdog, NULL);
-    k_timer_start(&sw_wtchdg_timer, K_MSEC(10), K_MSEC(10));
-    hw_wdt_channel = watchdog_register(100);
 }
 
 void start_stm32_bootloader()
