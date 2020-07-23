@@ -19,8 +19,6 @@ LOG_MODULE_REGISTER(data_nodes, CONFIG_LOG_DEFAULT_LEVEL);
 
 #include "setup.h"
 
-#include "version.h"
-
 // can be used to configure custom data objects in separate file instead
 // (e.g. data_nodes_custom.cpp)
 #ifndef CONFIG_CUSTOM_DATA_NODES_FILE

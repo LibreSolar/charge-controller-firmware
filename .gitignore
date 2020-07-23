@@ -3,9 +3,6 @@
 .gcc-flags.json
 .vscode/browse.vc.db*
 .vscode
-src/config.cpp
-src/config.h
-src/version.h
 html
 memory.map
 custom.ini
