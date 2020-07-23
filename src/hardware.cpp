@@ -59,7 +59,7 @@ void watchdog_init()
 {
     wdt = device_get_binding(DT_LABEL(DT_NODELABEL(iwdg)));
     if (!wdt) {
-        LOG_DBG("Cannot get IWDG device\n");
+        LOG_DBG("Cannot get IWDG device");
         return;
     }
 }
@@ -113,7 +113,7 @@ static void sw_watchdog(struct k_timer *timer_id)
 
     for (int i = 0; i < sw_wdt_channel_count; i++) {
         if ((current_time - sw_wdt_channels[i].check_in_time) > sw_wdt_channels[i].timeout) {
-            LOG_ERR("Watchdog channel %d triggered!\n", i);
+            LOG_ERR("Watchdog channel %d triggered!", i);
             reset_device();
         }
     }

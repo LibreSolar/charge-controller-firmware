@@ -50,7 +50,6 @@ void DeviceStatus::update_energy()
         // solar voltage > battery voltage after 5 hours of night time means sunrise in the morning
         // --> reset daily energy counters
         if (seconds_zero_solar > 60*60*5) {
-            //printf("Night!\n");
             day_counter++;
             solar_in_total_Wh_prev = solar_in_total_Wh;
             load_out_total_Wh_prev = load_out_total_Wh;

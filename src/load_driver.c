@@ -32,7 +32,6 @@ static struct device *dev_usb;
 #endif
 
 #include "hardware.h"
-#include "debug.h"
 #include "leds.h"
 
 /* TODO: porting and testing of comparator copied from mbed */
@@ -239,7 +238,7 @@ void load_cp_enable()
 	struct device *pwm_dev;
 	pwm_dev = device_get_binding(DT_OUTPUTS_CHARGE_PUMP_PWMS_CONTROLLER);
 	if (!pwm_dev) {
-		print_error("Cannot find %s!\n", DT_OUTPUTS_CHARGE_PUMP_PWMS_CONTROLLER);
+		LOG_ERR("Cannot find %s!\n", DT_OUTPUTS_CHARGE_PUMP_PWMS_CONTROLLER);
 		return;
 	}
     // set to 50% duty cycle

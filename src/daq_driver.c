@@ -6,7 +6,7 @@
 
 #include "daq.h"
 
-#if defined(__ZEPHYR__)
+#ifndef UNIT_TEST
 
 #include <stdint.h>
 #include <inttypes.h>
@@ -35,7 +35,6 @@
 #endif
 
 #include "dcdc.h"       // for low-level control function called by DMA
-#include "debug.h"
 
 #if defined(CONFIG_SOC_SERIES_STM32F0X) || defined(CONFIG_SOC_SERIES_STM32L0X)
 
@@ -388,4 +387,4 @@ void daq_setup()
     calibrate_current_sensors();
 }
 
-#endif // __ZEPHYR__
+#endif // UNIT_TEST

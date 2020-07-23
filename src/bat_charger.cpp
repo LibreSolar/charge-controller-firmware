@@ -8,6 +8,11 @@
 
 #include <zephyr.h>
 
+#ifndef UNIT_TEST
+#include <logging/log.h>
+LOG_MODULE_REGISTER(bat_charger, CONFIG_LOG_DEFAULT_LEVEL);
+#endif
+
 #include <math.h>       // for fabs function
 #include <stdio.h>
 
@@ -155,19 +160,17 @@ bool battery_conf_check(BatConf *bat_conf)
     // - cutoff current not extremely low/high
     // - capacity plausible
 
-    /*
-    printf("battery_conf_check: %d %d %d %d %d %d %d\n",
+    LOG_DBG("battery_conf_check: %d %d %d %d %d %d %d",
         bat_conf->voltage_load_reconnect > (bat_conf->voltage_load_disconnect + 0.6),
-        bat_conf->voltage_recharge < (bat_conf->voltage_max - 0.4),
+        bat_conf->voltage_recharge < (bat_conf->topping_voltage - 0.4),
         bat_conf->voltage_recharge > (bat_conf->voltage_load_disconnect + 1),
         bat_conf->voltage_load_disconnect > (bat_conf->voltage_absolute_min + 0.4),
-        bat_conf->current_cutoff_CV < (bat_conf->nominal_capacity / 10.0), // C/10 or lower allowed
-        bat_conf->current_cutoff_CV > 0.01,
+        bat_conf->topping_current_cutoff < (bat_conf->nominal_capacity / 10.0),
+        bat_conf->topping_current_cutoff > 0.01,
         (bat_conf->trickle_enabled == false ||
-            (bat_conf->trickle_voltage < bat_conf->voltage_max &&
+            (bat_conf->trickle_voltage < bat_conf->topping_voltage &&
              bat_conf->trickle_voltage > bat_conf->voltage_load_disconnect))
     );
-    */
 
     return (
         bat_conf->voltage_load_reconnect > (bat_conf->voltage_load_disconnect + 0.4) &&
@@ -296,7 +299,7 @@ void Charger::update_soc(BatConf *bat_conf)
 
 void Charger::enter_state(int next_state)
 {
-    //printf("Enter State: %d\n", next_state);
+    LOG_DBG("Enter State: %d", next_state);
     time_state_changed = uptime();
     state = next_state;
 }

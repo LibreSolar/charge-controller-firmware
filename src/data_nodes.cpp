@@ -10,6 +10,8 @@
 #include <zephyr.h>
 #include <drivers/hwinfo.h>
 #include <sys/crc.h>
+#include <logging/log.h>
+LOG_MODULE_REGISTER(data_nodes, CONFIG_LOG_DEFAULT_LEVEL);
 #endif
 
 #include <stdio.h>
@@ -473,7 +475,7 @@ void data_nodes_update_conf()
 {
     bool changed;
     if (battery_conf_check(&bat_conf_user)) {
-        printf("New config valid and activated.\n");
+        LOG_INF("New config valid and activated.");
         battery_conf_overwrite(&bat_conf_user, &bat_conf, &charger);
 #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
         load.set_voltage_limits(bat_conf.voltage_load_disconnect, bat_conf.voltage_load_reconnect,
@@ -482,7 +484,7 @@ void data_nodes_update_conf()
         changed = true;
     }
     else {
-        printf("Check not passed, getting back old config.\n");
+        LOG_ERR("Requested config change not valid and rejected.");
         battery_conf_overwrite(&bat_conf, &bat_conf_user);
         changed = false;
     }
@@ -524,17 +526,17 @@ void thingset_auth()
     if (strlen(pass_exp) == strlen(auth_password) &&
         strncmp(auth_password, pass_exp, strlen(pass_exp)) == 0)
     {
-        printf("Authenticated as expert user\n");
+        LOG_INF("Authenticated as expert user.");
         ts.set_authentication(TS_EXP_MASK | TS_USR_MASK);
     }
     else if (strlen(pass_mkr) == strlen(auth_password) &&
         strncmp(auth_password, pass_mkr, strlen(pass_mkr)) == 0)
     {
-        printf("Authenticated as maker\n");
+        LOG_INF("Authenticated as maker.");
         ts.set_authentication(TS_MKR_MASK | TS_USR_MASK);
     }
     else {
-        printf("Reset authentication\n");
+        LOG_INF("Reset authentication.");
         ts.set_authentication(TS_USR_MASK);
     }
 }

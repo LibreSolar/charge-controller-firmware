@@ -8,8 +8,6 @@ find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 
 project(libre_solar_charge_controller)
 
-add_definitions(-DDEBUG_PRINT_FLAGS=7)
-
 add_subdirectory(../src build/src)
 
 add_subdirectory(../lib/thingset build/thingset)

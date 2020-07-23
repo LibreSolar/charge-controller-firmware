@@ -54,7 +54,7 @@ struct isotp_recv_ctx recv_ctx;
 void send_complette_cb(int error_nr, void *arg)
 {
     ARG_UNUSED(arg);
-    LOG_DBG("TX complete cb [%d]\n", error_nr);
+    LOG_DBG("TX complete cb [%d]", error_nr);
 }
 
 void can_rx_thread()
@@ -71,7 +71,7 @@ void can_rx_thread()
 
     ret = isotp_bind(&recv_ctx, can_dev, &tx_addr, &rx_addr, &fc_opts, K_FOREVER);
     if (ret != ISOTP_N_OK) {
-        LOG_DBG("Failed to bind to rx ID %d [%d]\n", rx_addr.ext_id, ret);
+        LOG_DBG("Failed to bind to rx ID %d [%d]", rx_addr.ext_id, ret);
         return;
     }
 
@@ -80,7 +80,7 @@ void can_rx_thread()
         do {
             rem_len = isotp_recv_net(&recv_ctx, &buf, K_FOREVER);
             if (rem_len < 0) {
-                LOG_DBG("Receiving error [%d]\n", rem_len);
+                LOG_DBG("Receiving error [%d]", rem_len);
                 break;
             }
             if (received_len + buf->len <= sizeof(rx_buffer)) {
@@ -88,14 +88,14 @@ void can_rx_thread()
                 received_len += buf->len;
             }
             else {
-                LOG_DBG("RX buffer too small\n");
+                LOG_DBG("RX buffer too small");
                 break;
             }
             net_buf_unref(buf);
         } while (rem_len);
 
         if (received_len > 0) {
-            LOG_DBG("Got %d bytes via ISO-TP. Processing ThingSet message.\n", received_len);
+            LOG_DBG("Got %d bytes via ISO-TP. Processing ThingSet message.", received_len);
             int resp_len = ts.process(rx_buffer, received_len, tx_buffer, sizeof(tx_buffer));
 
             if (resp_len > 0) {
@@ -103,7 +103,7 @@ void can_rx_thread()
                 int ret = isotp_send(&send_ctx, can_dev, tx_buffer, resp_len,
                             &tx_addr, &rx_addr, send_complette_cb, NULL);
                 if (ret != ISOTP_N_OK) {
-                    LOG_DBG("Error while sending data to ID %d [%d]\n", tx_addr.ext_id, ret);
+                    LOG_DBG("Error while sending data to ID %d [%d]", tx_addr.ext_id, ret);
                 }
             }
         }
@@ -152,7 +152,7 @@ void can_pub_thread()
                     frame.dlc = data_len;
 
                     if (can_send(can_dev, &frame, K_MSEC(10), can_pub_isr, NULL) != CAN_TX_OK) {
-                        LOG_DBG("Error sending CAN frame\n");
+                        LOG_DBG("Error sending CAN frame");
                     }
                 }
             }

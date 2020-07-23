@@ -12,7 +12,6 @@
 #include <time.h>
 
 #include "daq.h"
-#include "debug.h"
 #include "helper.h"
 
 #if defined(CONFIG_SOC_STM32L072XX)

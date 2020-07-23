@@ -10,6 +10,9 @@
 
 #ifndef UNIT_TEST
 #include <drivers/gpio.h>
+
+#include <logging/log.h>
+LOG_MODULE_REGISTER(dcdc, CONFIG_LOG_DEFAULT_LEVEL);
 #endif
 
 #include <math.h>       // for fabs function
@@ -17,7 +20,6 @@
 #include <stdio.h>
 
 #include "device_status.h"
-#include "debug.h"
 #include "helper.h"
 #include "half_bridge.h"
 #include "eeprom.h"
@@ -116,14 +118,15 @@ int Dcdc::perturb_observe_controller()
         pwr_inc_goal = pwm_delta;
     }
 
-    print_test("P: %.2fW (prev %.2fW), in: %.2fV %.2fA (margin %.2fA limit %.2fA), "
-        "out: %.2fV (target %.2fV) %.2fA (margin %.2fA limit %.2fA), "
+#if CONFIG_LOG_DEFAULT_LEVEL == LOG_LEVEL_DBG
+    // workaround as LOG_DBG does not support float printing
+    printf("P: %.2fW (prev %.2fW), in: %.2fV %.2fA (limit %.2fA), "
+        "out: %.2fV (target %.2fV) %.2fA (limit %.2fA), "
         "PWM: %.1f, chg_state: %d, pwr_inc: %d, buck/boost: %d\n",
-        out->power, power_prev, in->bus->voltage, in->current, in->bus->src_current_margin,
-        in->neg_current_limit,
-        out->bus->voltage, out->bus->sink_voltage_bound, out->current, out->bus->sink_current_margin,
-        out->pos_current_limit,
+        out->power, power_prev, in->bus->voltage, in->current, in->neg_current_limit,
+        out->bus->voltage, out->bus->sink_voltage_bound, out->current, out->pos_current_limit,
         half_bridge_get_duty_cycle() * 100.0, state, pwr_inc_goal, pwr_inc_pwm_direction);
+#endif
 
     power_prev = out->power;
 
@@ -186,7 +189,7 @@ __weak void Dcdc::control()
             half_bridge_stop();
             state = DCDC_STATE_OFF;
             off_timestamp = uptime();
-            print_info("DC/DC Stop: %s.\n",stop_reason);
+            printf("DC/DC Stop: %s.\n", stop_reason);
         }
     }
     else { // half bridge is off
@@ -234,7 +237,7 @@ __weak void Dcdc::control()
                     }
                     half_bridge_start();
                     power_good_timestamp = uptime();
-                    print_info("DC/DC %s mode start (HV: %.2fV, LV: %.2fV, PWM: %.1f).\n", mode_name,
+                    printf("DC/DC %s mode start (HV: %.2fV, LV: %.2fV, PWM: %.1f).\n", mode_name,
                         hvs->bus->voltage, lvs->bus->voltage, half_bridge_get_duty_cycle() * 100);
                     startup_delay_counter = 0; // ensure we will have a delay before next start
                 }
@@ -261,7 +264,7 @@ void Dcdc::test()
             if (check_start_conditions() != 0) {
                 half_bridge_set_duty_cycle(lvs->bus->voltage / hvs->bus->voltage);
                 half_bridge_start();
-                print_info("DC/DC test mode start (HV: %.2fV, LV: %.2fV, PWM: %.1f).\n",
+                printf("DC/DC test mode start (HV: %.2fV, LV: %.2fV, PWM: %.1f).\n",
                     hvs->bus->voltage, lvs->bus->voltage, half_bridge_get_duty_cycle() * 100);
             }
         }
@@ -283,7 +286,7 @@ void Dcdc::fuse_destruction()
     static int counter = 0;
 
     if (counter > 20) {     // wait 20s to be able to send out data
-        print_error("Charge controller fuse destruction called!\n");
+        LOG_ERR("Charge controller fuse destruction called!\n");
         eeprom_store_data();
         half_bridge_stop();
         half_bridge_init(50, 0, 0, 0.98);   // reset safety limits to allow 0% duty cycle

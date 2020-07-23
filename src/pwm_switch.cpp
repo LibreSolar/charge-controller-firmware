@@ -8,12 +8,16 @@
 
 #include <zephyr.h>
 
+#ifndef UNIT_TEST
+#include <logging/log.h>
+LOG_MODULE_REGISTER(pwm_switch, CONFIG_LOG_DEFAULT_LEVEL);
+#endif
+
 #include <stdio.h>
 #include <time.h>
 
 #include "mcu.h"
 #include "daq.h"
-#include "debug.h"
 #include "helper.h"
 
 #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), pwm_switch))
@@ -51,13 +55,13 @@ void PwmSwitch::test()
     if (pwm_active() && enable == false) {
         pwm_signal_stop();
         off_timestamp = uptime();
-        print_info("PWM test mode stop.\n");
+        LOG_INF("PWM test mode stop.");
     }
     else if (!pwm_active() && enable == true) {
         // turning the PWM switch on creates a short voltage rise, so inhibit alerts by 50 ms
         adc_upper_alert_inhibit(ADC_POS(v_low), 50);
         pwm_signal_start(0.9);
-        print_info("PWM test mode start.\n");
+        LOG_INF("PWM test mode start.");
     }
 }
 
@@ -76,7 +80,7 @@ void PwmSwitch::control()
         {
             pwm_signal_stop();
             off_timestamp = uptime();
-            print_info("PWM charger stop, current = %.3fA\n", current);
+            LOG_INF("PWM charger stop, current = %d mA", (int)(current * 1000));
         }
         else if (bus->voltage > bus->sink_control_voltage()   // bus voltage above target
             || current < neg_current_limit                    // port current limit exceeded
@@ -94,7 +98,7 @@ void PwmSwitch::control()
                 // prevent very short on periods and switch completely off instead
                 pwm_signal_stop();
                 off_timestamp = uptime();
-                print_info("PWM charger stop, no further derating possible.\n");
+                LOG_INF("PWM charger stop, no further derating possible.");
             }
             else {
                 pwm_signal_duty_cycle_step(-1);
@@ -123,7 +127,7 @@ void PwmSwitch::control()
             adc_upper_alert_inhibit(ADC_POS(v_low), 50);
             pwm_signal_start(1);
             power_good_timestamp = uptime();
-            print_info("PWM charger start.\n");
+            LOG_INF("PWM charger start.");
         }
     }
 }

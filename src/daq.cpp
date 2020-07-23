@@ -8,12 +8,16 @@
 
 #include <zephyr.h>
 
+#ifndef UNIT_TEST
+#include <logging/log.h>
+LOG_MODULE_REGISTER(daq, CONFIG_LOG_DEFAULT_LEVEL);
+#endif
+
 #include <math.h>       // log for thermistor calculation
 #include <assert.h>
 
 #include "mcu.h"
 #include "setup.h"
-#include "debug.h"
 
 // typical value for Semitec 103AT-5 thermistor: 3435
 #define NTC_BETA_VALUE 3435
@@ -239,7 +243,7 @@ void high_voltage_alert()
 
     dev_stat.set_error(ERR_BAT_OVERVOLTAGE);
 
-    print_error("High voltage alert, ADC reading: %d limit: %d\n",
+    LOG_ERR("High voltage alert, ADC reading: %d limit: %d\n",
         adc_readings[ADC_POS(v_low)], adc_alerts_upper[ADC_POS(v_low)].limit);
 }
 
@@ -250,7 +254,7 @@ void low_voltage_alert()
     load.stop(ERR_LOAD_VOLTAGE_DIP);
 #endif
 
-    print_error("Low voltage alert, ADC reading: %d limit: %d\n",
+    LOG_ERR("Low voltage alert, ADC reading: %d limit: %d\n",
         adc_readings[ADC_POS(v_low)], adc_alerts_lower[ADC_POS(v_low)].limit);
 }
 

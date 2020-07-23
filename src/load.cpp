@@ -12,7 +12,6 @@
 
 #include "leds.h"
 #include "device_status.h"
-#include "debug.h"
 #include "helper.h"
 
 #define LOAD_CURRENT_MAX        DT_PROP(DT_CHILD(DT_PATH(outputs), load), current_max)
