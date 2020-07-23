@@ -4,11 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef UNIT_TEST
-
-#if CONFIG_EXT_OLED_DISPLAY     // otherwise don't compile code to reduce firmware size
-
-#include "ext/ext.h"
+#if CONFIG_EXT_OLED_DISPLAY
 
 #include <math.h>
 #include <stdio.h>
@@ -17,20 +13,14 @@
 #include <device.h>
 #include <drivers/gpio.h>
 
-#include "setup.h"
-#include "half_bridge.h"
 #include "oled_ssd1306.h"
 
-// implement specific extension inherited from ExtInterface
-class ExtOled: public ExtInterface
-{
-public:
-    ExtOled() {};
-    void enable();
-    void process_1s();
-};
+#include "setup.h"
+#include "half_bridge.h"
 
-static ExtOled ext_oled;    // local instance, will self register itself
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), uext_en))
+#define UEXT_EN_GPIO DT_CHILD(DT_PATH(outputs), uext_en)
+#endif
 
 const unsigned char bmp_load [] = {
     0x20, 0x22, 0x04, 0x70, 0x88, 0x8B, 0x88, 0x70, 0x04, 0x22, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -53,22 +43,7 @@ const unsigned char bmp_disconnected [] = {
 
 OledSSD1306 oled(DT_LABEL(DT_ALIAS(i2c_uext)));
 
-#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), uext_en))
-#define UEXT_EN_GPIO DT_CHILD(DT_PATH(outputs), uext_en)
-#endif
-
-void ExtOled::enable()
-{
-#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), uext_en))
-    struct device *dev_uext_en = device_get_binding(DT_GPIO_LABEL(UEXT_EN_GPIO, gpios));
-    gpio_pin_configure(dev_uext_en, DT_GPIO_PIN(UEXT_EN_GPIO, gpios),
-        DT_GPIO_FLAGS(UEXT_EN_GPIO, gpios) | GPIO_OUTPUT_ACTIVE);
-#endif
-
-    oled.init(CONFIG_EXT_OLED_BRIGHTNESS);
-}
-
-void ExtOled::process_1s()
+void oled_update()
 {
     char buf[30];
     unsigned int len;
@@ -195,6 +170,22 @@ void ExtOled::process_1s()
     oled.display();
 }
 
-#endif /* CONFIG_EXT_OLED_DISPLAY */
+void oled_thread()
+{
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), uext_en))
+    struct device *dev_uext_en = device_get_binding(DT_GPIO_LABEL(UEXT_EN_GPIO, gpios));
+    gpio_pin_configure(dev_uext_en, DT_GPIO_PIN(UEXT_EN_GPIO, gpios),
+        DT_GPIO_FLAGS(UEXT_EN_GPIO, gpios) | GPIO_OUTPUT_ACTIVE);
+#endif
 
-#endif /* UNIT_TEST */
+    oled.init(CONFIG_EXT_OLED_BRIGHTNESS);
+
+    while (true) {
+        oled_update();
+        k_sleep(K_MSEC(1000));
+    }
+}
+
+K_THREAD_DEFINE(oled_thread_id, 1024, oled_thread, NULL, NULL, NULL, 6, 0, 1000);
+
+#endif /* CONFIG_EXT_OLED_DISPLAY */
