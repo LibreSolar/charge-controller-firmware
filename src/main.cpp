@@ -21,7 +21,6 @@
 #include "pwm_switch.h"         // PWM charge controller
 #include "bat_charger.h"        // battery settings and charger state machine
 #include "daq.h"                // ADC using DMA and conversion to measurement values
-#include "ext/ext.h"            // communication interfaces, displays, etc. in UEXT connector
 #include "eeprom.h"             // external I2C EEPROM
 #include "load.h"               // load and USB output management
 #include "leds.h"               // LED switching using charlieplexing
@@ -45,9 +44,6 @@ void main(void)
 
     // Data Acquisition (DAQ) setup
     daq_setup();
-
-    // initialize all extensions and external communication interfaces
-    ext_mgr.enable_all();
 
     #if CONFIG_HV_TERMINAL_SOLAR || CONFIG_LV_TERMINAL_SOLAR || CONFIG_PWM_TERMINAL_SOLAR
     solar_terminal.init_solar();
@@ -171,33 +167,7 @@ void control_thread()
     }
 }
 
-void ext_mgr_thread()
-{
-    uint32_t last_call = 0;
-    int wdt_channel = watchdog_register(3000);
-
-    // quite long watchdog timeout as we might be dealing with slow communication (e.g. modems
-    // using AT commands via serial interface)
-
-    while (true) {
-
-        watchdog_feed(wdt_channel);
-
-        uint32_t now = k_uptime_get() / 1000;
-        ext_mgr.process_asap();     // approx. every millisecond
-        if (now >= last_call + 1) {
-            last_call = now;
-            ext_mgr.process_1s();
-        }
-        k_sleep(K_MSEC(1));
-    }
-}
-
 // 2s delay for control thread as a safety feature: be able to re-flash before starting
 K_THREAD_DEFINE(control_thread_id, 1024, control_thread, NULL, NULL, NULL, 2, 0, 2000);
-
-K_THREAD_DEFINE(leds_thread, 256, leds_update_thread, NULL, NULL, NULL,	4, 0, 100);
-
-K_THREAD_DEFINE(ext_thread, 1024, ext_mgr_thread, NULL, NULL, NULL, 6, 0, 1000);
 
 #endif // UNIT_TEST

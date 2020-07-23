@@ -288,3 +288,7 @@ void leds_update_soc(int soc, bool load_off_low_soc)
     }
 #endif
 }
+
+#ifndef UNIT_TEST
+K_THREAD_DEFINE(leds_thread, 256, leds_update_thread, NULL, NULL, NULL,	4, 0, 100);
+#endif
