@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#if CONFIG_EXT_THINGSET_CAN
+#if CONFIG_THINGSET_CAN
 
 #include <zephyr.h>
 #include <device.h>
@@ -164,4 +164,4 @@ void can_pub_thread()
 
 K_THREAD_DEFINE(can_pub, 1024, can_pub_thread, NULL, NULL, NULL, 6, 0, 1000);
 
-#endif /* CONFIG_EXT_THINGSET_CAN */
+#endif /* CONFIG_THINGSET_CAN */

@@ -63,7 +63,7 @@ CONFIG_EEPROM_AT24=y
 
 # don't enable CAN by default until PR #22832 is merged to upstream Zephyr
 #CONFIG_CAN=y
-#CONFIG_EXT_THINGSET_CAN=y
+#CONFIG_THINGSET_CAN=y
 
 CONFIG_ISOTP=y
 CONFIG_ISOTP_RX_BUF_COUNT=1

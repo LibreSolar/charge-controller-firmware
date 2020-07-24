@@ -51,7 +51,7 @@ static char auth_password[11];
 
 bool pub_serial_enable = false;
 
-#if CONFIG_EXT_THINGSET_CAN
+#if CONFIG_THINGSET_CAN
 bool pub_can_enable = false;
 uint16_t ts_can_node_id = CONFIG_THINGSET_CAN_DEFAULT_NODE_ID;
 #endif
@@ -200,7 +200,7 @@ static DataNode data_nodes[] = {
         ID_CONF, TS_ANY_R | TS_ANY_W, PUB_NVM),
 #endif
 
-#if CONFIG_EXT_THINGSET_CAN
+#if CONFIG_THINGSET_CAN
     TS_NODE_UINT16(0x59, "CanNodeId", &ts_can_node_id,
         ID_CONF, TS_ANY_R | TS_ANY_W, PUB_NVM),
 #endif
@@ -460,7 +460,7 @@ static DataNode data_nodes[] = {
     TS_NODE_BOOL(0xF2, "Enable", &pub_serial_enable, 0xF1, TS_ANY_RW, 0),
     TS_NODE_PUBSUB(0xF3, "IDs", PUB_SER, 0xF1, TS_ANY_RW, 0),
 
-#if CONFIG_EXT_THINGSET_CAN
+#if CONFIG_THINGSET_CAN
     TS_NODE_PATH(0xF5, "can", ID_PUB, NULL),
     TS_NODE_BOOL(0xF6, "Enable", &pub_can_enable, 0xF5, TS_ANY_RW, 0),
     TS_NODE_PUBSUB(0xF7, "IDs", PUB_CAN, 0xF5, TS_ANY_RW, 0),

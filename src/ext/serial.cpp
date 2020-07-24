@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#if CONFIG_EXT_THINGSET_SERIAL
+#if CONFIG_THINGSET_SERIAL
 
 #include <string.h>
 #include <stdio.h>
@@ -21,8 +21,8 @@
 
 struct device *uart_dev = device_get_binding(UART_DEVICE_NAME);
 
-static char buf_resp[CONFIG_EXT_THINGSET_SERIAL_TX_BUF_SIZE];
-static char buf_req[CONFIG_EXT_THINGSET_SERIAL_RX_BUF_SIZE];
+static char buf_resp[CONFIG_THINGSET_SERIAL_TX_BUF_SIZE];
+static char buf_req[CONFIG_THINGSET_SERIAL_RX_BUF_SIZE];
 
 static volatile size_t req_pos = 0;
 static volatile bool command_flag = false;
@@ -126,4 +126,4 @@ void serial_thread()
 
 K_THREAD_DEFINE(serial_thread_id, 1024, serial_thread, NULL, NULL, NULL, 6, 0, 1000);
 
-#endif /* CONFIG_EXT_THINGSET_SERIAL */
+#endif /* CONFIG_THINGSET_SERIAL */

@@ -1,5 +1,0 @@
-# SPDX-License-Identifier: Apache-2.0
-# Copyright (c) 2019 Martin Jäger / Libre Solar
-
-# include generic charge controller Kconfig
-rsource "../../Kconfig"
