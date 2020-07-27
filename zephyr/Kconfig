@@ -229,5 +229,8 @@ config CUSTOM_DCDC_CONTROLLER
 
 endif
 
+# include custom Kconfig if existing
+orsource "../src/custom/Kconfig"
+
 # include main Zephyr menu entries from Zephyr root directory
 source "Kconfig.zephyr"

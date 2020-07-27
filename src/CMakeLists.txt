@@ -25,7 +25,9 @@ target_sources(app PRIVATE
 
 add_subdirectory(ext)
 
-target_sources_if_kconfig(CONFIG_CUSTOM_DATA_NODES_FILE, app PRIVATE data_nodes_custom.cpp)
+if(${CONFIG_CUSTOM_DATA_NODES_FILE})
+        target_sources(app PRIVATE data_nodes_custom.cpp)
+endif()
 
 # Using this option enables user-specific customization of the firmware. The
 # custom subfolder should have its own CMakeLists.txt file.
