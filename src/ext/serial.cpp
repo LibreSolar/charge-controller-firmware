@@ -105,7 +105,9 @@ void process_input(void* user_data)
 void serial_thread()
 {
     uint32_t last_call = 0;
-    int wdt_channel = watchdog_register(50);
+
+    // long watchdog timeout needed for ThingSet conf calls which write to slow EEPROM
+    int wdt_channel = watchdog_register(500);
 
     uart_irq_callback_user_data_set(uart_dev, process_input, NULL);
     uart_irq_rx_enable(uart_dev);
