@@ -133,6 +133,8 @@ void can_pub_thread()
 
     can_dev = device_get_binding("CAN_1");
 
+    int64_t t_start = k_uptime_get();
+
     while (true) {
         watchdog_feed(wdt_channel);
 
@@ -158,7 +160,8 @@ void can_pub_thread()
             }
         }
 
-        k_sleep(K_MSEC(1000));
+        t_start += 1000;
+        k_sleep(K_TIMEOUT_ABS_MS(t_start));
     }
 }
 
