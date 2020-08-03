@@ -9,25 +9,7 @@ config BOARD
 config LIBRE_SOLAR_TYPE_ID
 	default 1
 
-if UART_CONSOLE
-
-config UART_1
-	bool
-	default y
-
-endif # UART_CONSOLE
-
-if I2C
-
-config I2C_1
-	default y
-
-endif # I2C
-
 if SPI
-
-config SPI_1
-	default y
 
 config SPI_STM32_INTERRUPT
 	default y
