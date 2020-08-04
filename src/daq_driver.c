@@ -139,10 +139,11 @@ static void vref_setup()
 {
 #ifdef CONFIG_SOC_SERIES_STM32G4X
     // output 2.048V at VREF+ pin (also used internally for ADC and DAC)
-	LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_SYSCFG);
-	LL_VREFBUF_SetVoltageScaling(LL_VREFBUF_VOLTAGE_SCALE0);
-	LL_VREFBUF_Enable();
-	LL_VREFBUF_DisableHIZ();
+    LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_SYSCFG);
+    LL_VREFBUF_SetVoltageScaling(LL_VREFBUF_VOLTAGE_SCALE0);
+    LL_VREFBUF_DisableHIZ();
+    LL_VREFBUF_Enable();
+    while (LL_VREFBUF_IsVREFReady() == 0) {;}
 #endif
 }
 
@@ -179,12 +180,21 @@ static void adc_init(ADC_TypeDef *adc)
     k_busy_wait(LL_ADC_DELAY_INTERNAL_REGUL_STAB_US);
     LL_ADC_SetCommonClock(__LL_ADC_COMMON_INSTANCE(adc), LL_ADC_CLOCK_SYNC_PCLK_DIV4);
 #elif defined(CONFIG_SOC_SERIES_STM32G4X)
+    // ADC clock can be generated from SYSCLK or PLL (async mode) or derived from AHB clock
+    // (sync mode). For synchronization with a timer, sync mode is preferred.
     LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_ADC12);
+    //LL_RCC_SetADCClockSource(LL_RCC_ADC12_CLKSOURCE_SYSCLK);
+
+    // Use DIV1 only, as DIV2 and DIV4 lead to errors in ADC readings (not sure why...)
+    LL_ADC_SetCommonClock(__LL_ADC_COMMON_INSTANCE(adc), LL_ADC_CLOCK_SYNC_PCLK_DIV1);
+    //LL_ADC_SetCommonClock(__LL_ADC_COMMON_INSTANCE(adc), LL_ADC_CLOCK_ASYNC_DIV1);
+
     // Prepare for ADC calibration
     LL_ADC_DisableDeepPowerDown(adc);
     LL_ADC_EnableInternalRegulator(adc);
-    k_busy_wait(LL_ADC_DELAY_INTERNAL_REGUL_STAB_US);
-    LL_ADC_SetCommonClock(__LL_ADC_COMMON_INSTANCE(adc), LL_ADC_CLOCK_SYNC_PCLK_DIV4);
+    // Datasheet: wait 20us for regulator to stabilize (taking 100us to be safe)
+    // LL_ADC_DELAY_INTERNAL_REGUL_STAB_US is erroneously set to 10 in stm32g4xx_ll_adc.h
+    k_busy_wait(100);
 #endif
 
 #if defined(CONFIG_SOC_SERIES_STM32G4X)
@@ -219,7 +229,7 @@ static void adc_init(ADC_TypeDef *adc)
                 LL_ADC_REG_SetSequencerRanks(adc,
                     table_rank[*num_ch], table_channel[ch_number]);
                 LL_ADC_SetChannelSamplingTime(adc,
-                    table_channel[ch_number], LL_ADC_SAMPLINGTIME_47CYCLES_5);
+                    table_channel[ch_number], LL_ADC_SAMPLINGTIME_247CYCLES_5);
                 (*num_ch)++;
             }
         }
