@@ -5,7 +5,13 @@
 #
 
 echo "---------- Trailing whitespace check -------------"
-git diff --check `git rev-list HEAD | tail -n 1`..$TRAVIS_BRANCH
+# check uncommitted changes
+git diff --check HEAD
+if [ $? != 0 ]; then
+        exit 1;
+fi
+# check all commits starting from initial commit
+git diff --check `git rev-list --max-parents=0 HEAD`..HEAD
 if [ $? != 0 ]; then
         exit 1;
 fi

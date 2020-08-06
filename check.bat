@@ -1,10 +1,16 @@
 @ECHO OFF
-:: This batch file performs the same checks as TravisCI and should be run after each commit and before
-:: pushing the commits
+:: This batch file performs the same checks as TravisCI and should be run after each commit and
+:: before pushing the commits
 
 echo "---------- Trailing whitespace check -------------"
-REM git diff --check 'git rev-list --max-count=1 --reverse HEAD' ..$TRAVIS_BRANCH
-git diff --check master
+:: check uncommitted changes
+git diff --check HEAD
+if errorlevel 1 (
+    echo Failure Reason is %errorlevel%
+    exit /b %errorlevel%
+)
+:: check all commits starting from initial commit
+for /F %i in ('"git rev-list --max-parents=0 HEAD"') do git diff --check %i..HEAD
 if errorlevel 1 (
     echo Failure Reason is %errorlevel%
     exit /b %errorlevel%
