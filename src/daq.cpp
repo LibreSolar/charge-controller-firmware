@@ -32,9 +32,12 @@ static float pwm_current_offset;
 static float load_current_offset;
 #endif
 
-// for ADC and DMA
+// left-aligned 12-bit ADC raw readings (i.e. left-shifted by 4 bits)
 volatile uint16_t adc_readings[NUM_ADC_CH] = {};
-static volatile uint32_t adc_filtered[NUM_ADC_CH] = {};
+
+// filtered raw readings left-shifted by additional ADC_FILTER_CONST bits
+volatile uint32_t adc_filtered[NUM_ADC_CH] = {};
+
 static volatile AdcAlert adc_alerts_upper[NUM_ADC_CH] = {};
 static volatile AdcAlert adc_alerts_lower[NUM_ADC_CH] = {};
 
@@ -58,7 +61,8 @@ static inline uint32_t adc_raw_filtered(uint32_t channel)
  *
  * @return scaled final value in volts/amps
  */
-static inline float adc_scaled(uint32_t channel, int32_t vref, const float gain, int32_t offset = 0)
+static inline float adc_scaled(uint32_t channel, int32_t vref, const float gain,
+    int32_t offset = 0)
 {
     return adc_raw_to_voltage(adc_raw_filtered(channel) - offset, vref) * gain;
 }
@@ -94,22 +98,29 @@ void calibrate_current_sensors()
 
 void adc_update_value(unsigned int pos)
 {
-    // low pass filter with filter constant c = 1/(2^ADC_FILTER_CONST)
-    // y(n) = c * x(n) + (c - 1) * y(n-1)
-    // see also here: http://techteach.no/simview/lowpass_filter/doc/filter_algorithm.pdf
-
 #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), pwm_switch))
-    if (pos == ADC_POS(v_pwm) || pos == ADC_POS(i_pwm)) {
-        // only read input voltage and current when switch is on or permanently off
-        if (pwm_switch.signal_high() || pwm_switch.active() == false) {
-            adc_filtered[pos] += (uint32_t)adc_readings[pos] - (adc_filtered[pos] >> ADC_FILTER_CONST);
-        }
-    }
-    else
+    // only read input voltage and current when switch is on or permanently off
+    if ((pos != ADC_POS(v_pwm) && pos != ADC_POS(i_pwm)) ||
+        pwm_switch.signal_high() || pwm_switch.active() == false)
 #endif
     {
-        // adc_readings: 12-bit ADC values left-aligned in uint16_t
-        adc_filtered[pos] += (uint32_t)adc_readings[pos] - (adc_filtered[pos] >> ADC_FILTER_CONST);
+        /*
+         * Low-pass filtering of ADC raw readings
+         * (see also: http://techteach.no/simview/lowpass_filter/doc/filter_algorithm.pdf)
+         *
+         * y(n) = c * x(n) + (1 - c) * y(n-1) with filter constant c = 1/(2^ADC_FILTER_CONST)
+         *
+         * Remarks regarding below implementation optimized for efficiency:
+         *
+         * 1. adc_readings has different fixed-point math format, so that it would have to be
+         *    aligned with << ADC_FILTER_CONST before calculation. Not aligning it is equivalent
+         *    to multiplication with c:
+         *    adc_readings[pos] == c * (adc_readings[pos] << ADC_FILTER_CONST)
+         *
+         * 2. c * adc_filtered[pos] == adc_filtered[pos] >> ADC_FILTER_CONST
+         */
+        adc_filtered[pos] = (uint32_t)adc_readings[pos] +
+            adc_filtered[pos] - (adc_filtered[pos] >> ADC_FILTER_CONST);
     }
 
     // check upper alerts
@@ -182,7 +193,8 @@ void daq_update()
 
     lv_terminal.current = dcdc_lv_port.current - load_current;
 
-    hv_terminal.current = -dcdc_lv_port.current * lv_terminal.bus->voltage / hv_terminal.bus->voltage;
+    hv_terminal.current = -dcdc_lv_port.current * lv_terminal.bus->voltage /
+        hv_terminal.bus->voltage;
 
     dcdc_lv_port.power  = dcdc_lv_port.bus->voltage * dcdc_lv_port.current;
     hv_terminal.power   = hv_terminal.bus->voltage * hv_terminal.current;
