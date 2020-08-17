@@ -291,6 +291,23 @@ endmenu # Custom temperature settings
 
 endmenu # Battery default settings
 
+
+menu "Load output settings"
+    depends on $(dt_node_has_bool_prop,/outputs/load,kconfig-flag)
+
+config LOAD_OC_RECOVERY_DELAY
+    int "Overcurrent recovery delay (s)"
+    default 300
+
+config LOAD_LVD_RECOVERY_DELAY
+    int "Low-voltage disconnect recovery delay (s)"
+    default 300
+    help
+      Prevents toggling load output in case of heavy load and low state of charge.
+
+endmenu # Load output settings
+
+
 endmenu # Charge controller setup
 
 
