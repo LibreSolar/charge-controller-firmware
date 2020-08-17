@@ -34,9 +34,9 @@ static struct device *dev_usb;
 #include "hardware.h"
 #include "leds.h"
 
-/* TODO: porting and testing of comparator copied from mbed */
+// short circuit detection comparator only present in PWM 2420 LUS board so far
+#ifdef CONFIG_BOARD_PWM_2420_LUS
 
-#if defined(PIN_I_LOAD_COMP) && PIN_LOAD_DIS == PB_2
 static void lptim_init()
 {
     // Enable peripheral clock of GPIOB
@@ -84,9 +84,6 @@ static void lptim_init()
     //LPTIM1->CR |= LPTIM_CR_CNTSTRT;
     //LPTIM1->CR |= LPTIM_CR_SNGSTRT;
 }
-#endif
-
-#ifdef PIN_I_LOAD_COMP
 
 void ADC1_COMP_IRQHandler(void *args)
 {
@@ -101,12 +98,8 @@ void ADC1_COMP_IRQHandler(void *args)
     EXTI->PR |= EXTI_PR_PIF22;
 }
 
-#endif // PIN_I_LOAD_COMP
-
 void short_circuit_comp_init()
 {
-#if defined(PIN_I_LOAD_COMP)
-
     // set GPIO pin to analog
     RCC->IOPENR |= RCC_IOPENR_GPIOBEN;
     GPIOB->MODER &= ~(GPIO_MODER_MODE4);
@@ -146,8 +139,9 @@ void short_circuit_comp_init()
     // 1 = second-highest priority of STM32L0/F0
     IRQ_CONNECT(ADC1_COMP_IRQn, 1, ADC1_COMP_IRQHandler, 0, 0);
     irq_enable(ADC1_COMP_IRQn);
-#endif
 }
+
+#endif
 
 void load_out_set(bool status)
 {
@@ -159,7 +153,7 @@ void load_out_set(bool status)
     gpio_pin_configure(dev_load, DT_GPIO_PIN(LOAD_GPIO, gpios),
         DT_GPIO_FLAGS(LOAD_GPIO, gpios) | GPIO_OUTPUT_INACTIVE);
     if (status == true) {
-#ifdef PIN_I_LOAD_COMP
+#ifdef CONFIG_BOARD_PWM_2420_LUS
         lptim_init();
 #else
         gpio_pin_set(dev_load, DT_GPIO_PIN(LOAD_GPIO, gpios), 1);
@@ -254,7 +248,9 @@ void load_out_init()
 #endif
 
     // analog comparator to detect short circuits and trigger immediate load switch-off
+#ifdef CONFIG_BOARD_PWM_2420_LUS
     short_circuit_comp_init();
+#endif
 
 #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), charge_pump))
     // enable charge pump for high-side switches (if existing)
