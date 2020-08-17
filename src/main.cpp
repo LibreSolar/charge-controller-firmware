@@ -35,8 +35,7 @@ void main(void)
 
     setup();
 
-    battery_conf_init(&bat_conf, CONFIG_BAT_DEFAULT_TYPE,
-        CONFIG_BAT_DEFAULT_NUM_CELLS, CONFIG_BAT_DEFAULT_CAPACITY_AH);
+    battery_conf_init(&bat_conf, CONFIG_BAT_TYPE, CONFIG_BAT_NUM_CELLS, CONFIG_BAT_CAPACITY_AH);
     battery_conf_overwrite(&bat_conf, &bat_conf_user);  // initialize conf_user with same values
 
     // read custom configuration from EEPROM
