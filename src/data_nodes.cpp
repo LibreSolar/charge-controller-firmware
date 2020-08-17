@@ -324,6 +324,9 @@ static DataNode data_nodes[] = {
 #if CONFIG_HV_TERMINAL_NANOGRID
     TS_NODE_FLOAT(0x90, "Grid_V", &hv_bus.voltage, 2,
         ID_OUTPUT, TS_ANY_R, PUB_SER | PUB_CAN),
+
+    TS_NODE_FLOAT(0x91, "Grid_A", &hv_terminal.current, 2,
+        ID_OUTPUT, TS_ANY_R, PUB_SER | PUB_CAN),
 #endif
 
     TS_NODE_UINT32(0x9F, "ErrorFlags", &dev_stat.error_flags,
