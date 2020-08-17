@@ -26,7 +26,7 @@ enum BatType {
     /*
      * IMPORTANT: make sure to adjust also boards/Kconfig if enum is changed here!
      */
-    BAT_TYPE_NONE = 0,      ///< Safe standard settings
+    BAT_TYPE_CUSTOM = 0,    ///< Custom battery type
     BAT_TYPE_FLOODED,       ///< Old flooded (wet) lead-acid batteries
     BAT_TYPE_GEL,           ///< VRLA gel batteries (maintainance-free)
     BAT_TYPE_AGM,           ///< AGM batteries (maintainance-free)

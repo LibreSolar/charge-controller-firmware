@@ -147,7 +147,56 @@ void battery_conf_init(BatConf *bat, int type, int num_cells, float nominal_capa
             bat->charge_temp_min = 0;
             break;
 
-        case BAT_TYPE_NONE:
+        case BAT_TYPE_CUSTOM:
+            bat->voltage_absolute_max = 0.001F *
+                static_cast<float>(CONFIG_BAT_NUM_CELLS * CONFIG_CELL_ABS_MAX_VOLTAGE_MV);
+
+            bat->topping_voltage = 0.001F *
+                static_cast<float>(CONFIG_BAT_NUM_CELLS * CONFIG_CELL_TOPPING_VOLTAGE_MV);
+
+            bat->voltage_recharge = 0.001F *
+                static_cast<float>(CONFIG_BAT_NUM_CELLS * CONFIG_CELL_RECHARGE_VOLTAGE_MV);
+
+            bat->voltage_load_disconnect = 0.001F *
+                static_cast<float>(CONFIG_BAT_NUM_CELLS * CONFIG_CELL_DISCONNECT_VOLTAGE_MV);
+            bat->voltage_load_reconnect = 0.001F *
+                static_cast<float>(CONFIG_BAT_NUM_CELLS * CONFIG_CELL_RECONNECT_VOLTAGE_MV);
+
+            bat->internal_resistance = 0.001F *
+                static_cast<float>(CONFIG_BAT_NUM_CELLS * CONFIG_CELL_INTERNAL_RESISTANCE_MOHM);
+
+            bat->voltage_absolute_min = 0.001F *
+                static_cast<float>(CONFIG_BAT_NUM_CELLS * CONFIG_CELL_ABS_MIN_VOLTAGE_MV);
+
+            // Voltages during idle (no charging/discharging current)
+            bat->ocv_full = 0.001F *
+                static_cast<float>(CONFIG_BAT_NUM_CELLS * CONFIG_CELL_OCV_FULL_MV);
+            bat->ocv_empty = 0.001F *
+                static_cast<float>(CONFIG_BAT_NUM_CELLS * CONFIG_CELL_OCV_EMPTY_MV);
+
+            // https://batteryuniversity.com/learn/article/charging_the_lead_acid_battery
+            bat->topping_current_cutoff = bat->nominal_capacity * 0.04F;  // 3-5 % of C/1
+
+            bat->trickle_enabled = IS_ENABLED(CONFIG_CELL_TRICKLE);
+            bat->trickle_recharge_time = CONFIG_CELL_TRICKLE_RECHARGE_TIME;
+            bat->trickle_voltage = 0.001F *
+                static_cast<float>(CONFIG_BAT_NUM_CELLS * CONFIG_CELL_TRICKLE_VOLTAGE_MV);
+
+            bat->equalization_enabled = IS_ENABLED(CONFIG_CELL_EQUALIZATION);
+            bat->equalization_voltage = 0.001F *
+                static_cast<float>(CONFIG_BAT_NUM_CELLS * CONFIG_CELL_EQUALIZATION_VOLTAGE_MV);
+            bat->equalization_duration = CONFIG_CELL_EQUALIZATION_DURATION;
+            bat->equalization_current_limit = (1.0F / 7.0F) * bat->nominal_capacity;
+            bat->equalization_trigger_days = CONFIG_CELL_EQUALIZATION_TRIGGER_DAYS;
+            bat->equalization_trigger_deep_cycles = CONFIG_CELL_EQUALIZATION_TRIGGER_DEEP_CYCLES;
+
+            bat->temperature_compensation = 0.001F *
+                static_cast<float>(CONFIG_BAT_NUM_CELLS * CONFIG_CELL_TEMP_COMPENSATION_MV_K);
+
+            bat->charge_temp_max    = CONFIG_BAT_CHARGE_TEMP_MAX;
+            bat->charge_temp_min    = CONFIG_BAT_CHARGE_TEMP_MIN;
+            bat->discharge_temp_max = CONFIG_BAT_DISCHARGE_TEMP_MAX;
+            bat->discharge_temp_min = CONFIG_BAT_DISCHARGE_TEMP_MIN;
             break;
     }
 }
