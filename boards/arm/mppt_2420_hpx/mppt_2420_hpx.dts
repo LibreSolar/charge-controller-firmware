@@ -59,6 +59,7 @@
 			label = "Load output";
 			gpios = <&gpiob 15 GPIO_ACTIVE_LOW>;
 			current-max = <20>;
+			kconfig-flag;	/* make node visible in Kconfig */
 		};
 
 		charge_pump {

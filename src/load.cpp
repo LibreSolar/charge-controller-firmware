@@ -34,8 +34,10 @@ LoadOutput::LoadOutput(DcBus *dc_bus, void (*drv_switch_fn)(bool), void (*drv_in
 
     switch_set(false);
     junction_temperature = 25;              // starting point: 25°C
-    oc_recovery_delay = 5*60;               // default: 5 minutes
-    lvd_recovery_delay = 60*60;             // default: 1 hour
+
+    oc_recovery_delay = CONFIG_LOAD_OC_RECOVERY_DELAY;
+    lvd_recovery_delay = CONFIG_LOAD_LVD_RECOVERY_DELAY;
+
     ov_hysteresis = 0.3;
 
     enable = true;  // switch on in next control() call if everything is fine
