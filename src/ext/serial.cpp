@@ -133,6 +133,6 @@ void serial_thread()
     }
 }
 
-K_THREAD_DEFINE(serial_thread_id, 1024, serial_thread, NULL, NULL, NULL, 6, 0, 1000);
+K_THREAD_DEFINE(serial_thread_id, 1280, serial_thread, NULL, NULL, NULL, 6, 0, 1000);
 
 #endif /* CONFIG_THINGSET_SERIAL */
