@@ -13,17 +13,16 @@
 
 #include "daq.h"
 #include "helper.h"
+#include "mcu.h"
 
-#if defined(CONFIG_SOC_STM32L072XX)
+#if defined(CONFIG_SOC_SERIES_STM32L0X)
 #include <stm32l0xx_ll_tim.h>
 #include <stm32l0xx_ll_rcc.h>
 #include <stm32l0xx_ll_bus.h>
-#include "stm32l072xx.h"
-#elif defined(CONFIG_SOC_STM32G431XX)
+#elif defined(CONFIG_SOC_SERIES_STM32G4X)
 #include <stm32g4xx_ll_tim.h>
 #include <stm32g4xx_ll_rcc.h>
 #include <stm32g4xx_ll_bus.h>
-#include "stm32g431xx.h"
 #endif
 
 #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), pwm_switch))

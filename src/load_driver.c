@@ -33,6 +33,7 @@ static struct device *dev_usb;
 
 #include "hardware.h"
 #include "leds.h"
+#include "mcu.h"
 
 // short circuit detection comparator only present in PWM 2420 LUS board so far
 #ifdef CONFIG_BOARD_PWM_2420_LUS
@@ -181,11 +182,10 @@ void usb_out_set(bool status)
 
 #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), charge_pump))
 
-#if defined(CONFIG_SOC_STM32G431XX)
+#if defined(CONFIG_SOC_SERIES_STM32G4X)
 #include <stm32g4xx_ll_tim.h>
 #include <stm32g4xx_ll_rcc.h>
 #include <stm32g4xx_ll_bus.h>
-#include "stm32g431xx.h"
 #endif
 
 #define CP_PWM_PERIOD (DT_PHA(DT_CHILD(DT_PATH(outputs), charge_pump), pwms, period))
