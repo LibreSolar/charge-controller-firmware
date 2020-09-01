@@ -23,13 +23,13 @@ LOG_MODULE_REGISTER(daq, CONFIG_LOG_DEFAULT_LEVEL);
 #define NTC_BETA_VALUE 3435
 
 #if DT_NODE_EXISTS(DT_PATH(dcdc))
-static float dcdc_current_offset;
+static uint16_t dcdc_current_offset_raw;
 #endif
 #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), pwm_switch))
-static float pwm_current_offset;
+static uint16_t pwm_current_offset_raw;
 #endif
 #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
-static float load_current_offset;
+static uint16_t load_current_offset_raw;
 #endif
 
 // left-aligned 12-bit ADC raw readings (i.e. left-shifted by 4 bits)
@@ -84,15 +84,14 @@ static inline float ntc_temp(uint32_t channel, int32_t vref, float ntc_series_re
 
 void calibrate_current_sensors()
 {
-    int vref = VREF;
 #if DT_NODE_EXISTS(DT_PATH(dcdc))
-    dcdc_current_offset = -adc_scaled(ADC_POS(i_dcdc), vref, ADC_GAIN(i_dcdc));
+    dcdc_current_offset_raw = adc_raw_filtered(ADC_POS(i_dcdc));
 #endif
 #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), pwm_switch))
-    pwm_current_offset = -adc_scaled(ADC_POS(i_pwm), vref, ADC_GAIN(i_pwm));
+    pwm_current_offset_raw = adc_raw_filtered(ADC_POS(i_pwm));
 #endif
 #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
-    load_current_offset = -adc_scaled(ADC_POS(i_load), vref, ADC_GAIN(i_load));
+    load_current_offset_raw = adc_raw_filtered(ADC_POS(i_load));
 #endif
 }
 
@@ -170,7 +169,7 @@ void daq_update()
 #endif
 
 #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
-    load.current = adc_scaled(ADC_POS(i_load), vref, ADC_GAIN(i_load)) + load_current_offset;
+    load.current = adc_scaled(ADC_POS(i_load), vref, ADC_GAIN(i_load), load_current_offset_raw);
     float load_current = load.current;
 #else
     float load_current = 0;     // value used below, so we still need to define the variable
@@ -179,8 +178,8 @@ void daq_update()
 #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), pwm_switch))
     // current multiplied with PWM duty cycle for PWM charger to get avg current for correct power
     // calculation
-    pwm_switch.current = -pwm_switch.get_duty_cycle() * (
-        adc_scaled(ADC_POS(i_pwm), vref, ADC_GAIN(i_pwm)) + pwm_current_offset);
+    pwm_switch.current = -pwm_switch.get_duty_cycle() *
+        adc_scaled(ADC_POS(i_pwm), vref, ADC_GAIN(i_pwm), pwm_current_offset_raw);
 
     lv_terminal.current = -pwm_switch.current - load_current;
 
@@ -189,7 +188,7 @@ void daq_update()
 
 #if DT_NODE_EXISTS(DT_PATH(dcdc))
     dcdc_lv_port.current =
-        adc_scaled(ADC_POS(i_dcdc), vref, ADC_GAIN(i_dcdc)) + dcdc_current_offset;
+        adc_scaled(ADC_POS(i_dcdc), vref, ADC_GAIN(i_dcdc), dcdc_current_offset_raw);
 
     lv_terminal.current = dcdc_lv_port.current - load_current;
 
