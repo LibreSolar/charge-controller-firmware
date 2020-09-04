@@ -11,6 +11,10 @@
  * Measurements are taken using ADC with DMA. The DAC is used to generate reference voltages
  * for bi-directional current measurement. Data is stored in structs, which are afterwards
  * used by the control algorithms
+ *
+ * All calculations assume a 16-bit ADC, even though the STM32 ADCs natively support 12-bit.
+ * Using 16-bit for calculation allows to increase resolution by oversampling. Left-aligned
+ * 12-bit ADC readings can be treated as 16-bit ADC readings.
  */
 
 #ifndef DAQ_H_
@@ -25,6 +29,7 @@ extern "C" {
 #include <stdint.h>
 
 #define ADC_FILTER_CONST 5          // filter multiplier = 1/(2^ADC_FILTER_CONST)
+#define ADC_SCALE_FLOAT 65536.0F    // 16-bit full scale
 
 #ifdef CONFIG_SOC_SERIES_STM32G4X
 // Using internal reference buffer at VREF+ pin, set to 2048 mV
@@ -72,29 +77,29 @@ typedef struct {
 } AdcAlert;
 
 /**
- * Convert raw ADC reading to voltage
+ * Convert 16-bit raw ADC reading to voltage
  *
- * @param raw 12-bit ADC reading (right-aligned)
+ * @param raw 16-bit ADC reading
  * @param vref_mV Reference voltage in millivolts
  *
- * @return Voltage in Volts
+ * @return Voltage in volts
  */
 static inline float adc_raw_to_voltage(int32_t raw, int32_t vref_mV)
 {
-    return (raw * vref_mV) / (4096.0F * 1000);
+    return (raw * vref_mV) / (ADC_SCALE_FLOAT * 1000);
 }
 
 /**
- * Convert voltage to raw ADC reading
+ * Convert voltage to 16-bit raw ADC reading
  *
- * @param voltage Voltage in Volts
+ * @param voltage Voltage in volts
  * @param vref_mV Reference voltage in millivolts
  *
- * @return 12-bit ADC reading (right-aligned)
+ * @return 16-bit ADC reading
  */
 static inline int32_t adc_voltage_to_raw(float voltage, int32_t vref_mV)
 {
-    return voltage / vref_mV * 4096.0F * 1000;
+    return voltage / vref_mV * ADC_SCALE_FLOAT * 1000;
 }
 
 /**

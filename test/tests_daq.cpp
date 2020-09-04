@@ -22,10 +22,10 @@ void test_adc_voltage_to_raw()
     TEST_ASSERT_EQUAL_INT32(0, raw);
 
     raw = adc_voltage_to_raw(3.3, 3300);
-    TEST_ASSERT_EQUAL_INT32(4095, raw);
+    TEST_ASSERT_EQUAL_INT32(65535, raw);
 
     raw = adc_voltage_to_raw(1.65, 3300);
-    TEST_ASSERT_EQUAL_INT32(2047, raw);
+    TEST_ASSERT_EQUAL_INT32(32767, raw);
 }
 
 void test_adc_raw_to_voltage()
@@ -35,10 +35,10 @@ void test_adc_raw_to_voltage()
     voltage = adc_raw_to_voltage(0, 3300);
     TEST_ASSERT_EQUAL_FLOAT(0.0, voltage);
 
-    voltage = adc_raw_to_voltage(4095, 3300);
+    voltage = adc_raw_to_voltage(65535, 3300);
     TEST_ASSERT_FLOAT_WITHIN(0.01, 3.3, voltage);
 
-    voltage = adc_raw_to_voltage(2048, 3300);
+    voltage = adc_raw_to_voltage(32767, 3300);
     TEST_ASSERT_FLOAT_WITHIN(0.01, 1.65, voltage);
 }
 
@@ -159,8 +159,8 @@ void adc_alert_overvoltage_triggering()
 void adc_alert_overflow_prevention()
 {
     // try to set an alert that overflows the 12-bit ADC resolution
-    uint16_t limit = adc_get_alert_limit(1, 4097);
-    TEST_ASSERT_EQUAL_HEX((uint16_t)(UINT16_MAX << 4), limit);
+    uint16_t limit = adc_get_alert_limit(1, UINT16_MAX + 1);
+    TEST_ASSERT_EQUAL_HEX(UINT16_MAX, limit);
 }
 
 /** Data acquisition tests
