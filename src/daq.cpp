@@ -32,7 +32,7 @@ static uint16_t pwm_current_offset_raw;
 static uint16_t load_current_offset_raw;
 #endif
 
-// left-aligned 12-bit ADC raw readings (i.e. left-shifted by 4 bits)
+// 16-bit ADC raw readings (actually left-aligned 12-bit, i.e. left-shifted by 4 bits)
 volatile uint16_t adc_readings[NUM_ADC_CH] = {};
 
 // filtered raw readings left-shifted by additional ADC_FILTER_CONST bits
@@ -48,8 +48,7 @@ static volatile AdcAlert adc_alerts_lower[NUM_ADC_CH] = {};
  */
 static inline uint32_t adc_raw_filtered(uint32_t channel)
 {
-    assert(channel < NUM_ADC_CH);
-    return adc_filtered[channel] >> (4 + ADC_FILTER_CONST);
+    return adc_filtered[channel] >> ADC_FILTER_CONST;
 }
 
 /**
@@ -225,8 +224,8 @@ void daq_update()
     dcdc.temp_mosfets = ntc_temp(ADC_POS(temp_fets), vref, ADC_GAIN(temp_fets));
 #endif
 
-    // internal MCU temperature
-    uint16_t adcval = adc_raw_filtered(ADC_POS(temp_mcu)) * vref / VREFINT_VALUE;
+    // internal MCU temperature (calibrated using 12-bit right-aligned readings)
+    uint16_t adcval = (adc_raw_filtered(ADC_POS(temp_mcu)) >> 4) * vref / VREFINT_VALUE;
     dev_stat.internal_temp = (TSENSE_CAL2_VALUE - TSENSE_CAL1_VALUE) /
         (TSENSE_CAL2 - TSENSE_CAL1) * (adcval - TSENSE_CAL1) + TSENSE_CAL1_VALUE;
 
@@ -278,18 +277,16 @@ void adc_upper_alert_inhibit(int adc_pos, int timeout_ms)
 
 uint16_t adc_get_alert_limit(float scale, float limit)
 {
-    const float adclimit = (UINT16_MAX >> 4); // 12 bits ADC resolution
-    const float limit_scaled = limit * scale;
     // even if we have a higher voltage limit, we must limit it
     // to the max value the ADC will be able to deliver
-    return (limit_scaled > adclimit ? 0x0FFF : (uint16_t)(limit_scaled)) << 4;
-    // shift 4 bits left to generate left aligned 16bit value
+    const float limit_scaled = limit * scale;
+    return limit_scaled > (float)UINT16_MAX ? UINT16_MAX : (uint16_t)(limit_scaled);
 }
 
 void daq_set_lv_alerts(float upper, float lower)
 {
     int vref = VREF;
-    float scale =  ((4096 * 1000) / ADC_GAIN(v_low)) / vref;
+    float scale =  (((4096 << 4) * 1000) / ADC_GAIN(v_low)) / vref;
 
     // LV side (battery) overvoltage alert
     adc_alerts_upper[ADC_POS(v_low)].limit = adc_get_alert_limit(scale, upper);

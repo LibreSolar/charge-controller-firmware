@@ -38,7 +38,7 @@
 
 #if defined(CONFIG_SOC_SERIES_STM32F0X) || defined(CONFIG_SOC_SERIES_STM32L0X)
 
-// automatich channel selection based on devicetree settings
+// automatic channel selection based on devicetree settings
 #define ADC_CHSEL_FN(node_id) (1UL << DT_PHA(node_id, io_channels, input)) |
 #define ADC_CHSEL (DT_FOREACH_CHILD(DT_PATH(adc_inputs), ADC_CHSEL_FN) 0)
 
