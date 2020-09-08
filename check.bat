@@ -17,7 +17,7 @@ if errorlevel 1 (
 )
 
 echo "---------- Running compile check -------------"
-platformio run -e mppt_2420_lc -e mppt_1210_hus -e mppt_2420_hpx -e pwm_2420_lus
+platformio run -e mppt_2420_lc -e mppt_1210_hus -e mppt_2420_hc -e pwm_2420_lus
 if errorlevel 1 (
     echo Failure Reason is %errorlevel%
     exit /b %errorlevel%

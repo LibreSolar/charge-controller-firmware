@@ -191,6 +191,20 @@ void usb_out_set(bool status)
 #define CP_PWM_PERIOD (DT_PHA(DT_CHILD(DT_PATH(outputs), charge_pump), pwms, period))
 #define CP_PWM_CHANNEL (DT_PHA(DT_CHILD(DT_PATH(outputs), charge_pump), pwms, channel))
 
+#if CP_PWM_CHANNEL == 1
+#define LL_TIM_CHANNEL LL_TIM_CHANNEL_CH1
+#define LL_TIM_OC_SetCompare LL_TIM_OC_SetCompareCH1
+#elif CP_PWM_CHANNEL == 2
+#define LL_TIM_CHANNEL LL_TIM_CHANNEL_CH2
+#define LL_TIM_OC_SetCompare LL_TIM_OC_SetCompareCH2
+#elif CP_PWM_CHANNEL == 3
+#define LL_TIM_CHANNEL LL_TIM_CHANNEL_CH3
+#define LL_TIM_OC_SetCompare LL_TIM_OC_SetCompareCH3
+#elif CP_PWM_CHANNEL == 4
+#define LL_TIM_CHANNEL LL_TIM_CHANNEL_CH4
+#define LL_TIM_OC_SetCompare LL_TIM_OC_SetCompareCH4
+#endif
+
 /* Currently hard-coded for TIM8 as Zephyr driver doesn't work with this timer at the moment */
 void load_cp_enable()
 {
@@ -201,9 +215,9 @@ void load_cp_enable()
     // Set timer clock to 100 kHz
     LL_TIM_SetPrescaler(TIM8, SystemCoreClock / 100000 - 1);
 
-    LL_TIM_OC_SetMode(TIM8, LL_TIM_CHANNEL_CH1, LL_TIM_OCMODE_PWM1);
-    LL_TIM_OC_EnablePreload(TIM8, LL_TIM_CHANNEL_CH1);
-    LL_TIM_OC_SetPolarity(TIM8, LL_TIM_CHANNEL_CH1, LL_TIM_OCPOLARITY_HIGH);
+    LL_TIM_OC_SetMode(TIM8, LL_TIM_CHANNEL, LL_TIM_OCMODE_PWM1);
+    LL_TIM_OC_EnablePreload(TIM8, LL_TIM_CHANNEL);
+    LL_TIM_OC_SetPolarity(TIM8, LL_TIM_CHANNEL, LL_TIM_OCPOLARITY_HIGH);
 
     // Interrupt on timer update
     LL_TIM_EnableIT_UPDATE(TIM8);
@@ -219,9 +233,9 @@ void load_cp_enable()
 
     LL_TIM_EnableCounter(TIM8);
 
-    LL_TIM_OC_SetCompareCH1(TIM8, _pwm_resolution / 2);    // 50% duty
+    LL_TIM_OC_SetCompare(TIM8, _pwm_resolution / 2);    // 50% duty
 
-    LL_TIM_CC_EnableChannel(TIM8, LL_TIM_CHANNEL_CH1);
+    LL_TIM_CC_EnableChannel(TIM8, LL_TIM_CHANNEL);
 
     LL_TIM_EnableAllOutputs(TIM8);
 

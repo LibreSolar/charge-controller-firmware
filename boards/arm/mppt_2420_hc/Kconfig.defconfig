@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2020 Martin Jäger / Libre Solar
+
+if BOARD_MPPT_2420_HC
+
+config BOARD
+	default "mppt_2420_hc"
+
+config LIBRE_SOLAR_TYPE_ID
+	default 8
+
+endif # BOARD_MPPT_2420_HC

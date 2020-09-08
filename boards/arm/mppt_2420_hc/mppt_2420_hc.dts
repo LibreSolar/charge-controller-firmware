@@ -1,0 +1,229 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Copyright (c) 2020 Martin Jäger / Libre Solar
+ */
+
+/dts-v1/;
+#include <st/g4/stm32g431Xb.dtsi>
+
+/ {
+	model = "Libre Solar MPPT 2420 HC";
+	compatible = "st,stm32g431";
+
+	pcb {
+		compatible = "charge-controller";
+
+		type = "MPPT 2420 HC";
+		version-str = "v0.1";
+		version-num = <1>;
+
+		hs-voltage-max = <80>;
+		ls-voltage-max = <32>;
+	};
+
+	dcdc {
+		compatible = "dcdc";
+		timer = <&timers1>;
+		pwm-frequency = <70000>;
+		pwm-deadtime = <300>;
+		current-max = <20>;
+	};
+
+	chosen {
+		zephyr,console = &usart1;
+		zephyr,shell-uart = &usart1;
+		zephyr,sram = &sram0;
+		zephyr,flash = &flash0;
+	};
+
+	/* temporary solution w/o using RGB LED */
+	leds {
+		compatible = "charlieplexing-leds";
+		gpios = <&gpiob 14 GPIO_ACTIVE_LOW>,	/* red */
+			<&gpiob 15 GPIO_ACTIVE_LOW>,	/* green */
+			<&gpiob 9 GPIO_ACTIVE_LOW>;	/* blue */
+
+		pwr {
+			states = <1 0 0>;
+		};
+
+		load {
+			states = <0 1 0>;
+		};
+
+		rxtx {
+			states = <0 0 1>;
+		};
+	};
+
+	outputs {
+		compatible = "outputs";
+
+		load {
+			label = "Load output";
+			gpios = <&gpiob 2 GPIO_ACTIVE_LOW>;
+			current-max = <20>;
+			kconfig-flag;	/* make node visible in Kconfig */
+		};
+
+		charge_pump {
+			label = "Charge pump for HS MOSFET drivers";
+			pwms = <&pwm8 2 200000 PWM_POLARITY_NORMAL>; /* 200 us period = 5 kHz */
+		};
+
+		can_en {
+			label = "CAN disable / standby";
+			gpios = <&gpiob 11 GPIO_ACTIVE_LOW>;
+		};
+	};
+
+	adc-inputs {
+		compatible = "adc-inputs";
+
+		v-low {
+			io-channels = <&adc1 12>;
+			multiplier = <105600>;
+			divider = <5600>;
+		};
+
+		v-high {
+			io-channels = <&adc1 15>;
+			multiplier = <102200>;
+			divider = <2200>;
+		};
+
+		temp-fets {
+			io-channels = <&adc1 11>;
+			multiplier = <10000>;	// 10k NTC series resistor
+			divider = <1>;
+		};
+
+		vref-mcu {
+			io-channels = <&adc1 18>;
+			multiplier = <1>;
+			divider = <1>;
+		};
+
+		temp-mcu {
+			io-channels = <&adc1 16>;
+			multiplier = <1>;
+			divider = <1>;
+		};
+
+		i-dcdc {
+			io-channels = <&adc2 1>;
+			// amp gain: 25, resistor: 2 mOhm
+			multiplier = <1000>;	// 1000
+			divider = <50>;	// 2*25
+		};
+
+		i-load {
+			io-channels = <&adc2 2>;
+			// amp gain: 25, resistor: 2 mOhm
+			multiplier = <1000>;	// 1000
+			divider = <50>;	// 2*25
+		};
+	};
+
+	soc {
+		dac1: dac@50000800 {
+			compatible = "st,stm32-dac";
+			reg = <0x50000800 0x400>;
+			clocks = <&rcc STM32_CLOCK_BUS_AHB2 0x00010000>;
+			status = "disabled";
+			label = "DAC_1";
+			#io-channel-cells = <1>;
+		};
+	};
+
+	aliases {
+		uart-dbg = &usart1;
+		uart-uext = &usart2;
+		spi-uext = &spi1;
+		i2c-uext = &i2c1;
+	};
+};
+
+&usart1 {
+	current-speed = <115200>;
+	status = "okay";
+};
+
+&usart2 {
+	current-speed = <115200>;
+	status = "okay";
+};
+
+&i2c1 {
+	status = "okay";
+};
+
+&spi1 {
+	cs-gpios = <&gpiob 6 GPIO_ACTIVE_LOW>;
+	status = "okay";
+};
+
+&usb {
+	status = "okay";
+};
+
+&rtc {
+	status = "okay";
+};
+
+&flash0 {
+	/*
+	 * For more information, see:
+	 * http://docs.zephyrproject.org/latest/guides/dts/index.html#flash-partitions
+	 */
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+	};
+};
+
+&iwdg {
+	status = "okay";
+};
+
+/* TIM8 (CH2) used for charge pump, but is currently not working with original Zephyr driver */
+&timers8 {
+	status = "okay";
+	pwm8: pwm {
+		status = "okay";
+	};
+};
+
+&i2c1 {
+	status = "okay";
+	clock-frequency = <I2C_BITRATE_STANDARD>;
+	eeprom@50 {
+		// Microchip 24AA32A
+		compatible = "atmel,at24";
+		reg = <0x50>;
+		label = "EEPROM_0";
+		size = <32768>;
+		pagesize = <32>;
+		address-width = <16>;
+		/*
+		 * timeout of 5 ms as suggested in datasheet seems too optimistic
+		 * (several write errors occured during testing)
+		 */
+		timeout = <7>;
+	};
+};
+
+/*
+// This requires https://github.com/zephyrproject-rtos/zephyr/pull/22832
+&can1 {
+	bus-speed = <250000>;
+	bus-speed-data = <250000>;
+	sjw = <1>;
+	sjw-data = <1>;
+	sample-point = <875>;
+	sample-point-data = <875>;
+	status = "okay";
+};
+*/

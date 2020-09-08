@@ -17,7 +17,7 @@ if [ $? != 0 ]; then
 fi
 
 echo "---------- Running compile check -------------"
-platformio run -e mppt_2420_lc -e mppt_1210_hus -e mppt_2420_hpx -e pwm_2420_lus
+platformio run -e mppt_2420_lc -e mppt_1210_hus -e mppt_2420_hc -e pwm_2420_lus
 if [ $? != 0 ]; then
         exit 1;
 fi
