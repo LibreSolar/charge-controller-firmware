@@ -6,7 +6,13 @@ This repository contains the firmware for the different Libre Solar Charge Contr
 
 Coding style is described [here](https://github.com/LibreSolar/coding-style).
 
-**Warning:** This firmware is under active development. Even though we try our best not to break any features that worked before, not every commit is fully tested on every board before including it to the master branch. For stable and tested versions consider using the latest [release](https://github.com/LibreSolar/charge-controller-firmware/releases).
+## Development and release model
+
+The `master` branch contains the latest release of the firmware plus some cherry-picked bug-fixes. So you can always pull this branch to get a stable and working firmware for your charge controller.
+
+New features are developed in the `develop` branch and merged into master after passing tests with multiple boards. The `develop` branch is changed frequently and may even be rebased to fix previous commits. Use this branch only if you want to try out most recent features and be aware that something might be broken.
+
+Releases are generated from master after significant changes have been made. The year is used as the major version number. The minor version number starts at zero and is increased for each release in that year.
 
 ## Supported devices
 
