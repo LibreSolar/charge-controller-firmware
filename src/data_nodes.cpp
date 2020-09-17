@@ -327,6 +327,9 @@ static DataNode data_nodes[] = {
 
     TS_NODE_FLOAT(0x91, "Grid_A", &hv_terminal.current, 2,
         ID_OUTPUT, TS_ANY_R, PUB_SER | PUB_CAN),
+
+    TS_NODE_FLOAT(0x92, "Grid_W", &hv_terminal.power, 2,
+        ID_OUTPUT, TS_ANY_R, PUB_SER | PUB_CAN),
 #endif
 
     TS_NODE_UINT32(0x9F, "ErrorFlags", &dev_stat.error_flags,
@@ -343,6 +346,14 @@ static DataNode data_nodes[] = {
 
 #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
     TS_NODE_UINT32(0x09, "LoadOutTotal_Wh", &dev_stat.load_out_total_Wh,
+        ID_REC, TS_ANY_R | TS_MKR_W, PUB_NVM),
+#endif
+
+#if CONFIG_HV_TERMINAL_NANOGRID
+    TS_NODE_UINT32(0xC1, "GridImportTotal_Wh", &dev_stat.grid_import_total_Wh,
+        ID_REC, TS_ANY_R | TS_MKR_W, PUB_NVM),
+
+    TS_NODE_UINT32(0xC2, "GridExportTotal_Wh", &dev_stat.grid_export_total_Wh,
         ID_REC, TS_ANY_R | TS_MKR_W, PUB_NVM),
 #endif
 
