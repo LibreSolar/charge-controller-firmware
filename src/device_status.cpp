@@ -27,6 +27,10 @@ void DeviceStatus::update_energy()
     static uint32_t load_out_total_Wh_prev;
     static uint32_t bat_chg_total_Wh_prev;
     static uint32_t bat_dis_total_Wh_prev;
+    #if CONFIG_HV_TERMINAL_NANOGRID
+    static uint32_t grid_import_total_Wh_prev;
+    static uint32_t grid_export_total_Wh_prev;
+    #endif
 
     static bool first_call = true;
     if (first_call) {
@@ -35,6 +39,10 @@ void DeviceStatus::update_energy()
         load_out_total_Wh_prev = load_out_total_Wh;
         bat_chg_total_Wh_prev = bat_chg_total_Wh;
         bat_dis_total_Wh_prev = bat_dis_total_Wh;
+        #if CONFIG_HV_TERMINAL_NANOGRID
+        grid_import_total_Wh_prev = grid_import_total_Wh;
+        grid_export_total_Wh_prev = grid_export_total_Wh;
+        #endif
         first_call = false;
     }
 
@@ -55,12 +63,20 @@ void DeviceStatus::update_energy()
             load_out_total_Wh_prev = load_out_total_Wh;
             bat_chg_total_Wh_prev = bat_chg_total_Wh;
             bat_dis_total_Wh_prev = bat_dis_total_Wh;
+            #if CONFIG_HV_TERMINAL_NANOGRID
+            grid_import_total_Wh_prev = grid_import_total_Wh;
+            grid_export_total_Wh_prev = grid_export_total_Wh;
+            #endif
             solar_terminal.neg_energy_Wh = 0.0;
             #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
             load.pos_energy_Wh = 0.0;
             #endif
             bat_terminal.pos_energy_Wh = 0.0;
             bat_terminal.neg_energy_Wh = 0.0;
+            #if CONFIG_HV_TERMINAL_NANOGRID
+            grid_terminal.pos_energy_Wh = 0.0;
+            grid_terminal.neg_energy_Wh = 0.0;
+            #endif
         }
         seconds_zero_solar = 0;
     }
@@ -79,6 +95,13 @@ void DeviceStatus::update_energy()
 #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
     load_out_total_Wh = load_out_total_Wh_prev +
         (load.pos_energy_Wh > 0 ? load.pos_energy_Wh : 0);
+#endif
+
+#if CONFIG_HV_TERMINAL_NANOGRID
+    grid_import_total_Wh = grid_import_total_Wh_prev +
+        (grid_terminal.neg_energy_Wh > 0 ? grid_terminal.neg_energy_Wh : 0);
+    grid_export_total_Wh = grid_export_total_Wh_prev +
+        (grid_terminal.pos_energy_Wh > 0 ? grid_terminal.pos_energy_Wh : 0);
 #endif
 }
 

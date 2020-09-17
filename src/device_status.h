@@ -115,6 +115,10 @@ public:
     uint32_t bat_dis_total_Wh;
     uint32_t solar_in_total_Wh;
     uint32_t load_out_total_Wh;
+    #if CONFIG_HV_TERMINAL_NANOGRID
+    uint32_t grid_import_total_Wh;
+    uint32_t grid_export_total_Wh;
+    #endif
 
     // maximum/minimum values
     uint16_t solar_power_max_day;
