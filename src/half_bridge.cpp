@@ -6,9 +6,13 @@
 
 #include "half_bridge.h"
 
+#include <zephyr.h>
+
 #include <stdio.h>
 
 #include "mcu.h"
+
+#if DT_NODE_EXISTS(DT_PATH(dcdc))
 
 static uint16_t tim_arr;            // auto-reload register (defines PWM frequency)
 static uint16_t tim_ccr_min;        // capture/compare register min/max
@@ -17,23 +21,17 @@ static uint16_t tim_dt_clocks;
 
 static bool pwm_enabled;
 
-#if defined(CONFIG_SOC_SERIES_STM32L0X)
+#ifndef UNIT_TEST
+
+// Get address of used timer from board dts
+#define PWM_TIMER_ADDR DT_REG_ADDR(DT_PHANDLE(DT_PATH(dcdc), timer))
+
+#if PWM_TIMER_ADDR == TIM3_BASE
 
 static void pwm_init_registers(uint16_t arr)
 {
-    // Enable peripheral clock of GPIOB
-    RCC->IOPENR |= RCC_IOPENR_IOPBEN;
-
     // Enable TIM3 clock
     RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;
-
-    // Select alternate function mode on PB0 and PB1 (first bit _1 = 1, second bit _0 = 0)
-    GPIOB->MODER = (GPIOB->MODER & ~(GPIO_MODER_MODE0)) | GPIO_MODER_MODE0_1;
-    GPIOB->MODER = (GPIOB->MODER & ~(GPIO_MODER_MODE1)) | GPIO_MODER_MODE1_1;
-
-    // Select AF2 on PB0 and PB1
-    GPIOB->AFR[0] |= 0x2 << GPIO_AFRL_AFSEL0_Pos;
-    GPIOB->AFR[0] |= 0x2 << GPIO_AFRL_AFSEL1_Pos;
 
     // No prescaler --> timer frequency == SystemClock
     TIM3->PSC = 0;
@@ -54,10 +52,6 @@ static void pwm_init_registers(uint16_t arr)
     // TIM_CR1_CEN =  1: Counter enable
     TIM3->CR1 |= TIM_CR1_CMS_0 | TIM_CR1_CEN;
 
-    // Control Register 2
-    // OIS1 = OIS1N = 0: Output Idle State is set to off
-    //TIM3->CR2 |= ;
-
     // Force update generation (UG = 1)
     TIM3->EGR |= TIM_EGR_UG;
 
@@ -71,8 +65,6 @@ static void pwm_start()
     // Capture/Compare Enable Register
     // CCxE = 1: Enable the output on OCx
     // CCxP = 0: Active high polarity on OCx (default)
-    // CCxNE = 1: Enable the output on OC1N
-    // CCxNP = 0: Active high polarity on OC1N (default)
     TIM3->CCER |= TIM_CCER_CC3E;
     TIM3->CCER |= TIM_CCER_CC4E;
 }
@@ -94,31 +86,13 @@ static void pwm_set_ccr(uint16_t ccr)
     TIM3->CCR4 = ccr + tim_dt_clocks;   // low-side
 }
 
-#elif defined(CONFIG_SOC_SERIES_STM32F0X) || defined(CONFIG_SOC_SERIES_STM32G4X)
+#elif PWM_TIMER_ADDR == TIM1_BASE
 
 static void pwm_init_registers(uint16_t arr)
 {
-    // Enable peripheral clock of GPIOA and GPIOB
-#ifdef CONFIG_SOC_SERIES_STM32F0X
-    RCC->AHBENR |= RCC_AHBENR_GPIOAEN | RCC_AHBENR_GPIOBEN;
-#else // CONFIG_SOC_SERIES_STM32G4X
-    RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN | RCC_AHB2ENR_GPIOBEN;
-#endif
-
     // Enable TIM1 clock
     RCC->APB2ENR |= RCC_APB2ENR_TIM1EN;
 
-    GPIOA->MODER = (GPIOA->MODER & ~(GPIO_MODER_MODER8)) | GPIO_MODER_MODER8_1;
-    GPIOB->MODER = (GPIOB->MODER & ~(GPIO_MODER_MODER13)) | GPIO_MODER_MODER13_1;
-
-    // Select AF2 on PA8 (TIM1_CH1) and PB13 (TIM1_CH1N)
-#ifdef CONFIG_SOC_SERIES_STM32F0X
-    GPIOA->AFR[1] |= 0x2 << GPIO_AFRH_AFSEL8_Pos;
-    GPIOB->AFR[1] |= 0x2 << GPIO_AFRH_AFSEL13_Pos;
-#else // CONFIG_SOC_SERIES_STM32G4X
-    GPIOA->AFR[1] |= 0x6 << GPIO_AFRH_AFSEL8_Pos;
-    GPIOB->AFR[1] |= 0x6 << GPIO_AFRH_AFSEL13_Pos;
-#endif
     // No prescaler --> timer frequency == SystemClock
     TIM1->PSC = 0;
 
@@ -132,16 +106,12 @@ static void pwm_init_registers(uint16_t arr)
     // CC1P = 0: Active high polarity on OC1 (default)
     // CC1NE = 1: Enable the output on OC1N
     // CC1NP = 0: Active high polarity on OC1N (default)
-    TIM1->CCER |= TIM_CCER_CC1E | TIM_CCER_CC1NE; // | TIM_CCER_CC1NP;
+    TIM1->CCER |= TIM_CCER_CC1E | TIM_CCER_CC1NE;
 
     // Control Register 1
     // TIM_CR1_CMS = 01: Select center-aligned mode 1
     // TIM_CR1_CEN =  1: Counter enable
     TIM1->CR1 |= TIM_CR1_CMS_0 | TIM_CR1_CEN;
-
-    // Control Register 2
-    // OIS1 = OIS1N = 0: Output Idle State is set to off
-    //TIM1->CR2 |= ;
 
 #ifdef CONFIG_SOC_SERIES_STM32G4X
     // Boards with STM32G4 MCU use ADC2 for synchronized ADC sampling. We use OC2
@@ -197,7 +167,9 @@ static void pwm_set_ccr(uint32_t ccr)
     TIM1->CCR2 = 1;
 }
 
-#elif defined(UNIT_TEST)
+#endif // TIM1
+
+#else // UNIT_TEST
 
 const uint32_t SystemCoreClock = 24000000;
 
@@ -308,3 +280,5 @@ bool half_bridge_enabled()
 {
     return pwm_enabled;
 }
+
+#endif // DT_NODE_EXISTS(DT_PATH(dcdc))

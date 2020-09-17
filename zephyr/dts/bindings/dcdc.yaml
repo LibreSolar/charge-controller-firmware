@@ -6,6 +6,10 @@ description: DC/DC converter as part of MPPT charge controllers
 compatible: "dcdc"
 
 properties:
+  timer:
+    type: phandle
+    required: true
+    description: Timer used for PWM signal generation
   pwm-frequency:
     type: int
     required: true

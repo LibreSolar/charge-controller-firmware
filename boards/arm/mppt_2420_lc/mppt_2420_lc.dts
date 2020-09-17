@@ -24,6 +24,7 @@
 
 	dcdc {
 		compatible = "dcdc";
+		timer = <&timers1>;
 		pwm-frequency = <70000>;
 		pwm-deadtime = <300>;
 		current-max = <20>;
