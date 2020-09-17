@@ -38,22 +38,37 @@
 #define DT_N_S_adc_inputs_S_temp_bat_EXISTS 1
 #define DT_N_S_adc_inputs_S_temp_bat_P_multiplier 10000
 #define DT_N_S_adc_inputs_S_temp_bat_P_divider 1
+#define DT_N_S_adc_inputs_S_temp_bat_P_filter_const 5
 
 #define DT_N_S_adc_inputs_S_v_high_P_multiplier 105600
 #define DT_N_S_adc_inputs_S_v_high_P_divider 5600
+#define DT_N_S_adc_inputs_S_v_high_P_filter_const 5
+
 #define DT_N_S_adc_inputs_S_v_low_P_multiplier 105600
 #define DT_N_S_adc_inputs_S_v_low_P_divider 5600
+#define DT_N_S_adc_inputs_S_v_low_P_filter_const 5
+
 #define DT_N_S_adc_inputs_S_v_pwm_P_multiplier 25224   // see pwm_2420_lus.dts
 #define DT_N_S_adc_inputs_S_v_pwm_P_divider 984
 #define DT_N_S_adc_inputs_S_v_pwm_P_offset 2338
+#define DT_N_S_adc_inputs_S_v_pwm_P_filter_const 5
 
 // amp gain: 50, resistor: 4 mOhm
 #define DT_N_S_adc_inputs_S_i_load_P_multiplier 1000
 #define DT_N_S_adc_inputs_S_i_load_P_divider (4 * 50)
+#define DT_N_S_adc_inputs_S_i_load_P_filter_const 5
+
 #define DT_N_S_adc_inputs_S_i_dcdc_P_multiplier 1000
 #define DT_N_S_adc_inputs_S_i_dcdc_P_divider (4 * 50)
+#define DT_N_S_adc_inputs_S_i_dcdc_P_filter_const 5
+
 #define DT_N_S_adc_inputs_S_i_pwm_P_multiplier 1000
 #define DT_N_S_adc_inputs_S_i_pwm_P_divider (4 * 50)
+#define DT_N_S_adc_inputs_S_i_pwm_P_filter_const 5
+
+#define DT_N_S_adc_inputs_S_vref_mcu_P_filter_const 5
+
+#define DT_N_S_adc_inputs_S_temp_mcu_P_filter_const 5
 
 #define DT_N_S_adc_inputs_FOREACH_CHILD(fn) \
         fn(DT_N_S_adc_inputs_S_v_low) \

@@ -28,7 +28,6 @@ extern "C" {
 
 #include <stdint.h>
 
-#define ADC_FILTER_CONST 5          // filter multiplier = 1/(2^ADC_FILTER_CONST)
 #define ADC_SCALE_FLOAT 65536.0F    // 16-bit full scale
 
 #ifdef CONFIG_SOC_SERIES_STM32G4X

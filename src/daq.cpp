@@ -35,11 +35,21 @@ static uint16_t load_current_offset_raw;
 // 16-bit ADC raw readings (actually left-aligned 12-bit, i.e. left-shifted by 4 bits)
 volatile uint16_t adc_readings[NUM_ADC_CH] = {};
 
-// filtered raw readings left-shifted by additional ADC_FILTER_CONST bits
+// filtered raw readings left-shifted by additional adc_filter_const[channel] bits
 volatile uint32_t adc_filtered[NUM_ADC_CH] = {};
 
 static volatile AdcAlert adc_alerts_upper[NUM_ADC_CH] = {};
 static volatile AdcAlert adc_alerts_lower[NUM_ADC_CH] = {};
+
+/*
+ * Channel-specific ADC filter constant from devicetree
+ *
+ * multiplier = 1/(2^adc_filter_const[channel])
+ */
+#define ADC_FILTER_CONST(node_id) DT_PROP(node_id, filter_const),
+static const uint8_t adc_filter_const[NUM_ADC_CH] = {
+    DT_FOREACH_CHILD(DT_PATH(adc_inputs), ADC_FILTER_CONST)
+};
 
 /**
  * Average value for ADC channel
@@ -48,7 +58,7 @@ static volatile AdcAlert adc_alerts_lower[NUM_ADC_CH] = {};
  */
 static inline uint32_t adc_raw_filtered(uint32_t channel)
 {
-    return adc_filtered[channel] >> ADC_FILTER_CONST;
+    return adc_filtered[channel] >> adc_filter_const[channel];
 }
 
 /**
@@ -106,19 +116,19 @@ void adc_update_value(unsigned int pos)
          * Low-pass filtering of ADC raw readings
          * (see also: http://techteach.no/simview/lowpass_filter/doc/filter_algorithm.pdf)
          *
-         * y(n) = c * x(n) + (1 - c) * y(n-1) with filter constant c = 1/(2^ADC_FILTER_CONST)
+         * y(n) = c * x(n) + (1 - c) * y(n-1) with filter constant c = 1/(2^adc_filter_const[pos])
          *
          * Remarks regarding below implementation optimized for efficiency:
          *
          * 1. adc_readings has different fixed-point math format, so that it would have to be
-         *    aligned with << ADC_FILTER_CONST before calculation. Not aligning it is equivalent
-         *    to multiplication with c:
-         *    adc_readings[pos] == c * (adc_readings[pos] << ADC_FILTER_CONST)
+         *    aligned with << adc_filter_const[pos] before calculation. Not aligning it is
+         *    equivalent to multiplication with c:
+         *    adc_readings[pos] == c * (adc_readings[pos] << adc_filter_const[pos])
          *
-         * 2. c * adc_filtered[pos] == adc_filtered[pos] >> ADC_FILTER_CONST
+         * 2. c * adc_filtered[pos] == adc_filtered[pos] >> adc_filter_const[pos]
          */
         adc_filtered[pos] = (uint32_t)adc_readings[pos] +
-            adc_filtered[pos] - (adc_filtered[pos] >> ADC_FILTER_CONST);
+            adc_filtered[pos] - (adc_filtered[pos] >> adc_filter_const[pos]);
     }
 
     // check upper alerts
@@ -318,7 +328,7 @@ void prepare_adc_filtered()
 {
     // initialize also filtered values
     for (int i = 0; i < NUM_ADC_CH; i++) {
-        adc_filtered[i] = adc_readings[i] << ADC_FILTER_CONST;
+        adc_filtered[i] = adc_readings[i] << adc_filter_const[i];
     }
 }
 
