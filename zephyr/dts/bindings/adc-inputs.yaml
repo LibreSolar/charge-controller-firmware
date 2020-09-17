@@ -32,6 +32,11 @@ child-binding:
       description: |
         Offset to be substracted from ADC raw reading before applying the gain
 
+    filter-const:
+      type: int
+      default: 5
+      description: Low-pass filter multiplier 1/(2^filter-const)
+
     enable-gpios:
       type: phandle-array
       required: false
