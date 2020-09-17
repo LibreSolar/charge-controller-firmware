@@ -24,6 +24,7 @@
 
 	dcdc {
 		compatible = "dcdc";
+		timer = <&timers3>;
 		pwm-frequency = <50000>;
 		pwm-deadtime = <230>;
 		current-max = <10>;
@@ -138,6 +139,19 @@
 		uart-uext = &usart2;
 		spi-uext = &spi1;
 		i2c-uext = &i2c1;
+	};
+
+	soc {
+		// not (yet) provided by Zephyr dts, but necessary for dcdc node
+		timers3: timers@40000400 {
+			compatible = "st,stm32-timers";
+			reg = <0x40000400 0x400>;
+			clocks = <&rcc STM32_CLOCK_BUS_APB1 0x00000002>;
+			interrupts = <16 0>;
+			interrupt-names = "global";
+			status = "disabled";
+			label = "TIMERS_3";
+		};
 	};
 };
 
