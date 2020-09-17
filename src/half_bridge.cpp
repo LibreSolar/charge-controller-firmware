@@ -14,12 +14,23 @@
 
 #if DT_NODE_EXISTS(DT_PATH(dcdc))
 
-static uint16_t tim_arr;            // auto-reload register (defines PWM frequency)
 static uint16_t tim_ccr_min;        // capture/compare register min/max
 static uint16_t tim_ccr_max;
-static uint16_t tim_dt_clocks;
+static uint16_t tim_dt_clocks = 0;
 
-static bool pwm_enabled;
+static uint16_t clamp_ccr(uint16_t ccr_target)
+{
+    // protection against wrong settings which could destroy the hardware
+    if (ccr_target <= tim_ccr_min) {
+        return tim_ccr_min;
+    }
+    else if (ccr_target >= tim_ccr_max) {
+        return tim_ccr_max;
+    }
+    else {
+        return ccr_target;
+    }
+}
 
 #ifndef UNIT_TEST
 
@@ -28,7 +39,7 @@ static bool pwm_enabled;
 
 #if PWM_TIMER_ADDR == TIM3_BASE
 
-static void pwm_init_registers(uint16_t arr)
+static void tim_init_registers(int freq_kHz)
 {
     // Enable TIM3 clock
     RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;
@@ -56,39 +67,54 @@ static void pwm_init_registers(uint16_t arr)
     TIM3->EGR |= TIM_EGR_UG;
 
     // Auto Reload Register
-    // center-aligned mode --> resolution is double
-    TIM3->ARR = arr;
+    // center-aligned mode counts up and down in each period, so we need half the clocks as
+    // resolution for the given frequency.
+    TIM3->ARR = SystemCoreClock / (freq_kHz * 1000) / 2;;
 }
 
-static void pwm_start()
+void half_bridge_start()
 {
-    // Capture/Compare Enable Register
-    // CCxE = 1: Enable the output on OCx
-    // CCxP = 0: Active high polarity on OCx (default)
-    TIM3->CCER |= TIM_CCER_CC3E;
-    TIM3->CCER |= TIM_CCER_CC4E;
+    if (TIM3->CCR3 != 0U) {
+        // Capture/Compare Enable Register
+        // CCxE = 1: Enable the output on OCx
+        // CCxP = 0: Active high polarity on OCx (default)
+        TIM3->CCER |= TIM_CCER_CC3E;
+        TIM3->CCER |= TIM_CCER_CC4E;
+    }
 }
 
-static void pwm_stop()
+void half_bridge_stop()
 {
     TIM3->CCER &= ~(TIM_CCER_CC3E);
     TIM3->CCER &= ~(TIM_CCER_CC4E);
 }
 
-static uint16_t pwm_get_ccr()
+uint16_t half_bridge_get_arr()
+{
+    return TIM3->ARR;
+}
+
+uint16_t half_bridge_get_ccr()
 {
     return TIM3->CCR3;
 }
 
-static void pwm_set_ccr(uint16_t ccr)
+void half_bridge_set_ccr(uint16_t ccr)
 {
-    TIM3->CCR3 = ccr;                   // high-side
-    TIM3->CCR4 = ccr + tim_dt_clocks;   // low-side
+    uint16_t ccr_clamped = clamp_ccr(ccr);
+
+    TIM3->CCR3 = ccr_clamped;                   // high-side
+    TIM3->CCR4 = ccr_clamped + tim_dt_clocks;   // low-side
+}
+
+bool half_bridge_enabled()
+{
+    return TIM3->CCER & TIM_CCER_CC3E;
 }
 
 #elif PWM_TIMER_ADDR == TIM1_BASE
 
-static void pwm_init_registers(uint16_t arr)
+static void tim_init_registers(int freq_kHz)
 {
     // Enable TIM1 clock
     RCC->APB2ENR |= RCC_APB2ENR_TIM1EN;
@@ -109,9 +135,9 @@ static void pwm_init_registers(uint16_t arr)
     TIM1->CCER |= TIM_CCER_CC1E | TIM_CCER_CC1NE;
 
     // Control Register 1
-    // TIM_CR1_CMS = 01: Select center-aligned mode 1
+    // TIM_CR1_CMS = 00: Select edge-aligned mode
     // TIM_CR1_CEN =  1: Counter enable
-    TIM1->CR1 |= TIM_CR1_CMS_0 | TIM_CR1_CEN;
+    TIM1->CR1 |= TIM_CR1_CEN;
 
 #ifdef CONFIG_SOC_SERIES_STM32G4X
     // Boards with STM32G4 MCU use ADC2 for synchronized ADC sampling. We use OC2
@@ -126,13 +152,11 @@ static void pwm_init_registers(uint16_t arr)
     TIM1->EGR |= TIM_EGR_UG;
 
     // Auto Reload Register
-    // center-aligned mode --> frequency is half the pwm_resolution;
-    TIM1->ARR = arr;
+    // edge-aligned mode possible with TIM1 to increase resolution (no division by 2 necessary)
+    TIM1->ARR = SystemCoreClock / (freq_kHz * 1000);
 
     // Break and Dead-Time Register
-    // MOE  = 1: Main output enable
-    // OSSR = 0: Off-state selection for Run mode -> OC/OCN = 0
-    // OSSI = 0: Off-state selection for Idle mode -> OC/OCN = 0
+    // DTG[7:0]: Dead-time generator setup
     TIM1->BDTR |= (tim_dt_clocks & (uint32_t)0x7F); // ensure that only the last 7 bits are changed
 
     // Lock Break and Dead-Time Register
@@ -140,31 +164,43 @@ static void pwm_init_registers(uint16_t arr)
     TIM1->BDTR |= TIM_BDTR_LOCK_1 | TIM_BDTR_LOCK_0;
 }
 
-static void pwm_start()
+void half_bridge_start()
 {
-    // Break and Dead-Time Register
-    // MOE  = 1: Main output enable
-    TIM1->BDTR |= TIM_BDTR_MOE;
+    if (TIM1->CCR1 != 0U) {
+        // Break and Dead-Time Register
+        // MOE  = 1: Main output enable
+        TIM1->BDTR |= TIM_BDTR_MOE;
+    }
 }
 
-static void pwm_stop()
+void half_bridge_stop()
 {
     // Break and Dead-Time Register
     // MOE  = 1: Main output enable
     TIM1->BDTR &= ~(TIM_BDTR_MOE);
 }
 
-static uint32_t pwm_get_ccr()
+uint16_t half_bridge_get_arr()
+{
+    return TIM1->ARR;
+}
+
+uint16_t half_bridge_get_ccr()
 {
     return TIM1->CCR1;
 }
 
-static void pwm_set_ccr(uint32_t ccr)
+void half_bridge_set_ccr(uint16_t ccr)
 {
-    TIM1->CCR1 = ccr;
+    TIM1->CCR1 = clamp_ccr(ccr);
 
     // Trigger ADC for current measurement in the middle of the cycle.
-    TIM1->CCR2 = 1;
+    TIM1->CCR2 = TIM1->CCR1 / 2;
+}
+
+bool half_bridge_enabled()
+{
+    return TIM1->BDTR & TIM_BDTR_MOE;
 }
 
 #endif // TIM1
@@ -174,75 +210,24 @@ static void pwm_set_ccr(uint32_t ccr)
 const uint32_t SystemCoreClock = 24000000;
 
 // dummy registers
-uint32_t _tim_ccr = 0;
+uint32_t tim_ccr = 0;
+uint32_t tim_arr = 0;
+bool pwm_enabled = false;
 
-static void pwm_init_registers(uint16_t arr)
+static void tim_init_registers(int freq_kHz)
 {
-    tim_arr = arr;
+    // assuming edge-aligned PWM like with TIM1
+    tim_arr = SystemCoreClock / (freq_kHz * 1000);
 }
 
-static void pwm_start()
+void half_bridge_start()
 {
-    // nothing to do
+    pwm_enabled = true;
 }
 
-static void pwm_stop()
+void half_bridge_stop()
 {
-    // nothing to do
-}
-
-static uint16_t pwm_get_ccr()
-{
-    return _tim_ccr;
-}
-
-static void pwm_set_ccr(uint16_t ccr)
-{
-    _tim_ccr = ccr;                // high-side
-}
-
-#endif /* UNIT_TEST */
-
-void half_bridge_init(int freq_kHz, int deadtime_ns, float min_duty, float max_duty)
-{
-    // The timer runs at system clock speed.
-    // We are using a mode which counts up and down in each period,
-    // so we need half the clocks as resolution for the given frequency.
-    tim_arr = SystemCoreClock / (freq_kHz * 1000) / 2;
-
-    // (clocks per ms * deadtime in ns) / 1000 == (clocks per ms * deadtime in ms)
-    // although the C operator precedence does the "right thing" to allow deadtime_ns < 1000 to
-    // be handled nicely, parentheses make this more explicit
-    tim_dt_clocks = ((SystemCoreClock / (1000000)) * deadtime_ns) / 1000;
-
-    // set PWM frequency and resolution (in fact half the resolution)
-    pwm_init_registers(tim_arr);
-
-    tim_ccr_min = min_duty * tim_arr;
-    tim_ccr_max = max_duty * tim_arr;
-
-    half_bridge_set_duty_cycle(max_duty);      // init with allowed value
-
     pwm_enabled = false;
-}
-
-void half_bridge_set_ccr(uint16_t ccr_target)
-{
-    // protection against wrong settings which could destroy the hardware
-    if (ccr_target < tim_ccr_min) {
-        pwm_set_ccr(tim_ccr_min);
-    }
-    else if (ccr_target > tim_ccr_max) {
-        pwm_set_ccr(tim_ccr_max);
-    }
-    else {
-        pwm_set_ccr(ccr_target);
-    }
-}
-
-uint16_t half_bridge_get_ccr()
-{
-    return pwm_get_ccr();
 }
 
 uint16_t half_bridge_get_arr()
@@ -250,35 +235,53 @@ uint16_t half_bridge_get_arr()
     return tim_arr;
 }
 
-void half_bridge_set_duty_cycle(float duty)
+uint16_t half_bridge_get_ccr()
 {
-    if (duty >= 0.0 && duty <= 1.0) {
-        half_bridge_set_ccr(tim_arr * duty);
-    }
+    return tim_ccr;
 }
 
-float half_bridge_get_duty_cycle()
+void half_bridge_set_ccr(uint16_t ccr)
 {
-    return (float)(pwm_get_ccr()) / tim_arr;
-}
-
-void half_bridge_start()
-{
-    if (pwm_get_ccr() >= tim_ccr_min && pwm_get_ccr() <= tim_ccr_max) {
-        pwm_start();
-        pwm_enabled = true;
-    }
-}
-
-void half_bridge_stop()
-{
-    pwm_stop();
-    pwm_enabled = false;
+    tim_ccr = clamp_ccr(ccr);          // high-side
 }
 
 bool half_bridge_enabled()
 {
     return pwm_enabled;
+}
+
+#endif /* UNIT_TEST */
+
+static void tim_calculate_dt_clocks(int deadtime_ns)
+{
+    // (clocks per ms * deadtime in ns) / 1000 == (clocks per ms * deadtime in ms)
+    // although the C operator precedence does the "right thing" to allow deadtime_ns < 1000 to
+    // be handled nicely, parentheses make this more explicit
+    tim_dt_clocks = ((SystemCoreClock / (1000000)) * deadtime_ns) / 1000;
+}
+
+void half_bridge_init(int freq_kHz, int deadtime_ns, float min_duty, float max_duty)
+{
+    tim_calculate_dt_clocks(deadtime_ns);
+
+    tim_init_registers(freq_kHz);
+
+    tim_ccr_min = min_duty * half_bridge_get_arr();
+    tim_ccr_max = max_duty * half_bridge_get_arr();
+
+    half_bridge_set_duty_cycle(max_duty);      // init with allowed value
+}
+
+void half_bridge_set_duty_cycle(float duty)
+{
+    if (duty >= 0.0 && duty <= 1.0) {
+        half_bridge_set_ccr(half_bridge_get_arr() * duty);
+    }
+}
+
+float half_bridge_get_duty_cycle()
+{
+    return (float)(half_bridge_get_ccr()) / half_bridge_get_arr();
 }
 
 #endif // DT_NODE_EXISTS(DT_PATH(dcdc))
