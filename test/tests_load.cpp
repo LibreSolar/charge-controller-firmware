@@ -54,7 +54,7 @@ static void load_init(LoadOutput *l, bool on = false, int num_batteries = 1)
 static void control_off_to_on_if_everything_fine()
 {
     DcBus bus = {};
-    LoadOutput load_out(&bus, &load_drv_set, &load_drv_init);
+    LoadOutput load_out(&bus, &load_drv_set, &load_drv_init, NULL);
     load_init(&load_out);
 
     load_out.enable = true;
@@ -66,7 +66,7 @@ static void control_off_to_on_if_everything_fine()
 static void control_off_to_on_if_everything_fine_dual_battery()
 {
     DcBus bus = {};
-    LoadOutput load_out(&bus, &load_drv_set, &load_drv_init);
+    LoadOutput load_out(&bus, &load_drv_set, &load_drv_init, NULL);
     load_init(&load_out, false, 2);
 
     load_out.enable = true;
@@ -78,7 +78,7 @@ static void control_off_to_on_if_everything_fine_dual_battery()
 static void control_on_to_off_shedding()
 {
     DcBus bus = {};
-    LoadOutput load_out(&bus, &load_drv_set, &load_drv_init);
+    LoadOutput load_out(&bus, &load_drv_set, &load_drv_init, NULL);
     load_init(&load_out, true);
 
     bus.voltage = load_out.disconnect_voltage - 0.1;
@@ -90,7 +90,7 @@ static void control_on_to_off_shedding()
 void control_on_to_off_overvoltage()
 {
     DcBus bus = {};
-    LoadOutput load_out(&bus, &load_drv_set, &load_drv_init);
+    LoadOutput load_out(&bus, &load_drv_set, &load_drv_init, NULL);
     load_init(&load_out, true);
 
     bus.voltage = bus.sink_voltage_intercept + 0.6;
@@ -111,7 +111,7 @@ void control_on_to_off_overvoltage()
 void control_on_to_off_overvoltage_dual_battery()
 {
     DcBus bus = {};
-    LoadOutput load_out(&bus, &load_drv_set, &load_drv_init);
+    LoadOutput load_out(&bus, &load_drv_set, &load_drv_init, NULL);
     load_init(&load_out, true, 2);
 
     bus.voltage = (bus.sink_voltage_intercept + 0.6) * bus.series_multiplier;
@@ -132,7 +132,7 @@ void control_on_to_off_overvoltage_dual_battery()
 void control_on_to_off_overcurrent()
 {
     DcBus bus = {};
-    LoadOutput load_out(&bus, &load_drv_set, &load_drv_init);
+    LoadOutput load_out(&bus, &load_drv_set, &load_drv_init, NULL);
     load_init(&load_out, true);
 
     // current slightly below factor 2 so that it is not switched off immediately
@@ -152,7 +152,7 @@ void control_on_to_off_overcurrent()
 void control_on_to_off_voltage_dip()
 {
     DcBus bus = {};
-    LoadOutput load_out(&bus, &load_drv_set, &load_drv_init);
+    LoadOutput load_out(&bus, &load_drv_set, &load_drv_init, NULL);
     load_init(&load_out, true);
 
     load_out.stop(ERR_LOAD_VOLTAGE_DIP);
@@ -164,7 +164,7 @@ void control_on_to_off_voltage_dip()
 void control_on_to_off_bus_limit()
 {
     DcBus bus = {};
-    LoadOutput load_out(&bus, &load_drv_set, &load_drv_init);
+    LoadOutput load_out(&bus, &load_drv_set, &load_drv_init, NULL);
     load_init(&load_out, true);
 
     load_out.bus->src_current_margin = 0;
@@ -176,7 +176,7 @@ void control_on_to_off_bus_limit()
 void control_on_to_off_if_enable_false()
 {
     DcBus bus = {};
-    LoadOutput load_out(&bus, &load_drv_set, &load_drv_init);
+    LoadOutput load_out(&bus, &load_drv_set, &load_drv_init, NULL);
     load_init(&load_out, true);
 
     load_out.enable = false;
@@ -188,7 +188,7 @@ void control_on_to_off_if_enable_false()
 void control_off_shedding_to_on_after_delay()
 {
     DcBus bus = {};
-    LoadOutput load_out(&bus, &load_drv_set, &load_drv_init);
+    LoadOutput load_out(&bus, &load_drv_set, &load_drv_init, NULL);
     load_init(&load_out);
     load_out.error_flags = ERR_LOAD_SHEDDING;
 
@@ -206,7 +206,7 @@ void control_off_shedding_to_on_after_delay()
 void control_off_overcurrent_to_on_after_delay()
 {
     DcBus bus = {};
-    LoadOutput load_out(&bus, &load_drv_set, &load_drv_init);
+    LoadOutput load_out(&bus, &load_drv_set, &load_drv_init, NULL);
     load_init(&load_out);
     load_out.error_flags = ERR_LOAD_OVERCURRENT;
 
@@ -224,7 +224,7 @@ void control_off_overcurrent_to_on_after_delay()
 void control_off_overvoltage_to_on_at_lower_voltage()
 {
     DcBus bus = {};
-    LoadOutput load_out(&bus, &load_drv_set, &load_drv_init);
+    LoadOutput load_out(&bus, &load_drv_set, &load_drv_init, NULL);
     load_init(&load_out);
     bus.voltage = load_out.overvoltage + 0.1;
     load_out.error_flags = ERR_LOAD_OVERVOLTAGE;
@@ -247,7 +247,7 @@ void control_off_overvoltage_to_on_at_lower_voltage()
 void control_off_overvoltage_to_on_at_lower_voltage_dual_battery()
 {
     DcBus bus = {};
-    LoadOutput load_out(&bus, &load_drv_set, &load_drv_init);
+    LoadOutput load_out(&bus, &load_drv_set, &load_drv_init, NULL);
     load_init(&load_out, false, 2);
     bus.voltage = (load_out.overvoltage + 0.1) * bus.series_multiplier;
     load_out.error_flags = ERR_LOAD_OVERVOLTAGE;
@@ -270,7 +270,7 @@ void control_off_overvoltage_to_on_at_lower_voltage_dual_battery()
 void control_off_short_circuit_flag_reset()
 {
     DcBus bus = {};
-    LoadOutput load_out(&bus, &load_drv_set, &load_drv_init);
+    LoadOutput load_out(&bus, &load_drv_set, &load_drv_init, NULL);
     load_init(&load_out);
     load_out.error_flags = ERR_LOAD_SHORT_CIRCUIT;
 

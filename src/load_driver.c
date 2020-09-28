@@ -171,6 +171,10 @@ void usb_out_set(bool status)
         DT_GPIO_FLAGS(USB_GPIO, gpios) | GPIO_OUTPUT_INACTIVE);
     if (status == true) {
         gpio_pin_set(dev_usb, DT_GPIO_PIN(USB_GPIO, gpios), 1);
+#if DT_PROP(DT_CHILD(DT_PATH(outputs), usb_pwr), latching_pgood)
+        k_sleep(K_MSEC(50));
+        gpio_pin_configure(dev_usb, DT_GPIO_PIN(USB_GPIO, gpios), GPIO_INPUT);
+#endif
     }
     else {
         gpio_pin_set(dev_usb, DT_GPIO_PIN(USB_GPIO, gpios), 0);
@@ -219,6 +223,15 @@ void usb_out_init()
 #endif
 }
 
+bool pgood_check()
+{
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), usb_pwr))
+    return gpio_pin_get(dev_usb, DT_GPIO_PIN(USB_GPIO, gpios));
+#else
+    return false;
+#endif
+}
+
 #else // UNIT_TEST
 
 void load_out_init() {;}
@@ -226,5 +239,7 @@ void usb_out_init() {;}
 
 void load_out_set(bool value) {;}
 void usb_out_set(bool value) {;}
+
+bool pgood_check() { return false; }
 
 #endif

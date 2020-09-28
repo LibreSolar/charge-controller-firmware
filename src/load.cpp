@@ -23,14 +23,15 @@
 
 extern DeviceStatus dev_stat;
 
-LoadOutput::LoadOutput(DcBus *dc_bus, void (*drv_switch_fn)(bool), void (*drv_init_fn)()) :
+LoadOutput::LoadOutput(DcBus *dc_bus, void (*switch_fn)(bool), void (*init_fn)(), bool (*pgood_fn)()) :
     PowerPort(dc_bus),
-    switch_set(drv_switch_fn)
+    switch_set(switch_fn),
+    pgood_check(pgood_fn)
 {
     state = LOAD_STATE_OFF;
 
     // call driver initialization function
-    drv_init_fn();
+    init_fn();
 
     switch_set(false);
     junction_temperature = 25;              // starting point: 25°C
@@ -57,6 +58,11 @@ void LoadOutput::control()
         if (junction_temperature > PCB_MOSFETS_TJ_MAX ||
             current > LOAD_CURRENT_MAX * 2)
         {
+            flags_set(&error_flags, ERR_LOAD_OVERCURRENT);
+            oc_timestamp = uptime();
+        }
+
+        if (pgood_check != NULL && !pgood_check()) {
             flags_set(&error_flags, ERR_LOAD_OVERCURRENT);
             oc_timestamp = uptime();
         }

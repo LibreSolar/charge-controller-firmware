@@ -45,11 +45,11 @@ PwmSwitch pwm_switch(&lv_bus);
 #endif
 
 #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
-LoadOutput load(&lv_bus, &load_out_set, &load_out_init);
+LoadOutput load(&lv_bus, &load_out_set, &load_out_init, NULL);
 #endif
 
 #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), usb_pwr))
-LoadOutput usb_pwr(&lv_bus, &usb_out_set, &usb_out_init);
+LoadOutput usb_pwr(&lv_bus, &usb_out_set, &usb_out_init, &pgood_check);
 #endif
 
 #if CONFIG_HV_TERMINAL_SOLAR

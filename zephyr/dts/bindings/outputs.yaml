@@ -14,6 +14,9 @@ child-binding:
     pwms:
       type: phandle-array
       description: PWM handle for PWM type output
+    latching-pgood:
+      type: boolean
+      description: Driver for latching power good pin (optional)
     current-max:
       type: int
       description: Maximum current of driven power switch (A)

@@ -96,10 +96,11 @@ public:
      * Initialize LoadOutput struct and overcurrent / short circuit protection comparator (if existing)
      *
      * @param dc_bus DC bus the load is connected to
-     * @param switch_set Pointer to function for enabling/disabling load switch
-     * @param init Pointer to function for load driver initialization
+     * @param switch_fn Pointer to function for enabling/disabling load switch
+     * @param init_fn Pointer to function for load driver initialization
+     * @param pgood_fn Pointer to pgood check
      */
-    LoadOutput(DcBus *dc_bus, void (*switch_fn)(bool), void (*init_fn)());
+    LoadOutput(DcBus *dc_bus, void (*switch_fn)(bool), void (*init_fn)(), bool (*pgood_fn)());
 
     /** Main load control function, should be called by control timer
      *
@@ -159,6 +160,11 @@ private:
     void (*switch_set)(bool);
 
     /**
+     * Pointer to the function to check the power output status
+     */
+    bool (*pgood_check)(void);
+
+    /**
      * Used to prevent switching of because of very short voltage dip
      */
     int uv_debounce_counter = 0;
@@ -182,6 +188,8 @@ void load_out_set(bool);
 void usb_out_set(bool);
 
 void load_short_circuit_stop();
+
+bool pgood_check();
 
 #ifdef __cplusplus
 }
