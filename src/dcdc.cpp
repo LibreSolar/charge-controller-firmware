@@ -136,7 +136,7 @@ int Dcdc::perturb_observe_controller()
     return (pwr_inc_goal == 0);
 }
 
-int Dcdc::check_start_conditions()
+__weak int Dcdc::check_start_conditions()
 {
     if (enable == false ||
         hvs->bus->voltage > hs_voltage_max ||   // also critical for buck mode because of ringing
@@ -168,9 +168,88 @@ int Dcdc::check_start_conditions()
     return 0;
 }
 
+bool Dcdc::check_hs_mosfet_short()
+{
+    static uint32_t first_time_detected = 0;
+    if (lvs->current > 0.5 && half_bridge_enabled() == false) {
+        // if there is current even though the DC/DC is switched off, the
+        // high-side MOSFET must be broken --> set flag and let main() decide
+        // what to do... (e.g. call dcdc_self_destruction)
+
+        uint32_t now = uptime();
+        if (first_time_detected == 0) {
+            first_time_detected = now;
+        }
+        else if (now - first_time_detected > 2) {
+            // waited >1s before setting the flag
+            dev_stat.set_error(ERR_DCDC_HS_MOSFET_SHORT);
+        }
+    }
+
+    return dev_stat.has_error(ERR_DCDC_HS_MOSFET_SHORT);
+}
+
+bool Dcdc::startup_inhibit(bool reset)
+{
+    // wait at least 100 ms for voltages to settle
+    static const int num_wait_calls =
+        (CONFIG_CONTROL_FREQUENCY / 10 >= 1) ? (CONFIG_CONTROL_FREQUENCY / 10) : 1;
+
+    static int startup_delay_counter = 0;
+
+    if (reset) {
+        startup_delay_counter = 0;
+    }
+    else {
+        startup_delay_counter++;
+    }
+
+    return (startup_delay_counter < num_wait_calls);
+}
+
 __weak void Dcdc::control()
 {
-    if (half_bridge_enabled()) {
+    if (half_bridge_enabled() == false) {
+
+        if (check_hs_mosfet_short()) {
+            return;
+        }
+
+        int startup_mode = check_start_conditions();
+
+        if (startup_mode != 0) {
+
+            // startup allowed, but we need to wait until voltages settle
+            if (startup_inhibit()) {
+                return;
+            }
+
+            const char *mode_name = NULL;
+            if (startup_mode == 1) {
+                mode_name = "buck";
+                // Don't start directly at Vmpp (approx. 0.8 * Voc) to prevent high inrush
+                // currents and stress on MOSFETs
+                half_bridge_set_duty_cycle(lvs->bus->voltage / (hvs->bus->voltage - 1));
+            }
+            else {
+                mode_name = "boost";
+                // Will automatically start with max. duty (0.97) if connected to a
+                // nanogrid not yet started up (zero voltage)
+                half_bridge_set_duty_cycle(lvs->bus->voltage / (hvs->bus->voltage + 1));
+            }
+
+            half_bridge_start();
+            power_good_timestamp = uptime();
+            printf("DC/DC %s mode start (HV: %.2fV, LV: %.2fV, PWM: %.1f).\n", mode_name,
+                hvs->bus->voltage, lvs->bus->voltage, half_bridge_get_duty_cycle() * 100);
+
+        }
+        else {
+            startup_inhibit(true);      // reset inhibit counter
+        }
+    }
+    else { // half bridge is on
+
         const char *stop_reason = NULL;
         if (lvs->bus->voltage > ls_voltage_max || hvs->bus->voltage > hs_voltage_max) {
             stop_reason = "emergency (voltage limits exceeded)";
@@ -190,58 +269,6 @@ __weak void Dcdc::control()
             state = DCDC_STATE_OFF;
             off_timestamp = uptime();
             printf("DC/DC Stop: %s.\n", stop_reason);
-        }
-    }
-    else { // half bridge is off
-
-        static int current_debounce_counter = 0;
-        if (lvs->current > 0.5) {
-            // if there is current even though the DC/DC is switched off, the
-            // high-side MOSFET must be broken --> set flag and let main() decide
-            // what to do... (e.g. call dcdc_self_destruction)
-            current_debounce_counter++;
-            // waited 1s before setting the flag
-            if (current_debounce_counter > CONFIG_CONTROL_FREQUENCY) {
-                dev_stat.set_error(ERR_DCDC_HS_MOSFET_SHORT);
-            }
-        }
-        else {  // hardware is fine
-            current_debounce_counter = 0;
-
-            static int startup_delay_counter = 0;
-
-            // wait at least 100 ms for voltages to settle
-            static const int num_wait_calls =
-                (CONFIG_CONTROL_FREQUENCY / 10 >= 1) ? (CONFIG_CONTROL_FREQUENCY / 10) : 1;
-
-            int startup_mode = check_start_conditions();
-
-            if (startup_mode == 0) {
-                startup_delay_counter = 0; // reset counter
-            }
-            else {
-                startup_delay_counter++;
-                if (startup_delay_counter > num_wait_calls) {
-                    const char *mode_name = NULL;
-                    if (startup_mode == 1) {
-                        mode_name = "buck";
-                        // Don't start directly at Vmpp (approx. 0.8 * Voc) to prevent high inrush
-                        // currents and stress on MOSFETs
-                        half_bridge_set_duty_cycle(lvs->bus->voltage / (hvs->bus->voltage - 1));
-                    }
-                    else {
-                        mode_name = "boost";
-                        // Will automatically start with max. duty (0.97) if connected to a
-                        // nanogrid not yet started up (zero voltage)
-                        half_bridge_set_duty_cycle(lvs->bus->voltage / (hvs->bus->voltage + 1));
-                    }
-                    half_bridge_start();
-                    power_good_timestamp = uptime();
-                    printf("DC/DC %s mode start (HV: %.2fV, LV: %.2fV, PWM: %.1f).\n", mode_name,
-                        hvs->bus->voltage, lvs->bus->voltage, half_bridge_get_duty_cycle() * 100);
-                    startup_delay_counter = 0; // ensure we will have a delay before next start
-                }
-            }
         }
     }
 }

@@ -141,6 +141,20 @@ private:
      * Disable the reverse polarity MOSFET on the high-sied (if option available)
      */
     void output_hvs_disable();
+
+    /**
+     * Check if the high-side MOSFET is shorted
+     */
+    bool check_hs_mosfet_short();
+
+    /**
+     * Check if we need to wait for voltages to settle before starting the DC/DC
+     *
+     * @param reset Reset the inhibit counter if set to true
+     *
+     * @returns true if we need to wait
+     */
+    bool startup_inhibit(bool reset = false);
 };
 
 #endif // __cplusplus
