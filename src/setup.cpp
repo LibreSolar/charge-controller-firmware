@@ -33,11 +33,11 @@ DcBus hv_bus;
 PowerPort hv_terminal(&hv_bus, true);   // high voltage terminal (solar for typical MPPT)
 PowerPort dcdc_lv_port(&lv_bus);        // internal low voltage side of DC/DC converter
 #if CONFIG_HV_TERMINAL_NANOGRID
-Dcdc dcdc(&hv_terminal, &dcdc_lv_port, MODE_NANOGRID);
+Dcdc dcdc(&hv_terminal, &dcdc_lv_port, DCDC_MODE_AUTO);
 #elif CONFIG_HV_TERMINAL_BATTERY
-Dcdc dcdc(&hv_terminal, &dcdc_lv_port, MODE_MPPT_BOOST);
+Dcdc dcdc(&hv_terminal, &dcdc_lv_port, DCDC_MODE_BOOST);
 #else
-Dcdc dcdc(&hv_terminal, &dcdc_lv_port, MODE_MPPT_BUCK);
+Dcdc dcdc(&hv_terminal, &dcdc_lv_port, DCDC_MODE_BUCK);
 #endif // CONFIG_HV_TERMINAL
 #endif
 

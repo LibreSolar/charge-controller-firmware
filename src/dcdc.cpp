@@ -38,7 +38,7 @@ Dcdc::Dcdc(PowerPort *hv_side, PowerPort *lv_side, DcdcOperationMode op_mode)
     lvs = lv_side;
     mode           = op_mode;
     enable         = true;
-    state          = DCDC_STATE_OFF;
+    state          = DCDC_CONTROL_OFF;
     lvs->neg_current_limit = -DT_PROP(DT_PATH(dcdc), current_max);
     lvs->pos_current_limit = DT_PROP(DT_PATH(dcdc), current_max);
     ls_current_max = DT_PROP(DT_PATH(dcdc), current_max);
@@ -61,9 +61,7 @@ int Dcdc::perturb_observe_controller()
     PowerPort *in;
     PowerPort *out;
 
-    if (mode == MODE_MPPT_BUCK ||
-        (mode == MODE_NANOGRID && lvs->current > 0.1))
-    {
+    if (mode == DCDC_MODE_BUCK || (mode == DCDC_MODE_AUTO && lvs->current > 0.1)) {
         // buck mode
         pwr_inc_pwm_direction = 1;
         in = hvs;
@@ -82,28 +80,35 @@ int Dcdc::perturb_observe_controller()
 
     int pwr_inc_goal = 0;     // stores if we want to increase (+1) or decrease (-1) power
 
-    if ((uptime() - power_good_timestamp > 10 || out->power < -1.0) && mode != MODE_NANOGRID) {
-        // swith off after 10s low power or negative power (if not in nanogrid mode)
+    if ((uptime() - power_good_timestamp > 10 || out->power < -1.0) && mode != DCDC_MODE_AUTO) {
+        // switch off after 10s low power or negative power (if not in nanogrid mode)
         pwr_inc_goal = 0;
     }
     else if (out->bus->voltage > out->bus->sink_control_voltage()) {
         // output voltage target reached
-        state = DCDC_STATE_CV;
+        state = (out == lvs) ? DCDC_CONTROL_CV_LS : DCDC_CONTROL_CV_HS;
         pwr_inc_goal = -1;  // decrease output power
     }
     else if (out->current > out->pos_current_limit) {
         // output charge current limit reached
-        state = DCDC_STATE_CC;
+        state = (out == lvs) ? DCDC_CONTROL_CC_LS : DCDC_CONTROL_CC_HS;
         pwr_inc_goal = -1;  // decrease output power
     }
     else if (fabs(lvs->current) > ls_current_max    // current above hardware maximum
-        || temp_mosfets > 80                        // temperature limits exceeded
-        || (in->bus->voltage < in->bus->src_control_voltage()
-            && out->current > 0.1)                  // input voltage below limit
         || in->current < in->neg_current_limit)     // input current (negative signs) limit exceeded
     {
-        state = DCDC_STATE_DERATING;
+        state = (in == hvs) ? DCDC_CONTROL_CC_HS : DCDC_CONTROL_CC_LS;
         pwr_inc_goal = -1;  // decrease output power
+    }
+    else if (in->bus->voltage < in->bus->src_control_voltage() && out->current > 0.1) {
+        // input voltage below limit
+        state = (in == hvs) ? DCDC_CONTROL_CV_HS : DCDC_CONTROL_CV_LS;
+        pwr_inc_goal = -1;
+    }
+    else if (temp_mosfets > 80) {
+        // temperature limits exceeded
+        state = DCDC_CONTROL_DERATING;
+        pwr_inc_goal = -1;
     }
     else if (out->power < output_power_min && out->bus->voltage < out->bus->src_control_voltage()) {
         // no load condition (e.g. start-up of nanogrid) --> raise voltage
@@ -111,7 +116,7 @@ int Dcdc::perturb_observe_controller()
     }
     else {
         // start MPPT
-        state = DCDC_STATE_MPPT;
+        state = DCDC_CONTROL_MPPT;
         if (power_prev > out->power) {
             pwm_delta = -pwm_delta;
         }
@@ -136,7 +141,7 @@ int Dcdc::perturb_observe_controller()
     return (pwr_inc_goal == 0);
 }
 
-__weak int Dcdc::check_start_conditions()
+__weak DcdcOperationMode Dcdc::check_start_conditions()
 {
     if (enable == false ||
         hvs->bus->voltage > hs_voltage_max ||   // also critical for buck mode because of ringing
@@ -145,7 +150,7 @@ __weak int Dcdc::check_start_conditions()
         dev_stat.has_error(ERR_BAT_UNDERVOLTAGE | ERR_BAT_OVERVOLTAGE) ||
         (int)uptime() < (off_timestamp + (int)restart_interval))
     {
-        return 0;       // no energy transfer allowed
+        return DCDC_MODE_OFF;
     }
 
     if (lvs->bus->sink_current_margin > 0 &&
@@ -154,7 +159,7 @@ __weak int Dcdc::check_start_conditions()
         hvs->bus->voltage > hvs->bus->src_control_voltage() &&
         hvs->bus->voltage * 0.85 > lvs->bus->voltage)
     {
-        return 1;       // start in buck mode allowed
+        return DCDC_MODE_BUCK;
     }
 
     if (hvs->bus->sink_current_margin > 0 &&
@@ -162,10 +167,10 @@ __weak int Dcdc::check_start_conditions()
         lvs->bus->src_current_margin < 0 &&
         lvs->bus->voltage > lvs->bus->src_control_voltage())
     {
-        return -1;      // start in boost mode allowed
+        return DCDC_MODE_BOOST;
     }
 
-    return 0;
+    return DCDC_MODE_OFF;
 }
 
 bool Dcdc::check_hs_mosfet_short()
@@ -217,7 +222,7 @@ __weak void Dcdc::control()
 
         int startup_mode = check_start_conditions();
 
-        if (startup_mode != 0) {
+        if (startup_mode != DCDC_MODE_OFF) {
 
             // startup allowed, but we need to wait until voltages settle
             if (startup_inhibit()) {
@@ -225,7 +230,7 @@ __weak void Dcdc::control()
             }
 
             const char *mode_name = NULL;
-            if (startup_mode == 1) {
+            if (startup_mode == DCDC_MODE_BUCK) {
                 mode_name = "buck";
                 // Don't start directly at Vmpp (approx. 0.8 * Voc) to prevent high inrush
                 // currents and stress on MOSFETs
@@ -266,7 +271,7 @@ __weak void Dcdc::control()
 
         if (stop_reason != NULL) {
             half_bridge_stop();
-            state = DCDC_STATE_OFF;
+            state = DCDC_CONTROL_OFF;
             off_timestamp = uptime();
             printf("DC/DC Stop: %s.\n", stop_reason);
         }
@@ -288,7 +293,7 @@ void Dcdc::test()
             (CONFIG_CONTROL_FREQUENCY / 10 >= 1) ? (CONFIG_CONTROL_FREQUENCY / 10) : 1;
 
         if (startup_delay_counter > num_wait_calls) {
-            if (check_start_conditions() != 0) {
+            if (check_start_conditions() != DCDC_MODE_OFF) {
                 half_bridge_set_duty_cycle(lvs->bus->voltage / hvs->bus->voltage);
                 half_bridge_start();
                 printf("DC/DC test mode start (HV: %.2fV, LV: %.2fV, PWM: %.1f).\n",
@@ -304,7 +309,7 @@ void Dcdc::test()
 void Dcdc::emergency_stop()
 {
     half_bridge_stop();
-    state = DCDC_STATE_OFF;
+    state = DCDC_CONTROL_OFF;
     off_timestamp = uptime();
 }
 

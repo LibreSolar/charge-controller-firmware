@@ -7,7 +7,8 @@
 #ifndef DCDC_H
 #define DCDC_H
 
-/** @file
+/**
+ * @file
  *
  * @brief DC/DC buck/boost control functions
  */
@@ -19,34 +20,61 @@
 
 #include "power_port.h"
 
-/** DC/DC basic operation mode
+/**
+ * DC/DC operation mode
  *
  * Defines which type of device is connected to the high side and low side ports
  */
 enum DcdcOperationMode
 {
-    MODE_MPPT_BUCK,     ///< solar panel at high side port, battery / load at low side port (typical MPPT)
-    MODE_MPPT_BOOST,    ///< battery at high side port, solar panel at low side (e.g. e-bike charging)
-    MODE_NANOGRID       ///< accept input power (if available and need for charging) or provide output power
-                        ///< (if no other power source on the grid and battery charged) on the high side port
-                        ///< and dis/charge battery on the low side port, battery voltage must be lower than
-                        ///< nano grid voltage.
+    /**
+     * DC/DC converter switched off
+     */
+    DCDC_MODE_OFF,
+
+    /**
+     * Buck converter mode
+     *
+     * Solar panel at high side port, battery / load at low side port (typical MPPT).
+     */
+    DCDC_MODE_BUCK,
+
+    /**
+     * Boost converter mode
+     *
+     * Battery at high side port, solar panel at low side (e.g. e-bike charging).
+     */
+    DCDC_MODE_BOOST,
+
+    /**
+     * Automatic mode selection
+     *
+     * Boost or buck mode is automatically chosen based on high-side and low-side port settings.
+     *
+     * May be used in nanogrid applications: Accept input power (if available and need for charging)
+     * or provide output power (if no other power source available on the grid and battery charged)
+     */
+    DCDC_MODE_AUTO
 };
 
-/** DC/DC control state
+/**
+ * DC/DC control state
  *
  * Allows to determine the current control state (off, CC, CV and MPPT)
  */
 enum DcdcControlState
 {
-    DCDC_STATE_OFF,     ///< DC/DC switched off (low input power available or actively disabled)
-    DCDC_STATE_MPPT,    ///< Maximum Power Point Tracking
-    DCDC_STATE_CC,      ///< Constant-Current control
-    DCDC_STATE_CV,      ///< Constant-Voltage control
-    DCDC_STATE_DERATING ///< Hardware-limits (current or temperature) reached
+    DCDC_CONTROL_OFF,           ///< DC/DC switched off (low input power or actively disabled)
+    DCDC_CONTROL_MPPT,          ///< Maximum Power Point Tracking
+    DCDC_CONTROL_CC_LS,         ///< Constant-Current control at low-side
+    DCDC_CONTROL_CV_LS,         ///< Constant-Voltage control at low-side
+    DCDC_CONTROL_CC_HS,         ///< Constant-Current control at high-side
+    DCDC_CONTROL_CV_HS,         ///< Constant-Voltage control at high-side
+    DCDC_CONTROL_DERATING       ///< Hardware-limits (current or temperature) reached
 };
 
-/** DC/DC class
+/**
+ * DC/DC class
  *
  * Contains all data belonging to the DC/DC sub-component of the PCB, incl.
  * actual measurements and calibration parameters.
@@ -54,7 +82,8 @@ enum DcdcControlState
 class Dcdc
 {
 public:
-    /** Initialize DC/DC and DC/DC port structs
+    /**
+     * Initialize DC/DC and DC/DC port structs
      *
      * See http://libre.solar/docs/dcdc_control for detailed information
      *
@@ -64,29 +93,34 @@ public:
      */
     Dcdc(PowerPort *hv_side, PowerPort* lv_side, DcdcOperationMode mode);
 
-    /** Check for valid start conditions of the DC/DC converter
+    /**
+     * Check for valid start conditions of the DC/DC converter
      *
-     * @returns 1 for buck mode, -1 for boost mode and 0 for invalid conditions
+     * @returns operation mode that is valid for starting up
      */
-    int check_start_conditions();
+    DcdcOperationMode check_start_conditions();
 
-    /** Main control function for the DC/DC converter
+    /**
+     * Main control function for the DC/DC converter
      *
      * If DC/DC is off, this function checks start conditions and starts conversion if possible.
      */
     void control();
 
-    /** Test mode for DC/DC, ramping up to 50% duty cycle
+    /**
+     * Test mode for DC/DC, ramping up to 50% duty cycle
      */
     void test();
 
-    /** Fast emergency stop function
+    /**
+     * Fast emergency stop function
      *
      * May be called from an ISR which detected overvoltage / overcurrent conditions
      */
     void emergency_stop();
 
-    /** Prevent overcharging of battery in case of shorted HS MOSFET
+    /**
+     * Prevent overcharging of battery in case of shorted HS MOSFET
      *
      * This function switches the LS MOSFET continuously on to blow the battery input fuse. The
      * reason for self destruction should be logged and stored to EEPROM prior to calling this

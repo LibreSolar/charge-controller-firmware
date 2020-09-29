@@ -133,7 +133,7 @@ void control_thread()
 
             // energy + soc calculation must be called exactly once per second
             #if DT_NODE_EXISTS(DT_PATH(dcdc))
-            if  (dcdc.state != DCDC_STATE_OFF) {
+            if  (dcdc.state != DCDC_CONTROL_OFF) {
                 hv_terminal.energy_balance();
             }
             #endif

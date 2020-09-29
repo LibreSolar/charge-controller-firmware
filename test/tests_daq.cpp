@@ -133,7 +133,7 @@ void adc_alert_overvoltage_triggering()
     prepare_adc_filtered();
     adc_update_value(ADC_POS(v_low));
 
-    dcdc.state = DCDC_STATE_MPPT;
+    dcdc.state = DCDC_CONTROL_MPPT;
 
     // overvoltage test
     adcval.battery_voltage = bat_conf.voltage_absolute_max + 0.1;
@@ -143,7 +143,7 @@ void adc_alert_overvoltage_triggering()
     adc_update_value(ADC_POS(v_low));
     TEST_ASSERT_EQUAL(true, dev_stat.has_error(ERR_BAT_OVERVOLTAGE));
     TEST_ASSERT_EQUAL(false, pwm_switch.active());
-    TEST_ASSERT_EQUAL(DCDC_STATE_OFF, dcdc.state);
+    TEST_ASSERT_EQUAL(DCDC_CONTROL_OFF, dcdc.state);
 
     // reset values
     adcval.battery_voltage = 12;
