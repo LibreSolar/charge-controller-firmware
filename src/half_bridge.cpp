@@ -140,12 +140,12 @@ static void tim_init_registers(int freq_kHz)
     TIM1->CR1 |= TIM_CR1_CEN;
 
 #ifdef CONFIG_SOC_SERIES_STM32G4X
-    // Boards with STM32G4 MCU use ADC2 for synchronized ADC sampling. We use OC2
+    // Boards with STM32G4 MCU use ADC2 for synchronized ADC sampling. We use OC6
     // for triggering, but but don't configure any pin for PWM mode
-    TIM1->CCMR1 |= TIM_CCMR1_OC2M_2 | TIM_CCMR1_OC2M_1 | TIM_CCMR1_OC2PE;
-    TIM1->CCER |= TIM_CCER_CC2E | TIM_CCER_CC2NE;
-    // Trigger ADC via TIM1_TRGO2 on OC2ref signal event
-    TIM1->CR2 |= TIM_CR2_MMS2_2 |  TIM_CR2_MMS2_0;
+    TIM1->CCMR3 |= TIM_CCMR3_OC6M_2 | TIM_CCMR3_OC6M_1 | TIM_CCMR3_OC6PE;
+    TIM1->CCER |= TIM_CCER_CC6E;
+    // Trigger ADC via TIM1_TRGO2 on OC6ref falling edge signal event
+    TIM1->CR2 |= TIM_CR2_MMS2_3 | TIM_CR2_MMS2_2 |  TIM_CR2_MMS2_0;
 #endif
 
     // Force update generation (UG = 1)
@@ -194,8 +194,10 @@ void half_bridge_set_ccr(uint16_t ccr)
 {
     TIM1->CCR1 = clamp_ccr(ccr);
 
+#ifdef CONFIG_SOC_SERIES_STM32G4X
     // Trigger ADC for current measurement in the middle of the cycle.
-    TIM1->CCR2 = TIM1->CCR1 / 2;
+    TIM1->CCR6 = TIM1->CCR1 / 2;
+#endif
 }
 
 bool half_bridge_enabled()
