@@ -36,8 +36,8 @@ extern "C" {
 #elif defined(UNIT_TEST)
 #define VREF (3300)
 #else
-// internal STM reference voltage
-#define VREF (VREFINT_VALUE * VREFINT_CAL / adc_raw_filtered(ADC_POS(vref_mcu)))
+// internal STM reference voltage (calibrated using 12-bit right-aligned readings)
+#define VREF (VREFINT_VALUE * VREFINT_CAL / (adc_raw_filtered(ADC_POS(vref_mcu)) >> 4))
 #endif
 
 #define ADC_GAIN(name) ((float)DT_PROP(DT_CHILD(DT_PATH(adc_inputs), name), multiplier) / \
