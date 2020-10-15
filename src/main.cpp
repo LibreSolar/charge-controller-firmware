@@ -168,6 +168,7 @@ void control_thread()
 }
 
 // 2s delay for control thread as a safety feature: be able to re-flash before starting
-K_THREAD_DEFINE(control_thread_id, 1024, control_thread, NULL, NULL, NULL, 2, 0, 2000);
+// priority is set to -1 (=cooperative) to have higher priority than other threads incl. main
+K_THREAD_DEFINE(control_thread_id, 1024, control_thread, NULL, NULL, NULL, -1, 0, 2000);
 
 #endif // UNIT_TEST
