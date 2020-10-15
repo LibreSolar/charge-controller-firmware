@@ -69,9 +69,44 @@ void main(void)
     k_sleep(K_MSEC(2500));
     watchdog_start();
 
+    int64_t t_start = k_uptime_get();
+
     while (true) {
+        // loop runs exactly once per second and includes slow control tasks and energy calculation
+
         charger.discharge_control(&bat_conf);
         charger.charge_control(&bat_conf);
+
+        // energy + soc calculation must be called exactly once per second
+        #if DT_NODE_EXISTS(DT_PATH(dcdc))
+        if  (dcdc.state != DCDC_CONTROL_OFF) {
+            hv_terminal.energy_balance();
+        }
+        #endif
+
+        #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), pwm_switch))
+        if (pwm_switch.active() == 1) {
+            pwm_switch.energy_balance();
+        }
+        #endif
+
+        lv_terminal.energy_balance();
+
+        #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
+        if (load.state == 1) {
+            load.energy_balance();
+        }
+        #endif
+
+        dev_stat.update_energy();
+        dev_stat.update_min_max_values();
+        charger.update_soc(&bat_conf);
+
+        #if CONFIG_HS_MOSFET_FAIL_SAFE_PROTECTION && DT_NODE_EXISTS(DT_PATH(dcdc))
+        if (dev_stat.has_error(ERR_DCDC_HS_MOSFET_SHORT)) {
+            dcdc.fuse_destruction();
+        }
+        #endif
 
         leds_update_1s();
 
@@ -83,16 +118,17 @@ void main(void)
 
         eeprom_update();
 
-        k_sleep(K_MSEC(1000));
+        t_start += 1000;
+        k_sleep(K_TIMEOUT_ABS_MS(t_start));
     }
 }
 
 void control_thread()
 {
-    uint32_t last_call = 0;
     int wdt_channel = watchdog_register(200);
 
     while (true) {
+        // control loop runs at approx. 10 Hz
 
         bool charging = false;
 
@@ -127,41 +163,6 @@ void control_thread()
         usb_pwr.control();
         #endif
 
-        uint32_t now = k_uptime_get() / 1000;
-        if (now > last_call) {
-            last_call = now;
-
-            // energy + soc calculation must be called exactly once per second
-            #if DT_NODE_EXISTS(DT_PATH(dcdc))
-            if  (dcdc.state != DCDC_CONTROL_OFF) {
-                hv_terminal.energy_balance();
-            }
-            #endif
-
-            #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), pwm_switch))
-            if (pwm_switch.active() == 1) {
-                pwm_switch.energy_balance();
-            }
-            #endif
-
-            lv_terminal.energy_balance();
-
-            #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
-            if (load.state == 1) {
-                load.energy_balance();
-            }
-            #endif
-
-            dev_stat.update_energy();
-            dev_stat.update_min_max_values();
-            charger.update_soc(&bat_conf);
-
-            #if CONFIG_HS_MOSFET_FAIL_SAFE_PROTECTION && DT_NODE_EXISTS(DT_PATH(dcdc))
-            if (dev_stat.has_error(ERR_DCDC_HS_MOSFET_SHORT)) {
-                dcdc.fuse_destruction();
-            }
-            #endif
-        }
         k_sleep(K_MSEC(100));
     }
 }
