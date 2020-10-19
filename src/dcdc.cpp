@@ -270,9 +270,7 @@ __weak void Dcdc::control()
         }
 
         if (stop_reason != NULL) {
-            half_bridge_stop();
-            state = DCDC_CONTROL_OFF;
-            off_timestamp = uptime();
+            stop();
             printf("DC/DC Stop: %s.\n", stop_reason);
         }
     }
@@ -306,7 +304,7 @@ void Dcdc::test()
     }
 }
 
-void Dcdc::emergency_stop()
+void Dcdc::stop()
 {
     half_bridge_stop();
     state = DCDC_CONTROL_OFF;

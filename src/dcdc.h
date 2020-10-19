@@ -113,11 +113,13 @@ public:
     void test();
 
     /**
-     * Fast emergency stop function
+     * Fast stop function (bypassing control loop)
      *
-     * May be called from an ISR which detected overvoltage / overcurrent conditions
+     * May be called from an ISR which detected overvoltage / overcurrent conditions.
+     *
+     * DC/DC will be restarted automatically from control function if condtions are valid.
      */
-    void emergency_stop();
+    void stop();
 
     /**
      * Prevent overcharging of battery in case of shorted HS MOSFET

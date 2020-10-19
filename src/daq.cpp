@@ -253,10 +253,10 @@ void high_voltage_alert()
 {
     // disable any sort of input
 #if DT_NODE_EXISTS(DT_PATH(dcdc))
-    dcdc.emergency_stop();
+    dcdc.stop();
 #endif
 #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), pwm_switch))
-    pwm_switch.emergency_stop();
+    pwm_switch.stop();
 #endif
     // do not use enter_state function, as we don't want to wait entire recharge delay
     charger.state = CHG_STATE_IDLE;

@@ -132,7 +132,7 @@ void PwmSwitch::control()
     }
 }
 
-void PwmSwitch::emergency_stop()
+void PwmSwitch::stop()
 {
     pwm_signal_stop();
     off_timestamp = uptime();
