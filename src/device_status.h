@@ -89,6 +89,12 @@ enum ErrorFlag {
      */
     ERR_DCDC_HS_MOSFET_SHORT = 1U << 14,
 
+    /** Short-circuit in HS MOSFET
+     *
+     * Set in Dcdc::control() and never cleared
+     */
+    ERR_DCDC_HS_OVERVOLTAGE = 1U << 15,
+
     /** Mask to catch all error flags (up to 32 errors)
      */
     ERR_ANY_ERROR = UINT32_MAX,

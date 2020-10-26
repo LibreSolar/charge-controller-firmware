@@ -97,11 +97,11 @@ void check_temperature_readings()
     TEST_ASSERT_EQUAL_FLOAT(adcval.bat_temperature, round(charger.bat_temperature * 10) / 10);
 }
 
-void adc_alert_undervoltage_triggering()
+void adc_alert_lv_undervoltage_triggering()
 {
     dev_stat.clear_error(ERR_ANY_ERROR);
     battery_conf_init(&bat_conf, BAT_TYPE_LFP, 4, 100);
-    daq_set_lv_alerts(bat_conf.voltage_absolute_max, bat_conf.voltage_absolute_min);
+    daq_set_lv_limits(bat_conf.voltage_absolute_max, bat_conf.voltage_absolute_min);
     prepare_adc_filtered();
     adc_update_value(ADC_POS(v_low));
 
@@ -125,11 +125,11 @@ void adc_alert_undervoltage_triggering()
     TEST_ASSERT_EQUAL(false, dev_stat.has_error(ERR_BAT_UNDERVOLTAGE));  // ToDo
 }
 
-void adc_alert_overvoltage_triggering()
+void adc_alert_lv_overvoltage_triggering()
 {
     dev_stat.clear_error(ERR_ANY_ERROR);
     battery_conf_init(&bat_conf, BAT_TYPE_LFP, 4, 100);
-    daq_set_lv_alerts(bat_conf.voltage_absolute_max, bat_conf.voltage_absolute_min);
+    daq_set_lv_limits(bat_conf.voltage_absolute_max, bat_conf.voltage_absolute_min);
     prepare_adc_filtered();
     adc_update_value(ADC_POS(v_low));
 
@@ -156,10 +156,27 @@ void adc_alert_overvoltage_triggering()
     TEST_ASSERT_EQUAL(false, dev_stat.has_error(ERR_BAT_OVERVOLTAGE));
 }
 
+void adc_alert_hv_overvoltage_triggering()
+{
+    dev_stat.clear_error(ERR_ANY_ERROR);
+    daq_set_hv_limit(DT_PROP(DT_PATH(pcb), hs_voltage_max));
+    prepare_adc_filtered();
+    adc_update_value(ADC_POS(v_high));
+
+    // overvoltage test
+    adcval.solar_voltage = 85.0F;
+    prepare_adc_readings(adcval);
+    adc_update_value(ADC_POS(v_high));
+    TEST_ASSERT_EQUAL(false, dev_stat.has_error(ERR_DCDC_HS_OVERVOLTAGE));
+    adc_update_value(ADC_POS(v_high));
+    TEST_ASSERT_EQUAL(true, dev_stat.has_error(ERR_DCDC_HS_OVERVOLTAGE));
+    TEST_ASSERT_EQUAL(DCDC_CONTROL_OFF, dcdc.state);
+}
+
 void adc_alert_overflow_prevention()
 {
     // try to set an alert that overflows the 12-bit ADC resolution
-    uint16_t limit = adc_get_alert_limit(1, UINT16_MAX + 1);
+    uint16_t limit = adc_raw_clamp(1, UINT16_MAX + 1);
     TEST_ASSERT_EQUAL_HEX(UINT16_MAX, limit);
 }
 
@@ -195,8 +212,9 @@ void daq_tests()
 
     //RUN_TEST(check_temperature_readings);     // TODO
 
-    RUN_TEST(adc_alert_undervoltage_triggering);
-    RUN_TEST(adc_alert_overvoltage_triggering);
+    RUN_TEST(adc_alert_lv_undervoltage_triggering);
+    RUN_TEST(adc_alert_lv_overvoltage_triggering);
+    RUN_TEST(adc_alert_hv_overvoltage_triggering);
     RUN_TEST(adc_alert_overflow_prevention);
 
     UNITY_END();

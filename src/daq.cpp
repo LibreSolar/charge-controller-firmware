@@ -249,7 +249,7 @@ void daq_update()
     // else: keep previous setting
 }
 
-void high_voltage_alert()
+void lv_overvoltage_alert()
 {
     // disable any sort of input
 #if DT_NODE_EXISTS(DT_PATH(dcdc))
@@ -263,20 +263,35 @@ void high_voltage_alert()
 
     dev_stat.set_error(ERR_BAT_OVERVOLTAGE);
 
-    LOG_ERR("High voltage alert, ADC reading: %d limit: %d\n",
+    LOG_ERR("Low-side overvoltage alert, ADC reading: %d limit: %d\n",
         adc_readings[ADC_POS(v_low)], adc_alerts_upper[ADC_POS(v_low)].limit);
 }
 
-void low_voltage_alert()
+void lv_undervoltage_alert()
 {
 #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
     // the battery undervoltage must have been caused by a load current peak
     load.stop(ERR_LOAD_VOLTAGE_DIP);
 #endif
 
-    LOG_ERR("Low voltage alert, ADC reading: %d limit: %d\n",
+    LOG_ERR("Low-side undervoltage alert, ADC reading: %d limit: %d\n",
         adc_readings[ADC_POS(v_low)], adc_alerts_lower[ADC_POS(v_low)].limit);
 }
+
+#if DT_NODE_EXISTS(DT_PATH(dcdc))
+void hv_overvoltage_alert()
+{
+    dcdc.stop();
+
+    // do not use enter_state function, as we don't want to wait entire recharge delay
+    charger.state = CHG_STATE_IDLE;
+
+    dev_stat.set_error(ERR_DCDC_HS_OVERVOLTAGE);
+
+    LOG_ERR("High-side overvoltage alert, ADC reading: %d limit: %d\n",
+        adc_readings[ADC_POS(v_high)], adc_alerts_upper[ADC_POS(v_high)].limit);
+}
+#endif
 
 void adc_upper_alert_inhibit(int adc_pos, int timeout_ms)
 {
@@ -285,7 +300,7 @@ void adc_upper_alert_inhibit(int adc_pos, int timeout_ms)
     adc_alerts_upper[adc_pos].debounce_ms = -timeout_ms;
 }
 
-uint16_t adc_get_alert_limit(float scale, float limit)
+uint16_t adc_raw_clamp(float scale, float limit)
 {
     // even if we have a higher voltage limit, we must limit it
     // to the max value the ADC will be able to deliver
@@ -293,19 +308,29 @@ uint16_t adc_get_alert_limit(float scale, float limit)
     return limit_scaled > (float)UINT16_MAX ? UINT16_MAX : (uint16_t)(limit_scaled);
 }
 
-void daq_set_lv_alerts(float upper, float lower)
+void daq_set_lv_limits(float lv_overvoltage, float lv_undervoltage)
 {
-    int vref = VREF;
-    float scale =  (((4096 << 4) * 1000) / ADC_GAIN(v_low)) / vref;
+    float scale =  (((4096 << 4) * 1000) / ADC_GAIN(v_low)) / (float)VREF;
 
     // LV side (battery) overvoltage alert
-    adc_alerts_upper[ADC_POS(v_low)].limit = adc_get_alert_limit(scale, upper);
-    adc_alerts_upper[ADC_POS(v_low)].callback = high_voltage_alert;
+    adc_alerts_upper[ADC_POS(v_low)].limit = adc_raw_clamp(scale, lv_overvoltage);
+    adc_alerts_upper[ADC_POS(v_low)].callback = lv_overvoltage_alert;
 
     // LV side (battery) undervoltage alert
-    adc_alerts_lower[ADC_POS(v_low)].limit = adc_get_alert_limit(scale, lower);
-    adc_alerts_lower[ADC_POS(v_low)].callback = low_voltage_alert;
+    adc_alerts_lower[ADC_POS(v_low)].limit = adc_raw_clamp(scale, lv_undervoltage);
+    adc_alerts_lower[ADC_POS(v_low)].callback = lv_undervoltage_alert;
 }
+
+#if DT_NODE_EXISTS(DT_PATH(dcdc))
+void daq_set_hv_limit(float hv_overvoltage)
+{
+    float scale =  (((4096 << 4) * 1000) / ADC_GAIN(v_high)) / (float)VREF;
+
+    // HV side (solar/grid) overvoltage alert
+    adc_alerts_upper[ADC_POS(v_high)].limit = adc_raw_clamp(scale, hv_overvoltage);
+    adc_alerts_upper[ADC_POS(v_high)].callback = hv_overvoltage_alert;
+}
+#endif
 
 #if defined(UNIT_TEST)
 

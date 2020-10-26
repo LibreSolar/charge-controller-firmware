@@ -126,10 +126,17 @@ void adc_update_value(unsigned int pos);
 /**
  * Set lv side (battery) voltage limits where an alert should be triggered
  *
- * @param upper Upper voltage limit
- * @param lower Lower voltage limit
+ * @param lv_overvoltage Upper voltage limit
+ * @param lv_undervoltage Lower voltage limit
  */
-void daq_set_lv_alerts(float upper, float lower);
+void daq_set_lv_limits(float lv_overvoltage, float lv_undervoltage);
+
+/**
+ * Set hv side (grid/solar) voltage limit where an alert should be triggered
+ *
+ * @param hv_overvoltage Upper voltage limit
+ */
+void daq_set_hv_limit(float hv_overvoltage);
 
 /**
  * Add an inhibit delay to the alerts to disable it temporarily

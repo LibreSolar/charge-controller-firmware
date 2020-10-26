@@ -23,6 +23,6 @@ void prepare_adc_readings(AdcValues values);
 void prepare_adc_filtered();
 void clear_adc_filtered();
 uint32_t get_adc_filtered(uint32_t channel);
-uint16_t adc_get_alert_limit(float scale, float limit);
+uint16_t adc_raw_clamp(float scale, float limit);
 
 #endif

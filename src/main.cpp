@@ -44,6 +44,10 @@ void main(void)
     // Data Acquisition (DAQ) setup
     daq_setup();
 
+    #if DT_NODE_EXISTS(DT_PATH(dcdc))
+    daq_set_hv_limit(DT_PROP(DT_PATH(pcb), hs_voltage_max));
+    #endif
+
     #if CONFIG_HV_TERMINAL_SOLAR || CONFIG_LV_TERMINAL_SOLAR || CONFIG_PWM_TERMINAL_SOLAR
     solar_terminal.init_solar();
     #endif
@@ -138,7 +142,7 @@ void control_thread()
         daq_update();
 
         // alerts should trigger only for transients, so update based on actual voltage
-        daq_set_lv_alerts(lv_terminal.bus->voltage * 1.2F, lv_terminal.bus->voltage * 0.8F);
+        daq_set_lv_limits(lv_terminal.bus->voltage * 1.2F, lv_terminal.bus->voltage * 0.8F);
 
         lv_terminal.update_bus_current_margins();
 

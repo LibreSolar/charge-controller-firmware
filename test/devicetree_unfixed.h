@@ -40,8 +40,8 @@
 #define DT_N_S_adc_inputs_S_temp_bat_P_divider 1
 #define DT_N_S_adc_inputs_S_temp_bat_P_filter_const 5
 
-#define DT_N_S_adc_inputs_S_v_high_P_multiplier 105600
-#define DT_N_S_adc_inputs_S_v_high_P_divider 5600
+#define DT_N_S_adc_inputs_S_v_high_P_multiplier 102800
+#define DT_N_S_adc_inputs_S_v_high_P_divider 2800
 #define DT_N_S_adc_inputs_S_v_high_P_filter_const 5
 
 #define DT_N_S_adc_inputs_S_v_low_P_multiplier 105600
