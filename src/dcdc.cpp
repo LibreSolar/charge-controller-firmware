@@ -43,7 +43,7 @@ Dcdc::Dcdc(PowerPort *hv_side, PowerPort *lv_side, DcdcOperationMode op_mode)
     lvs->pos_current_limit = DT_PROP(DT_PATH(dcdc), current_max);
     ls_current_max = DT_PROP(DT_PATH(dcdc), current_max);
     hs_voltage_max = DT_PROP(DT_PATH(pcb), hs_voltage_max);
-    ls_voltage_max = DT_PROP(DT_PATH(pcb), hs_voltage_max);
+    ls_voltage_max = DT_PROP(DT_PATH(pcb), ls_voltage_max);
     ls_voltage_min = 9.0;
     output_power_min = 1;         // switch off if power < 1 W
     restart_interval = 60;
