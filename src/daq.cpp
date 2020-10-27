@@ -184,13 +184,15 @@ void daq_update()
     float load_current = 0;     // value used below, so we still need to define the variable
 #endif
 
+    float lv_terminal_current = -load_current;
+
 #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), pwm_switch))
     // current multiplied with PWM duty cycle for PWM charger to get avg current for correct power
     // calculation
     pwm_switch.current = -pwm_switch.get_duty_cycle() *
         adc_scaled(ADC_POS(i_pwm), vref, ADC_GAIN(i_pwm), pwm_current_offset_raw);
 
-    lv_terminal.current = -pwm_switch.current - load_current;
+    lv_terminal_current -= pwm_switch.current;
 
     pwm_switch.power = pwm_switch.bus->voltage * pwm_switch.current;
 #endif
@@ -199,7 +201,7 @@ void daq_update()
     dcdc_lv_port.current =
         adc_scaled(ADC_POS(i_dcdc), vref, ADC_GAIN(i_dcdc), dcdc_current_offset_raw);
 
-    lv_terminal.current = dcdc_lv_port.current - load_current;
+    lv_terminal_current += dcdc_lv_port.current;
 
     hv_terminal.current = -dcdc_lv_port.current * lv_terminal.bus->voltage /
         hv_terminal.bus->voltage;
@@ -207,6 +209,7 @@ void daq_update()
     dcdc_lv_port.power  = dcdc_lv_port.bus->voltage * dcdc_lv_port.current;
     hv_terminal.power   = hv_terminal.bus->voltage * hv_terminal.current;
 #endif
+    lv_terminal.current = lv_terminal_current;
     lv_terminal.power   = lv_terminal.bus->voltage * lv_terminal.current;
 
 #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
