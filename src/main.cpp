@@ -38,12 +38,6 @@ void main(void)
     battery_conf_init(&bat_conf, CONFIG_BAT_TYPE, CONFIG_BAT_NUM_CELLS, CONFIG_BAT_CAPACITY_AH);
     battery_conf_overwrite(&bat_conf, &bat_conf_user);  // initialize conf_user with same values
 
-    // read custom configuration from EEPROM
-    data_nodes_init();
-
-    // Data Acquisition (DAQ) setup
-    daq_setup();
-
     #if DT_NODE_EXISTS(DT_PATH(dcdc))
     daq_set_hv_limit(DT_PROP(DT_PATH(pcb), hs_voltage_max));
     #endif
@@ -55,6 +49,12 @@ void main(void)
     #if CONFIG_HV_TERMINAL_NANOGRID
     grid_terminal.init_nanogrid();
     #endif
+
+    // read custom configuration from EEPROM
+    data_nodes_init();
+
+    // Data Acquisition (DAQ) setup
+    daq_setup();
 
     charger.detect_num_batteries(&bat_conf);     // check if we have 24V instead of 12V system
     charger.init_terminal(&bat_conf);
