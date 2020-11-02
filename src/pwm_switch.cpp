@@ -118,7 +118,7 @@ void PwmSwitch::control()
     }
     else {
         if (bus->sink_current_margin > 0          // charging allowed
-            && bus->voltage < bus->sink_voltage_bound
+            && bus->voltage < bus->sink_control_voltage()
             && ext_voltage > bus->voltage + offset_voltage_start
             && uptime() > (off_timestamp + restart_interval)
             && enable == true)
