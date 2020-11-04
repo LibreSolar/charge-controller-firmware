@@ -45,7 +45,7 @@ public:
      * This value is the voltage at zero current. Values for other currents are calculated
      * using the droop resistance.
      */
-    float sink_voltage_bound;
+    float sink_voltage_intercept;
 
     /**
      * Lower voltage boundary where this bus may be used to source current.
@@ -53,7 +53,7 @@ public:
      * This value is the voltage at zero current. Values for other currents are calculated
      * using the droop resistance.
      */
-    float src_voltage_bound;
+    float src_voltage_intercept;
 
     /**
      * Droop resistance to adjust voltage bounds for current in sourcing direction
@@ -91,11 +91,11 @@ public:
      * Calculate current-compensated src control voltage, considering droop and series multiplier
      *
      * @param voltage_zero_current Voltage at zero current (without droop). If this parameter is
-     *                             left empty, the src_voltage_bound is considered.
+     *                             left empty, the src_voltage_intercept is considered.
      */
     inline float src_control_voltage(float voltage_zero_current = 0)
     {
-        float v0 = (voltage_zero_current == 0) ? src_voltage_bound : voltage_zero_current;
+        float v0 = (voltage_zero_current == 0) ? src_voltage_intercept : voltage_zero_current;
         if (ref_current != nullptr) {
             return (v0 - src_droop_res * (*ref_current)) * series_multiplier;
         }
@@ -108,11 +108,11 @@ public:
      * Calculate current-compensated sink control voltage, considering droop and series multiplier
      *
      * @param voltage_zero_current Voltage at zero current (without droop). If this parameter is
-     *                             left empty, the sink_voltage_bound is considered.
+     *                             left empty, the sink_voltage_intercept is considered.
      */
     inline float sink_control_voltage(float voltage_zero_current = 0)
     {
-        float v0 = (voltage_zero_current == 0) ? sink_voltage_bound : voltage_zero_current;
+        float v0 = (voltage_zero_current == 0) ? sink_voltage_intercept : voltage_zero_current;
         if (ref_current != nullptr) {
             return (v0 - sink_droop_res * (*ref_current)) * series_multiplier;
         }

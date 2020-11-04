@@ -129,7 +129,7 @@ int Dcdc::perturb_observe_controller()
         "out: %.2fV (target %.2fV) %.2fA (limit %.2fA), "
         "PWM: %.1f, chg_state: %d, pwr_inc: %d, buck/boost: %d\n",
         out->power, power_prev, in->bus->voltage, in->current, in->neg_current_limit,
-        out->bus->voltage, out->bus->sink_voltage_bound, out->current, out->pos_current_limit,
+        out->bus->voltage, out->bus->sink_voltage_intercept, out->current, out->pos_current_limit,
         half_bridge_get_duty_cycle() * 100.0, state, pwr_inc_goal, pwr_inc_pwm_direction);
 #endif
 

@@ -231,10 +231,10 @@ static DataNode data_nodes[] = {
 #endif
 
 #if CONFIG_HV_TERMINAL_NANOGRID
-    TS_NODE_FLOAT(0x65, "GridSink_V", &hv_bus.sink_voltage_bound, 2,
+    TS_NODE_FLOAT(0x65, "GridSink_V", &hv_bus.sink_voltage_intercept, 2,
         ID_INPUT, TS_ANY_R | TS_ANY_W, 0),
 
-    TS_NODE_FLOAT(0x66, "GridSrc_V", &hv_bus.src_voltage_bound, 2,
+    TS_NODE_FLOAT(0x66, "GridSrc_V", &hv_bus.src_voltage_intercept, 2,
         ID_INPUT, TS_ANY_R | TS_ANY_W, 0),
 #endif
 
@@ -273,7 +273,7 @@ static DataNode data_nodes[] = {
         ID_OUTPUT, TS_ANY_R, 0),
 #endif
 
-    TS_NODE_FLOAT(0x7A, "ChgTarget_V", &bat_bus.sink_voltage_bound, 2,
+    TS_NODE_FLOAT(0x7A, "ChgTarget_V", &bat_bus.sink_voltage_intercept, 2,
         ID_OUTPUT, TS_ANY_R, 0),
 
     TS_NODE_FLOAT(0x7B, "ChgTarget_A", &bat_terminal.pos_current_limit, 2,

@@ -22,8 +22,8 @@ void PowerPort::init_nanogrid()
     bus->src_droop_res = 0.1;
 
     // also initialize the connected bus
-    bus->src_voltage_bound = 30.0;          // starting buck mode above this point
-    bus->sink_voltage_bound = 28.0;         // boost mode until this voltage is reached
+    bus->src_voltage_intercept = 30.0;          // starting buck mode above this point
+    bus->sink_voltage_intercept = 28.0;         // boost mode until this voltage is reached
 }
 
 void PowerPort::energy_balance()

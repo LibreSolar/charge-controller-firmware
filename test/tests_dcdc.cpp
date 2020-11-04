@@ -19,7 +19,7 @@ static void init_structs_buck(int num_batteries = 1)
     dev_stat.error_flags = 0;
     hv_terminal.init_solar();
     hv_terminal.bus->voltage = 20 * num_batteries;
-    hv_terminal.bus->src_voltage_bound = 18 * num_batteries;
+    hv_terminal.bus->src_voltage_intercept = 18 * num_batteries;
     hv_terminal.bus->series_multiplier = 1;
     hv_terminal.current = 0;
     hv_terminal.update_bus_current_margins();
@@ -57,7 +57,7 @@ static void init_structs_boost(int num_batteries = 1)
 
     hv_terminal.init_solar();
     dcdc_lv_port.bus->voltage = 20;
-    dcdc_lv_port.bus->src_voltage_bound = 18;
+    dcdc_lv_port.bus->src_voltage_intercept = 18;
     dcdc_lv_port.bus->series_multiplier = 1;
     dcdc_lv_port.current = 0;
     dcdc_lv_port.power = 0;
@@ -213,7 +213,7 @@ void buck_derating_output_voltage_too_high()
 {
     start_buck();
     float pwm_before = half_bridge_get_duty_cycle();
-    dcdc_lv_port.bus->voltage = dcdc_lv_port.bus->sink_voltage_bound + 0.1;
+    dcdc_lv_port.bus->voltage = dcdc_lv_port.bus->sink_voltage_intercept + 0.1;
     dcdc.control();
     float pwm_after = half_bridge_get_duty_cycle();
     TEST_ASSERT(pwm_after < pwm_before);    // less duty cycle = higher voltage
@@ -235,7 +235,7 @@ void buck_derating_input_voltage_too_low()
 {
     start_buck();
     float pwm_before = half_bridge_get_duty_cycle();
-    hv_terminal.bus->voltage = hv_terminal.bus->src_voltage_bound - 0.1;
+    hv_terminal.bus->voltage = hv_terminal.bus->src_voltage_intercept - 0.1;
     dcdc_lv_port.current = 0.2;
     dcdc.control();
     float pwm_after = half_bridge_get_duty_cycle();
@@ -314,7 +314,7 @@ void boost_derating_output_voltage_too_high()
 {
     start_boost();
     float pwm_before = half_bridge_get_duty_cycle();
-    hv_terminal.bus->voltage = hv_terminal.bus->sink_voltage_bound + 0.5;
+    hv_terminal.bus->voltage = hv_terminal.bus->sink_voltage_intercept + 0.5;
     dcdc.control();
     float pwm_after = half_bridge_get_duty_cycle();
     TEST_ASSERT(pwm_after > pwm_before);    // higher duty cycle = less power
@@ -334,7 +334,7 @@ void boost_derating_input_voltage_too_low()
 {
     start_boost();
     float pwm_before = half_bridge_get_duty_cycle();
-    dcdc_lv_port.bus->voltage = dcdc_lv_port.bus->src_voltage_bound - 0.1;
+    dcdc_lv_port.bus->voltage = dcdc_lv_port.bus->src_voltage_intercept - 0.1;
     hv_terminal.current = 0.2;
     dcdc.control();
     float pwm_after = half_bridge_get_duty_cycle();

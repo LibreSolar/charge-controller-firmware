@@ -33,8 +33,8 @@ static void load_init(LoadOutput *l, bool on = false, int num_batteries = 1)
     l->pos_current_limit = 10;
     l->bus->series_multiplier = num_batteries;
     l->bus->voltage = 14 * num_batteries;
-    l->bus->sink_voltage_bound = 14.4;
-    l->bus->src_voltage_bound = 12;
+    l->bus->sink_voltage_intercept = 14.4;
+    l->bus->src_voltage_intercept = 12;
     l->bus->sink_current_margin = 10;
     l->bus->src_current_margin = -10;
     l->junction_temperature = 25;
@@ -93,7 +93,7 @@ void control_on_to_off_overvoltage()
     LoadOutput load_out(&bus, &load_drv_set, &load_drv_init);
     load_init(&load_out, true);
 
-    bus.voltage = bus.sink_voltage_bound + 0.6;
+    bus.voltage = bus.sink_voltage_intercept + 0.6;
 
     // increase debounce counter to 1 before limit
     for (int i = 0; i < CONFIG_CONTROL_FREQUENCY; i++) {
@@ -114,7 +114,7 @@ void control_on_to_off_overvoltage_dual_battery()
     LoadOutput load_out(&bus, &load_drv_set, &load_drv_init);
     load_init(&load_out, true, 2);
 
-    bus.voltage = (bus.sink_voltage_bound + 0.6) * bus.series_multiplier;
+    bus.voltage = (bus.sink_voltage_intercept + 0.6) * bus.series_multiplier;
 
     // increase debounce counter to 1 before limit
     for (int i = 0; i < CONFIG_CONTROL_FREQUENCY; i++) {

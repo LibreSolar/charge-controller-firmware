@@ -462,7 +462,7 @@ void Charger::charge_control(BatConf *bat_conf)
                 && bat_temperature < bat_conf->charge_temp_max - 1
                 && bat_temperature > bat_conf->charge_temp_min + 1)
             {
-                port->bus->sink_voltage_bound = bat_conf->topping_voltage +
+                port->bus->sink_voltage_intercept = bat_conf->topping_voltage +
                     bat_conf->temperature_compensation * (bat_temperature - 25);
                 port->pos_current_limit = bat_conf->charge_current_max;
                 full = false;
@@ -475,7 +475,7 @@ void Charger::charge_control(BatConf *bat_conf)
         }
         case CHG_STATE_BULK: {
             // continuously adjust voltage setting for temperature compensation
-            port->bus->sink_voltage_bound = bat_conf->topping_voltage +
+            port->bus->sink_voltage_intercept = bat_conf->topping_voltage +
                 bat_conf->temperature_compensation * (bat_temperature - 25);
 
             if (port->bus->voltage > port->bus->sink_control_voltage()) {
@@ -486,7 +486,7 @@ void Charger::charge_control(BatConf *bat_conf)
         }
         case CHG_STATE_TOPPING: {
             // continuously adjust voltage setting for temperature compensation
-            port->bus->sink_voltage_bound = bat_conf->topping_voltage +
+            port->bus->sink_voltage_intercept = bat_conf->topping_voltage +
                 bat_conf->temperature_compensation * (bat_temperature - 25);
 
             if (port->bus->voltage >= port->bus->sink_control_voltage() - 0.05F) {
@@ -515,12 +515,12 @@ void Charger::charge_control(BatConf *bat_conf)
                     num_deep_discharges - deep_dis_last_equalization
                     >= bat_conf->equalization_trigger_deep_cycles))
                 {
-                    port->bus->sink_voltage_bound = bat_conf->equalization_voltage;
+                    port->bus->sink_voltage_intercept = bat_conf->equalization_voltage;
                     port->pos_current_limit = bat_conf->equalization_current_limit;
                     enter_state(CHG_STATE_EQUALIZATION);
                 }
                 else if (bat_conf->trickle_enabled) {
-                    port->bus->sink_voltage_bound = bat_conf->trickle_voltage +
+                    port->bus->sink_voltage_intercept = bat_conf->trickle_voltage +
                         bat_conf->temperature_compensation * (bat_temperature - 25);
                     enter_state(CHG_STATE_TRICKLE);
                 }
@@ -533,7 +533,7 @@ void Charger::charge_control(BatConf *bat_conf)
         }
         case CHG_STATE_TRICKLE: {
             // continuously adjust voltage setting for temperature compensation
-            port->bus->sink_voltage_bound = bat_conf->trickle_voltage +
+            port->bus->sink_voltage_intercept = bat_conf->trickle_voltage +
                 bat_conf->temperature_compensation * (bat_temperature - 25);
 
             if (port->bus->voltage >= port->bus->sink_control_voltage()) {
@@ -553,7 +553,7 @@ void Charger::charge_control(BatConf *bat_conf)
         }
         case CHG_STATE_EQUALIZATION: {
             // continuously adjust voltage setting for temperature compensation
-            port->bus->sink_voltage_bound = bat_conf->equalization_voltage +
+            port->bus->sink_voltage_intercept = bat_conf->equalization_voltage +
                 bat_conf->temperature_compensation * (bat_temperature - 25);
 
             // current or time limit for equalization reached
@@ -566,7 +566,7 @@ void Charger::charge_control(BatConf *bat_conf)
                 discharged_Ah = 0;         // reset coulomb counter again
 
                 if (bat_conf->trickle_enabled) {
-                    port->bus->sink_voltage_bound = bat_conf->trickle_voltage +
+                    port->bus->sink_voltage_intercept = bat_conf->trickle_voltage +
                         bat_conf->temperature_compensation * (bat_temperature - 25);
                     enter_state(CHG_STATE_TRICKLE);
                 }
@@ -582,8 +582,8 @@ void Charger::charge_control(BatConf *bat_conf)
 
 void Charger::init_terminal(BatConf *bat) const
 {
-    port->bus->sink_voltage_bound = bat->topping_voltage;
-    port->bus->src_voltage_bound = bat->voltage_load_disconnect;
+    port->bus->sink_voltage_intercept = bat->topping_voltage;
+    port->bus->src_voltage_intercept = bat->voltage_load_disconnect;
 
     port->neg_current_limit = -bat->discharge_current_max;
     port->pos_current_limit = bat->charge_current_max;
