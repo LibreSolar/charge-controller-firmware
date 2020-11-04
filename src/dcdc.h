@@ -87,11 +87,11 @@ public:
      *
      * See http://libre.solar/docs/dcdc_control for detailed information
      *
-     * @param hv_side High voltage terminal (e.g. solar input for MPPT buck)
-     * @param lv_side Low voltage terminal (e.g. battery output for MPPT buck)
+     * @param high High voltage bus (e.g. solar input for MPPT buck)
+     * @param low Low voltage bus (e.g. battery output for MPPT buck)
      * @param mode Operation mode (buck, boost or nanogrid)
      */
-    Dcdc(PowerPort *hv_side, PowerPort* lv_side, DcdcOperationMode mode);
+    Dcdc(DcBus *high, DcBus* low, DcdcOperationMode mode);
 
     /**
      * Check for valid start conditions of the DC/DC converter
@@ -135,8 +135,10 @@ public:
     uint16_t state;             ///< Control state (off / MPPT / CC / CV)
 
     // actual measurements
-    PowerPort *hvs;             ///< Pointer to DC bus at high voltage side
-    PowerPort *lvs;             ///< Pointer to DC bus at low voltage (inductor) side
+    DcBus *hvb;                 ///< Pointer to DC bus at high voltage side
+    DcBus *lvb;                 ///< Pointer to DC bus at low voltage (inductor) side
+    float inductor_current;     ///< Inductor current
+    float power;                ///< Low-side power
     float temp_mosfets;         ///< MOSFET temperature measurement (if existing)
 
     // current state
@@ -146,8 +148,8 @@ public:
     int32_t power_good_timestamp;   ///< Last time the DC/DC reached above minimum output power
 
     // maximum allowed values
-    float ls_current_max = 0;   ///< Maximum low-side (inductor) current
-    float hs_voltage_max = 0;       ///< Maximum high-side voltage
+    float inductor_current_max = 0;   ///< Maximum low-side (inductor) current
+    float hs_voltage_max = 0;   ///< Maximum high-side voltage
     float ls_voltage_max;       ///< Maximum low-side voltage
     float ls_voltage_min;       ///< Minimum low-side voltage, e.g. for driver supply
     float output_power_min;     ///< Minimum output power (if lower, DC/DC is switched off)

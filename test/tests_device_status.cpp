@@ -69,7 +69,7 @@ void dev_stat_new_bat_voltage_max()
 
 void dev_stat_new_dcdc_current_max()
 {
-    dcdc.lvs->current = 21;
+    dcdc.inductor_current = 21;
     dev_stat.update_min_max_values();
     TEST_ASSERT_EQUAL(21, dev_stat.dcdc_current_max);
 }

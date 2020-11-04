@@ -21,7 +21,6 @@ extern PowerPort lv_terminal;
 #if DT_NODE_EXISTS(DT_PATH(dcdc))
 extern DcBus hv_bus;
 extern PowerPort hv_terminal;
-extern PowerPort dcdc_lv_port;
 extern Dcdc dcdc;
 #endif
 

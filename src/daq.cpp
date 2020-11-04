@@ -198,15 +198,15 @@ void daq_update()
 #endif
 
 #if DT_NODE_EXISTS(DT_PATH(dcdc))
-    dcdc_lv_port.current =
+    dcdc.inductor_current =
         adc_scaled(ADC_POS(i_dcdc), vref, ADC_GAIN(i_dcdc), dcdc_current_offset_raw);
 
-    lv_terminal_current += dcdc_lv_port.current;
+    lv_terminal_current += dcdc.inductor_current;
 
-    hv_terminal.current = -dcdc_lv_port.current * lv_terminal.bus->voltage /
+    hv_terminal.current = -dcdc.inductor_current * lv_terminal.bus->voltage /
         hv_terminal.bus->voltage;
 
-    dcdc_lv_port.power  = dcdc_lv_port.bus->voltage * dcdc_lv_port.current;
+    dcdc.power  = dcdc.lvb->voltage * dcdc.inductor_current;
     hv_terminal.power   = hv_terminal.bus->voltage * hv_terminal.current;
 #endif
     lv_terminal.current = lv_terminal_current;

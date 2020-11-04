@@ -86,12 +86,6 @@ void check_load_terminal_readings()
     TEST_ASSERT_EQUAL_FLOAT(adcval.load_current, round(load.current * 10) / 10);
 }
 
-void check_lv_bus_int_readings()
-{
-    TEST_ASSERT_EQUAL_FLOAT(adcval.battery_voltage, round(dcdc_lv_port.bus->voltage * 10) / 10);
-    TEST_ASSERT_EQUAL_FLOAT(adcval.dcdc_current, round(dcdc_lv_port.current * 10) / 10);
-}
-
 void check_temperature_readings()
 {
     TEST_ASSERT_EQUAL_FLOAT(adcval.bat_temperature, round(charger.bat_temperature * 10) / 10);
@@ -208,7 +202,6 @@ void daq_tests()
     RUN_TEST(check_solar_terminal_readings);
     RUN_TEST(check_bat_terminal_readings);
     RUN_TEST(check_load_terminal_readings);
-    RUN_TEST(check_lv_bus_int_readings);
 
     //RUN_TEST(check_temperature_readings);     // TODO
 

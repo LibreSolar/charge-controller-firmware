@@ -122,8 +122,8 @@ void DeviceStatus::update_min_max_values()
 #endif
 
 #if DT_NODE_EXISTS(DT_PATH(dcdc))
-    if (dcdc.lvs->current > dcdc_current_max) {
-        dcdc_current_max = dcdc.lvs->current;
+    if (dcdc.inductor_current > dcdc_current_max) {
+        dcdc_current_max = dcdc.inductor_current;
     }
 
     if (dcdc.temp_mosfets > mosfet_temp_max) {
