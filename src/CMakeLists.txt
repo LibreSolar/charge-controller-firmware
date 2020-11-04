@@ -12,7 +12,6 @@ target_sources(app PRIVATE
         eeprom.cpp
         half_bridge.cpp
         hardware.cpp
-        helper.cpp
         leds.cpp
         load.cpp
         load_driver.c
