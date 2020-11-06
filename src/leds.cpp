@@ -67,7 +67,7 @@ static const int led_pin_states[NUM_LEDS][NUM_LED_PINS] = {
 /*
  * GPIO pin numbers (for up to 5 LED pins)
  */
-static const int led_pins[] = {
+static const gpio_pin_t led_pins[] = {
     DT_PHA_BY_IDX(DT_PATH(leds), gpios, 0, pin),
 #if NUM_LED_PINS >= 2
     DT_PHA_BY_IDX(DT_PATH(leds), gpios, 1, pin),
@@ -99,6 +99,25 @@ static const char *const led_ports[] = {
 #endif
 #if NUM_LED_PINS >= 5
     DT_PROP_BY_PHANDLE_IDX(DT_PATH(leds), gpios, 4, label),
+#endif
+};
+
+/*
+ * GPIO pin flags (for up to 5 LED pins)
+ */
+static const gpio_flags_t led_flags[] = {
+    DT_PHA_BY_IDX(DT_PATH(leds), gpios, 0, flags),
+#if NUM_LED_PINS >= 2
+    DT_PHA_BY_IDX(DT_PATH(leds), gpios, 1, flags),
+#endif
+#if NUM_LED_PINS >= 3
+    DT_PHA_BY_IDX(DT_PATH(leds), gpios, 2, flags),
+#endif
+#if NUM_LED_PINS >= 4
+    DT_PHA_BY_IDX(DT_PATH(leds), gpios, 3, flags),
+#endif
+#if NUM_LED_PINS >= 5
+    DT_PHA_BY_IDX(DT_PATH(leds), gpios, 4, flags),
 #endif
 };
 
@@ -148,11 +167,13 @@ void leds_update_thread()
             for (unsigned int pin_number = 0; pin_number < NUM_LED_PINS; pin_number++) {
                 switch (led_pin_states[led_count][pin_number]) {
                     case PIN_HIGH:
-                        gpio_pin_configure(led_devs[pin_number], led_pins[pin_number], GPIO_OUTPUT);
+                        gpio_pin_configure(led_devs[pin_number], led_pins[pin_number],
+                            led_flags[pin_number] | GPIO_OUTPUT);
                         gpio_pin_set(led_devs[pin_number], led_pins[pin_number], 1);
                         break;
                     case PIN_LOW:
-                        gpio_pin_configure(led_devs[pin_number], led_pins[pin_number], GPIO_OUTPUT);
+                        gpio_pin_configure(led_devs[pin_number], led_pins[pin_number],
+                            led_flags[pin_number] | GPIO_OUTPUT);
                         gpio_pin_set(led_devs[pin_number], led_pins[pin_number], 0);
                         break;
                     case PIN_FLOAT:
@@ -181,7 +202,7 @@ void leds_init(bool enabled)
     for (unsigned int led = 0; led < NUM_LEDS; led++) {
         if (enabled) {
             led_states[led] = LED_STATE_ON;
-            trigger_timeout[led] = 0;           // switched off the first time the main loop is called
+            trigger_timeout[led] = 0;      // switched off the first time the main loop is called
         }
         else {
             led_states[led] = LED_STATE_OFF;

@@ -14,6 +14,7 @@
 #include "devicetree.h"
 #include "devicetree_unfixed.h"
 #include "autoconf.h"
+#include "stdint.h"
 
 #ifndef __deprecated
 #define __deprecated	__attribute__((deprecated))
@@ -40,6 +41,13 @@
 
 // dummy
 #define LOG_MODULE_REGISTER(a, b)
+
+
+/* from gpio.h */
+
+typedef uint8_t gpio_pin_t;
+
+typedef uint32_t gpio_flags_t;
 
 
 /* crazy functions from Zephyr's util.h */

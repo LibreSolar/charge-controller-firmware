@@ -89,6 +89,7 @@
 
 #define DT_N_S_leds_P_gpios_IDX_0_PH DT_N_S_soc_S_pin_controller_48000000_S_gpio_48000800
 #define DT_N_S_leds_P_gpios_IDX_0_VAL_pin 15
+#define DT_N_S_leds_P_gpios_IDX_0_VAL_flags 0
 #define DT_N_S_leds_P_gpios_LEN 1
 
 #define DT_N_S_soc_S_pin_controller_48000000_S_gpio_48000800_P_label "GPIOC"
