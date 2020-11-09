@@ -3,10 +3,10 @@
 .gcc-flags.json
 .vscode/browse.vc.db*
 .vscode
+.west
 html
 memory.map
 custom.ini
-zephyr/build
 tools
 *.bak
 *_bak
