@@ -257,7 +257,7 @@ static void adc_init(ADC_TypeDef *adc)
 static void adc_setup()
 {
 #if DT_NODE_EXISTS(DT_PROP(V_HIGH_ENABLE_GPIO, enable_gpios))
-    struct device *dev = device_get_binding(DT_GPIO_LABEL(V_HIGH_ENABLE_GPIO, enable_gpios));
+    const struct device *dev = device_get_binding(DT_GPIO_LABEL(V_HIGH_ENABLE_GPIO, enable_gpios));
     gpio_pin_configure(dev, DT_GPIO_PIN(V_HIGH_ENABLE_GPIO, enable_gpios),
         DT_GPIO_FLAGS(V_HIGH_ENABLE_GPIO, enable_gpios) | GPIO_OUTPUT_ACTIVE);
 #endif

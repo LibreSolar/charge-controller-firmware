@@ -66,7 +66,7 @@
 
 		pwm_switch {
 			label = "PWM power switch (solar panel)";
-			pwms = <&pwm3 4 (20*1000*1000)>; /* 20 ms period = 50 Hz */
+			pwms = <&pwm3 4 (20*1000*1000) PWM_POLARITY_NORMAL>; /* 20 ms period = 50 Hz */
 			// Current reduced to 15A. Increase to 20A PCB max values
 			// only if attached to a big heat sink.
 			current-max = <15>;
@@ -162,7 +162,7 @@
 				status = "okay";
 				st,prescaler = <10000>;
 				label = "PWM_3";
-				#pwm-cells = <2>;
+				#pwm-cells = <3>;
 			};
 		};
 	};

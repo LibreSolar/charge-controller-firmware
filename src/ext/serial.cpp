@@ -26,7 +26,7 @@
 #error "No UART for ThingSet serial defined."
 #endif
 
-struct device *uart_dev = device_get_binding(UART_DEVICE_NAME);
+const struct device *uart_dev = device_get_binding(UART_DEVICE_NAME);
 
 static char buf_resp[CONFIG_THINGSET_SERIAL_TX_BUF_SIZE];
 static char buf_req[CONFIG_THINGSET_SERIAL_RX_BUF_SIZE];
@@ -73,7 +73,7 @@ void process_asap()
  * Read characters from stream until line end \n detected, signal command available then
  * and wait for processing
  */
-void process_input(void* user_data)
+void process_input(const struct device *dev, void* user_data)
 {
     uint8_t c;
 

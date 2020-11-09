@@ -115,7 +115,7 @@ void leds_update_thread()
     unsigned int led_count = 0;
     int flicker_count = 0;
     bool flicker_state = true;
-    struct device *led_devs[NUM_LED_PINS];
+    const struct device *led_devs[NUM_LED_PINS];
 
     int wdt_channel = watchdog_register(1000);
 

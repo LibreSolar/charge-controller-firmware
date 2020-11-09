@@ -173,7 +173,7 @@ void oled_update()
 void oled_thread()
 {
 #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), uext_en))
-    struct device *dev_uext_en = device_get_binding(DT_GPIO_LABEL(UEXT_EN_GPIO, gpios));
+    const struct device *dev_uext_en = device_get_binding(DT_GPIO_LABEL(UEXT_EN_GPIO, gpios));
     gpio_pin_configure(dev_uext_en, DT_GPIO_PIN(UEXT_EN_GPIO, gpios),
         DT_GPIO_FLAGS(UEXT_EN_GPIO, gpios) | GPIO_OUTPUT_ACTIVE);
 #endif

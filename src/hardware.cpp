@@ -43,7 +43,7 @@ struct sw_wdt_channel {
 	uint32_t timeout;       // timeout of corresponding thread for sw_watchdog
 };
 
-static struct device *wdt;
+static const struct device *wdt;
 struct k_timer sw_wdt_timer;
 struct sw_wdt_channel sw_wdt_channels[MAX_SW_WDT_CHANNELS];
 
@@ -124,7 +124,7 @@ void start_stm32_bootloader()
 #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), boot0))
 
     // pin is connected to BOOT0 via resistor and capacitor
-    struct device *dev = device_get_binding(DT_GPIO_LABEL(BOOT0_GPIO, gpios));
+    const struct device *dev = device_get_binding(DT_GPIO_LABEL(BOOT0_GPIO, gpios));
     gpio_pin_configure(dev, DT_GPIO_PIN(BOOT0_GPIO, gpios),
         DT_GPIO_FLAGS(BOOT0_GPIO, gpios) | GPIO_OUTPUT_ACTIVE);
 

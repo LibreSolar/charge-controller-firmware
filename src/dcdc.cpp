@@ -335,7 +335,7 @@ void Dcdc::fuse_destruction()
 void Dcdc::output_hvs_enable()
 {
 #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), hv_ext_sense))
-    struct device *dev_hv_ext = device_get_binding(DT_GPIO_LABEL(HV_EXT_SENSE_GPIO, gpios));
+    const struct device *dev_hv_ext = device_get_binding(DT_GPIO_LABEL(HV_EXT_SENSE_GPIO, gpios));
     gpio_pin_configure(dev_hv_ext, DT_GPIO_PIN(HV_EXT_SENSE_GPIO, gpios),
         DT_GPIO_FLAGS(HV_EXT_SENSE_GPIO, gpios) | GPIO_OUTPUT_ACTIVE);
 #endif
@@ -344,7 +344,7 @@ void Dcdc::output_hvs_enable()
 void Dcdc::output_hvs_disable()
 {
 #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), hv_ext_sense))
-    struct device *dev_hv_ext = device_get_binding(DT_GPIO_LABEL(HV_EXT_SENSE_GPIO, gpios));
+    const struct device *dev_hv_ext = device_get_binding(DT_GPIO_LABEL(HV_EXT_SENSE_GPIO, gpios));
     gpio_pin_configure(dev_hv_ext, DT_GPIO_PIN(HV_EXT_SENSE_GPIO, gpios),
         DT_GPIO_FLAGS(HV_EXT_SENSE_GPIO, gpios) | GPIO_OUTPUT_INACTIVE);
 #endif

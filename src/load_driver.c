@@ -23,12 +23,12 @@
 
 #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
 #define LOAD_GPIO DT_CHILD(DT_PATH(outputs), load)
-static struct device *dev_load;
+static const struct device *dev_load;
 #endif
 
 #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), usb_pwr))
 #define USB_GPIO DT_CHILD(DT_PATH(outputs), usb_pwr)
-static struct device *dev_usb;
+static const struct device *dev_usb;
 #endif
 
 #include "hardware.h"
@@ -229,7 +229,7 @@ void load_cp_enable()
     This should do the same using the Zephyr driver, but there seems to be a bug in Zephyr v2.2
     so that it doesn't work with advanced timer as TIM8. Keep it here until Zephyr bug was fixed.
 
-	struct device *pwm_dev;
+	const struct device *pwm_dev;
 	pwm_dev = device_get_binding(DT_OUTPUTS_CHARGE_PUMP_PWMS_CONTROLLER);
 	if (!pwm_dev) {
 		LOG_ERR("Cannot find %s!\n", DT_OUTPUTS_CHARGE_PUMP_PWMS_CONTROLLER);

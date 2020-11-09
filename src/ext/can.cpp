@@ -30,7 +30,7 @@ LOG_MODULE_REGISTER(ext_can, CONFIG_LOG_DEFAULT_LEVEL);
 extern ThingSet ts;
 extern uint16_t ts_can_node_id;
 
-struct device *can_dev;
+const struct device *can_dev;
 
 #ifdef CONFIG_ISOTP
 
@@ -127,7 +127,7 @@ void can_pub_thread()
     unsigned int can_id;
     uint8_t can_data[8];
 
-    struct device *can_en_dev = device_get_binding(DT_GPIO_LABEL(CAN_EN_GPIO, gpios));
+    const struct device *can_en_dev = device_get_binding(DT_GPIO_LABEL(CAN_EN_GPIO, gpios));
     gpio_pin_configure(can_en_dev, DT_GPIO_PIN(CAN_EN_GPIO, gpios),
         DT_GPIO_FLAGS(CAN_EN_GPIO, gpios) | GPIO_OUTPUT_ACTIVE);
 

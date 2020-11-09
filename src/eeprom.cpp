@@ -71,7 +71,7 @@ void eeprom_restore_data()
     uint8_t buf_req[300];  // ThingSet request buffer
     int err;
 
-	struct device *eeprom_dev = device_get_binding("EEPROM_0");
+	const struct device *eeprom_dev = device_get_binding("EEPROM_0");
 
     // EEPROM header
     uint8_t buf_header[EEPROM_HEADER_SIZE] = {};    // initialize to avoid compiler warning
@@ -114,7 +114,7 @@ void eeprom_store_data()
 {
     uint8_t buf[300];
 
-	struct device *eeprom_dev = device_get_binding("EEPROM_0");
+	const struct device *eeprom_dev = device_get_binding("EEPROM_0");
 
     int len = ts.bin_pub(buf + EEPROM_HEADER_SIZE, sizeof(buf) - EEPROM_HEADER_SIZE, PUB_NVM);
     uint32_t crc = _calc_crc(buf + EEPROM_HEADER_SIZE, len);

@@ -51,7 +51,7 @@
 
 		pwm_switch {
 			label = "PWM power switch (solar panel)";
-			pwms = <&pwm3 2 (20*1000*1000)>; /* 20 ms period = 50 Hz */
+			pwms = <&pwm3 2 (20*1000*1000) PWM_POLARITY_NORMAL>; /* 20 ms period = 50 Hz */
 			current-max = <20>;
 			kconfig-flag;	/* make node visible in Kconfig */
 		};
@@ -65,7 +65,7 @@
 
 		charge_pump {
 			label = "Charge pump for HS MOSFET drivers";
-			pwms = <&pwm8 1 200000>; /* 200 us period = 5 kHz */
+			pwms = <&pwm8 1 200000 PWM_POLARITY_NORMAL>; /* 200 us period = 5 kHz */
 		};
 
 		hv-ext-sense {
