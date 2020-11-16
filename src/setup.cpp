@@ -96,6 +96,13 @@ void setup()
     static struct k_timer timestamp_timer;
     k_timer_init(&timestamp_timer, timestamp_inc, NULL);
     k_timer_start(&timestamp_timer, K_MSEC(1000), K_MSEC(1000));
+
+    /*
+     * printf from newlib-nano requires malloc, but Zephyr garbage-collects heap management if it
+     * is not used anywhere in the code. Below dummy calls force Zephyr to build with heap support.
+     */
+    void *temp = k_malloc(4);
+    k_free(temp);
 }
 
 #endif
