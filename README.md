@@ -18,9 +18,10 @@ Releases are generated from master after significant changes have been made. The
 
 The software is configurable to support different charge controller PCBs with STM32F072, low-power STM32L072 or most recent STM32G431 MCUs:
 
-- [Libre Solar MPPT 12/24V 20A with CAN](https://github.com/LibreSolar/MPPT-2420-LC)
-- [Libre Solar MPPT 12V 10A with USB](https://github.com/LibreSolar/MPPT-1210-HUS)
-- [Libre Solar PWM 12/24V 20A](https://github.com/LibreSolar/PWM-2420-LUS)
+- [Libre Solar MPPT 2420 HC](https://github.com/LibreSolar/mppt-2420-hc)
+- [Libre Solar MPPT 2420 LC](https://github.com/LibreSolar/mppt-2420-lc)
+- [Libre Solar MPPT 1210 HUS](https://github.com/LibreSolar/mppt-1210-hus)
+- [Libre Solar PWM 2420 LUS](https://github.com/LibreSolar/pwm-2420-lus)
 
 ## Building and flashing the firmware
 
