@@ -89,11 +89,17 @@ enum ErrorFlag {
      */
     ERR_DCDC_HS_MOSFET_SHORT = 1U << 14,
 
-    /** Short-circuit in HS MOSFET
+    /** Overvoltage in HS MOSFET
      *
-     * Set in Dcdc::control() and never cleared
+     * Set in DAQ alert and never cleared
      */
     ERR_DCDC_HS_OVERVOLTAGE = 1U << 15,
+
+    /** Overvoltage caused by PWM switch
+     *
+     * Set and cleared in PwmSwitch::control()
+     */
+    ERR_PWM_SWITCH_OVERVOLTAGE = 1U << 16,
 
     /** Mask to catch all error flags (up to 32 errors)
      */

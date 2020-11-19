@@ -19,6 +19,7 @@ LOG_MODULE_REGISTER(pwm_switch, CONFIG_LOG_DEFAULT_LEVEL);
 #include "mcu.h"
 #include "daq.h"
 #include "helper.h"
+#include "setup.h"
 
 #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), pwm_switch))
 
@@ -74,6 +75,12 @@ void PwmSwitch::control()
             off_timestamp = uptime();
             LOG_INF("PWM charger stop, current = %d mA", (int)(current * 1000.0F));
         }
+        else if (bus->voltage > bus->sink_control_voltage() + 0.3F) {
+            pwm_signal_stop();
+            off_timestamp = uptime();
+            dev_stat.set_error(ERR_PWM_SWITCH_OVERVOLTAGE);
+            LOG_INF("PWM charger stop, overvoltage.");
+        }
         else if (bus->voltage > bus->sink_control_voltage()   // bus voltage above target
             || current < neg_current_limit                    // port current limit exceeded
             || current < -PWM_CURRENT_MAX)                    // PCB current limit exceeded
@@ -90,10 +97,14 @@ void PwmSwitch::control()
                 // prevent very short on periods and switch completely off instead
                 pwm_signal_stop();
                 off_timestamp = uptime();
+                // consider this as overvoltage in order to start again with 5% duty cycle
+                dev_stat.set_error(ERR_PWM_SWITCH_OVERVOLTAGE);
                 LOG_INF("PWM charger stop, no further derating possible.");
             }
             else {
-                pwm_signal_duty_cycle_step(-1);
+                // decrease the power with large steps to prevent long-term overvoltages if
+                // the PWM switch was started with full battery and high solar irradiation
+                pwm_signal_duty_cycle_step(-10);
             }
         }
         else {
@@ -107,6 +118,12 @@ void PwmSwitch::control()
                 pwm_signal_duty_cycle_step(1);
             }
         }
+
+        if (dev_stat.has_error(ERR_PWM_SWITCH_OVERVOLTAGE) &&
+            bus->voltage < bus->sink_control_voltage() - 0.5F)
+        {
+            dev_stat.clear_error(ERR_PWM_SWITCH_OVERVOLTAGE);
+        }
     }
     else {
         if (bus->sink_current_margin > 0          // charging allowed
@@ -117,7 +134,15 @@ void PwmSwitch::control()
         {
             // turning the PWM switch on creates a short voltage rise, so inhibit alerts by 50 ms
             adc_upper_alert_inhibit(ADC_POS(v_low), 50);
-            pwm_signal_start(1);
+
+            if (dev_stat.has_error(ERR_PWM_SWITCH_OVERVOLTAGE)) {
+                // start with minimum duty cycle in order to prevent another overvoltage event
+                pwm_signal_start(0.05F);
+            }
+            else {
+                pwm_signal_start(1.0F);
+            }
+
             power_good_timestamp = uptime();
             LOG_INF("PWM charger start.");
         }
