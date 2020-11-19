@@ -1,13 +1,14 @@
 /*
- * Copyright (c) 2018 Martin Jäger / Libre Solar
- *
  * SPDX-License-Identifier: Apache-2.0
+ *
+ * Copyright (c) 2018 Martin Jäger / Libre Solar
  */
 
 #ifndef PWM_SWITCH_H
 #define PWM_SWITCH_H
 
-/** @file
+/**
+ * @file
  *
  * @brief PWM charger MOSFET switch control functions
  */
@@ -19,7 +20,8 @@
 
 #include "power_port.h"
 
-/** PWM charger type
+/**
+ * PWM charger type
  *
  * Contains all data belonging to the PWM switching sub-component.
  */
@@ -28,11 +30,13 @@ class PwmSwitch : public PowerPort
 public:
     PwmSwitch(DcBus *dc_bus);
 
-    /** Main control function for the PWM switching algorithm
+    /**
+     * Main control function for the PWM switching algorithm
      */
     void control();
 
-    /** Test mode for PWM switch
+    /**
+     * Test mode for PWM switch
      *
      * Sets duty cycle to 90% and listens to enable/disable signal
      */
@@ -47,31 +51,59 @@ public:
      */
     void stop();
 
-    /** Read the general on/off status of PWM switching
+    /**
+     * Read the general on/off status of PWM switching
      *
      * @returns true if on
      */
     bool active();
 
-    /** Read the current high or low state of the PWM signal
+    /**
+     * Read the current high or low state of the PWM signal
      *
      * @returns true if high, false if low
      */
     bool signal_high();
 
-    /** Read the currently set duty cycle
+    /**
+     * Read the currently set duty cycle
      *
      * @returns Duty cycle between 0.0 and 1.0
      */
     float get_duty_cycle();
 
-    float ext_voltage;              ///< Voltage measurement at terminal (external)
+    /**
+     * Voltage measurement at terminal (external, usually solar panel voltage)
+     */
+    float ext_voltage;
 
-    bool enable;                    ///< Can be used to disable the PWM power stage
-    float offset_voltage_start;     ///< Offset voltage of solar panel vs. battery to start charging (V)
-    int restart_interval;           ///< Interval to wait before retrying charging after low solar power cut-off (s)
-    time_t off_timestamp;           ///< Time when charger was switched off last time
-    time_t power_good_timestamp;   ///< Last time the current through the switch was above minimum
+    /**
+     * Enable switch, true by default. Can be used to completely disable the PWM power stage.
+     */
+    bool enable = true;
+
+    /**
+     * Offset voltage of solar panel vs. battery to start charging (V)
+     */
+    float offset_voltage_start = 2.0F;
+
+    /**
+     * Interval to wait before retrying charging after low solar power cut-off or overvoltage
+     * event (s)
+     */
+    int restart_interval = 60;
+
+    /**
+     * Time when charger was switched off last time
+     *
+     * Initialized with large negative value to start immediately after reset.
+     */
+    time_t off_timestamp = -10000;
+
+    /**
+     * Last time the current through the switch was above minimum
+     */
+    time_t power_good_timestamp;
 };
 #endif
 

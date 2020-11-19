@@ -38,16 +38,8 @@ bool PwmSwitch::signal_high()
 PwmSwitch::PwmSwitch(DcBus *dc_bus) :
     PowerPort(dc_bus)
 {
-    off_timestamp = -10000;              // start immediately
-
-    // calibration parameters
-    offset_voltage_start = 2.0;     // V  charging switched on if Vsolar > Vbat + offset
-    restart_interval = 60;          // s  When should we retry to start charging after low solar power cut-off?
-
     // period stored in nanoseconds
     pwm_signal_init_registers(1000 * 1000 * 1000 / PWM_PERIOD);
-
-    enable = true;     // enable charging in general
 }
 
 void PwmSwitch::test()
@@ -60,7 +52,7 @@ void PwmSwitch::test()
     else if (!pwm_active() && enable == true) {
         // turning the PWM switch on creates a short voltage rise, so inhibit alerts by 50 ms
         adc_upper_alert_inhibit(ADC_POS(v_low), 50);
-        pwm_signal_start(0.9);
+        pwm_signal_start(0.9F);
         LOG_INF("PWM test mode start.");
     }
 }
@@ -68,19 +60,19 @@ void PwmSwitch::test()
 void PwmSwitch::control()
 {
     if (pwm_active()) {
-        if (current < -0.1) {
+        if (current < -0.1F) {
             power_good_timestamp = uptime();     // reset the time
         }
 
         if (neg_current_limit == 0
             || (uptime() - power_good_timestamp > 10)      // low power since 10s
-            || current > 0.5         // discharging battery into solar panel --> stop
-            || bus->voltage < 9.0    // not enough voltage for MOSFET drivers anymore
+            || current > 0.5F         // discharging battery into solar panel --> stop
+            || bus->voltage < 9.0F    // not enough voltage for MOSFET drivers anymore
             || enable == false)
         {
             pwm_signal_stop();
             off_timestamp = uptime();
-            LOG_INF("PWM charger stop, current = %d mA", (int)(current * 1000));
+            LOG_INF("PWM charger stop, current = %d mA", (int)(current * 1000.0F));
         }
         else if (bus->voltage > bus->sink_control_voltage()   // bus voltage above target
             || current < neg_current_limit                    // port current limit exceeded
@@ -90,11 +82,11 @@ void PwmSwitch::control()
 
             // the gate driver switch-off time is quite high (fall time around 1ms), so very short
             // on or off periods (duty cycle close to 0 and 1) should be avoided
-            if (pwm_signal_get_duty_cycle() > 0.95) {
+            if (pwm_signal_get_duty_cycle() > 0.95F) {
                 // prevent very short off periods
-                pwm_signal_set_duty_cycle(0.95);
+                pwm_signal_set_duty_cycle(0.95F);
             }
-            else if (pwm_signal_get_duty_cycle() < 0.05) {
+            else if (pwm_signal_get_duty_cycle() < 0.05F) {
                 // prevent very short on periods and switch completely off instead
                 pwm_signal_stop();
                 off_timestamp = uptime();
@@ -107,7 +99,7 @@ void PwmSwitch::control()
         else {
             // increase power (if not yet at 100% duty cycle)
 
-            if (pwm_signal_get_duty_cycle() > 0.95) {
+            if (pwm_signal_get_duty_cycle() > 0.95F) {
                 // prevent very short off periods and switch completely on instead
                 pwm_signal_set_duty_cycle(1);
             }
