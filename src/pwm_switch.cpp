@@ -10,7 +10,7 @@
 
 #ifndef UNIT_TEST
 #include <logging/log.h>
-LOG_MODULE_REGISTER(pwm_switch, CONFIG_LOG_DEFAULT_LEVEL);
+LOG_MODULE_REGISTER(pwm_switch, CONFIG_PWM_LOG_LEVEL);
 #endif
 
 #include <stdio.h>

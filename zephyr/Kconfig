@@ -370,6 +370,59 @@ config THINGSET_MAKER_PASSWORD
 
 endmenu # ThingSet interfaces
 
+menu "Logging setup"
+
+config CAN_LOG_LEVEL
+    int "Log level for the CAN module (if included)"
+    default 2
+    depends on LOG
+    help
+      Log level for the CAN module (if included). 0=off, 1=ERR, 2=WRN, 3=INF, 4=DBG
+
+config DAQ_LOG_LEVEL
+    int "Log level for the DAQ module"
+    default 2
+    depends on LOG
+    help
+      Log level for the DAQ module. 0=off, 1=ERR, 2=WRN, 3=INF, 4=DBG
+
+config DATA_NODES_LOG_LEVEL
+    int "Log level for the data nodes module"
+    default 2
+    depends on LOG
+    help
+      Log level for the data nodes module. 0=off, 1=ERR, 2=WRN, 3=INF, 4=DBG
+
+
+config DCDC_LOG_LEVEL
+    int "Log level for the DCDC module (if included)"
+    default 2
+    depends on LOG
+    help
+      Log level for the DCDC module (if included). 0=off, 1=ERR, 2=WRN, 3=INF, 4=DBG
+
+config HW_LOG_LEVEL
+    int "Log level for the hardware module"
+    default 2
+    depends on LOG
+    help
+      Log level for the hardware module. 0=off, 1=ERR, 2=WRN, 3=INF, 4=DBG
+
+config BAT_LOG_LEVEL
+    int "Log level for the battery module"
+    default 2
+    depends on LOG
+    help
+      Log level for the battery module. 0=off, 1=ERR, 2=WRN, 3=INF, 4=DBG
+
+config PWM_LOG_LEVEL
+    int "Log level for the PWM module (if included)"
+    default 2
+    depends on LOG
+    help
+      Log level for the PWM module (if included). 0=off, 1=ERR, 2=WRN, 3=INF, 4=DBG
+
+endmenu # Logging setup
 
 menuconfig CUSTOMIZATION
     bool "Firmware customization"

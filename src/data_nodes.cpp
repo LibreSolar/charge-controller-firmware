@@ -11,7 +11,7 @@
 #include <drivers/hwinfo.h>
 #include <sys/crc.h>
 #include <logging/log.h>
-LOG_MODULE_REGISTER(data_nodes, CONFIG_LOG_DEFAULT_LEVEL);
+LOG_MODULE_REGISTER(data_nodes, CONFIG_DATA_NODES_LOG_LEVEL);
 #endif
 
 #include <stdio.h>

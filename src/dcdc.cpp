@@ -12,7 +12,7 @@
 #include <drivers/gpio.h>
 
 #include <logging/log.h>
-LOG_MODULE_REGISTER(dcdc, CONFIG_LOG_DEFAULT_LEVEL);
+LOG_MODULE_REGISTER(dcdc, CONFIG_DCDC_LOG_LEVEL);
 #endif
 
 #include <math.h>       // for fabs function
@@ -128,7 +128,7 @@ int Dcdc::perturb_observe_controller()
         pwr_inc_goal = pwm_delta;
     }
 
-#if CONFIG_LOG_DEFAULT_LEVEL == LOG_LEVEL_DBG
+#if CONFIG_DCDC_LOG_LEVEL == LOG_LEVEL_DBG
     // workaround as LOG_DBG does not support float printing
     printf("P: %.2fW (prev %.2fW), ind. current: %.2f, "
         "in: %.2fV, %.2fA margin, out: %.2fV (target %.2fV), %.2fA margin, "

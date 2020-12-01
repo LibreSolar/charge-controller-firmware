@@ -16,7 +16,7 @@
 #endif
 
 #include <logging/log.h>
-LOG_MODULE_REGISTER(ext_can, CONFIG_LOG_DEFAULT_LEVEL);
+LOG_MODULE_REGISTER(ext_can, CONFIG_CAN_LOG_LEVEL);
 
 #include "hardware.h"   // for software watchdog
 

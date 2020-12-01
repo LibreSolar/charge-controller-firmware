@@ -10,7 +10,7 @@
 
 #ifndef UNIT_TEST
 #include <logging/log.h>
-LOG_MODULE_REGISTER(daq, CONFIG_LOG_DEFAULT_LEVEL);
+LOG_MODULE_REGISTER(daq, CONFIG_DAQ_LOG_LEVEL);
 #endif
 
 #include <math.h>       // log for thermistor calculation

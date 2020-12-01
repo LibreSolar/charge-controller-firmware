@@ -34,7 +34,7 @@
 #include <drivers/watchdog.h>
 
 #include <logging/log.h>
-LOG_MODULE_REGISTER(hardware, CONFIG_LOG_DEFAULT_LEVEL);
+LOG_MODULE_REGISTER(hardware, CONFIG_HW_LOG_LEVEL);
 
 #define MAX_SW_WDT_CHANNELS 5
 

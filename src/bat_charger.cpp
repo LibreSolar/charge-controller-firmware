@@ -10,7 +10,7 @@
 
 #ifndef UNIT_TEST
 #include <logging/log.h>
-LOG_MODULE_REGISTER(bat_charger, CONFIG_LOG_DEFAULT_LEVEL);
+LOG_MODULE_REGISTER(bat_charger, CONFIG_BAT_LOG_LEVEL);
 #endif
 
 #include <math.h>       // for fabs function
