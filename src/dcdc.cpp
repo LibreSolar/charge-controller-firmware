@@ -130,11 +130,11 @@ int Dcdc::perturb_observe_controller()
 
 #if CONFIG_LOG_DEFAULT_LEVEL == LOG_LEVEL_DBG
     // workaround as LOG_DBG does not support float printing
-    printf("P: %.2fW (prev %.2fW), in: %.2fV %.2fA (limit %.2fA), "
-        "out: %.2fV (target %.2fV) %.2fA (limit %.2fA), "
+    printf("P: %.2fW (prev %.2fW), ind. current: %.2f, "
+        "in: %.2fV, %.2fA margin, out: %.2fV (target %.2fV), %.2fA margin, "
         "PWM: %.1f, chg_state: %d, pwr_inc: %d, buck/boost: %d\n",
-        out_power, power_prev, in->voltage, in->current, in->neg_current_limit,
-        out->voltage, out->sink_voltage_intercept, out->current, out->pos_current_limit,
+        out_power, power_prev, inductor_current, in->voltage, in->src_current_margin,
+        out->voltage, out->sink_voltage_intercept, out->sink_current_margin,
         half_bridge_get_duty_cycle() * 100.0, state, pwr_inc_goal, pwr_inc_pwm_direction);
 #endif
 
