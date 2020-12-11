@@ -12,6 +12,13 @@
 
 #include "mcu.h"
 
+#ifndef UNIT_TEST
+#include <soc.h>
+#include <pinmux/stm32/pinmux_stm32.h>
+
+#define DT_DRV_COMPAT st_stm32_timers
+#endif
+
 #if DT_NODE_EXISTS(DT_PATH(dcdc))
 
 static uint16_t tim_ccr_min;        // capture/compare register min/max
@@ -39,8 +46,12 @@ static uint16_t clamp_ccr(uint16_t ccr_target)
 
 #if PWM_TIMER_ADDR == TIM3_BASE
 
+static const struct soc_gpio_pinctrl tim_pinctrl[] = ST_STM32_DT_PINCTRL(timers3, 0);
+
 static void tim_init_registers(int freq_kHz)
 {
+    stm32_dt_pinctrl_configure(tim_pinctrl, ARRAY_SIZE(tim_pinctrl), PWM_TIMER_ADDR);
+
     // Enable TIM3 clock
     RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;
 
@@ -114,8 +125,12 @@ bool half_bridge_enabled()
 
 #elif PWM_TIMER_ADDR == TIM1_BASE
 
+static const struct soc_gpio_pinctrl tim_pinctrl[] = ST_STM32_DT_PINCTRL(timers1, 0);
+
 static void tim_init_registers(int freq_kHz)
 {
+    stm32_dt_pinctrl_configure(tim_pinctrl, ARRAY_SIZE(tim_pinctrl), PWM_TIMER_ADDR);
+
     // Enable TIM1 clock
     RCC->APB2ENR |= RCC_APB2ENR_TIM1EN;
 

@@ -6,6 +6,7 @@
 
 /dts-v1/;
 #include <st/g4/stm32g431Xb.dtsi>
+#include <st/g4/stm32g431c(6-8-b)tx-pinctrl.dtsi>
 
 / {
 	model = "Libre Solar MPPT 2420 RC";
@@ -122,22 +123,26 @@
 };
 
 &usart1 {
+	pinctrl-0 = <&usart1_tx_pa9 &usart1_rx_pa10>;
 	current-speed = <115200>;
 	status = "okay";
 };
 
 &usart2 {
+	pinctrl-0 = <&usart2_tx_pa2 &usart2_rx_pa3>;
 	current-speed = <115200>;
 	status = "okay";
 };
 
 &spi1 {
+	pinctrl-0 = <&spi1_sck_pb3 &spi1_miso_pb4 &spi1_mosi_pb5>;
 	cs-gpios = <&gpiob 6 GPIO_ACTIVE_LOW>;
 	status = "okay";
 };
 
-&rtc {
+&timers1 {
 	status = "okay";
+	pinctrl-0 = <&tim1_ch1_pa8 &tim1_ch1n_pb13>;
 };
 
 &flash0 {
@@ -165,6 +170,7 @@
 &i2c1 {
 	/* shared between UEXT and EEPROM */
 	status = "okay";
+	pinctrl-0 = <&i2c1_scl_pa15 &i2c1_sda_pb7>;
 	clock-frequency = <I2C_BITRATE_STANDARD>;
 	eeprom@50 {
 		// Microchip 24AA32A
@@ -185,6 +191,7 @@
 /*
 // This requires https://github.com/zephyrproject-rtos/zephyr/pull/22832
 &can1 {
+	pinctrl-0 = <&fdcan1_rx_pa11 &fdcan1_tx_pa12>;
 	bus-speed = <250000>;
 	bus-speed-data = <250000>;
 	sjw = <1>;
