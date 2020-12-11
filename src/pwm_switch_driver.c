@@ -23,6 +23,11 @@
 #include <stm32_ll_rcc.h>
 #include <stm32_ll_bus.h>
 
+#include <soc.h>
+#include <pinmux/stm32/pinmux_stm32.h>
+
+#define DT_DRV_COMPAT st_stm32_pwm
+
 // all PWM charge controllers use TIM3 at the moment
 static TIM_TypeDef *tim = TIM3;
 
@@ -53,6 +58,8 @@ static TIM_TypeDef *tim = TIM3;
 #define PWM_GPIO_PIN_HIGH (GPIOC->IDR & GPIO_IDR_ID7)
 #endif
 
+static const struct soc_gpio_pinctrl pwm_pinctrl[] = ST_STM32_DT_PINCTRL(pwm3, 0);
+
 static bool _pwm_active;
 static int _pwm_resolution;
 
@@ -69,6 +76,8 @@ static void TIM3_IRQHandler(void *args)
 
 void pwm_signal_init_registers(int freq_Hz)
 {
+    stm32_dt_pinctrl_configure(pwm_pinctrl, ARRAY_SIZE(pwm_pinctrl), (uint32_t)tim);
+
 	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM3);
 
     // Set timer clock to 10 kHz
