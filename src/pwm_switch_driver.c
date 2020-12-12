@@ -15,19 +15,13 @@
 #include "helper.h"
 #include "mcu.h"
 
-#if defined(CONFIG_SOC_SERIES_STM32L0X)
-#include <stm32l0xx_ll_tim.h>
-#include <stm32l0xx_ll_rcc.h>
-#include <stm32l0xx_ll_bus.h>
-#elif defined(CONFIG_SOC_SERIES_STM32G4X)
-#include <stm32g4xx_ll_tim.h>
-#include <stm32g4xx_ll_rcc.h>
-#include <stm32g4xx_ll_bus.h>
-#endif
-
 #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), pwm_switch))
 
 #ifndef UNIT_TEST
+
+#include <stm32_ll_tim.h>
+#include <stm32_ll_rcc.h>
+#include <stm32_ll_bus.h>
 
 // all PWM charge controllers use TIM3 at the moment
 static TIM_TypeDef *tim = TIM3;

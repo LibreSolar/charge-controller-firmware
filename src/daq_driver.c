@@ -14,25 +14,11 @@
 #include <zephyr.h>
 #include <drivers/gpio.h>
 
-#if defined(CONFIG_SOC_SERIES_STM32L0X)
-#include <stm32l0xx_ll_system.h>
-#include <stm32l0xx_ll_adc.h>
-#include <stm32l0xx_ll_dac.h>
-#include <stm32l0xx_ll_dma.h>
-#include <stm32l0xx_ll_bus.h>
-#elif defined(CONFIG_SOC_SERIES_STM32F0X)
-#include <stm32f0xx_ll_system.h>
-#include <stm32f0xx_ll_adc.h>
-#include <stm32f0xx_ll_dac.h>
-#include <stm32f0xx_ll_dma.h>
-#include <stm32f0xx_ll_bus.h>
-#elif defined(CONFIG_SOC_SERIES_STM32G4X)
-#include <stm32g4xx_ll_system.h>
-#include <stm32g4xx_ll_adc.h>
-#include <stm32g4xx_ll_dac.h>
-#include <stm32g4xx_ll_dma.h>
-#include <stm32g4xx_ll_bus.h>
-#endif
+#include <stm32_ll_system.h>
+#include <stm32_ll_adc.h>
+#include <stm32_ll_dac.h>
+#include <stm32_ll_dma.h>
+#include <stm32_ll_bus.h>
 
 #include "dcdc.h"       // for low-level control function called by DMA
 

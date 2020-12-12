@@ -17,11 +17,7 @@
 #include "leds.h"
 #include "mcu.h"
 
-#if defined(CONFIG_SOC_SERIES_STM32L0X)
-#include <stm32l0xx_ll_system.h>
-#elif defined(CONFIG_SOC_SERIES_STM32G4X)
-#include <stm32g4xx_ll_system.h>
-#endif
+#include <stm32_ll_system.h>
 
 #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
 #define LOAD_GPIO DT_CHILD(DT_PATH(outputs), load)
