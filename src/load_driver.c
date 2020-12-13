@@ -8,12 +8,14 @@
 
 #ifndef UNIT_TEST
 
-#include <inttypes.h>       // for PRIu32 in printf statements
-
 #include <zephyr.h>
 #include <device.h>
 #include <drivers/gpio.h>
 #include <drivers/pwm.h>
+
+#include "hardware.h"
+#include "leds.h"
+#include "mcu.h"
 
 #if defined(CONFIG_SOC_SERIES_STM32L0X)
 #include <stm32l0xx_ll_system.h>
@@ -30,10 +32,6 @@ static const struct device *dev_load;
 #define USB_GPIO DT_CHILD(DT_PATH(outputs), usb_pwr)
 static const struct device *dev_usb;
 #endif
-
-#include "hardware.h"
-#include "leds.h"
-#include "mcu.h"
 
 // short circuit detection comparator only present in PWM 2420 LUS board so far
 #ifdef CONFIG_BOARD_PWM_2420_LUS
@@ -182,77 +180,19 @@ void usb_out_set(bool status)
 
 #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), charge_pump))
 
-#if defined(CONFIG_SOC_SERIES_STM32G4X)
-#include <stm32g4xx_ll_tim.h>
-#include <stm32g4xx_ll_rcc.h>
-#include <stm32g4xx_ll_bus.h>
-#endif
-
+#define CP_PWM_CONTROLLER (DT_PWMS_LABEL(DT_CHILD(DT_PATH(outputs), charge_pump)))
 #define CP_PWM_PERIOD (DT_PHA(DT_CHILD(DT_PATH(outputs), charge_pump), pwms, period))
 #define CP_PWM_CHANNEL (DT_PHA(DT_CHILD(DT_PATH(outputs), charge_pump), pwms, channel))
 
-#if CP_PWM_CHANNEL == 1
-#define LL_TIM_CHANNEL LL_TIM_CHANNEL_CH1
-#define LL_TIM_OC_SetCompare LL_TIM_OC_SetCompareCH1
-#elif CP_PWM_CHANNEL == 2
-#define LL_TIM_CHANNEL LL_TIM_CHANNEL_CH2
-#define LL_TIM_OC_SetCompare LL_TIM_OC_SetCompareCH2
-#elif CP_PWM_CHANNEL == 3
-#define LL_TIM_CHANNEL LL_TIM_CHANNEL_CH3
-#define LL_TIM_OC_SetCompare LL_TIM_OC_SetCompareCH3
-#elif CP_PWM_CHANNEL == 4
-#define LL_TIM_CHANNEL LL_TIM_CHANNEL_CH4
-#define LL_TIM_OC_SetCompare LL_TIM_OC_SetCompareCH4
-#endif
-
-/* Currently hard-coded for TIM8 as Zephyr driver doesn't work with this timer at the moment */
 void load_cp_enable()
 {
-    int freq_Hz = 1000*1000*1000 / CP_PWM_PERIOD;
-
-	LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_TIM8);
-
-    // Set timer clock to 100 kHz
-    LL_TIM_SetPrescaler(TIM8, SystemCoreClock / 100000 - 1);
-
-    LL_TIM_OC_SetMode(TIM8, LL_TIM_CHANNEL, LL_TIM_OCMODE_PWM1);
-    LL_TIM_OC_EnablePreload(TIM8, LL_TIM_CHANNEL);
-    LL_TIM_OC_SetPolarity(TIM8, LL_TIM_CHANNEL, LL_TIM_OCPOLARITY_HIGH);
-
-    // Interrupt on timer update
-    LL_TIM_EnableIT_UPDATE(TIM8);
-
-    // Force update generation (UG = 1)
-    LL_TIM_GenerateEvent_UPDATE(TIM8);
-
-    // set PWM frequency and resolution
-    int _pwm_resolution = 100000 / freq_Hz;
-
-    // Period goes from 0 to ARR (including ARR value), so substract 1 clock cycle
-    LL_TIM_SetAutoReload(TIM8, _pwm_resolution - 1);
-
-    LL_TIM_EnableCounter(TIM8);
-
-    LL_TIM_OC_SetCompare(TIM8, _pwm_resolution / 2);    // 50% duty
-
-    LL_TIM_CC_EnableChannel(TIM8, LL_TIM_CHANNEL);
-
-    LL_TIM_EnableAllOutputs(TIM8);
-
-/*
-    This should do the same using the Zephyr driver, but there seems to be a bug in Zephyr v2.2
-    so that it doesn't work with advanced timer as TIM8. Keep it here until Zephyr bug was fixed.
-
-	const struct device *pwm_dev;
-	pwm_dev = device_get_binding(DT_OUTPUTS_CHARGE_PUMP_PWMS_CONTROLLER);
-	if (!pwm_dev) {
-		LOG_ERR("Cannot find %s!\n", DT_OUTPUTS_CHARGE_PUMP_PWMS_CONTROLLER);
-		return;
+	const struct device *pwm_dev = device_get_binding(CP_PWM_CONTROLLER);
+	if (pwm_dev) {
+        // set to 50% duty cycle
+        pwm_pin_set_nsec(pwm_dev, CP_PWM_CHANNEL, CP_PWM_PERIOD, CP_PWM_PERIOD / 2, 0);
 	}
-    // set to 50% duty cycle
-    pwm_pin_set_nsec(pwm_dev, CP_PWM_CHANNEL, CP_PWM_PERIOD, CP_PWM_PERIOD / 2, 0);
-*/
 }
+
 #endif
 
 void load_out_init()

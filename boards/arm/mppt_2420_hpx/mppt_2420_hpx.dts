@@ -239,11 +239,12 @@
 	};
 };
 
-/* TIM8 (CH1) used for charge pump, but is currently not working with original Zephyr driver */
+/* TIM8 (CH1) used for charge pump */
 &timers8 {
 	status = "okay";
 	pwm8: pwm {
 		status = "okay";
+		st,prescaler = <149>;	/* reduce counter clock frequency to 1 MHz */
 	};
 };
 
