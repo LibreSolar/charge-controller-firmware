@@ -126,17 +126,6 @@
 		};
 	};
 
-	soc {
-		dac1: dac@50000800 {
-			compatible = "st,stm32-dac";
-			reg = <0x50000800 0x400>;
-			clocks = <&rcc STM32_CLOCK_BUS_AHB2 0x00010000>;
-			status = "disabled";
-			label = "DAC_1";
-			#io-channel-cells = <1>;
-		};
-	};
-
 	aliases {
 		uart-dbg = &usart1;
 		uart-uext = &usart2;
