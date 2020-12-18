@@ -24,6 +24,8 @@
 
 #define EEPROM_UPDATE_INTERVAL  (6*60*60)       // update every 6 hours
 
+static uint8_t buf[512];  // Buffer used by store and restore functions
+
 extern ThingSet ts;
 
 #ifndef UNIT_TEST
@@ -68,7 +70,6 @@ uint32_t _calc_crc(const uint8_t *buf, size_t len)
 
 void eeprom_restore_data()
 {
-    uint8_t buf_req[300];  // ThingSet request buffer
     int err;
 
 	const struct device *eeprom_dev = device_get_binding("EEPROM_0");
@@ -89,16 +90,16 @@ void eeprom_restore_data()
     //    buf_header[0], buf_header[1], buf_header[2], buf_header[3],
     //    buf_header[4], buf_header[5], buf_header[6], buf_header[7]);
 
-    if (version == DATA_NODES_VERSION && len <= sizeof(buf_req)) {
+    if (version == DATA_NODES_VERSION && len <= sizeof(buf)) {
 
-        err = eeprom_read(eeprom_dev, EEPROM_HEADER_SIZE, buf_req, len);
+        err = eeprom_read(eeprom_dev, EEPROM_HEADER_SIZE, buf, len);
 
         //printf("Data (len=%d): ", len);
-        //for (int i = 0; i < len; i++) printf("%.2x ", buf_req[i]);
+        //for (int i = 0; i < len; i++) printf("%.2x ", buf[i]);
 
-        if (_calc_crc(buf_req, len) == crc) {
-            int status = ts.bin_sub(buf_req, sizeof(buf_req), TS_WRITE_MASK, PUB_NVM);
-            printf("EEPROM: Data objects read and updated, ThingSet result: %x\n", status);
+        if (_calc_crc(buf, len) == crc) {
+            int status = ts.bin_sub(buf, sizeof(buf), TS_WRITE_MASK, PUB_NVM);
+            printf("EEPROM: Data objects read and updated, ThingSet result: 0x%x\n", status);
         }
         else {
             printf("EEPROM: CRC of data not correct, expected 0x%x (data_len = %d)\n",
@@ -112,7 +113,7 @@ void eeprom_restore_data()
 
 void eeprom_store_data()
 {
-    uint8_t buf[300];
+    int err;
 
 	const struct device *eeprom_dev = device_get_binding("EEPROM_0");
 
@@ -134,7 +135,7 @@ void eeprom_store_data()
         printf("EEPROM: Data could not be stored. ThingSet error (len = %d)\n", len);
     }
     else {
-        int err = eeprom_write(eeprom_dev, 0, buf, len + EEPROM_HEADER_SIZE);
+        err = eeprom_write(eeprom_dev, 0, buf, len + EEPROM_HEADER_SIZE);
         if (err == 0) {
             printf("EEPROM: Data successfully stored.\n");
         }
