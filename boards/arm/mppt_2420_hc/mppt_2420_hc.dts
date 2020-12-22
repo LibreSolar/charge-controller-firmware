@@ -216,8 +216,6 @@
 	};
 };
 
-/*
-// This requires https://github.com/zephyrproject-rtos/zephyr/pull/22832
 &can1 {
 	pinctrl-0 = <&fdcan1_rx_pa11 &fdcan1_tx_pa12>;
 	bus-speed = <250000>;
@@ -228,4 +226,3 @@
 	sample-point-data = <875>;
 	status = "okay";
 };
-*/
