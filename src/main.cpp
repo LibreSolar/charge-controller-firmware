@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <device.h>
 #include <drivers/gpio.h>
+#include <task_wdt/task_wdt.h>
 
 #include "thingset.h"           // handles access to internal data via communication interfaces
 #include "setup.h"
@@ -31,7 +32,7 @@ void main(void)
 {
     printf("Libre Solar Charge Controller: %s\n", CONFIG_BOARD);
 
-    watchdog_init();
+    task_wdt_init(device_get_binding(DT_LABEL(DT_NODELABEL(iwdg))));
 
     setup();
 
@@ -71,7 +72,6 @@ void main(void)
 
     // wait until all threads are spawned before activating the watchdog
     k_sleep(K_MSEC(2500));
-    watchdog_start();
 
     int64_t t_start = k_uptime_get();
 
@@ -129,14 +129,14 @@ void main(void)
 
 void control_thread()
 {
-    int wdt_channel = watchdog_register(200);
+    int wdt_channel = task_wdt_add(200, task_wdt_callback, (void *)k_current_get());
 
     while (true) {
         // control loop runs at approx. 10 Hz
 
         bool charging = false;
 
-        watchdog_feed(wdt_channel);
+        task_wdt_feed(wdt_channel);
 
         // convert ADC readings to meaningful measurement values
         daq_update();
