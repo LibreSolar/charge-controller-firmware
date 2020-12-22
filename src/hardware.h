@@ -13,40 +13,6 @@
  * Hardware-specific functions like timers, watchdog, bootloader
  */
 
-#include <stdint.h>
-
-/**
- * Initialization of IWDG
- */
-void watchdog_init();
-
-/**
- * Register watchdog for this thread
- *
- * @param timeout_ms Timeout in milliseconds
- *
- * @returns Assigned channel number or -1 in case of error
- */
-int watchdog_register(uint32_t timeout_ms);
-
-/**
- * Must be called after all channels have been registered
- */
-void watchdog_start();
-
-/**
- * Feed/Check-in watchdog for given channel
- *
- * @param channel Channel number assigned by watchdog_register function
- */
-void watchdog_feed(int channel);
-
-/** Timer for system control (main DC/DC or PWM control loop) is started
- *
- * @param freq_Hz Frequency in Hz (10 Hz suggested)
- */
-void control_timer_start(int freq_Hz);
-
 /** DC/DC or PWM control loop (implemented in main.cpp)
  */
 void system_control();
@@ -59,5 +25,10 @@ void start_stm32_bootloader();
  * Reset device
  */
 void reset_device();
+
+/**
+ * Callback for task watchdogs used in multiple threads
+ */
+void task_wdt_callback(int channel_id, void *user_data);
 
 #endif /* HARDWARE_H */

@@ -10,6 +10,7 @@
 #include <device.h>
 #include <drivers/gpio.h>
 #include <drivers/can.h>
+#include <task_wdt/task_wdt.h>
 
 #ifdef CONFIG_ISOTP
 #include <canbus/isotp.h>
@@ -122,7 +123,7 @@ void can_pub_isr(uint32_t err_flags, void *arg)
 
 void can_pub_thread()
 {
-    int wdt_channel = watchdog_register(1100);
+    int wdt_channel = task_wdt_add(1100, task_wdt_callback, (void *)k_current_get());
 
     unsigned int can_id;
     uint8_t can_data[8];
@@ -136,7 +137,8 @@ void can_pub_thread()
     int64_t t_start = k_uptime_get();
 
     while (true) {
-        watchdog_feed(wdt_channel);
+
+        task_wdt_feed(wdt_channel);
 
         if (pub_can_enable) {
             int data_len = 0;

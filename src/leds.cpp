@@ -9,6 +9,7 @@
 #include <zephyr.h>
 #ifndef UNIT_TEST
 #include <drivers/gpio.h>
+#include <task_wdt/task_wdt.h>
 #endif
 
 #include "hardware.h"
@@ -136,7 +137,7 @@ void leds_update_thread()
     bool flicker_state = true;
     const struct device *led_devs[NUM_LED_PINS];
 
-    int wdt_channel = watchdog_register(1000);
+    int wdt_channel = task_wdt_add(1000, task_wdt_callback, (void *)k_current_get());
 
     for (int pin = 0; pin < NUM_LED_PINS; pin++) {
         led_devs[pin] = device_get_binding(led_ports[pin]);
@@ -146,7 +147,7 @@ void leds_update_thread()
 
     while (true) {
 
-        watchdog_feed(wdt_channel);
+        task_wdt_feed(wdt_channel);
 
         // could be increased to value >NUM_LEDS to reduce on-time
         if (led_count >= NUM_LEDS) {

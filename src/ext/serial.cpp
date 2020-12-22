@@ -12,6 +12,7 @@
 #include <zephyr.h>
 #include <sys/printk.h>
 #include <drivers/uart.h>
+#include <task_wdt/task_wdt.h>
 
 #include "thingset.h"
 #include "hardware.h"
@@ -114,13 +115,13 @@ void serial_thread()
     uint32_t last_call = 0;
 
     // long watchdog timeout needed for ThingSet conf calls which write to slow EEPROM
-    int wdt_channel = watchdog_register(500);
+    int wdt_channel = task_wdt_add(500, task_wdt_callback, (void *)k_current_get());
 
     uart_irq_callback_user_data_set(uart_dev, process_input, NULL);
     uart_irq_rx_enable(uart_dev);
 
     while (true) {
-        watchdog_feed(wdt_channel);
+        task_wdt_feed(wdt_channel);
 
         uint32_t now = k_uptime_get() / 1000;
 
