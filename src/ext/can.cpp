@@ -55,7 +55,7 @@ struct isotp_recv_ctx recv_ctx;
 void send_complette_cb(int error_nr, void *arg)
 {
     ARG_UNUSED(arg);
-    LOG_DBG("TX complete cb [%d]", error_nr);
+    LOG_DBG("TX complete callback, err: %d", error_nr);
 }
 
 void can_rx_thread()
@@ -63,8 +63,8 @@ void can_rx_thread()
     int ret, rem_len;
     unsigned int received_len;
     struct net_buf *buf;
-    static u8_t rx_buffer[100];
-    static u8_t tx_buffer[500];
+    static uint8_t rx_buffer[100];
+    static uint8_t tx_buffer[500];
 
     // CAN node ID retrieved from EEPROM --> reset necessary after change via ThingSet serial
     rx_addr.ext_id = ts_can_node_id << 8;
