@@ -30,6 +30,7 @@ LOG_MODULE_REGISTER(ext_can, CONFIG_CAN_LOG_LEVEL);
 
 extern ThingSet ts;
 extern uint16_t ts_can_node_id;
+uint16_t ts_can_host_id = 0x00;     //  temporarily hard-coded
 
 const struct device *can_dev;
 
@@ -67,16 +68,16 @@ void can_rx_thread()
     static uint8_t tx_buffer[500];
 
     // CAN node ID retrieved from EEPROM --> reset necessary after change via ThingSet serial
-    rx_addr.ext_id = ts_can_node_id << 8;
-    tx_addr.ext_id = ts_can_node_id;
-
-    ret = isotp_bind(&recv_ctx, can_dev, &tx_addr, &rx_addr, &fc_opts, K_FOREVER);
-    if (ret != ISOTP_N_OK) {
-        LOG_DBG("Failed to bind to rx ID %d [%d]", rx_addr.ext_id, ret);
-        return;
-    }
+    rx_addr.ext_id = ts_can_node_id << 8 | ts_can_host_id;
+    tx_addr.ext_id = ts_can_host_id << 8 | ts_can_node_id;
 
     while (1) {
+        ret = isotp_bind(&recv_ctx, can_dev, &rx_addr, &tx_addr, &fc_opts, K_FOREVER);
+        if (ret != ISOTP_N_OK) {
+            LOG_DBG("Failed to bind to rx ID %d [%d]", rx_addr.ext_id, ret);
+            return;
+        }
+
         received_len = 0;
         do {
             rem_len = isotp_recv_net(&recv_ctx, &buf, K_FOREVER);
@@ -95,9 +96,14 @@ void can_rx_thread()
             net_buf_unref(buf);
         } while (rem_len);
 
+        // we need to unbind the receive ctx so that control frames are received in the send ctx
+        isotp_unbind(&recv_ctx);
+
         if (received_len > 0) {
             LOG_DBG("Got %d bytes via ISO-TP. Processing ThingSet message.", received_len);
+            LOG_DBG("RX buf: %x %x %x %x", rx_buffer[0], rx_buffer[1], rx_buffer[2], rx_buffer[3]);
             int resp_len = ts.process(rx_buffer, received_len, tx_buffer, sizeof(tx_buffer));
+            LOG_DBG("TX buf: %x %x %x %x", tx_buffer[0], tx_buffer[1], tx_buffer[2], tx_buffer[3]);
 
             if (resp_len > 0) {
                 static struct isotp_send_ctx send_ctx;
