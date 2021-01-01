@@ -29,26 +29,27 @@ LOG_MODULE_REGISTER(ext_can, CONFIG_CAN_LOG_LEVEL);
 #endif
 
 extern ThingSet ts;
-extern uint16_t ts_can_node_id;
-uint16_t ts_can_host_id = 0x00;     //  temporarily hard-coded
+extern uint16_t can_node_addr;
 
 const struct device *can_dev;
 
 #ifdef CONFIG_ISOTP
 
-#define RX_THREAD_STACK_SIZE 512
+#define RX_THREAD_STACK_SIZE 1024
 #define RX_THREAD_PRIORITY 2
 
 const struct isotp_fc_opts fc_opts = {.bs = 8, .stmin = 0};
 
 struct isotp_msg_id rx_addr = {
     .id_type = CAN_EXTENDED_IDENTIFIER,
-    .use_ext_addr = 0   // Normal ISO-TP addressing (using only CAN ID)
+    .use_ext_addr = 0,      // Normal ISO-TP addressing (using only CAN ID)
+    .use_fixed_addr = 1,    // enable SAE J1939 compatible addressing
 };
 
 struct isotp_msg_id tx_addr = {
     .id_type = CAN_EXTENDED_IDENTIFIER,
-    .use_ext_addr = 0   // Normal ISO-TP addressing (using only CAN ID)
+    .use_ext_addr = 0,      // Normal ISO-TP addressing (using only CAN ID)
+    .use_fixed_addr = 1,    // enable SAE J1939 compatible addressing
 };
 
 struct isotp_recv_ctx recv_ctx;
@@ -68,8 +69,8 @@ void can_rx_thread()
     static uint8_t tx_buffer[500];
 
     // CAN node ID retrieved from EEPROM --> reset necessary after change via ThingSet serial
-    rx_addr.ext_id = ts_can_node_id << 8 | ts_can_host_id;
-    tx_addr.ext_id = ts_can_host_id << 8 | ts_can_node_id;
+    rx_addr.ext_id = TS_CAN_BASE_REQRESP | TS_CAN_PRIO_REQRESP | TS_CAN_TARGET_SET(can_node_addr);
+    tx_addr.ext_id = TS_CAN_BASE_REQRESP | TS_CAN_PRIO_REQRESP | TS_CAN_SOURCE_SET(can_node_addr);
 
     while (1) {
         ret = isotp_bind(&recv_ctx, can_dev, &rx_addr, &tx_addr, &fc_opts, K_FOREVER);
@@ -108,7 +109,7 @@ void can_rx_thread()
             if (resp_len > 0) {
                 static struct isotp_send_ctx send_ctx;
                 int ret = isotp_send(&send_ctx, can_dev, tx_buffer, resp_len,
-                            &tx_addr, &rx_addr, send_complette_cb, NULL);
+                            &recv_ctx.tx_addr, &recv_ctx.rx_addr, send_complette_cb, NULL);
                 if (ret != ISOTP_N_OK) {
                     LOG_DBG("Error while sending data to ID %d [%d]", tx_addr.ext_id, ret);
                 }
@@ -149,7 +150,7 @@ void can_pub_thread()
         if (pub_can_enable) {
             int data_len = 0;
             int start_pos = 0;
-            while ((data_len = ts.bin_pub_can(start_pos, PUB_CAN, ts_can_node_id, can_id, can_data))
+            while ((data_len = ts.bin_pub_can(start_pos, PUB_CAN, can_node_addr, can_id, can_data))
                      != -1)
             {
                 struct zcan_frame frame = {0};

@@ -53,7 +53,7 @@ bool pub_serial_enable = false;
 
 #if CONFIG_THINGSET_CAN
 bool pub_can_enable = false;
-uint16_t ts_can_node_id = CONFIG_THINGSET_CAN_DEFAULT_NODE_ID;
+uint16_t can_node_addr = CONFIG_THINGSET_CAN_DEFAULT_NODE_ID;
 #endif
 
 /**
@@ -201,7 +201,7 @@ static DataNode data_nodes[] = {
 #endif
 
 #if CONFIG_THINGSET_CAN
-    TS_NODE_UINT16(0x59, "CanNodeId", &ts_can_node_id,
+    TS_NODE_UINT16(0x59, "CanNodeId", &can_node_addr,
         ID_CONF, TS_ANY_R | TS_ANY_W, PUB_NVM),
 #endif
 
