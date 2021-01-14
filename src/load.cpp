@@ -125,6 +125,10 @@ void LoadOutput::control()
             flags_clear(&error_flags, ERR_LOAD_OVERVOLTAGE);
         }
 
+        if (flags_check(&error_flags, ERR_LOAD_BUS_SRC_CURRENT) && bus->src_current_margin < 0) {
+            flags_clear(&error_flags, ERR_LOAD_BUS_SRC_CURRENT);
+        }
+
         if (flags_check(&error_flags, ERR_LOAD_SHORT_CIRCUIT) && enable == false) {
             // stay here until the charge controller is reset or load is manually switched off
             flags_clear(&error_flags, ERR_LOAD_SHORT_CIRCUIT);

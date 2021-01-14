@@ -84,6 +84,10 @@ public:
     /**
      * Available additional current from the DC bus until limits of the connected ports are reached
      * (has a negative sign)
+     *
+     * If for example a battery connected to the bus is not allowed to be discharged anymore, but
+     * we still get power via solar, current up to the amount of solar input can be diverted into
+     * the load (until the margin gets 0 and the battery would be discharged).
      */
     float src_current_margin;
 
