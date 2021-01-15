@@ -1,0 +1,207 @@
+/*
+ * Copyright (c) 2017 Linaro Limited
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/dts-v1/;
+#include <st/f3/stm32f334X8.dtsi>
+#include <st/f3/stm32f334r(6-8)tx-pinctrl.dtsi>
+#include "arduino_r3_connector.dtsi"
+
+/ {
+	model = "STMicroelectronics STM32F334R8-NUCLEO board";
+	compatible = "st,stm32f334r8-nucleo";
+
+	pcb {
+		compatible = "charge-controller";
+
+		type = "MPPT 2420 HC";
+		version-str = "v0.1";
+		version-num = <1>;
+
+		hs-voltage-max = <80>;
+		ls-voltage-max = <32>;
+	};
+
+	dcdc {
+		compatible = "dcdc";
+		timer = <&timers1>;
+		pwm-frequency = <70000>;
+		pwm-deadtime = <300>;
+		current-max = <20>;
+	};
+
+	chosen {
+		zephyr,console = &usart2;
+		zephyr,shell-uart = &usart2;
+		zephyr,sram = &sram0;
+		zephyr,flash = &flash0;
+	};
+
+	/* temporary solution w/o using RGB LED */
+	leds {
+		compatible = "charlieplexing-leds";
+		gpios = <&gpiob 14 GPIO_ACTIVE_LOW>,	/* red */
+			<&gpiob 15 GPIO_ACTIVE_LOW>,	/* green */
+			<&gpiob 9 GPIO_ACTIVE_LOW>;	/* blue */
+
+		pwr {
+			states = <1 0 0>;
+		};
+
+		load {
+			states = <0 1 0>;
+		};
+
+		rxtx {
+			states = <0 0 1>;
+		};
+	};
+
+	outputs {
+		compatible = "outputs";
+
+		load {
+			label = "Load output";
+			gpios = <&gpiob 2 GPIO_ACTIVE_LOW>;
+			current-max = <20>;
+			kconfig-flag;	/* make node visible in Kconfig */
+		};
+
+		can_en {
+			label = "CAN disable / standby";
+			gpios = <&gpiob 11 GPIO_ACTIVE_LOW>;
+		};
+	};
+
+	adc-inputs {
+		compatible = "adc-inputs";
+
+		v-low {
+			io-channels = <&adc1 12>;
+			multiplier = <105600>;
+			divider = <5600>;
+		};
+
+		v-high {
+			io-channels = <&adc1 15>;
+			multiplier = <102200>;
+			divider = <2200>;
+		};
+
+		temp-fets {
+			io-channels = <&adc1 11>;
+			multiplier = <10000>;	// 10k NTC series resistor
+			divider = <1>;
+		};
+
+		vref-mcu {
+			io-channels = <&adc1 18>;
+			multiplier = <1>;
+			divider = <1>;
+		};
+
+		temp-mcu {
+			io-channels = <&adc1 16>;
+			multiplier = <1>;
+			divider = <1>;
+		};
+
+		i-dcdc {
+			io-channels = <&adc1 1>;
+			// amp gain: 25, resistor: 2 mOhm
+			multiplier = <1000>;	// 1000
+			divider = <50>;	// 2*25
+		};
+
+		i-load {
+			io-channels = <&adc1 2>;
+			// amp gain: 25, resistor: 2 mOhm
+			multiplier = <1000>;	// 1000
+			divider = <50>;	// 2*25
+		};
+	};
+
+	leds2 {
+		compatible = "gpio-leds";
+		green_led_2: led_2 {
+			gpios = <&gpioa 5 GPIO_ACTIVE_HIGH>;
+			label = "User LD2";
+		};
+	};
+
+	gpio_keys {
+		compatible = "gpio-keys";
+		user_button: button {
+			label = "User";
+			gpios = <&gpioc 13 GPIO_ACTIVE_LOW>;
+		};
+	};
+
+	aliases {
+		led0 = &green_led_2;
+		sw0 = &user_button;
+	};
+};
+
+&usart1 {
+	pinctrl-0 = <&usart1_tx_pa9 &usart1_rx_pa10>;
+	current-speed = <115200>;
+	status = "okay";
+};
+
+&usart2 {
+	pinctrl-0 = <&usart2_tx_pa2 &usart2_rx_pa3>;
+	current-speed = <115200>;
+	status = "okay";
+};
+
+&usart3 {
+	pinctrl-0 = <&usart3_tx_pb10 &usart3_rx_pb11>;
+	current-speed = <115200>;
+};
+
+&i2c1 {
+	pinctrl-0 = <&i2c1_scl_pb8 &i2c1_sda_pb9>;
+	status = "okay";
+	clock-frequency = <I2C_BITRATE_FAST>;
+};
+
+&spi1 {
+	pinctrl-0 = <&spi1_nss_pa4 &spi1_sck_pa5
+		     &spi1_miso_pa6 &spi1_mosi_pa7>;
+	status = "okay";
+};
+
+&timers1 {
+	status = "okay";
+
+	pwm1: pwm {
+		status = "okay";
+		pinctrl-0 = <&tim1_ch1_pa8>;
+	};
+};
+
+&rtc {
+	status = "okay";
+};
+
+&iwdg {
+	status = "okay";
+};
+
+&flash0 {
+
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		/* Set 6Kb of storage at the end of the 64Kb of flash */
+		storage_partition: partition@e800 {
+			label = "storage";
+			reg = <0x0000e800 0x00001800>;
+		};
+	};
+};
