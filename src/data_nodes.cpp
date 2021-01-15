@@ -22,7 +22,8 @@ LOG_MODULE_REGISTER(data_nodes, CONFIG_DATA_NODES_LOG_LEVEL);
 // can be used to configure custom data objects in separate file instead
 // (e.g. data_nodes_custom.cpp)
 #ifndef CONFIG_CUSTOM_DATA_NODES_FILE
-
+#include <soc.h>
+#include <stm32_ll_utils.h>
 #include "thingset.h"
 #include "hardware.h"
 #include "dcdc.h"
@@ -32,6 +33,9 @@ const char manufacturer[] = "Libre Solar";
 const char device_type[] = DT_PROP(DT_PATH(pcb), type);
 const char hardware_version[] = DT_PROP(DT_PATH(pcb), version_str);
 const char firmware_version[] = FIRMWARE_VERSION_ID;
+const char* const firmware_commit = COMMIT_HASH;
+uint32_t flash_size = LL_GetFlashSize();
+uint32_t page_size = FLASH_PAGE_SIZE;
 char device_id[9];
 
 static char auth_password[11];
@@ -87,6 +91,12 @@ static DataNode data_nodes[] = {
 
     TS_NODE_UINT32(0x20, "Timestamp_s", &timestamp,
         ID_INFO, TS_ANY_R | TS_ANY_W, PUB_NVM),
+
+    TS_NODE_UINT32(0x21, "FlashSize_kb", &flash_size,
+        ID_INFO, TS_ANY_R | TS_ANY_W, PUB_SER | PUB_NVM),
+
+    TS_NODE_UINT32(0x22, "FlashPageSize_kb", &page_size,
+        ID_INFO, TS_ANY_R | TS_ANY_W, PUB_SER | PUB_NVM),
 
     // CONFIGURATION //////////////////////////////////////////////////////////
     // using IDs >= 0x30 except for high priority data objects
