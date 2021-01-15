@@ -22,7 +22,7 @@
 
 #include "dcdc.h"       // for low-level control function called by DMA
 
-#if defined(CONFIG_SOC_SERIES_STM32F0X) || defined(CONFIG_SOC_SERIES_STM32L0X)
+#if defined(CONFIG_SOC_SERIES_STM32F0X) || defined(CONFIG_SOC_SERIES_STM32L0X) || defined(CONFIG_SOC_SERIES_STM32F3X)
 
 // automatic channel selection based on devicetree settings
 #define ADC_CHSEL_FN(node_id) (1UL << DT_PHA(node_id, io_channels, input)) |

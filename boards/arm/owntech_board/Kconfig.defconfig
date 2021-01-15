@@ -3,13 +3,12 @@
 # Copyright (c) 2016 RnDity Sp. z o.o.
 # SPDX-License-Identifier: Apache-2.0
 
-if BOARD_NUCLEO_F334R8
+if BOARD_OWNTECH
 
 config BOARD
-	default "nucleo_f334r8"
+	default "owntech_board"
 
-config SPI_STM32_INTERRUPT
-	default y
-	depends on SPI
+config LIBRE_SOLAR_TYPE_ID
+	default 0
 
 endif # BOARD_NUCLEO_F334R8

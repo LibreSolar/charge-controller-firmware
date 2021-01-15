@@ -140,8 +140,10 @@
 	};
 
 	aliases {
-		led0 = &green_led_2;
-		sw0 = &user_button;
+		uart-dbg = &usart1;
+		uart-uext = &usart3;
+		spi-uext = &spi1;
+		i2c-uext = &i2c1;
 	};
 };
 

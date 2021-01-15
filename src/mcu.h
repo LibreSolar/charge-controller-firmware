@@ -23,7 +23,7 @@
 
 // factory calibration values for internal voltage reference and temperature sensor
 // (see MCU datasheet, not Reference Manual)
-#if defined(CONFIG_SOC_SERIES_STM32F0X)
+#if defined(CONFIG_SOC_SERIES_STM32F0X) || defined(CONFIG_SOC_SERIES_STM32F3X)
     #define VREFINT_CAL (*((uint16_t *)0x1FFFF7BA)) // VREFINT @3.3V/30°C
     #define VREFINT_VALUE 3300 // mV
     #define TSENSE_CAL1 (*((uint16_t *)0x1FFFF7B8))

@@ -3,6 +3,6 @@
 # Copyright (c) 2016 RnDity Sp. z o.o.
 # SPDX-License-Identifier: Apache-2.0
 
-config BOARD_NUCLEO_F334R8
-	bool "NUCLEO-64 F334R8 Development Board"
+config BOARD_OWNTECH
+	bool "Owntech Board"
 	depends on SOC_STM32F334X8
