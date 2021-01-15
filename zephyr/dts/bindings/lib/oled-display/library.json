@@ -1,0 +1,21 @@
+{
+  "name": "OledDisplay",
+  "keywords": "oled, display, ssd1306",
+  "description": "Library for SSD1306 OLED displays based on Adafruit GFX",
+  "repository":
+  {
+    "type": "git",
+    "url": "https://github.com/LibreSolar/oled-display-library"
+  },
+  "authors":
+  [
+    {
+      "name": "Martin Jäger",
+      "url": "http://libre.solar",
+      "maintainer": true
+    }
+  ],
+  "version": "0.1.0",
+  "frameworks": ["mbed", "zephyr"],
+  "platforms": "*"
+}

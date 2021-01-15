@@ -1,0 +1,32 @@
+language: python
+
+# Cache PlatformIO packages using Travis CI container-based infrastructure
+sudo: false
+cache:
+    directories:
+        - "~/.platformio"
+
+env:
+    - PLATFORMIO_CI_SRC=src
+
+install:
+    - pip install -U platformio
+    - platformio update
+
+addons:
+    apt:
+        packages:
+            - doxygen
+
+script:
+    - platformio test -e native-std
+    - doxygen Doxyfile
+
+deploy:
+    provider: pages
+    skip_cleanup: true
+    local_dir: html
+    github_token: $GH_REPO_TOKEN
+    on:
+        branch: master
+
