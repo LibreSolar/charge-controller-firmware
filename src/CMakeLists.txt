@@ -20,6 +20,7 @@ target_sources(app PRIVATE
         pwm_switch_driver.c
         pwm_switch.cpp
         setup.cpp
+        hrtim.c
 )
 
 add_subdirectory(ext)
