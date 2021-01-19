@@ -7,7 +7,6 @@
 /dts-v1/;
 #include <st/f3/stm32f334X8.dtsi>
 #include <st/f3/stm32f334r(6-8)tx-pinctrl.dtsi>
-#include "arduino_r3_connector.dtsi"
 
 / {
 	model = "STMicroelectronics STM32F334R8-NUCLEO board";
@@ -62,6 +61,13 @@
 
 	outputs {
 		compatible = "outputs";
+
+		pwm_switch {
+			label = "PWM power switch (solar panel)";
+			pwms = <&pwm3 2 (20*1000*1000) PWM_POLARITY_NORMAL>; /* 20 ms period = 50 Hz */
+			current-max = <20>;
+			kconfig-flag;	/* make node visible in Kconfig */
+		};
 
 		load {
 			label = "Load output";
@@ -155,7 +161,7 @@
 };
 
 &usart2 {
-	pinctrl-0 = <&usart2_tx_pa2 &usart2_rx_pa3>;
+	pinctrl-0 = <&usart2_tx_pb3 &usart2_rx_pb4>;
 	current-speed = <115200>;
 	status = "okay";
 };
@@ -181,6 +187,15 @@
 &timers1 {
 	status = "okay";
 	pinctrl-0 = <&tim1_ch1_pa8 &tim1_ch1n_pa11>;
+};
+
+/* TIM3 (CH2) used for PWM power switch */
+&timers3 {
+	status = "okay";
+	pwm3: pwm {
+		status = "okay";
+		pinctrl-0 = <&tim3_ch2_pc7>;
+	};
 };
 
 
