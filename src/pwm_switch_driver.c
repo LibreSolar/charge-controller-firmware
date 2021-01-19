@@ -191,8 +191,8 @@ void pwm_signal_init_registers(int freq_Hz)
     // setup complementary outputs
     hrtim_set_cb_set(tim, TIMA, OUT1, MSTPER);
     hrtim_rst_cb_set(tim, TIMA, OUT1, MSTCMP1);
-    hrtim_set_cb_set(tim, TIMC, OUT2, MSTCMP1);
-    hrtim_rst_cb_set(tim, TIMC, OUT2, MSTPER);
+    hrtim_set_cb_set(tim, TIMC, OUT1, MSTCMP1);
+    hrtim_rst_cb_set(tim, TIMC, OUT1, MSTPER);
 
     // reset on master timer period event
     hrtim_rst_evt_en(tim, TIMA, RST_MSTPER);
@@ -223,7 +223,7 @@ void pwm_signal_start(float pwm_duty)
 {
     pwm_signal_set_duty_cycle(pwm_duty);
     hrtim_out_en(tim, TIMA, OUT1);
-    hrtim_out_en(tim, TIMC, OUT2);
+    hrtim_out_en(tim, TIMC, OUT1);
     _pwm_active = true;
 }
 
@@ -231,7 +231,7 @@ void pwm_signal_start(float pwm_duty)
 void pwm_signal_stop()
 {
     hrtim_out_dis(tim, TIMA, OUT1);
-    hrtim_out_dis(tim, TIMC, OUT2);
+    hrtim_out_dis(tim, TIMC, OUT1);
     _pwm_active = false;
 }
 
