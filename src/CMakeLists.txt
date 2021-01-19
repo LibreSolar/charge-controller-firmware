@@ -3,23 +3,24 @@
 zephyr_include_directories(.)
 
 target_sources(app PRIVATE
-        bat_charger.cpp
-        data_nodes.cpp
-        daq.cpp
-        daq_driver.c
-        device_status.cpp
-        dcdc.cpp
-        eeprom.cpp
-        half_bridge.cpp
-        hardware.cpp
-        leds.cpp
-        load.cpp
-        load_driver.c
-        main.cpp
-        power_port.cpp
+        #~ bat_charger.cpp
+        #~ data_nodes.cpp
+        #~ daq.cpp
+        #~ daq_driver.c
+        #~ device_status.cpp
+        #~ dcdc.cpp
+        #~ eeprom.cpp
+        #~ half_bridge.cpp
+        #~ hardware.cpp
+        #~ leds.cpp
+        #~ load.cpp
+        #~ load_driver.c
+        #~ main.cpp
+        #~ power_port.cpp
         pwm_switch_driver.c
-        pwm_switch.cpp
-        setup.cpp
+        #~ pwm_switch.cpp
+        #~ setup.cpp
+        main.c
         hrtim.c
 )
 
