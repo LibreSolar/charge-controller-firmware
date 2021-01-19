@@ -154,7 +154,11 @@ bool pwm_active()
  * HRTIM have a master timer and 5 slave timing units (tu) with two outputs each. Pinout of f334r8
  * and f072rb are the same. PWM_HS is on PA8 (TIMA OUT1) and PWM_LS is on PB13 (TIMC OUT2).
  */
-static HRTIM_TypeDef *tim = HRTIM1;
+//~ static HRTIM_TypeDef *tim = HRTIM1;
+static hrtim_t tim = 0;
+
+static bool _pwm_active;
+static int _pwm_resolution;
 
 static uint16_t _crossbar_value;
 
@@ -191,8 +195,8 @@ void pwm_signal_init_registers(int freq_Hz)
     hrtim_rst_cb_set(tim, TIMC, OUT2, MSTPER);
 
     // reset on master timer period event
-    hrtim_rst_evt_en(hrtim, TIMA, RST_MSTPER);
-    hrtim_rst_evt_en(hrtim, TIMC, RST_MSTPER);
+    hrtim_rst_evt_en(tim, TIMA, RST_MSTPER);
+    hrtim_rst_evt_en(tim, TIMC, RST_MSTPER);
 }
 
 void pwm_signal_set_duty_cycle(float duty)
@@ -204,19 +208,16 @@ void pwm_signal_set_duty_cycle(float duty)
 void pwm_signal_duty_cycle_step(int delta)
 {
     uint16_t cb_new = _crossbar_value + delta;
-    uint16_t phase_shift = 0;
-    if (cb_new <= _pwm_resolution && ccr_new >= 0) {
+    if (cb_new <= _pwm_resolution && cb_new >= 0) {
         hrtim_cmp_set(tim, MSTR, MCMP1R, cb_new);
         _crossbar_value = cb_new;
     }
 }
 
-
 float pwm_signal_get_duty_cycle()
 {
     return (float)(_crossbar_value) / _pwm_resolution;
 }
-
 
 void pwm_signal_start(float pwm_duty)
 {
@@ -237,7 +238,8 @@ void pwm_signal_stop()
 // Read the current high or low state of the PWM signal
 bool pwm_signal_high()
 {
-    return PWM_GPIO_PIN_HIGH;
+    //~ return PWM_GPIO_PIN_HIGH;
+    return 0;
 }
 
 // Read the general on/off status of PWM switching
