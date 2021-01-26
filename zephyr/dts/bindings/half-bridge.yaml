@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2021 Martin Jäger / Libre Solar
+
+description: Half bridge, consisting of two coupled PWM outputs
+
+compatible: "half-bridge"
+
+include: base.yaml
+
+properties:
+    frequency:
+      type: int
+      required: true
+      description: PWM frequency in Hz
+
+    deadtime:
+      type: int
+      required: true
+      description: Dead time for synchronous PWM generation in nanoseconds
+
+    pinctrl-0:
+      type: phandles
+      required: false
+      description: |
+        GPIO pin configuration for PWM signal/s. We expect that the phandles
+        will reference pinctrl nodes, e.g.
+
+           pinctrl-0 = <&tim1_ch1_pwm_pa8 &tim1_ch2_pwm_pa9>;

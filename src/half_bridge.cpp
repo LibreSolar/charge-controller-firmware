@@ -16,11 +16,14 @@
 #ifndef UNIT_TEST
 #include <soc.h>
 #include <pinmux/stm32/pinmux_stm32.h>
-
-#define DT_DRV_COMPAT st_stm32_timers
 #endif
 
 #if BOARD_HAS_DCDC
+
+#define DT_DRV_COMPAT half_bridge
+
+// Get address of used timer from board dts
+#define TIMER_ADDR DT_REG_ADDR(DT_PARENT(DT_DRV_INST(0)))
 
 static uint16_t tim_ccr_min;        // capture/compare register min/max
 static uint16_t tim_ccr_max;
@@ -42,16 +45,13 @@ static uint16_t clamp_ccr(uint16_t ccr_target)
 
 #ifndef UNIT_TEST
 
-// Get address of used timer from board dts
-#define PWM_TIMER_ADDR DT_REG_ADDR(DT_PHANDLE(DT_PATH(dcdc), timer))
+static const struct soc_gpio_pinctrl tim_pinctrl[] = ST_STM32_DT_INST_PINCTRL(0, 0);
 
-#if PWM_TIMER_ADDR == TIM3_BASE
-
-static const struct soc_gpio_pinctrl tim_pinctrl[] = ST_STM32_DT_PINCTRL(timers3, 0);
+#if TIMER_ADDR == TIM3_BASE
 
 static void tim_init_registers(int freq_kHz)
 {
-    stm32_dt_pinctrl_configure(tim_pinctrl, ARRAY_SIZE(tim_pinctrl), PWM_TIMER_ADDR);
+    stm32_dt_pinctrl_configure(tim_pinctrl, ARRAY_SIZE(tim_pinctrl), TIMER_ADDR);
 
     // Enable TIM3 clock
     RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;
@@ -124,13 +124,11 @@ bool half_bridge_enabled()
     return TIM3->CCER & TIM_CCER_CC3E;
 }
 
-#elif PWM_TIMER_ADDR == TIM1_BASE
-
-static const struct soc_gpio_pinctrl tim_pinctrl[] = ST_STM32_DT_PINCTRL(timers1, 0);
+#elif TIMER_ADDR == TIM1_BASE
 
 static void tim_init_registers(int freq_kHz)
 {
-    stm32_dt_pinctrl_configure(tim_pinctrl, ARRAY_SIZE(tim_pinctrl), PWM_TIMER_ADDR);
+    stm32_dt_pinctrl_configure(tim_pinctrl, ARRAY_SIZE(tim_pinctrl), TIMER_ADDR);
 
     // Enable TIM1 clock
     RCC->APB2ENR |= RCC_APB2ENR_TIM1EN;
