@@ -18,10 +18,13 @@
 #define DT_N_S_pcb_P_mosfets_tj_max 120
 #define DT_N_S_pcb_P_mosfets_tau_ja 5
 
-#define DT_N_S_dcdc_EXISTS 1
-#define DT_N_S_dcdc_P_pwm_frequency 70000
-#define DT_N_S_dcdc_P_pwm_deadtime 300
-#define DT_N_S_dcdc_P_current_max 20
+#define DT_N_S_pcb_P_dcdc_current_max 20
+#define DT_N_S_pcb_P_dcdc_current_max_EXISTS 1
+
+#define DT_COMPAT_HAS_OKAY_half_bridge 1
+#define DT_N_INST_0_half_bridge DT_N_S_soc_S_timers_40016800_S_halfbridge
+#define DT_N_S_soc_S_timers_40016800_S_halfbridge_P_frequency 70000
+#define DT_N_S_soc_S_timers_40016800_S_halfbridge_P_deadtime 300
 
 #define DT_N_S_outputs_S_pwm_switch_EXISTS 1
 #define DT_N_S_outputs_S_pwm_switch_P_current_max 20

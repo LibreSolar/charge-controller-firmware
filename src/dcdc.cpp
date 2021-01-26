@@ -40,7 +40,7 @@ Dcdc::Dcdc(DcBus *high, DcBus *low, DcdcOperationMode op_mode)
     mode           = op_mode;
     enable         = true;
     state          = DCDC_CONTROL_OFF;
-    inductor_current_max = DT_PROP(DT_PATH(dcdc), current_max);
+    inductor_current_max = DT_PROP(DT_PATH(pcb), dcdc_current_max);
     hs_voltage_max = DT_PROP(DT_PATH(pcb), hs_voltage_max);
     ls_voltage_max = DT_PROP(DT_PATH(pcb), ls_voltage_max);
     ls_voltage_min = 9.0;
@@ -50,8 +50,8 @@ Dcdc::Dcdc(DcBus *high, DcBus *low, DcdcOperationMode op_mode)
     pwm_delta = 1;                // start-condition of duty cycle pwr_inc_pwm_direction
 
     // lower duty limit might have to be adjusted dynamically depending on LS voltage
-    half_bridge_init(DT_PROP(DT_PATH(dcdc), pwm_frequency) / 1000,
-        DT_PROP(DT_PATH(dcdc), pwm_deadtime), 12 / hs_voltage_max, 0.97);
+    half_bridge_init(DT_PROP(DT_INST(0, half_bridge), frequency) / 1000,
+        DT_PROP(DT_INST(0, half_bridge), deadtime), 12 / hs_voltage_max, 0.97);
 }
 
 int Dcdc::perturb_observe_controller()

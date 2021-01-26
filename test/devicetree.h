@@ -39,8 +39,13 @@
 #define DT_PROP_BY_PHANDLE(node_id, ph, prop) \
 	DT_PROP_BY_PHANDLE_IDX(node_id, ph, 0, prop)
 
+#define DT_HAS_COMPAT_STATUS_OKAY(compat) \
+	IS_ENABLED(DT_CAT(DT_COMPAT_HAS_OKAY_, compat))
+
 /*
  * Simplified mocks for certain macros from devicetree.h
  */
+
+#define DT_INST(inst, compat) UTIL_CAT(DT_N_INST_, UTIL_CAT(inst, UTIL_CAT(_, compat)))
 
 #define DT_PATH(node) UTIL_CAT(DT_N_S_, node)

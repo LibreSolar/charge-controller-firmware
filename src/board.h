@@ -15,7 +15,7 @@
 
 #include <zephyr.h>
 
-#define BOARD_HAS_DCDC          DT_NODE_EXISTS(DT_PATH(dcdc))
+#define BOARD_HAS_DCDC          DT_HAS_COMPAT_STATUS_OKAY(half_bridge)
 #define BOARD_HAS_PWM_PORT      DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), pwm_switch))
 #define BOARD_HAS_LOAD_OUTPUT   DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
 #define BOARD_HAS_USB_OUTPUT    DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), usb_pwr))

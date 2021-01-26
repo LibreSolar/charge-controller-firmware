@@ -21,14 +21,7 @@
 
 		hs-voltage-max = <55>;
 		ls-voltage-max = <32>;
-	};
-
-	dcdc {
-		compatible = "dcdc";
-		timer = <&timers1>;
-		pwm-frequency = <70000>;
-		pwm-deadtime = <300>;
-		current-max = <20>;
+		dcdc-current-max = <20>;
 	};
 
 	chosen {
@@ -201,7 +194,13 @@
 
 &timers1 {
 	status = "okay";
-	pinctrl-0 = <&tim1_ch1_pa8 &tim1_ch1n_pb13>;
+
+	halfbridge {
+		compatible = "half-bridge";
+		pinctrl-0 = <&tim1_ch1_pa8 &tim1_ch1n_pb13>;
+		frequency = <70000>;
+		deadtime = <300>;
+	};
 };
 
 &can1 {

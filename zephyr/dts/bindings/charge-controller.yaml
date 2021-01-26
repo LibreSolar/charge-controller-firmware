@@ -26,6 +26,9 @@ properties:
     type: int
     required: true
     description: Maximum voltage at low-side (typically battery) in volts
+  dcdc-current-max:
+    type: int
+    description: Maximum inductor current in amps (if existing in the charge controller)
   internal-tref-max:
     type: int
     default: 50

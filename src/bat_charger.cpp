@@ -27,7 +27,7 @@ extern LoadOutput load;
 #if BOARD_HAS_LOAD_OUTPUT
 #define DISCHARGE_CURRENT_MAX DT_PROP(DT_CHILD(DT_PATH(outputs), load), current_max)
 #else
-#define DISCHARGE_CURRENT_MAX DT_PROP(DT_PATH(dcdc), current_max)
+#define DISCHARGE_CURRENT_MAX DT_PROP(DT_PATH(pcb), dcdc_current_max)
 #endif
 
 void battery_conf_init(BatConf *bat, int type, int num_cells, float nominal_capacity)
