@@ -18,10 +18,12 @@ Releases are generated from master after significant changes have been made. The
 
 The software is configurable to support different charge controller PCBs with STM32F072, low-power STM32L072 or most recent STM32G431 MCUs:
 
-- [Libre Solar MPPT 2420 HC](https://github.com/LibreSolar/mppt-2420-hc)
-- [Libre Solar MPPT 2420 LC](https://github.com/LibreSolar/mppt-2420-lc)
-- [Libre Solar MPPT 1210 HUS](https://github.com/LibreSolar/mppt-1210-hus)
-- [Libre Solar PWM 2420 LUS](https://github.com/LibreSolar/pwm-2420-lus)
+| Board                                               | Default revision | Older revisions |
+|-----------------------------------------------------|------------------|-----------------|
+| [Libre Solar MPPT 2420 HC](https://github.com/LibreSolar/mppt-2420-hc)      | 0.1  |     |
+| [Libre Solar MPPT 2420 LC](https://github.com/LibreSolar/mppt-2420-lc)      | 0.10 |     |
+| [Libre Solar MPPT 1210 HUS](https://github.com/LibreSolar/mppt-1210-hus)    | 0.7  | 0.4 |
+| [Libre Solar PWM 2420 LUS](https://github.com/LibreSolar/pwm-2420-lus)      | 0.3  | 0.2 |
 
 ## Building and flashing the firmware
 
@@ -41,7 +43,7 @@ It is suggested to use Visual Studio Code and PlatformIO for firmware developmen
 
 2. Adjust configuration in `zephyr/prj.conf` if necessary.
 
-3. Select the correct board in `platformio.ini` by removing the comment before the board name under `[platformio]` or create a file `custom.ini` with your personal settings.
+3. Select the correct board in `platformio.ini` by removing the comment before the board name under `[platformio]` or create a file `custom.ini` with your personal settings. PlatformIO is configured for latest revision of the boards (see table above). For older revisions adjust `platformio.ini` and the `.json` files in `boards` folder manually or use native Zephyr environment.
 
 4. Connect the board via a programmer. See the Libre Solar website for [further project-agnostic instructions](http://libre.solar/docs/flashing).
 
@@ -65,9 +67,11 @@ The CMake entry point is in the `zephyr` subfolder, so you need to run `west bui
 
         cd zephyr
 
-Initial board selection (see `boards subfolder for correct names):
+Initial board selection (see `boards` subfolder for correct names):
 
-        west build -b <board-name>
+        west build -b <board-name>@<revision>
+
+The appended `@<revision>` specifies the board version according to the above table. It can be omitted if only a single board revision is available or if the default (most recent) version should be used. See also [here](https://docs.zephyrproject.org/latest/application/index.html#application-board-version) for more details regarding board revision handling in Zephyr.
 
 Flash with specific debug probe (runner), e.g. J-Link:
 
@@ -126,9 +130,7 @@ In Zephyr, all hardware-specific configuration is described in the [devicetree](
 
 The file `boards/arm/board_name/board_name.dts` contains the default devicetree specification (DTS) for a board. It is based on the DTS of the used MCU, which is included from the main Zephyr repository.
 
-In order to overwrite the default configuration, so-called overlays can be used. An overlay file can be specified via the west command line. If it is stored as `board_name.overlay` in the `zephyr` subfolder, it will be recognized automatically when building the firmware for that board (also with PlatformIO).
-
-In order to support older board versions (e.g. with changed pins), some overlays with appended version numbers are already existing as a template. Remove the version number (e.g. `_0v4`) to "activate" them.
+In order to overwrite the default devicetree specification, so-called overlays can be used. An overlay file can be specified via the west command line. If it is stored as `board_name.overlay` in the `zephyr` subfolder, it will be recognized automatically when building the firmware for that board (also with PlatformIO).
 
 ### Application firmware configuration
 

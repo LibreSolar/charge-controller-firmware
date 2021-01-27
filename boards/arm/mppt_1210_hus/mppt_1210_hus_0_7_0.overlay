@@ -1,0 +1,12 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Copyright (c) 2021 Martin Jäger / Libre Solar
+ */
+
+/ {
+	pcb {
+		version-str = "v0.7.1";
+		version-num = <7>;		// minor version .1 includes no HW change
+	};
+};
