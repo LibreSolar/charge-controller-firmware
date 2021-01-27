@@ -1,0 +1,68 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Copyright (c) 2021 Martin Jäger / Libre Solar
+ */
+
+/ {
+	pcb {
+		version-str = "v0.1";
+		version-num = <1>;
+	};
+
+	/* temporary solution w/o using RGB LED */
+	leds {
+		compatible = "charlieplexing-leds";
+		gpios = <&gpiob 14 GPIO_ACTIVE_LOW>,	/* red */
+			<&gpiob 15 GPIO_ACTIVE_LOW>,	/* green */
+			<&gpiob 9 GPIO_ACTIVE_LOW>;	/* blue */
+
+		pwr {
+			states = <1 0 0>;
+		};
+
+		load {
+			states = <0 1 0>;
+		};
+
+		rxtx {
+			states = <0 0 1>;
+		};
+	};
+};
+
+&i2c1 {
+	eeprom@50 {
+		// Microchip 24AA32A
+		compatible = "atmel,at24";
+		reg = <0x50>;
+		label = "EEPROM_0";
+		size = <32768>;
+		pagesize = <32>;
+		address-width = <16>;
+		/*
+		 * timeout of 5 ms as suggested in datasheet seems too optimistic
+		 * (several write errors occured during testing)
+		 */
+		timeout = <7>;
+	};
+};
+
+&spi1 {
+	pinctrl-0 = <&spi1_sck_pb3 &spi1_miso_pb4 &spi1_mosi_pb5>;
+	cs-gpios = <&gpiob 6 GPIO_ACTIVE_LOW>;
+	status = "okay";
+};
+
+&timers1 {
+	halfbridge {
+		pinctrl-0 = <&tim1_ch1_pa8 &tim1_ch1n_pb13>;
+	};
+};
+
+&spi2 {
+	status = "disabled";
+
+	/delete-node/ pinctrl-0;
+	/delete-node/ cs-gpios;
+};

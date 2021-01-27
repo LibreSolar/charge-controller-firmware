@@ -1,0 +1,81 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Copyright (c) 2021 Martin Jäger / Libre Solar
+ */
+
+/ {
+	pcb {
+		version-str = "v0.2";
+		version-num = <2>;
+	};
+
+	chosen {
+		zephyr,code-partition = &slot0_partition;
+	};
+};
+
+&spi2 {
+	w25q80dv: w25q80dv@0 {
+		compatible = "jedec,spi-nor";
+		label = "W25Q80DV";
+		reg = <0>;
+		spi-max-frequency = <4000000>;
+		size = <0x800000>; /* bits */
+		has-dpd;
+		t-enter-dpd = <4000>;
+		t-exit-dpd = <25000>;
+		jedec-id = [ef 40 14];
+	};
+};
+
+/*
+ * Below partition layout allows to use MCUboot if CONFIG_BOOTLOADER_MCUBOOT is enabled. Otherwise,
+ * the code will just use the entire available flash of the MCU.
+ */
+&flash0 {
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		/* bootloader slot: 32 KiB */
+		boot_partition: partition@0 {
+			label = "mcuboot";
+			reg = <0x00000000 0x8000>;
+			read-only;
+		};
+
+		/* application image slot: 96 KiB */
+		slot0_partition: partition@8000 {
+			label = "image-0";
+			reg = <0x00008000 0x18000>;
+		};
+	};
+};
+
+&w25q80dv {
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		/* backup slot: 96 KiB */
+		slot1_partition: partition@0 {
+			label = "image-1";
+			reg = <0x00000000 0x18000>;
+		};
+
+		/* swap slot: 96 KiB */
+		scratch_partition: partition@18000 {
+			label = "image-scratch";
+			reg = <0x00018000 0x00018000>;
+		};
+
+		/* remaining 832 KiB of SPI flash used as storage */
+		storage_partition: partition@30000 {
+			label = "storage";
+			reg = <0x00030000 0x000D0000>;
+		};
+	};
+};

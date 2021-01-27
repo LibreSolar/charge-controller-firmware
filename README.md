@@ -20,7 +20,7 @@ The software is configurable to support different charge controller PCBs with ST
 
 | Board                                               | Default revision | Older revisions |
 |-----------------------------------------------------|------------------|-----------------|
-| [Libre Solar MPPT 2420 HC](https://github.com/LibreSolar/mppt-2420-hc)      | 0.1  |     |
+| [Libre Solar MPPT 2420 HC](https://github.com/LibreSolar/mppt-2420-hc)      | 0.2  | 0.1 |
 | [Libre Solar MPPT 2420 LC](https://github.com/LibreSolar/mppt-2420-lc)      | 0.10 |     |
 | [Libre Solar MPPT 1210 HUS](https://github.com/LibreSolar/mppt-1210-hus)    | 0.7  | 0.4 |
 | [Libre Solar PWM 2420 LUS](https://github.com/LibreSolar/pwm-2420-lus)      | 0.3  | 0.2 |
