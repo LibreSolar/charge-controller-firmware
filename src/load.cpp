@@ -7,8 +7,9 @@
 #include "load.h"
 
 #include <zephyr.h>
+#include "board.h"
 
-#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load)) || UNIT_TEST
+#if BOARD_HAS_LOAD_OUTPUT || UNIT_TEST
 
 #include "leds.h"
 #include "device_status.h"
@@ -171,4 +172,4 @@ void load_short_circuit_stop()
     load.stop(ERR_LOAD_SHORT_CIRCUIT);
 }
 
-#endif /* DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load)) */
+#endif /* BOARD_HAS_LOAD_OUTPUT */

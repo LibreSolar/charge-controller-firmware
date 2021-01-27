@@ -93,7 +93,7 @@ void oled_update()
     }
 
     // solar panel data
-#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), pwm_switch))
+#if BOARD_HAS_PWM_PORT
     if (pwm_switch.active()) {
 #else
     if (half_bridge_enabled()) {
@@ -108,7 +108,7 @@ void oled_update()
         len = snprintf(buf, sizeof(buf), "n/a");
         oled.writeString(buf, len);
     }
-#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), pwm_switch))
+#if BOARD_HAS_PWM_PORT
     if (in_terminal.bus->voltage > bat_terminal.bus->voltage)
 #endif
     {
@@ -146,7 +146,7 @@ void oled_update()
 
     oled.setTextCursor(0, 56);
 
-#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), pwm_switch))
+#if BOARD_HAS_PWM_PORT
     bool pwm_enabled = pwm_switch.active();
     float duty_cycle = pwm_switch.get_duty_cycle();
 #else

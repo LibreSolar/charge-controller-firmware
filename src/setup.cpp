@@ -13,6 +13,7 @@
 
 #include "thingset.h"           // handles access to internal data via communication interfaces
 
+#include "board.h"
 #include "half_bridge.h"        // PWM generation for DC/DC converter
 #include "hardware.h"           // hardware-related functions like load switch, LED control, watchdog, etc.
 #include "dcdc.h"               // DC/DC converter control (hardware independent)
@@ -28,7 +29,7 @@
 DcBus lv_bus;
 PowerPort lv_terminal(&lv_bus, true);   // low voltage terminal (battery for typical MPPT)
 
-#if DT_NODE_EXISTS(DT_PATH(dcdc))
+#if BOARD_HAS_DCDC
 DcBus hv_bus;
 PowerPort hv_terminal(&hv_bus, true);   // high voltage terminal (solar for typical MPPT)
 #if CONFIG_HV_TERMINAL_NANOGRID
@@ -40,15 +41,15 @@ Dcdc dcdc(&hv_bus, &lv_bus, DCDC_MODE_BUCK);
 #endif // CONFIG_HV_TERMINAL
 #endif
 
-#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), pwm_switch))
+#if BOARD_HAS_PWM_PORT
 PwmSwitch pwm_switch(&lv_bus);
 #endif
 
-#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
+#if BOARD_HAS_LOAD_OUTPUT
 LoadOutput load(&lv_bus, &load_out_set, &load_out_init, NULL);
 #endif
 
-#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), usb_pwr))
+#if BOARD_HAS_USB_OUTPUT
 LoadOutput usb_pwr(&lv_bus, &usb_out_set, &usb_out_init, &pgood_check);
 #endif
 

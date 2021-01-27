@@ -22,13 +22,13 @@ LOG_MODULE_REGISTER(daq, CONFIG_DAQ_LOG_LEVEL);
 // typical value for Semitec 103AT-5 thermistor: 3435
 #define NTC_BETA_VALUE 3435
 
-#if DT_NODE_EXISTS(DT_PATH(dcdc))
+#if BOARD_HAS_DCDC
 static uint16_t dcdc_current_offset_raw;
 #endif
-#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), pwm_switch))
+#if BOARD_HAS_PWM_PORT
 static uint16_t pwm_current_offset_raw;
 #endif
-#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
+#if BOARD_HAS_LOAD_OUTPUT
 static uint16_t load_current_offset_raw;
 #endif
 
@@ -93,20 +93,20 @@ static inline float ntc_temp(uint32_t channel, int32_t vref, float ntc_series_re
 
 void calibrate_current_sensors()
 {
-#if DT_NODE_EXISTS(DT_PATH(dcdc))
+#if BOARD_HAS_DCDC
     dcdc_current_offset_raw = adc_raw_filtered(ADC_POS(i_dcdc));
 #endif
-#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), pwm_switch))
+#if BOARD_HAS_PWM_PORT
     pwm_current_offset_raw = adc_raw_filtered(ADC_POS(i_pwm));
 #endif
-#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
+#if BOARD_HAS_LOAD_OUTPUT
     load_current_offset_raw = adc_raw_filtered(ADC_POS(i_load));
 #endif
 }
 
 void adc_update_value(unsigned int pos)
 {
-#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), pwm_switch))
+#if BOARD_HAS_PWM_PORT
     // only read input voltage and current when switch is on or permanently off
     if ((pos != ADC_POS(v_pwm) && pos != ADC_POS(i_pwm)) ||
         pwm_switch.signal_high() || pwm_switch.active() == false)
@@ -168,16 +168,16 @@ void daq_update()
     // calculate lower voltage first, as it is needed for PWM terminal voltage calculation
     lv_bus.voltage = adc_scaled(ADC_POS(v_low), vref, ADC_GAIN(v_low));
 
-#if DT_NODE_EXISTS(DT_PATH(dcdc))
+#if BOARD_HAS_DCDC
     hv_bus.voltage = adc_scaled(ADC_POS(v_high), vref, ADC_GAIN(v_high));
 #endif
 
-#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), pwm_switch))
+#if BOARD_HAS_PWM_PORT
     pwm_switch.ext_voltage = lv_bus.voltage -
         adc_scaled(ADC_POS(v_pwm), vref, ADC_GAIN(v_pwm), ADC_OFFSET(v_pwm));
 #endif
 
-#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
+#if BOARD_HAS_LOAD_OUTPUT
     load.current = adc_scaled(ADC_POS(i_load), vref, ADC_GAIN(i_load), load_current_offset_raw);
     float load_current = load.current;
 #else
@@ -186,7 +186,7 @@ void daq_update()
 
     float lv_terminal_current = -load_current;
 
-#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), pwm_switch))
+#if BOARD_HAS_PWM_PORT
     // current multiplied with PWM duty cycle for PWM charger to get avg current for correct power
     // calculation
     pwm_switch.current = -pwm_switch.get_duty_cycle() *
@@ -197,7 +197,7 @@ void daq_update()
     pwm_switch.power = pwm_switch.bus->voltage * pwm_switch.current;
 #endif
 
-#if DT_NODE_EXISTS(DT_PATH(dcdc))
+#if BOARD_HAS_DCDC
     dcdc.inductor_current =
         adc_scaled(ADC_POS(i_dcdc), vref, ADC_GAIN(i_dcdc), dcdc_current_offset_raw);
 
@@ -212,7 +212,7 @@ void daq_update()
     lv_terminal.current = lv_terminal_current;
     lv_terminal.power   = lv_terminal.bus->voltage * lv_terminal.current;
 
-#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
+#if BOARD_HAS_LOAD_OUTPUT
     load.power = load.bus->voltage * load.current;
 #endif
 
@@ -255,10 +255,10 @@ void daq_update()
 void lv_overvoltage_alert()
 {
     // disable any sort of input
-#if DT_NODE_EXISTS(DT_PATH(dcdc))
+#if BOARD_HAS_DCDC
     dcdc.stop();
 #endif
-#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), pwm_switch))
+#if BOARD_HAS_PWM_PORT
     pwm_switch.stop();
 #endif
     // do not use enter_state function, as we don't want to wait entire recharge delay
@@ -272,7 +272,7 @@ void lv_overvoltage_alert()
 
 void lv_undervoltage_alert()
 {
-#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
+#if BOARD_HAS_LOAD_OUTPUT
     // the battery undervoltage must have been caused by a load current peak
     load.stop(ERR_LOAD_VOLTAGE_DIP);
 #endif
@@ -281,7 +281,7 @@ void lv_undervoltage_alert()
         adc_readings[ADC_POS(v_low)], adc_alerts_lower[ADC_POS(v_low)].limit);
 }
 
-#if DT_NODE_EXISTS(DT_PATH(dcdc))
+#if BOARD_HAS_DCDC
 void hv_overvoltage_alert()
 {
     dcdc.stop();
@@ -324,7 +324,7 @@ void daq_set_lv_limits(float lv_overvoltage, float lv_undervoltage)
     adc_alerts_lower[ADC_POS(v_low)].callback = lv_undervoltage_alert;
 }
 
-#if DT_NODE_EXISTS(DT_PATH(dcdc))
+#if BOARD_HAS_DCDC
 void daq_set_hv_limit(float hv_overvoltage)
 {
     float scale =  (((4096 << 4) * 1000) / ADC_GAIN(v_high)) / (float)VREF;

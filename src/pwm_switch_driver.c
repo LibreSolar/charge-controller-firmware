@@ -11,11 +11,12 @@
 #include <stdio.h>
 #include <time.h>
 
+#include "board.h"
 #include "daq.h"
 #include "helper.h"
 #include "mcu.h"
 
-#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), pwm_switch))
+#if BOARD_HAS_PWM_PORT
 
 #ifndef UNIT_TEST
 
@@ -161,4 +162,4 @@ bool pwm_active() { return false; }
 
 #endif
 
-#endif /* DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), pwm_switch)) */
+#endif /* BOARD_HAS_PWM_PORT */

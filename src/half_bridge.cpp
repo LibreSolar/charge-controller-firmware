@@ -11,6 +11,7 @@
 #include <stdio.h>
 
 #include "mcu.h"
+#include "setup.h"
 
 #ifndef UNIT_TEST
 #include <soc.h>
@@ -19,7 +20,7 @@
 #define DT_DRV_COMPAT st_stm32_timers
 #endif
 
-#if DT_NODE_EXISTS(DT_PATH(dcdc))
+#if BOARD_HAS_DCDC
 
 static uint16_t tim_ccr_min;        // capture/compare register min/max
 static uint16_t tim_ccr_max;
@@ -301,4 +302,4 @@ float half_bridge_get_duty_cycle()
     return (float)(half_bridge_get_ccr()) / half_bridge_get_arr();
 }
 
-#endif // DT_NODE_EXISTS(DT_PATH(dcdc))
+#endif // BOARD_HAS_DCDC
