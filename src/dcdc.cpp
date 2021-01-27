@@ -23,10 +23,11 @@ LOG_MODULE_REGISTER(dcdc, CONFIG_DCDC_LOG_LEVEL);
 #include "helper.h"
 #include "half_bridge.h"
 #include "eeprom.h"
+#include "setup.h"
 
 extern DeviceStatus dev_stat;
 
-#if DT_NODE_EXISTS(DT_PATH(dcdc))
+#if BOARD_HAS_DCDC
 
 #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), hv_ext_sense))
 #define HV_EXT_SENSE_GPIO DT_CHILD(DT_PATH(outputs), hv_ext_sense)
@@ -354,4 +355,4 @@ void Dcdc::output_hvs_disable()
 
 Dcdc::Dcdc(DcBus *high, DcBus *low, DcdcOperationMode op_mode) {}
 
-#endif /* DT_NODE_EXISTS(DT_PATH(dcdc)) */
+#endif /* BOARD_HAS_DCDC */

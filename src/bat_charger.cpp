@@ -16,6 +16,7 @@ LOG_MODULE_REGISTER(bat_charger, CONFIG_BAT_LOG_LEVEL);
 #include <math.h>       // for fabs function
 #include <stdio.h>
 
+#include "board.h"
 #include "helper.h"
 #include "device_status.h"
 
@@ -23,7 +24,7 @@ extern DeviceStatus dev_stat;
 extern LoadOutput load;
 
 // DISCHARGE_CURRENT_MAX used to estimate current-compensation of load disconnect voltage
-#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
+#if BOARD_HAS_LOAD_OUTPUT
 #define DISCHARGE_CURRENT_MAX DT_PROP(DT_CHILD(DT_PATH(outputs), load), current_max)
 #else
 #define DISCHARGE_CURRENT_MAX DT_PROP(DT_PATH(dcdc), current_max)
@@ -355,8 +356,8 @@ void Charger::enter_state(int next_state)
 
 void Charger::discharge_control(BatConf *bat_conf)
 {
-#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load)) || \
-    DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), usb_pwr))
+#if BOARD_HAS_LOAD_OUTPUT || \
+    BOARD_HAS_USB_OUTPUT
 
     if (!empty) {
         // as we don't have a proper SOC estimation, we determine an empty battery by the main

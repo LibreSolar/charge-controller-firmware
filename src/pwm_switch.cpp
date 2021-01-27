@@ -21,7 +21,7 @@ LOG_MODULE_REGISTER(pwm_switch, CONFIG_PWM_LOG_LEVEL);
 #include "helper.h"
 #include "setup.h"
 
-#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), pwm_switch))
+#if BOARD_HAS_PWM_PORT
 
 #define PWM_CURRENT_MAX (DT_PROP(DT_CHILD(DT_PATH(outputs), pwm_switch), current_max))
 #define PWM_PERIOD (DT_PHA(DT_CHILD(DT_PATH(outputs), pwm_switch), pwms, period))
@@ -160,4 +160,4 @@ float PwmSwitch::get_duty_cycle()
     return pwm_signal_get_duty_cycle();
 }
 
-#endif /* DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), pwm_switch)) */
+#endif /* BOARD_HAS_PWM_PORT */

@@ -13,18 +13,19 @@
 #include <drivers/gpio.h>
 #include <drivers/pwm.h>
 
+#include "board.h"
 #include "hardware.h"
 #include "leds.h"
 #include "mcu.h"
 
 #include <stm32_ll_system.h>
 
-#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
+#if BOARD_HAS_LOAD_OUTPUT
 #define LOAD_GPIO DT_CHILD(DT_PATH(outputs), load)
 static const struct device *dev_load;
 #endif
 
-#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), usb_pwr))
+#if BOARD_HAS_USB_OUTPUT
 #define USB_GPIO DT_CHILD(DT_PATH(outputs), usb_pwr)
 static const struct device *dev_usb;
 #endif
@@ -144,7 +145,7 @@ void load_out_set(bool status)
     leds_set(LED_POS(load), status, LED_TIMEOUT_INFINITE);
 #endif
 
-#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
+#if BOARD_HAS_LOAD_OUTPUT
     gpio_pin_configure(dev_load, DT_GPIO_PIN(LOAD_GPIO, gpios),
         DT_GPIO_FLAGS(LOAD_GPIO, gpios) | GPIO_OUTPUT_INACTIVE);
     if (status == true) {
@@ -162,7 +163,7 @@ void load_out_set(bool status)
 
 void usb_out_set(bool status)
 {
-#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), usb_pwr))
+#if BOARD_HAS_USB_OUTPUT
     gpio_pin_configure(dev_usb, DT_GPIO_PIN(USB_GPIO, gpios),
         DT_GPIO_FLAGS(USB_GPIO, gpios) | GPIO_OUTPUT_INACTIVE);
     if (status == true) {
@@ -197,7 +198,7 @@ void load_cp_enable()
 
 void load_out_init()
 {
-#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
+#if BOARD_HAS_LOAD_OUTPUT
     dev_load = device_get_binding(DT_GPIO_LABEL(LOAD_GPIO, gpios));
 #endif
 
@@ -214,14 +215,14 @@ void load_out_init()
 
 void usb_out_init()
 {
-#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), usb_pwr))
+#if BOARD_HAS_USB_OUTPUT
     dev_usb = device_get_binding(DT_GPIO_LABEL(USB_GPIO, gpios));
 #endif
 }
 
 bool pgood_check()
 {
-#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), usb_pwr))
+#if BOARD_HAS_USB_OUTPUT
     return gpio_pin_get(dev_usb, DT_GPIO_PIN(USB_GPIO, gpios));
 #else
     return false;

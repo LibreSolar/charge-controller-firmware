@@ -68,7 +68,7 @@ void DeviceStatus::update_energy()
             grid_export_total_Wh_prev = grid_export_total_Wh;
             #endif
             solar_terminal.neg_energy_Wh = 0.0;
-            #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
+            #if BOARD_HAS_LOAD_OUTPUT
             load.pos_energy_Wh = 0.0;
             #endif
             bat_terminal.pos_energy_Wh = 0.0;
@@ -92,7 +92,7 @@ void DeviceStatus::update_energy()
         (solar_terminal.neg_energy_Wh > 0 ? solar_terminal.neg_energy_Wh : 0);
 #endif
 
-#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
+#if BOARD_HAS_LOAD_OUTPUT
     load_out_total_Wh = load_out_total_Wh_prev +
         (load.pos_energy_Wh > 0 ? load.pos_energy_Wh : 0);
 #endif
@@ -121,7 +121,7 @@ void DeviceStatus::update_min_max_values()
     }
 #endif
 
-#if DT_NODE_EXISTS(DT_PATH(dcdc))
+#if BOARD_HAS_DCDC
     if (dcdc.inductor_current > dcdc_current_max) {
         dcdc_current_max = dcdc.inductor_current;
     }
@@ -131,7 +131,7 @@ void DeviceStatus::update_min_max_values()
     }
 #endif
 
-#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
+#if BOARD_HAS_LOAD_OUTPUT
     if (load.current > load_current_max) {
         load_current_max = load.current;
     }
@@ -146,7 +146,7 @@ void DeviceStatus::update_min_max_values()
     }
 #endif
 
-#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
+#if BOARD_HAS_LOAD_OUTPUT
     if (load.power > load_power_max_day) {
         load_power_max_day = load.power;
         if (load_power_max_day > load_power_max_total) {

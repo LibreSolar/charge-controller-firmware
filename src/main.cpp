@@ -39,7 +39,7 @@ void main(void)
     battery_conf_init(&bat_conf, CONFIG_BAT_TYPE, CONFIG_BAT_NUM_CELLS, CONFIG_BAT_CAPACITY_AH);
     battery_conf_overwrite(&bat_conf, &bat_conf_user);  // initialize conf_user with same values
 
-    #if DT_NODE_EXISTS(DT_PATH(dcdc))
+    #if BOARD_HAS_DCDC
     daq_set_hv_limit(DT_PROP(DT_PATH(pcb), hs_voltage_max));
     #endif
 
@@ -60,12 +60,12 @@ void main(void)
     charger.detect_num_batteries(&bat_conf);     // check if we have 24V instead of 12V system
     charger.init_terminal(&bat_conf);
 
-    #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
+    #if BOARD_HAS_LOAD_OUTPUT
     load.set_voltage_limits(bat_conf.voltage_load_disconnect, bat_conf.voltage_load_reconnect,
         bat_conf.voltage_absolute_max);
     #endif
 
-    #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), usb_pwr))
+    #if BOARD_HAS_USB_OUTPUT
     usb_pwr.set_voltage_limits(bat_conf.voltage_load_disconnect - 0.1, // keep on longer than load
         bat_conf.voltage_load_reconnect, bat_conf.voltage_absolute_max);
     #endif
@@ -82,13 +82,13 @@ void main(void)
         charger.charge_control(&bat_conf);
 
         // energy + soc calculation must be called exactly once per second
-        #if DT_NODE_EXISTS(DT_PATH(dcdc))
+        #if BOARD_HAS_DCDC
         if  (dcdc.state != DCDC_CONTROL_OFF) {
             hv_terminal.energy_balance();
         }
         #endif
 
-        #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), pwm_switch))
+        #if BOARD_HAS_PWM_PORT
         if (pwm_switch.active() == 1) {
             pwm_switch.energy_balance();
         }
@@ -96,7 +96,7 @@ void main(void)
 
         lv_terminal.energy_balance();
 
-        #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
+        #if BOARD_HAS_LOAD_OUTPUT
         if (load.state == 1) {
             load.energy_balance();
         }
@@ -106,7 +106,7 @@ void main(void)
         dev_stat.update_min_max_values();
         charger.update_soc(&bat_conf);
 
-        #if CONFIG_HS_MOSFET_FAIL_SAFE_PROTECTION && DT_NODE_EXISTS(DT_PATH(dcdc))
+        #if CONFIG_HS_MOSFET_FAIL_SAFE_PROTECTION && BOARD_HAS_DCDC
         if (dev_stat.has_error(ERR_DCDC_HS_MOSFET_SHORT)) {
             dcdc.fuse_destruction();
         }
@@ -114,7 +114,7 @@ void main(void)
 
         leds_update_1s();
 
-        #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
+        #if BOARD_HAS_LOAD_OUTPUT
         leds_update_soc(charger.soc, flags_check(&load.error_flags, ERR_LOAD_SHEDDING));
         #else
         leds_update_soc(charger.soc, false);
@@ -146,12 +146,12 @@ void control_thread()
 
         lv_terminal.update_bus_current_margins();
 
-        #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), pwm_switch))
+        #if BOARD_HAS_PWM_PORT
         pwm_switch.control();
         charging |= pwm_switch.active();
         #endif
 
-        #if DT_NODE_EXISTS(DT_PATH(dcdc))
+        #if BOARD_HAS_DCDC
         hv_terminal.update_bus_current_margins();
         dcdc.control();     // control of DC/DC including MPPT algorithm
         charging |= half_bridge_enabled();
@@ -159,11 +159,11 @@ void control_thread()
 
         leds_set_charging(charging);
 
-        #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
+        #if BOARD_HAS_LOAD_OUTPUT
         load.control();
         #endif
 
-        #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), usb_pwr))
+        #if BOARD_HAS_USB_OUTPUT
         usb_pwr.control();
         #endif
 

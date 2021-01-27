@@ -14,17 +14,18 @@
 #include "power_port.h"
 #include "pwm_switch.h"
 #include "thingset.h"
+#include "board.h"
 
 extern DcBus lv_bus;
 extern PowerPort lv_terminal;
 
-#if DT_NODE_EXISTS(DT_PATH(dcdc))
+#if BOARD_HAS_DCDC
 extern DcBus hv_bus;
 extern PowerPort hv_terminal;
 extern Dcdc dcdc;
 #endif
 
-#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), pwm_switch))
+#if BOARD_HAS_PWM_PORT
 extern PwmSwitch pwm_switch;
 #endif
 
@@ -37,11 +38,11 @@ extern Charger charger;
 extern BatConf bat_conf;
 extern BatConf bat_conf_user;
 
-#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), load))
+#if BOARD_HAS_LOAD_OUTPUT
 extern LoadOutput load;
 #endif
 
-#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), usb_pwr))
+#if BOARD_HAS_USB_OUTPUT
 extern LoadOutput usb_pwr;
 #endif
 
