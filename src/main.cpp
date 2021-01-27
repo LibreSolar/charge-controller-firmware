@@ -11,6 +11,8 @@
 #include <device.h>
 #include <drivers/gpio.h>
 
+#include <stm32_ll_system.h>
+
 #include "thingset.h"           // handles access to internal data via communication interfaces
 #include "setup.h"
 #include "helper.h"
@@ -30,6 +32,21 @@
 void main(void)
 {
     printf("Libre Solar Charge Controller: %s\n", CONFIG_BOARD);
+
+#if 1  // read what caused reset
+    unsigned int flags = RCC->CSR;
+    printf("Reset Reason(s) 0x%08x :", flags);
+    if (flags & RCC_CSR_FWRSTF)    printf(" FireWall");
+    if (flags & RCC_CSR_OBLRSTF)   printf(" OBL");      // Option Byte Load
+    if (flags & RCC_CSR_PINRSTF)   printf(" PIN");
+    if (flags & RCC_CSR_PORRSTF)   printf(" POR");
+    if (flags & RCC_CSR_SFTRSTF)   printf(" Soft");
+    if (flags & RCC_CSR_IWDGRSTF)  printf(" IWDG");
+    if (flags & RCC_CSR_WWDGRSTF)  printf(" WWDG");
+    if (flags & RCC_CSR_LPWRRSTF)  printf(" Low-Power");
+    printf("\n");
+    SET_BIT(RCC->CSR, RCC_CSR_RMVF);
+#endif
 
     watchdog_init();
 
@@ -123,7 +140,10 @@ void main(void)
         eeprom_update();
 
         t_start += 1000;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wnarrowing"
         k_sleep(K_TIMEOUT_ABS_MS(t_start));
+#pragma GCC diagnostic pop
     }
 }
 
