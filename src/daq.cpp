@@ -22,6 +22,11 @@ LOG_MODULE_REGISTER(daq, CONFIG_DAQ_LOG_LEVEL);
 // typical value for Semitec 103AT-5 thermistor: 3435
 #define NTC_BETA_VALUE 3435
 
+// filter parameter c for additional battery voltage and current low-pass filter
+// c = dt / (tau + dt) = 0.1s / (10s + 0.1s)
+#define LV_BUS_VOLTAGE_FILTER_CONST         0.0099F
+#define LV_TERMINAL_CURRENT_FILTER_CONST    0.0099F
+
 #if BOARD_HAS_DCDC
 static uint16_t dcdc_current_offset_raw;
 #endif
@@ -168,6 +173,15 @@ void daq_update()
     // calculate lower voltage first, as it is needed for PWM terminal voltage calculation
     lv_bus.voltage = adc_scaled(ADC_POS(v_low), vref, ADC_GAIN(v_low));
 
+    if (lv_bus.voltage_filtered != 0.0F) {
+        lv_bus.voltage_filtered = LV_BUS_VOLTAGE_FILTER_CONST * lv_bus.voltage +
+            (1.0F - LV_BUS_VOLTAGE_FILTER_CONST) * lv_bus.voltage_filtered;
+    }
+    else {
+        // initialize properly at startup
+        lv_bus.voltage_filtered = lv_bus.voltage;
+    }
+
 #if BOARD_HAS_DCDC
     hv_bus.voltage = adc_scaled(ADC_POS(v_high), vref, ADC_GAIN(v_high));
 #endif
@@ -211,6 +225,9 @@ void daq_update()
 #endif
     lv_terminal.current = lv_terminal_current;
     lv_terminal.power   = lv_terminal.bus->voltage * lv_terminal.current;
+
+    lv_terminal.current_filtered = LV_TERMINAL_CURRENT_FILTER_CONST * lv_bus.voltage +
+        (1.0F - LV_TERMINAL_CURRENT_FILTER_CONST) * lv_bus.voltage_filtered;
 
 #if BOARD_HAS_LOAD_OUTPUT
     load.power = load.bus->voltage * load.current;

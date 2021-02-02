@@ -490,10 +490,10 @@ void Charger::charge_control(BatConf *bat_conf)
             port->bus->sink_voltage_intercept = bat_conf->topping_voltage +
                 bat_conf->temperature_compensation * (bat_temperature - 25);
 
-            if (port->bus->voltage >= port->bus->sink_control_voltage() - 0.05F) {
+            if (port->bus->voltage_filtered >= port->bus->sink_control_voltage() - 0.05F) {
                 // battery is full if topping target voltage is still reached (i.e. sufficient
                 // solar power available) and time limit or cut-off current reached
-                if (port->current < bat_conf->topping_current_cutoff ||
+                if (port->current_filtered < bat_conf->topping_current_cutoff ||
                     target_voltage_timer > bat_conf->topping_duration)
                 {
                     full = true;

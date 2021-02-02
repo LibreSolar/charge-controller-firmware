@@ -31,6 +31,14 @@ public:
     float voltage;
 
     /**
+     * Filtered bus voltage
+     *
+     * Suitable filter time constants depend on type of DC bus. This filtering is applied in
+     * addition to the raw ADC value filtering.
+     */
+    float voltage_filtered = 0;
+
+    /**
      * Multiplier for series connection of batteries
      *
      * Used for automatic 12V/24V battery detection at start-up (can be 1 or 2 only)
@@ -181,6 +189,14 @@ public:
      * Measured current through this port (positive sign = current into the external device)
      */
     float current = 0;
+
+    /**
+     * Filtered port current
+     *
+     * Suitable filter time constants depend on type of port. This filtering is applied in
+     * addition to the raw ADC value filtering.
+     */
+    float current_filtered = 0;
 
     /**
      * Product of port current and bus voltage

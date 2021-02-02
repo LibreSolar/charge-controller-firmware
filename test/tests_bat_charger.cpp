@@ -18,6 +18,7 @@ static void init_structs()
     charger.state = CHG_STATE_IDLE;
     charger.bat_temperature = 25;
     bat_terminal.bus->voltage = 14.0;
+    bat_terminal.bus->voltage_filtered = 14.0;
     bat_terminal.current = 0;
 }
 
@@ -65,9 +66,11 @@ void enter_topping_at_voltage_setpoint()
     init_structs();
     charger.time_state_changed = time(NULL) - bat_conf.time_limit_recharge - 1;
     bat_terminal.bus->voltage = bat_conf.voltage_recharge - 0.1;
+    bat_terminal.bus->voltage_filtered = bat_terminal.bus->voltage;
     charger.charge_control(&bat_conf);
     TEST_ASSERT_EQUAL(CHG_STATE_BULK, charger.state);
     bat_terminal.bus->voltage = bat_conf.topping_voltage + 0.1;
+    bat_terminal.bus->voltage_filtered = bat_terminal.bus->voltage;
     charger.charge_control(&bat_conf);
     TEST_ASSERT_EQUAL(CHG_STATE_TOPPING, charger.state);
 }
@@ -78,7 +81,9 @@ void topping_to_bulk_after_8h_low_power()
 
     charger.time_state_changed = time(NULL) - 8 * 60 * 60 + 1;
     bat_terminal.bus->voltage = bat_conf.topping_voltage - 0.1;
+    bat_terminal.bus->voltage_filtered = bat_terminal.bus->voltage;
     bat_terminal.current = bat_conf.topping_current_cutoff + 0.1;
+    bat_terminal.current_filtered = bat_terminal.current;
 
     charger.charge_control(&bat_conf);
     TEST_ASSERT_EQUAL(CHG_STATE_TOPPING, charger.state);
@@ -94,8 +99,10 @@ void stop_topping_after_time_limit()
 
     charger.target_voltage_timer = bat_conf.topping_duration - 1;
     bat_terminal.current = bat_conf.topping_current_cutoff + 0.1;
+    bat_terminal.current_filtered = bat_terminal.current;
     bat_terminal.bus->voltage = bat_conf.topping_voltage -
         bat_terminal.current * bat_terminal.bus->sink_droop_res + 0.1;
+    bat_terminal.bus->voltage_filtered = bat_terminal.bus->voltage;
 
     charger.charge_control(&bat_conf);
     TEST_ASSERT_EQUAL(CHG_STATE_TOPPING, charger.state);
@@ -111,8 +118,10 @@ void stop_topping_at_cutoff_current()
 
     charger.target_voltage_timer = 0;
     bat_terminal.current = bat_conf.topping_current_cutoff - 0.1;
+    bat_terminal.current_filtered = bat_terminal.current;
     bat_terminal.bus->voltage = bat_conf.topping_voltage -
         bat_terminal.current * bat_terminal.bus->sink_droop_res + 0.1;
+    bat_terminal.bus->voltage_filtered = bat_terminal.bus->voltage;
     charger.charge_control(&bat_conf);
     TEST_ASSERT_EQUAL(CHG_STATE_TRICKLE, charger.state);
 }
