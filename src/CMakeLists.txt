@@ -12,6 +12,7 @@ target_sources(app PRIVATE
         #~ eeprom.cpp
         half_bridge_hrtim.cpp
         hardware.cpp
+        hrtim.c
         leds.cpp
         load.cpp
         load_driver.c
@@ -19,6 +20,8 @@ target_sources(app PRIVATE
         power_port.cpp
         pwm_switch_driver.c
         pwm_switch.cpp
+        riot/cpu_common.c
+        riot/gpio_all.c
         setup.cpp
 )
 
