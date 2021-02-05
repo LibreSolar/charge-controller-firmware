@@ -6,32 +6,24 @@
 
 #include "eeprom.h"
 
-#include <stdio.h>
+#ifdef CONFIG_EEPROM
 
-#ifndef UNIT_TEST
 #include <zephyr.h>
 #include <device.h>
 #include <drivers/eeprom.h>
-#endif
 
 #include "mcu.h"
 #include "thingset.h"
 #include "data_nodes.h"
-#include "helper.h"
 
-
-#ifndef UNIT_TEST
-K_MUTEX_DEFINE(_lock);
-static uint8_t buf[512];  // Buffer used by store and restore functions
-#endif
+#include <stdio.h>
 
 #define EEPROM_HEADER_SIZE 8    // bytes
 
-#define EEPROM_UPDATE_INTERVAL  (6*60*60)       // update every 6 hours
+K_MUTEX_DEFINE(_lock);
+static uint8_t buf[512];  // Buffer used by store and restore functions
 
 extern ThingSet ts;
-
-#ifndef UNIT_TEST
 
 uint32_t _calc_crc(const uint8_t *buf, size_t len)
 {
@@ -158,6 +150,8 @@ void eeprom_store_data() {;}
 void eeprom_restore_data() {;}
 
 #endif
+
+#include "helper.h"
 
 void eeprom_update()
 {
