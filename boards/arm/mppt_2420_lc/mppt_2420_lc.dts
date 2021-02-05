@@ -5,11 +5,13 @@
  */
 
 /dts-v1/;
-#include <st/f0/stm32f072Xb.dtsi>
+#include <st/f3/stm32f334X8.dtsi>
+#include <st/f3/stm32f334r(6-8)tx-pinctrl.dtsi>
+//~ #include "hrtim.dtsi"   // do not work here...
 
 / {
 	model = "Libre Solar MPPT 2420 LC";
-	compatible = "st,stm32f072";
+	compatible = "st,stm32f334r8-nucleo";
 
 	pcb {
 		compatible = "charge-controller";
@@ -21,7 +23,7 @@
 		hs-voltage-max = <55>;
 		ls-voltage-max = <32>;
 	};
-
+/*
 	dcdc {
 		compatible = "dcdc";
 		timer = <&timers1>;
@@ -29,7 +31,7 @@
 		pwm-deadtime = <300>;
 		current-max = <20>;
 	};
-
+*/
 	chosen {
 		zephyr,console = &usart1;
 		zephyr,shell-uart = &usart1;
@@ -142,6 +144,8 @@
 		};
 	};
 
+#include "hrtim.dtsi"
+
 	aliases {
 		uart-dbg = &usart1;
 		uart-uext = &usart2;
@@ -164,7 +168,7 @@
 	status = "okay";
 	clock-frequency = <I2C_BITRATE_FAST>;
 };
-
+/*
 &i2c2 {
 	status = "okay";
 	clock-frequency = <I2C_BITRATE_STANDARD>;
@@ -179,11 +183,11 @@
 		/*
 		 * timeout of 5 ms as suggested in datasheet seems too optimistic
 		 * (several write errors occured during testing)
-		 */
+		 *//*
 		timeout = <7>;
 	};
 };
-
+*/
 &spi1 {
 	cs-gpios = <&gpioc 13 GPIO_ACTIVE_LOW>;
 	status = "okay";

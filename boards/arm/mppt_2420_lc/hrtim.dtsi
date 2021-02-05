@@ -1,0 +1,41 @@
+/*
+ * Copyright (c) 2021 Centre National de la Recherche Scientifique
+ *
+ * CNRS, établissement public à caractère scientifique et technologique,
+ * dont le siège est situé 3 rue Michel-Ange, 75794 Paris cedex 16.
+ *
+ *            Luiz Villa - Projet OwnTech <owntech@laas.fr>
+ *        Laboratoire d'analyse et d'architecture des systèmes
+ *               LAAS-CNRS - 7, avenue du Colonel Roche
+ *                 BP 54200 - 31031 Toulouse cedex 4
+ *
+ * SPDX-License-Identifier: CECILL-C
+ */
+
+/**
+ * @file
+ * @author      Hugues Larrive <hugues.larrive@laas.fr>
+ */
+
+soc {
+    hrtim1: timers@40016800 {
+        compatible = "st,stm32-timers";
+        reg = <0x40016800 0x400>;
+        clocks = <&rcc STM32_CLOCK_BUS_APB2 0x04000000>;
+        interrupts = <67 0>, <68 0>, <69 0>, <70 0>, <71 0>, <72 0>, <73 0>, <74 0>;
+        interrupt-names = "master", "tima", "timb", "timc", "timd", "time", "flt", "timf";
+        status = "okay";
+        label = "HRTIM_1";
+    };
+
+/* required until hal_stm32 PR #87 is merged */
+    pinctrl: pin-controller@48000000 {
+        hrtim1_cha1_pa8: hrtim1_cha1_pa8 {
+            pinmux = <STM32_PINMUX('A', 8, AF13)>;
+        };
+
+        hrtim1_chc2_pb13: hrtim1_chc2_pb13 {
+            pinmux = <STM32_PINMUX('C', 13, AF13)>;
+        };
+    };
+};

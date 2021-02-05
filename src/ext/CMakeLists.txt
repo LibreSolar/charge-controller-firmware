@@ -2,6 +2,6 @@
 
 target_sources(app PRIVATE
     oled.cpp
-    serial.cpp
-    can.cpp
+    #~ serial.cpp
+    #~ can.cpp
 )

@@ -4,13 +4,13 @@ zephyr_include_directories(.)
 
 target_sources(app PRIVATE
         bat_charger.cpp
-        data_nodes.cpp
-        daq.cpp
-        daq_driver.c
+        #~ data_nodes.cpp
+        #~ daq.cpp
+        #~ daq_driver.c
         device_status.cpp
         dcdc.cpp
-        eeprom.cpp
-        half_bridge.cpp
+        #~ eeprom.cpp
+        half_bridge_hrtim.cpp
         hardware.cpp
         leds.cpp
         load.cpp

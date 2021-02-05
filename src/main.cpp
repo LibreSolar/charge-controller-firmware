@@ -20,7 +20,7 @@
 #include "dcdc.h"               // DC/DC converter control (hardware independent)
 #include "pwm_switch.h"         // PWM charge controller
 #include "bat_charger.h"        // battery settings and charger state machine
-#include "daq.h"                // ADC using DMA and conversion to measurement values
+//~ #include "daq.h"                // ADC using DMA and conversion to measurement values
 #include "eeprom.h"             // external I2C EEPROM
 #include "load.h"               // load and USB output management
 #include "leds.h"               // LED switching using charlieplexing
@@ -51,9 +51,10 @@ void main(void)
     #endif
 
     // read custom configuration from EEPROM
-    data_nodes_init();
+    //~ data_nodes_init();
 
     // Data Acquisition (DAQ) setup
+/*
     daq_setup();
 
     charger.detect_num_batteries(&bat_conf);     // check if we have 24V instead of 12V system
@@ -68,7 +69,7 @@ void main(void)
     usb_pwr.set_voltage_limits(bat_conf.voltage_load_disconnect - 0.1, // keep on longer than load
         bat_conf.voltage_load_reconnect, bat_conf.voltage_absolute_max);
     #endif
-
+*/
     // wait until all threads are spawned before activating the watchdog
     k_sleep(K_MSEC(2500));
     watchdog_start();
@@ -120,7 +121,7 @@ void main(void)
         leds_update_soc(charger.soc, false);
         #endif
 
-        eeprom_update();
+        //~ eeprom_update();
 
         t_start += 1000;
         k_sleep(K_TIMEOUT_ABS_MS(t_start));
@@ -139,10 +140,10 @@ void control_thread()
         watchdog_feed(wdt_channel);
 
         // convert ADC readings to meaningful measurement values
-        daq_update();
+        //~ daq_update();
 
         // alerts should trigger only for transients, so update based on actual voltage
-        daq_set_lv_limits(lv_terminal.bus->voltage * 1.2F, lv_terminal.bus->voltage * 0.8F);
+        //~ daq_set_lv_limits(lv_terminal.bus->voltage * 1.2F, lv_terminal.bus->voltage * 0.8F);
 
         lv_terminal.update_bus_current_margins();
 
