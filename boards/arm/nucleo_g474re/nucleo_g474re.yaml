@@ -1,0 +1,22 @@
+identifier: nucleo_g474re
+name: ST Nucleo G474RE
+type: mcu
+arch: arm
+toolchain:
+  - zephyr
+  - gnuarmemb
+  - xtools
+ram: 128
+flash: 512
+supported:
+  - nvs
+  - pwm
+  - i2c
+  - gpio
+  - usb device
+  - counter
+  - spi
+  - watchdog
+  - adc
+  - can
+  - canfd
