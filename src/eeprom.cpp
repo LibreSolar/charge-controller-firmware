@@ -20,8 +20,10 @@
 
 #define EEPROM_HEADER_SIZE 8    // bytes
 
-K_MUTEX_DEFINE(_lock);
-static uint8_t buf[512];  // Buffer used by store and restore functions
+K_MUTEX_DEFINE(eeprom_buf_lock);
+
+// Buffer used by store and restore functions (must be word-aligned for hardware CRC calculation)
+static uint8_t buf[512] __aligned(sizeof(uint32_t));
 
 extern ThingSet ts;
 
@@ -86,7 +88,7 @@ void eeprom_restore_data()
     //    buf_header[4], buf_header[5], buf_header[6], buf_header[7]);
 
     if (version == DATA_NODES_VERSION && len <= sizeof(buf)) {
-        k_mutex_lock(&_lock, K_FOREVER);
+        k_mutex_lock(&eeprom_buf_lock, K_FOREVER);
         err = eeprom_read(eeprom_dev, EEPROM_HEADER_SIZE, buf, len);
 
         //printf("Data (len=%d): ", len);
@@ -100,7 +102,7 @@ void eeprom_restore_data()
             printf("EEPROM: CRC of data not correct, expected 0x%x (data_len = %d)\n",
                 (unsigned int)crc, len);
         }
-        k_mutex_unlock(&_lock);
+        k_mutex_unlock(&eeprom_buf_lock);
     }
     else {
         printf("EEPROM: Empty or data layout version changed\n");
@@ -113,7 +115,7 @@ void eeprom_store_data()
 
 	const struct device *eeprom_dev = device_get_binding("EEPROM_0");
 
-    k_mutex_lock(&_lock, K_FOREVER);
+    k_mutex_lock(&eeprom_buf_lock, K_FOREVER);
 
     int len = ts.bin_pub(buf + EEPROM_HEADER_SIZE, sizeof(buf) - EEPROM_HEADER_SIZE, PUB_NVM);
     uint32_t crc = _calc_crc(buf + EEPROM_HEADER_SIZE, len);
@@ -141,7 +143,7 @@ void eeprom_store_data()
             printf("EEPROM: Write error.\n");
         }
     }
-    k_mutex_unlock(&_lock);
+    k_mutex_unlock(&eeprom_buf_lock);
 }
 
 #else
