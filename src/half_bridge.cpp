@@ -219,7 +219,101 @@ bool half_bridge_enabled()
     return TIM1->BDTR & TIM_BDTR_MOE;
 }
 
-#endif // TIM1
+#elif TIMER_ADDR == HRTIM1_BASE
+
+/*
+ * Below initial HRTIM implementation only works for channel A and it does not make use of the
+ * possible higher resolution yet.
+ */
+
+#include <stm32_ll_system.h>
+#include <stm32_ll_bus.h>
+
+static void tim_init_registers(int freq_kHz)
+{
+    stm32_dt_pinctrl_configure(tim_pinctrl, ARRAY_SIZE(tim_pinctrl), TIMER_ADDR);
+
+    // Enable HRTIM1 clock
+    RCC->APB2ENR |= RCC_APB2ENR_HRTIM1EN;
+
+    // Enable periodic calibration of delay-locked loop (DLL) with lowest calibration period
+    HRTIM1->sCommonRegs.DLLCR |= HRTIM_DLLCR_CALEN | HRTIM_DLLCR_CALRTE_0 | HRTIM_DLLCR_CALRTE_1;
+
+    // Wait for calibration to finish
+    while ((HRTIM1_COMMON->ISR & HRTIM_ISR_DLLRDY) == 0) {;}
+
+    // Prescaler 32 --> SystemClock (same as normal timers like TIM1)
+    HRTIM1_TIMA->TIMxCR |= (5U << HRTIM_TIMCR_CK_PSC_Pos);
+
+    // Prescaler 8 / 2^3 --> same frequency as HRTIM
+    HRTIM1_TIMA->DTxR |= (3U << HRTIM_DTR_DTPRSC_Pos);
+
+    // Continuous mode operation
+    HRTIM1_TIMA->TIMxCR |= HRTIM_TIMCR_CONT;
+
+    // Enable preloading with timer reset update trigger
+    //HRTIM1_TIMA->TIMxCR |= HRTIM_TIMCR_PREEN | HRTIM_TIMCR_TRSTU;
+
+    // Enable preloading with timer E update trigger
+    //HRTIM1_TIMA->TIMxCR |= HRTIM_TIMCR_PREEN | HRTIM_TIMCR_TEU;
+
+    // Timer period register
+    HRTIM1_TIMA->PERxR = SystemCoreClock / (freq_kHz * 1000) + 1;
+
+    HRTIM1_TIMA->SETx1R = HRTIM_SET1R_PER;
+    HRTIM1_TIMA->RSTx1R = HRTIM_SET1R_CMP1;
+
+    HRTIM1_TIMA->OUTxR = HRTIM_OUTR_DTEN;
+
+    // Set deadtime values and lock deadtime signs
+    HRTIM1_TIMA->DTxR |=
+        HRTIM_DTR_DTFSLK | (tim_dt_clocks << 16U) |
+        HRTIM_DTR_DTRSLK | tim_dt_clocks;
+
+    // activate trigger for ADC
+    HRTIM1_COMMON->CR1 = HRTIM_CR1_ADC1USRC_0; // ADC trigger update: Timer A
+    HRTIM1_COMMON->ADC1R = HRTIM_ADC1R_AD1TAC3; // ADC trigger event: Timer A compare 3
+
+    // Start timer A
+    HRTIM1->sMasterRegs.MCR = HRTIM_MCR_TACEN;
+}
+
+void half_bridge_start()
+{
+    HRTIM1->sCommonRegs.OENR = HRTIM_OENR_TA1OEN | HRTIM_OENR_TA2OEN;
+}
+
+void half_bridge_stop()
+{
+    HRTIM1->sCommonRegs.ODISR = HRTIM_ODISR_TA1ODIS | HRTIM_ODISR_TA2ODIS;
+}
+
+uint16_t half_bridge_get_arr()
+{
+    return HRTIM1_TIMA->PERxR;
+}
+
+uint16_t half_bridge_get_ccr()
+{
+    return HRTIM1_TIMA->CMP1xR;
+}
+
+void half_bridge_set_ccr(uint16_t ccr)
+{
+    HRTIM1_TIMA->CMP1xR = clamp_ccr(ccr);
+
+    // Trigger ADC for current measurement in the middle of the cycle.
+    // A negative offset of 80 clocks was found to improve current measurement accuracy and
+    // compensate the ADC delay (no risk of underflow as CCR is around 214 even at 0.1% duty).
+    HRTIM1_TIMA->CMP3xR = HRTIM1_TIMA->CMP1xR / 2 - 80;
+}
+
+bool half_bridge_enabled()
+{
+    return (HRTIM1->sCommonRegs.OENR & (HRTIM_OENR_TA1OEN | HRTIM_OENR_TA2OEN)) > 0;
+}
+
+#endif // HRTIM1
 
 #else // UNIT_TEST
 
