@@ -26,6 +26,7 @@ LOG_MODULE_REGISTER(daq, CONFIG_DAQ_LOG_LEVEL);
 // c = dt / (tau + dt) = 0.1s / (10s + 0.1s)
 #define LV_BUS_VOLTAGE_FILTER_CONST         0.0099F
 #define LV_TERMINAL_CURRENT_FILTER_CONST    0.0099F
+#define PWM_CURRENT_FILTER_CONST            0.0625F // 1.5 seconds
 
 #if BOARD_HAS_DCDC
 static uint16_t dcdc_current_offset_raw;
@@ -205,6 +206,8 @@ void daq_update()
     // calculation
     pwm_switch.current = -pwm_switch.get_duty_cycle() *
         adc_scaled(ADC_POS(i_pwm), vref, ADC_GAIN(i_pwm), pwm_current_offset_raw);
+    pwm_switch.current_filtered = PWM_CURRENT_FILTER_CONST * pwm_switch.current +
+        (1.0F - PWM_CURRENT_FILTER_CONST) * pwm_switch.current_filtered;
 
     lv_terminal_current -= pwm_switch.current;
 
@@ -226,8 +229,8 @@ void daq_update()
     lv_terminal.current = lv_terminal_current;
     lv_terminal.power   = lv_terminal.bus->voltage * lv_terminal.current;
 
-    lv_terminal.current_filtered = LV_TERMINAL_CURRENT_FILTER_CONST * lv_bus.voltage +
-        (1.0F - LV_TERMINAL_CURRENT_FILTER_CONST) * lv_bus.voltage_filtered;
+    lv_terminal.current_filtered = LV_TERMINAL_CURRENT_FILTER_CONST * lv_terminal.current +
+        (1.0F - LV_TERMINAL_CURRENT_FILTER_CONST) * lv_terminal.current_filtered;
 
 #if BOARD_HAS_LOAD_OUTPUT
     load.power = load.bus->voltage * load.current;
