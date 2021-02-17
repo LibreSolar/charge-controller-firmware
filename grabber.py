@@ -56,6 +56,16 @@ with open("src/data_nodes.cpp", 'r') as fd:
 
 append_stuff(temp_obj)
 
+# add missing fields
+for category in main_obj:
+    for node in main_obj[category]:
+        if not 'unit' in main_obj[category][node]:
+            main_obj[category][node]['unit'] = None
+        if not 'min' in main_obj[category][node]:
+            main_obj[category][node]['min'] = None
+        if not 'max' in main_obj[category][node]:
+            main_obj[category][node]['max'] = None
+
 with open(output_path, "w", encoding='utf8') as filename:
     json.dump(main_obj, filename, indent=4, ensure_ascii=False)
 
