@@ -9,6 +9,7 @@
 #include <zephyr.h>
 
 #ifndef UNIT_TEST
+#include <device.h>
 #include <drivers/gpio.h>
 
 #include <logging/log.h>
@@ -29,8 +30,8 @@ extern DeviceStatus dev_stat;
 
 #if BOARD_HAS_DCDC
 
-#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), hv_ext_sense))
-#define HV_EXT_SENSE_GPIO DT_CHILD(DT_PATH(outputs), hv_ext_sense)
+#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), hv_out))
+#define HV_OUT_NODE DT_CHILD(DT_PATH(outputs), hv_out)
 #endif
 
 Dcdc::Dcdc(DcBus *high, DcBus *low, DcdcOperationMode op_mode)
@@ -335,19 +336,23 @@ void Dcdc::fuse_destruction()
 
 void Dcdc::output_hvs_enable()
 {
-#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), hv_ext_sense))
-    const struct device *dev_hv_ext = device_get_binding(DT_GPIO_LABEL(HV_EXT_SENSE_GPIO, gpios));
-    gpio_pin_configure(dev_hv_ext, DT_GPIO_PIN(HV_EXT_SENSE_GPIO, gpios),
-        DT_GPIO_FLAGS(HV_EXT_SENSE_GPIO, gpios) | GPIO_OUTPUT_ACTIVE);
+#ifdef HV_OUT_NODE
+    const struct device *hv_out = DEVICE_DT_GET(DT_GPIO_CTLR(HV_OUT_NODE, gpios));
+    if (device_is_ready(hv_out)) {
+        gpio_pin_configure(hv_out, DT_GPIO_PIN(HV_OUT_NODE, gpios),
+            DT_GPIO_FLAGS(HV_OUT_NODE, gpios) | GPIO_OUTPUT_ACTIVE);
+    }
 #endif
 }
 
 void Dcdc::output_hvs_disable()
 {
-#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), hv_ext_sense))
-    const struct device *dev_hv_ext = device_get_binding(DT_GPIO_LABEL(HV_EXT_SENSE_GPIO, gpios));
-    gpio_pin_configure(dev_hv_ext, DT_GPIO_PIN(HV_EXT_SENSE_GPIO, gpios),
-        DT_GPIO_FLAGS(HV_EXT_SENSE_GPIO, gpios) | GPIO_OUTPUT_INACTIVE);
+#ifdef HV_OUT_NODE
+    const struct device *hv_out = DEVICE_DT_GET(DT_GPIO_CTLR(HV_OUT_NODE, gpios));
+    if (device_is_ready(hv_out)) {
+        gpio_pin_configure(hv_out, DT_GPIO_PIN(HV_OUT_NODE, gpios),
+            DT_GPIO_FLAGS(HV_OUT_NODE, gpios) | GPIO_OUTPUT_INACTIVE);
+    }
 #endif
 }
 

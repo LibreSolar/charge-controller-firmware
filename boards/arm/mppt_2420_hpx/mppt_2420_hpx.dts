@@ -62,8 +62,8 @@
 			pwms = <&pwm8 1 200000 PWM_POLARITY_NORMAL>; /* 200 us period = 5 kHz */
 		};
 
-		hv-ext-sense {
-			label = "HV external sense and switch";
+		hv-out {
+			label = "HV output sense and enable switch";
 			gpios = <&gpiob 12 GPIO_ACTIVE_LOW>;
 		};
 	};

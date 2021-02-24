@@ -48,8 +48,8 @@
 			gpios = <&gpiob 14 GPIO_ACTIVE_LOW>;
 		};
 
-		hv-ext-sense {
-			label = "HV external sense and switch";
+		hv-out {
+			label = "HV output sense and enable switch";
 			gpios = <&gpiob 12 GPIO_ACTIVE_LOW>;
 		};
 	};
