@@ -453,7 +453,8 @@ void Charger::charge_control(BatConf *bat_conf)
     }
 
     if (dev_stat.has_error(ERR_BAT_OVERVOLTAGE) &&
-        port->bus->voltage < (bat_conf->voltage_absolute_max - 0.5F) * port->bus->series_multiplier)
+        port->bus->voltage < (bat_conf->voltage_absolute_max - 0.5F) *
+                             port->bus->series_multiplier)
     {
         dev_stat.clear_error(ERR_BAT_OVERVOLTAGE);
     }
@@ -461,9 +462,13 @@ void Charger::charge_control(BatConf *bat_conf)
     // state machine
     switch (state) {
         case CHG_STATE_IDLE: {
-            if  (port->bus->voltage < port->bus->sink_control_voltage(bat_conf->voltage_recharge)
-                && port->bus->voltage > port->bus->sink_control_voltage(bat_conf->voltage_absolute_min) // ToDo set error flag otherwise
-                && (uptime() - time_state_changed) > bat_conf->time_limit_recharge
+            if ((time_state_changed == CHARGER_TIME_NEVER ||
+                    ((uptime() - time_state_changed) > bat_conf->time_limit_recharge &&
+                    port->bus->voltage < port->bus->sink_control_voltage(
+                        bat_conf->voltage_recharge))
+                )
+                && port->bus->voltage > port->bus->sink_control_voltage(
+                    bat_conf->voltage_absolute_min) // ToDo set error flag otherwise
                 && bat_temperature < bat_conf->charge_temp_max - 1
                 && bat_temperature > bat_conf->charge_temp_min + 1)
             {

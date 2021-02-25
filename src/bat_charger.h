@@ -19,6 +19,8 @@
 
 #include "power_port.h"
 
+#define CHARGER_TIME_NEVER      INT32_MIN
+
 /**
  * Battery cell types
  */
@@ -268,132 +270,6 @@ typedef struct
 } BatConf;
 
 /**
- * Charger configuration and battery state
- */
-class Charger
-{
-public:
-    Charger(PowerPort *pwr_port):
-        port(pwr_port) {};
-
-    PowerPort *port;
-
-    /**
-     * Current charger state (see enum ChargerState)
-     */
-    uint32_t state;
-
-    /**
-     * Battery temperature (°C) from ext. temperature sensor (if existing)
-     */
-    float bat_temperature = 25;
-
-    /**
-     * Flag to indicate if external temperature sensor was detected
-     */
-    bool ext_temp_sensor;
-
-    /**
-     * Estimated usable capacity (Ah) based on coulomb counting
-     */
-    float usable_capacity;
-
-    /**
-     * Coulomb counter for SOH calculation
-     */
-    float discharged_Ah;
-
-    /**
-     * Number of full charge cycles
-     */
-    uint16_t num_full_charges;
-
-    /**
-     * Number of deep-discharge cycles
-     */
-    uint16_t num_deep_discharges;
-
-    /**
-     * State of Charge (%)
-     */
-    uint16_t soc = 100;
-
-    /**
-     * State of Health (%)
-     */
-    uint16_t soh = 100;
-
-    /**
-     * Timestamp of last state change
-     */
-    time_t time_state_changed;
-
-    /**
-     * Last time the CV limit was reached
-     */
-    time_t time_target_voltage_reached;
-
-    /**
-     * Counts the number of seconds during which the target voltage of current charging phase was
-     * reached.
-     */
-    int target_voltage_timer;
-
-    /**
-     * Timestamp after finish of last equalization charge
-     */
-    time_t time_last_equalization;
-
-    /**
-     * Deep discharge counter value after last equalization
-     */
-    int deep_dis_last_equalization;
-
-    /**
-     * Flag to indicate if battery was fully charged
-     */
-    bool full;
-
-    /**
-     * Flag to indicate if battery was completely discharged
-     */
-    bool empty;
-
-    /**
-     * Detect if two batteries are connected in series (12V/24V auto-detection)
-     */
-    void detect_num_batteries(BatConf *bat) const;
-
-    /**
-     * Discharging control update (for load output), should be called once per second
-     */
-    void discharge_control(BatConf *bat_conf);
-
-    /**
-     * Charger state machine update, should be called once per second
-     */
-    void charge_control(BatConf *bat_conf);
-
-    /**
-     * SOC estimation
-     *
-     * Must be called exactly once per second, otherwise SOC calculation gets wrong.
-     */
-    void update_soc(BatConf *bat_conf);
-
-    /**
-     * Initialize terminal and dc bus for battery connection
-     *
-     * @param bat Configuration to be used for terminal setpoints
-     */
-    void init_terminal(BatConf *bat) const;
-
-private:
-    void enter_state(int next_state);
-};
-
-
-/**
  * Possible charger states
  *
  * Further information:
@@ -447,6 +323,131 @@ enum ChargerState {
      * enabled in the software)
      */
     CHG_STATE_EQUALIZATION
+};
+
+/**
+ * Charger configuration and battery state
+ */
+class Charger
+{
+public:
+    Charger(PowerPort *pwr_port):
+        port(pwr_port) {};
+
+    PowerPort *port;
+
+    /**
+     * Current charger state (see enum ChargerState)
+     */
+    uint32_t state = CHG_STATE_IDLE;
+
+    /**
+     * Battery temperature (°C) from ext. temperature sensor (if existing)
+     */
+    float bat_temperature = 25;
+
+    /**
+     * Flag to indicate if external temperature sensor was detected
+     */
+    bool ext_temp_sensor;
+
+    /**
+     * Estimated usable capacity (Ah) based on coulomb counting
+     */
+    float usable_capacity;
+
+    /**
+     * Coulomb counter for SOH calculation
+     */
+    float discharged_Ah;
+
+    /**
+     * Number of full charge cycles
+     */
+    uint16_t num_full_charges;
+
+    /**
+     * Number of deep-discharge cycles
+     */
+    uint16_t num_deep_discharges;
+
+    /**
+     * State of Charge (%)
+     */
+    uint16_t soc = 100;
+
+    /**
+     * State of Health (%)
+     */
+    uint16_t soh = 100;
+
+    /**
+     * Timestamp of last state change
+     */
+    time_t time_state_changed = CHARGER_TIME_NEVER;
+
+    /**
+     * Last time the CV limit was reached
+     */
+    time_t time_target_voltage_reached = CHARGER_TIME_NEVER;
+
+    /**
+     * Counts the number of seconds during which the target voltage of current charging phase was
+     * reached.
+     */
+    int target_voltage_timer;
+
+    /**
+     * Timestamp after finish of last equalization charge
+     */
+    time_t time_last_equalization = CHARGER_TIME_NEVER;
+
+    /**
+     * Deep discharge counter value after last equalization
+     */
+    int deep_dis_last_equalization;
+
+    /**
+     * Flag to indicate if battery was fully charged
+     */
+    bool full;
+
+    /**
+     * Flag to indicate if battery was completely discharged
+     */
+    bool empty;
+
+    /**
+     * Detect if two batteries are connected in series (12V/24V auto-detection)
+     */
+    void detect_num_batteries(BatConf *bat) const;
+
+    /**
+     * Discharging control update (for load output), should be called once per second
+     */
+    void discharge_control(BatConf *bat_conf);
+
+    /**
+     * Charger state machine update, should be called once per second
+     */
+    void charge_control(BatConf *bat_conf);
+
+    /**
+     * SOC estimation
+     *
+     * Must be called exactly once per second, otherwise SOC calculation gets wrong.
+     */
+    void update_soc(BatConf *bat_conf);
+
+    /**
+     * Initialize terminal and dc bus for battery connection
+     *
+     * @param bat Configuration to be used for terminal setpoints
+     */
+    void init_terminal(BatConf *bat) const;
+
+private:
+    void enter_state(int next_state);
 };
 
 /**
