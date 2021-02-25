@@ -24,6 +24,7 @@ LOG_MODULE_REGISTER(daq, CONFIG_DAQ_LOG_LEVEL);
 
 // filter parameter c for additional battery voltage and current low-pass filter
 // c = dt / (tau + dt) = 0.1s / (10s + 0.1s)
+#define HV_BUS_VOLTAGE_FILTER_CONST         0.0099F
 #define LV_BUS_VOLTAGE_FILTER_CONST         0.0099F
 #define LV_TERMINAL_CURRENT_FILTER_CONST    0.0099F
 #define PWM_CURRENT_FILTER_CONST            0.0625F // 1.5 seconds
@@ -185,6 +186,15 @@ void daq_update()
 
 #if BOARD_HAS_DCDC
     hv_bus.voltage = adc_scaled(ADC_POS(v_high), vref, ADC_GAIN(v_high));
+
+    if (hv_bus.voltage_filtered != 0.0F) {
+        hv_bus.voltage_filtered = HV_BUS_VOLTAGE_FILTER_CONST * hv_bus.voltage +
+            (1.0F - HV_BUS_VOLTAGE_FILTER_CONST) * hv_bus.voltage_filtered;
+    }
+    else {
+        // initialize properly at startup
+        hv_bus.voltage_filtered = hv_bus.voltage;
+    }
 #endif
 
 #if BOARD_HAS_PWM_PORT
