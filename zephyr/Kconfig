@@ -314,6 +314,7 @@ endmenu # Charge controller setup
 menu "UEXT port"
 
 config EXT_OLED_DISPLAY
+    select I2C
     bool "OLED display"
 
 config EXT_OLED_BRIGHTNESS
