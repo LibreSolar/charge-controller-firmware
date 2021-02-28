@@ -22,7 +22,7 @@
 #include "pwm_switch.h"         // PWM charge controller
 #include "bat_charger.h"        // battery settings and charger state machine
 #include "daq.h"                // ADC using DMA and conversion to measurement values
-#include "eeprom.h"             // external I2C EEPROM
+#include "data_storage.h"       // non-volatile data storage (e.g. EEPROM)
 #include "load.h"               // load and USB output management
 #include "leds.h"               // LED switching using charlieplexing
 #include "device_status.h"      // log data (error memory, min/max measurements, etc.)
@@ -120,7 +120,7 @@ void main(void)
         leds_update_soc(charger.soc, false);
         #endif
 
-        eeprom_update();
+        data_storage_update();
 
         t_start += 1000;
         k_sleep(K_TIMEOUT_ABS_MS(t_start));

@@ -23,7 +23,7 @@ LOG_MODULE_REGISTER(dcdc, CONFIG_DCDC_LOG_LEVEL);
 #include "device_status.h"
 #include "helper.h"
 #include "half_bridge.h"
-#include "eeprom.h"
+#include "data_storage.h"
 #include "setup.h"
 
 extern DeviceStatus dev_stat;
@@ -324,7 +324,7 @@ void Dcdc::fuse_destruction()
 
     if (counter > 20) {     // wait 20s to be able to send out data
         LOG_ERR("Charge controller fuse destruction called!\n");
-        eeprom_store_data();
+        data_storage_write();
         half_bridge_stop();
         half_bridge_init(50, 0, 0, 0.98);   // reset safety limits to allow 0% duty cycle
         half_bridge_set_duty_cycle(0);

@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef EEPROM_H
-#define EEPROM_H
+#ifndef DATA_STORAGE_H_
+#define DATA_STORAGE_H_
 
-#define EEPROM_UPDATE_INTERVAL  (6*60*60)       // update every 6 hours
+#define DATA_UPDATE_INTERVAL  (6*60*60)       // update every 6 hours
 
 /**
  * @file
@@ -18,16 +18,16 @@
 /**
  * Store current charge controller data to EEPROM
  */
-void eeprom_store_data();
+void data_storage_write();
 
 /**
  * Restore charge controller data from EEPROM and write to variables in RAM
  */
-void eeprom_restore_data();
+void data_storage_read();
 
 /**
  * Stores data to EEPROM every 6 hours (can be called regularly)
  */
-void eeprom_update();
+void data_storage_update();
 
-#endif /* EEPROM_H */
+#endif /* DATA_STORAGE_H_ */

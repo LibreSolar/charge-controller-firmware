@@ -4,23 +4,22 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "eeprom.h"
-
-#ifdef CONFIG_EEPROM
+#include "data_storage.h"
 
 #include <zephyr.h>
-#include <device.h>
-#include <drivers/eeprom.h>
 
 #include "mcu.h"
 #include "thingset.h"
 #include "data_nodes.h"
+#include "helper.h"
 
 #include <stdio.h>
 
-#define EEPROM_HEADER_SIZE 8    // bytes
+#ifndef UNIT_TEST
 
-K_MUTEX_DEFINE(eeprom_buf_lock);
+#include <device.h>
+
+K_MUTEX_DEFINE(data_buf_lock);
 
 // Buffer used by store and restore functions (must be word-aligned for hardware CRC calculation)
 static uint8_t buf[512] __aligned(sizeof(uint32_t));
@@ -59,13 +58,21 @@ uint32_t _calc_crc(const uint8_t *buf, size_t len)
     return CRC->DR;
 }
 
+#endif /* UNIT_TEST */
+
+#ifdef CONFIG_EEPROM
+
+#include <drivers/eeprom.h>
+
+#define EEPROM_HEADER_SIZE 8    // bytes
+
 // EEPROM layout:
 // bytes 0-1: Version number
 // bytes 2-3: number of data bytes
 // bytes 4-7: CRC32
 // byte 8: start of data
 
-void eeprom_restore_data()
+void data_storage_read()
 {
     int err;
 
@@ -88,7 +95,7 @@ void eeprom_restore_data()
     //    buf_header[4], buf_header[5], buf_header[6], buf_header[7]);
 
     if (version == DATA_NODES_VERSION && len <= sizeof(buf)) {
-        k_mutex_lock(&eeprom_buf_lock, K_FOREVER);
+        k_mutex_lock(&data_buf_lock, K_FOREVER);
         err = eeprom_read(eeprom_dev, EEPROM_HEADER_SIZE, buf, len);
 
         //printf("Data (len=%d): ", len);
@@ -102,20 +109,20 @@ void eeprom_restore_data()
             printf("EEPROM: CRC of data not correct, expected 0x%x (data_len = %d)\n",
                 (unsigned int)crc, len);
         }
-        k_mutex_unlock(&eeprom_buf_lock);
+        k_mutex_unlock(&data_buf_lock);
     }
     else {
         printf("EEPROM: Empty or data layout version changed\n");
     }
 }
 
-void eeprom_store_data()
+void data_storage_write()
 {
     int err;
 
 	const struct device *eeprom_dev = device_get_binding("EEPROM_0");
 
-    k_mutex_lock(&eeprom_buf_lock, K_FOREVER);
+    k_mutex_lock(&data_buf_lock, K_FOREVER);
 
     int len = ts.bin_pub(buf + EEPROM_HEADER_SIZE, sizeof(buf) - EEPROM_HEADER_SIZE, PUB_NVM);
     uint32_t crc = _calc_crc(buf + EEPROM_HEADER_SIZE, len);
@@ -143,21 +150,19 @@ void eeprom_store_data()
             printf("EEPROM: Write error.\n");
         }
     }
-    k_mutex_unlock(&eeprom_buf_lock);
+    k_mutex_unlock(&data_buf_lock);
 }
 
 #else
 
-void eeprom_store_data() {;}
-void eeprom_restore_data() {;}
+void data_storage_write() {;}
+void data_storage_read() {;}
 
 #endif
 
-#include "helper.h"
-
-void eeprom_update()
+void data_storage_update()
 {
-    if (uptime() % EEPROM_UPDATE_INTERVAL == 0 && uptime() > 0) {
-        eeprom_store_data();
+    if (uptime() % DATA_UPDATE_INTERVAL == 0 && uptime() > 0) {
+        data_storage_write();
     }
 }

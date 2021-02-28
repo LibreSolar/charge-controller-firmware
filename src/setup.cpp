@@ -20,7 +20,7 @@
 #include "pwm_switch.h"         // PWM charge controller
 #include "bat_charger.h"        // battery settings and charger state machine
 #include "daq.h"                // ADC using DMA and conversion to measurement values
-#include "eeprom.h"             // external I2C EEPROM
+#include "data_storage.h"             // external I2C EEPROM
 #include "load.h"               // load and USB output management
 #include "leds.h"               // LED switching using charlieplexing
 #include "device_status.h"      // log data (error memory, min/max measurements, etc.)

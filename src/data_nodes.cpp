@@ -26,7 +26,7 @@ LOG_MODULE_REGISTER(data_nodes, CONFIG_DATA_NODES_LOG_LEVEL);
 #include "thingset.h"
 #include "hardware.h"
 #include "dcdc.h"
-#include "eeprom.h"
+#include "data_storage.h"
 
 const char manufacturer[] = "Libre Solar";
 const char device_type[] = DT_PROP(DT_PATH(pcb), type);
@@ -456,7 +456,7 @@ static DataNode data_nodes[] = {
 
     TS_NODE_EXEC(0xE1, "reset", &reset_device, ID_EXEC, TS_ANY_RW),
     TS_NODE_EXEC(0xE2, "bootloader-stm", &start_stm32_bootloader, ID_EXEC, TS_ANY_RW),
-    TS_NODE_EXEC(0xE3, "save-settings", &eeprom_store_data, ID_EXEC, TS_ANY_RW),
+    TS_NODE_EXEC(0xE3, "save-settings", &data_storage_write, ID_EXEC, TS_ANY_RW),
 
     TS_NODE_EXEC(0xEE, "auth", &thingset_auth, 0, TS_ANY_RW),
     TS_NODE_STRING(0xEF, "Password", auth_password, sizeof(auth_password), 0xEE, TS_ANY_RW, 0),
@@ -501,7 +501,7 @@ void data_nodes_update_conf()
     changed = true; // temporary hack
 
     if (changed) {
-        eeprom_store_data();
+        data_storage_write();
     }
 }
 
@@ -517,7 +517,7 @@ void data_nodes_init()
     uint64_to_base32(id64, device_id, sizeof(device_id), alphabet_crockford);
 #endif
 
-    eeprom_restore_data();
+    data_storage_read();
     if (battery_conf_check(&bat_conf_user)) {
         battery_conf_overwrite(&bat_conf_user, &bat_conf, &charger);
     }
