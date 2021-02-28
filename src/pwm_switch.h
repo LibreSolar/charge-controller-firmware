@@ -1,7 +1,7 @@
 /*
- * SPDX-License-Identifier: Apache-2.0
+ * Copyright (c) The Libre Solar Project Contributors
  *
- * Copyright (c) 2018 Martin Jäger / Libre Solar
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 #ifndef PWM_SWITCH_H

@@ -1,5 +1,5 @@
+# Copyright (c) The Libre Solar Project Contributors
 # SPDX-License-Identifier: Apache-2.0
-# Copyright (c) 2019 Martin Jäger / Libre Solar
 
 config BOARD_MPPT_1210_HUS
 	bool "Libre Solar MPPT 1210 HUS"

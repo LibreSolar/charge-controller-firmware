@@ -1,5 +1,5 @@
+# Copyright (c) The Libre Solar Project Contributors
 # SPDX-License-Identifier: Apache-2.0
-# Copyright (c) 2021 Martin Jäger / Libre Solar
 
 description: Half bridge, consisting of two coupled PWM outputs
 
