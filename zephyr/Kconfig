@@ -394,6 +394,12 @@ config DATA_NODES_LOG_LEVEL
     help
       Log level for the data nodes module. 0=off, 1=ERR, 2=WRN, 3=INF, 4=DBG
 
+config DATA_STORAGE_LOG_LEVEL
+    int "Log level for the data storage module"
+    default 2
+    depends on LOG
+    help
+      Log level for the data storage module. 0=off, 1=ERR, 2=WRN, 3=INF, 4=DBG
 
 config DCDC_LOG_LEVEL
     int "Log level for the DCDC module (if included)"

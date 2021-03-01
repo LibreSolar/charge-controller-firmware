@@ -18,6 +18,8 @@
 #ifndef UNIT_TEST
 
 #include <device.h>
+#include <logging/log.h>
+LOG_MODULE_REGISTER(nvs, CONFIG_DATA_STORAGE_LOG_LEVEL);
 
 K_MUTEX_DEFINE(data_buf_lock);
 
@@ -64,13 +66,15 @@ uint32_t _calc_crc(const uint8_t *buf, size_t len)
 
 #include <drivers/eeprom.h>
 
-#define EEPROM_HEADER_SIZE 8    // bytes
-
-// EEPROM layout:
-// bytes 0-1: Version number
-// bytes 2-3: number of data bytes
-// bytes 4-7: CRC32
-// byte 8: start of data
+/*
+ * EEPROM header bytes:
+ * - 0-1: Data nodes version number
+ * - 2-3: Number of data bytes
+ * - 4-7: CRC32
+ *
+ * Data starts from byte 8
+ */
+#define EEPROM_HEADER_SIZE 8
 
 void data_storage_read()
 {
@@ -78,21 +82,20 @@ void data_storage_read()
 
 	const struct device *eeprom_dev = device_get_binding("EEPROM_0");
 
-    // EEPROM header
-    uint8_t buf_header[EEPROM_HEADER_SIZE] = {};    // initialize to avoid compiler warning
+    uint8_t buf_header[EEPROM_HEADER_SIZE] = {};
     err = eeprom_read(eeprom_dev, 0, buf_header, EEPROM_HEADER_SIZE);
     if (err != 0) {
-        printf("EEPROM: read error: %d\n", err);
+        LOG_ERR("EEPROM read error %d", err);
         return;
     }
     uint16_t version = *((uint16_t*)&buf_header[0]);
     uint16_t len     = *((uint16_t*)&buf_header[2]);
     uint32_t crc     = *((uint32_t*)&buf_header[4]);
 
-    //printf("EEPROM header restore: ver %d, len %d, CRC %.8x\n", version, len, (unsigned int)crc);
-    //printf("Header: %.2x %.2x %.2x %.2x %.2x %.2x %.2x %.2x\n",
-    //    buf_header[0], buf_header[1], buf_header[2], buf_header[3],
-    //    buf_header[4], buf_header[5], buf_header[6], buf_header[7]);
+    LOG_DBG("EEPROM header restore: ver %d, len %d, CRC %.8x", version, len, (unsigned int)crc);
+    LOG_DBG("Header: %.2x %.2x %.2x %.2x %.2x %.2x %.2x %.2x",
+        buf_header[0], buf_header[1], buf_header[2], buf_header[3],
+        buf_header[4], buf_header[5], buf_header[6], buf_header[7]);
 
     if (version == DATA_NODES_VERSION && len <= sizeof(buf)) {
         k_mutex_lock(&data_buf_lock, K_FOREVER);
@@ -103,16 +106,16 @@ void data_storage_read()
 
         if (_calc_crc(buf, len) == crc) {
             int status = ts.bin_sub(buf, sizeof(buf), TS_WRITE_MASK, PUB_NVM);
-            printf("EEPROM: Data objects read and updated, ThingSet result: 0x%x\n", status);
+            LOG_INF("EEPROM read and data nodes updated, ThingSet result: 0x%x", status);
         }
         else {
-            printf("EEPROM: CRC of data not correct, expected 0x%x (data_len = %d)\n",
+            LOG_ERR("EEPROM data CRC invalid, expected 0x%x (data_len = %d)",
                 (unsigned int)crc, len);
         }
         k_mutex_unlock(&data_buf_lock);
     }
     else {
-        printf("EEPROM: Empty or data layout version changed\n");
+        LOG_INF("EEPROM empty or data layout version changed");
     }
 }
 
@@ -127,27 +130,26 @@ void data_storage_write()
     int len = ts.bin_pub(buf + EEPROM_HEADER_SIZE, sizeof(buf) - EEPROM_HEADER_SIZE, PUB_NVM);
     uint32_t crc = _calc_crc(buf + EEPROM_HEADER_SIZE, len);
 
-    // store EEPROM_VERSION, number of bytes and CRC
     *((uint16_t*)&buf[0]) = (uint16_t)DATA_NODES_VERSION;
-    *((uint16_t*)&buf[2]) = (uint16_t)(len);   // length of data
+    *((uint16_t*)&buf[2]) = (uint16_t)(len);
     *((uint32_t*)&buf[4]) = crc;
 
     //printf("Data (len=%d): ", len);
     //for (int i = 0; i < len; i++) printf("%.2x ", buf[i + EEPROM_HEADER_SIZE]);
 
-    //printf("Header: %.2x %.2x %.2x %.2x %.2x %.2x %.2x %.2x\n",
-    //    buf[0], buf[1], buf[2], buf[3], buf[4], buf[5], buf[6], buf[7]);
+    LOG_DBG("Header: %.2x %.2x %.2x %.2x %.2x %.2x %.2x %.2x",
+        buf[0], buf[1], buf[2], buf[3], buf[4], buf[5], buf[6], buf[7]);
 
     if (len == 0) {
-        printf("EEPROM: Data could not be stored. ThingSet error (len = %d)\n", len);
+        LOG_ERR("EEPROM data could not be stored. ThingSet error (len = %d)", len);
     }
     else {
         err = eeprom_write(eeprom_dev, 0, buf, len + EEPROM_HEADER_SIZE);
         if (err == 0) {
-            printf("EEPROM: Data successfully stored.\n");
+            LOG_INF("EEPROM data successfully stored");
         }
         else {
-            printf("EEPROM: Write error.\n");
+            LOG_ERR("EEPROM write error %d", err);
         }
     }
     k_mutex_unlock(&data_buf_lock);
