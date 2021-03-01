@@ -155,6 +155,108 @@ void data_storage_write()
     k_mutex_unlock(&data_buf_lock);
 }
 
+#elif defined(CONFIG_NVS)
+
+#include <drivers/flash.h>
+#include <storage/flash_map.h>
+#include <fs/nvs.h>
+
+/*
+ * NVS header bytes:
+ * - 0-1: Data nodes version number
+ *
+ * Data starts from byte 2
+ */
+#define NVS_HEADER_SIZE 2
+
+#define FLASH_PARTITION_NODE DT_NODE_BY_FIXED_PARTITION_LABEL(storage)
+#define FLASH_DEVICE_NODE DT_MTD_FROM_FIXED_PARTITION(FLASH_PARTITION_NODE)
+
+#define THINGSET_DATA_ID    1
+
+static const struct device *flash_dev = DEVICE_DT_GET(FLASH_DEVICE_NODE);
+
+static struct nvs_fs fs;
+static bool nvs_initialized = false;
+
+static void data_storage_init()
+{
+    int err;
+    struct flash_pages_info page_info;
+
+    fs.offset = FLASH_AREA_OFFSET(storage);
+    err = flash_get_page_info_by_offs(flash_dev, fs.offset, &page_info);
+    if (err) {
+        LOG_ERR("Unable to get flash page info");
+    }
+    fs.sector_size = page_info.size;
+    fs.sector_count = FLASH_AREA_SIZE(storage) / page_info.size;
+
+    err = nvs_init(&fs, DT_LABEL(FLASH_DEVICE_NODE));
+    if (err) {
+        LOG_ERR("NVS init failed");
+    }
+
+    nvs_initialized = true;
+}
+
+void data_storage_read()
+{
+    if (!nvs_initialized) {
+        data_storage_init();
+    }
+
+    int num_bytes = nvs_read(&fs, THINGSET_DATA_ID, &buf, sizeof(buf));
+
+    if (num_bytes < 0) {
+        LOG_ERR("NVS read error %d", num_bytes);
+        return;
+    }
+
+    uint16_t version = *((uint16_t*)&buf[0]);
+
+    if (version == DATA_NODES_VERSION) {
+        k_mutex_lock(&data_buf_lock, K_FOREVER);
+
+        int status = ts.bin_sub(buf + NVS_HEADER_SIZE, num_bytes - NVS_HEADER_SIZE,
+            TS_WRITE_MASK, PUB_NVM);
+        LOG_INF("NVS read and data nodes updated, ThingSet result: 0x%x", status);
+
+        k_mutex_unlock(&data_buf_lock);
+    }
+    else {
+        LOG_INF("EEPROM empty or data layout version changed");
+    }
+}
+
+void data_storage_write()
+{
+    if (!nvs_initialized) {
+        data_storage_init();
+    }
+
+    k_mutex_lock(&data_buf_lock, K_FOREVER);
+
+    *((uint16_t*)&buf[0]) = (uint16_t)DATA_NODES_VERSION;
+
+    int len = ts.bin_pub(buf + NVS_HEADER_SIZE, sizeof(buf) - NVS_HEADER_SIZE, PUB_NVM);
+
+    if (len == 0) {
+        LOG_ERR("NVS data could not be stored. ThingSet error (len = %d)", len);
+    }
+    else {
+        int ret = nvs_write(&fs, THINGSET_DATA_ID, &buf, len + NVS_HEADER_SIZE);
+        if (ret == len + NVS_HEADER_SIZE) {
+            LOG_INF("NVS data successfully stored");
+        }
+        else {
+            LOG_ERR("NVS write error %d", ret);
+        }
+    }
+
+    k_mutex_unlock(&data_buf_lock);
+}
+
 #else
 
 void data_storage_write() {;}
