@@ -28,11 +28,10 @@ LOG_MODULE_REGISTER(data_nodes, CONFIG_DATA_NODES_LOG_LEVEL);
 #include "dcdc.h"
 #include "eeprom.h"
 
-const char* const manufacturer = "Libre Solar";
-const char* const device_type = DT_PROP(DT_PATH(pcb), type);
-const char* const hardware_version = DT_PROP(DT_PATH(pcb), version_str);
-const char* const firmware_version = "0.1";
-const char* const firmware_commit = COMMIT_HASH;
+const char manufacturer[] = "Libre Solar";
+const char device_type[] = DT_PROP(DT_PATH(pcb), type);
+const char hardware_version[] = DT_PROP(DT_PATH(pcb), version_str);
+const char firmware_version[] = FIRMWARE_VERSION_ID;
 char device_id[9];
 
 static char auth_password[11];
@@ -84,9 +83,6 @@ static DataNode data_nodes[] = {
         ID_INFO, TS_ANY_R, 0),
 
     TS_NODE_STRING(0x1D, "FirmwareVersion", firmware_version, 0,
-        ID_INFO, TS_ANY_R, 0),
-
-    TS_NODE_STRING(0x1E, "FirmwareCommit", firmware_commit, 0,
         ID_INFO, TS_ANY_R, 0),
 
     TS_NODE_UINT32(0x20, "Timestamp_s", &timestamp,
