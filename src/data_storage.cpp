@@ -20,6 +20,7 @@
 #include <device.h>
 #include <logging/log.h>
 LOG_MODULE_REGISTER(nvs, CONFIG_DATA_STORAGE_LOG_LEVEL);
+#include <stm32_ll_bus.h>
 
 K_MUTEX_DEFINE(data_buf_lock);
 
@@ -30,11 +31,7 @@ extern ThingSet ts;
 
 uint32_t _calc_crc(const uint8_t *buf, size_t len)
 {
-#if defined(CONFIG_SOC_SERIES_STM32G4X)
-    RCC->AHB1ENR |= RCC_AHB1ENR_CRCEN;
-#else
-    RCC->AHBENR |= RCC_AHBENR_CRCEN;
-#endif
+    LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_CRC);
 
     // we keep standard polynomial 0x04C11DB7 (same for STM32L0 and STM32F0)
     // and we don't care for endianness here
@@ -51,11 +48,7 @@ uint32_t _calc_crc(const uint8_t *buf, size_t len)
         }
     }
 
-#if defined(CONFIG_SOC_SERIES_STM32G4X)
-    RCC->AHB1ENR &= ~(RCC_AHB1ENR_CRCEN);
-#else
-    RCC->AHBENR &= ~(RCC_AHBENR_CRCEN);
-#endif
+    LL_AHB1_GRP1_DisableClock(LL_AHB1_GRP1_PERIPH_CRC);
 
     return CRC->DR;
 }

@@ -19,6 +19,7 @@
 #include "mcu.h"
 
 #include <stm32_ll_system.h>
+#include <stm32_ll_bus.h>
 
 #if BOARD_HAS_LOAD_OUTPUT
 #define LOAD_GPIO DT_CHILD(DT_PATH(outputs), load)
@@ -35,11 +36,9 @@ static const struct device *dev_usb;
 
 static void lptim_init()
 {
-    // Enable peripheral clock of GPIOB
-    RCC->IOPENR |= RCC_IOPENR_IOPBEN;
+    LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_LPTIM1);
 
-    // Enable LPTIM clock
-    RCC->APB1ENR |= RCC_APB1ENR_LPTIM1EN;
+    LL_IOP_GRP1_EnableClock(LL_IOP_GRP1_PERIPH_GPIOB);
 
     // Select alternate function mode on PB2 (first bit _1 = 1, second bit _0 = 0)
     GPIOB->MODER = (GPIOB->MODER & ~(GPIO_MODER_MODE2)) | GPIO_MODER_MODE2_1;
@@ -96,12 +95,12 @@ void ADC1_COMP_IRQHandler(void *args)
 
 void short_circuit_comp_init()
 {
-    // set GPIO pin to analog
-    RCC->IOPENR |= RCC_IOPENR_GPIOBEN;
-    GPIOB->MODER &= ~(GPIO_MODER_MODE4);
+    LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_SYSCFG);
 
-    // enable SYSCFG clock
-    RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;
+    LL_IOP_GRP1_EnableClock(LL_IOP_GRP1_PERIPH_GPIOB);
+
+    // set GPIO pin to analog
+    GPIOB->MODER &= ~(GPIO_MODER_MODE4);
 
     // enable VREFINT buffer
     SYSCFG->CFGR3 |= SYSCFG_CFGR3_ENBUFLP_VREFINT_COMP;

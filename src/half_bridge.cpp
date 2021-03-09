@@ -16,6 +16,7 @@
 #ifndef UNIT_TEST
 #include <soc.h>
 #include <pinmux/stm32/pinmux_stm32.h>
+#include <stm32_ll_bus.h>
 #endif
 
 #if BOARD_HAS_DCDC
@@ -53,8 +54,7 @@ static void tim_init_registers(int freq_kHz)
 {
     stm32_dt_pinctrl_configure(tim_pinctrl, ARRAY_SIZE(tim_pinctrl), TIMER_ADDR);
 
-    // Enable TIM3 clock
-    RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;
+    LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM3);
 
     // No prescaler --> timer frequency == SystemClock
     TIM3->PSC = 0;
@@ -130,8 +130,11 @@ static void tim_init_registers(int freq_kHz)
 {
     stm32_dt_pinctrl_configure(tim_pinctrl, ARRAY_SIZE(tim_pinctrl), TIMER_ADDR);
 
-    // Enable TIM1 clock
-    RCC->APB2ENR |= RCC_APB2ENR_TIM1EN;
+#ifdef LL_APB2_GRP1_PERIPH_TIM1
+    LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_TIM1);
+#else
+    LL_APB1_GRP2_EnableClock(LL_APB1_GRP2_PERIPH_TIM1);
+#endif
 
     // No prescaler --> timer frequency == SystemClock
     TIM1->PSC = 0;
@@ -233,8 +236,7 @@ static void tim_init_registers(int freq_kHz)
 {
     stm32_dt_pinctrl_configure(tim_pinctrl, ARRAY_SIZE(tim_pinctrl), TIMER_ADDR);
 
-    // Enable HRTIM1 clock
-    RCC->APB2ENR |= RCC_APB2ENR_HRTIM1EN;
+    LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_HRTIM1);
 
     // Enable periodic calibration of delay-locked loop (DLL) with lowest calibration period
     HRTIM1->sCommonRegs.DLLCR |= HRTIM_DLLCR_CALEN | HRTIM_DLLCR_CALRTE_0 | HRTIM_DLLCR_CALRTE_1;
