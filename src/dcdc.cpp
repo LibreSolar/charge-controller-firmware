@@ -83,7 +83,7 @@ int Dcdc::perturb_observe_controller()
 
     int pwr_inc_goal = 0;     // stores if we want to increase (+1) or decrease (-1) power
 
-    if ((uptime() - power_good_timestamp > 10 || out_power < -1.0) && mode != DCDC_MODE_AUTO) {
+    if ((uptime() - power_good_timestamp > 10 || out_power < -10.0) && mode != DCDC_MODE_AUTO) {
         // switch off after 10s low power or negative power (if not in nanogrid mode)
         pwr_inc_goal = 0;
     }
