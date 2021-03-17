@@ -202,7 +202,7 @@ void data_storage_read()
     int num_bytes = nvs_read(&fs, THINGSET_DATA_ID, &buf, sizeof(buf));
 
     if (num_bytes < 0) {
-        LOG_ERR("NVS read error %d", num_bytes);
+        LOG_INF("NVS empty (read error %d)", num_bytes);
         return;
     }
 
@@ -218,7 +218,7 @@ void data_storage_read()
         k_mutex_unlock(&data_buf_lock);
     }
     else {
-        LOG_INF("EEPROM empty or data layout version changed");
+        LOG_INF("NVS data layout version changed");
     }
 }
 
