@@ -53,7 +53,7 @@ void battery_conf_init(BatConf *bat, int type, int num_cells, float nominal_capa
         case BAT_TYPE_GEL:
             bat->voltage_absolute_max    = static_cast<float>(num_cells) * 2.45F;
             bat->topping_voltage         = static_cast<float>(num_cells) * 2.4F;
-            bat->voltage_recharge        = static_cast<float>(num_cells) * 2.3F;
+            bat->voltage_recharge        = static_cast<float>(num_cells) * 2.2F;
 
             // Cell-level thresholds based on EN 62509:2011 (both thresholds current-compensated)
             bat->voltage_load_disconnect = static_cast<float>(num_cells) * 1.95F;
@@ -550,7 +550,9 @@ void Charger::charge_control(BatConf *bat_conf)
                 time_target_voltage_reached = uptime();
             }
 
-            if (uptime() - time_target_voltage_reached > bat_conf->trickle_recharge_time)
+            if ((uptime() - time_target_voltage_reached > bat_conf->trickle_recharge_time) &&
+                port->bus->voltage_filtered < port->bus->sink_control_voltage(
+                    bat_conf->voltage_recharge))
             {
                 // the battery was discharged: trickle voltage could not be reached anymore
                 port->pos_current_limit = bat_conf->charge_current_max;
