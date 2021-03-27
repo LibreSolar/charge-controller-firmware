@@ -381,6 +381,7 @@ void daq_setup()
     k_sleep(K_MSEC(500));      // wait for ADC to collect some measurement values
     daq_update();
     calibrate_current_sensors();
+    daq_update();
 }
 
 #endif // UNIT_TEST
