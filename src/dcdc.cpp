@@ -142,8 +142,13 @@ int Dcdc::perturb_observe_controller()
 
     power_prev = out_power;
 
+#ifdef CONFIG_SOC_SERIES_STM32G4X
+    // reduced step size for fast microcontroller
+    half_bridge_set_ccr(half_bridge_get_ccr() + pwr_inc_goal * pwr_inc_pwm_direction * 3);
+#else
     // change duty cycle by single minimum step
     half_bridge_set_ccr(half_bridge_get_ccr() + pwr_inc_goal * pwr_inc_pwm_direction);
+#endif
 
     return (pwr_inc_goal == 0);
 }

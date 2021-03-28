@@ -229,12 +229,6 @@ static void adc_init(ADC_TypeDef *adc)
     // Enable DMA transfer on ADC and circular mode
     LL_ADC_REG_SetDMATransfer(adc, LL_ADC_REG_DMA_TRANSFER_UNLIMITED);
 
-#if defined(CONFIG_SOC_SERIES_STM32G4X)
-    if (adc == ADC2) {
-        LL_ADC_REG_SetTriggerEdge(adc, LL_ADC_REG_TRIG_EXT_RISING);
-        LL_ADC_REG_SetTriggerSource(adc, LL_ADC_REG_TRIG_EXT_TIM1_TRGO2);
-    }
-#endif
     LL_ADC_Enable(adc);
 }
 
@@ -259,7 +253,9 @@ static inline void adc_trigger_conversion(struct k_timer *timer_id)
 {
     LL_ADC_REG_StartConversion(ADC1);
 
-    // ADC2 (if existing) is triggered by the PWM timer
+#if defined(CONFIG_SOC_SERIES_STM32G4X)
+    LL_ADC_REG_StartConversion(ADC2);
+#endif
 }
 
 static void DMA1_Channel1_IRQHandler(void *args)
