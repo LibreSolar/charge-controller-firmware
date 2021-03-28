@@ -17,7 +17,7 @@
 
 		type = "MPPT 2420 HC";
 
-		hs-voltage-max = <80>;
+		hs-voltage-max = <90>;
 		ls-voltage-max = <32>;
 		dcdc-current-max = <20>;
 	};
