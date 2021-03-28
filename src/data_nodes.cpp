@@ -83,10 +83,10 @@ static DataNode data_nodes[] = {
         ID_INFO, TS_ANY_R, 0),
 
     TS_NODE_STRING(0x1D, "FirmwareVersion", firmware_version, 0,
-        ID_INFO, TS_ANY_R, 0),
+        ID_INFO, TS_ANY_R, PUB_SER),
 
     TS_NODE_UINT32(0x20, "Timestamp_s", &timestamp,
-        ID_INFO, TS_ANY_R | TS_ANY_W, PUB_SER | PUB_NVM),
+        ID_INFO, TS_ANY_R | TS_ANY_W, PUB_NVM),
 
     // CONFIGURATION //////////////////////////////////////////////////////////
     // using IDs >= 0x30 except for high priority data objects
