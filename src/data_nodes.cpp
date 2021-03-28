@@ -48,10 +48,10 @@ static char auth_password[11];
 #define solar_bus lv_bus
 #endif
 
-bool pub_serial_enable = false;
+bool pub_serial_enable = IS_ENABLED(CONFIG_THINGSET_SERIAL_PUB_DEFAULT);
 
 #if CONFIG_THINGSET_CAN
-bool pub_can_enable = false;
+bool pub_can_enable = IS_ENABLED(CONFIG_THINGSET_CAN_PUB_DEFAULT);
 uint16_t can_node_addr = CONFIG_THINGSET_CAN_DEFAULT_NODE_ID;
 #endif
 
