@@ -18,13 +18,10 @@
 #include "hardware.h"
 #include "data_nodes.h"
 
-#if CONFIG_UEXT_SERIAL_THINGSET
-#define UART_DEVICE_NAME DT_LABEL(DT_ALIAS(uart_uext))
-#elif DT_NODE_EXISTS(DT_ALIAS(uart_dbg))
+#if CONFIG_THINGSET_SERIAL_DEBUG_PORT && DT_NODE_EXISTS(DT_ALIAS(uart_dbg))
 #define UART_DEVICE_NAME DT_LABEL(DT_ALIAS(uart_dbg))
 #else
-// cppcheck-suppress preprocessorErrorDirective
-#error "No UART for ThingSet serial defined."
+#define UART_DEVICE_NAME DT_LABEL(DT_ALIAS(uart_uext))
 #endif
 
 const struct device *uart_dev = device_get_binding(UART_DEVICE_NAME);

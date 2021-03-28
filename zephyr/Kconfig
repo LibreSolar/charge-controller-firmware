@@ -323,14 +323,6 @@ config EXT_OLED_BRIGHTNESS
     range 1 255
     default 1
 
-config UEXT_SERIAL_THINGSET
-    depends on THINGSET_SERIAL
-    bool "Use UEXT serial for ThingSet interface"
-    default n
-    help
-      If the ThingSet interface is not attached to the serial port in the UEXT connector, the
-      debug serial connector is used (if existing).
-
 endmenu # UEXT port
 
 
@@ -338,6 +330,14 @@ menu "ThingSet interfaces"
 
 config THINGSET_SERIAL
     bool "ThingSet serial interface"
+
+config THINGSET_SERIAL_DEBUG_PORT
+    depends on THINGSET_SERIAL
+    bool "Use debug serial connector for ThingSet interface"
+    default n
+    help
+      Attach the ThingSet serial interface to separate debug serial connector (if existing)
+      instead of the UEXT connector serial.
 
 config THINGSET_SERIAL_RX_BUF_SIZE
     depends on THINGSET_SERIAL
