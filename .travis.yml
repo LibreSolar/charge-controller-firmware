@@ -10,7 +10,9 @@ env:
     - PLATFORMIO_CI_SRC=src
 
 install:
+    - pip install wheel
     - pip install -U platformio
+    - platformio platform install native
     - platformio update
 
 addons:
