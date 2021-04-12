@@ -32,27 +32,27 @@
 	leds {
 		compatible = "charlieplexing-leds";
 		gpios = <&gpiob 13 GPIO_ACTIVE_HIGH>,	/* Pin A */
-			<&gpiob 2 GPIO_ACTIVE_HIGH>,	/* Pin C */
-			<&gpiob 14 GPIO_ACTIVE_HIGH>;	/* Pin B */
+			<&gpiob 14 GPIO_ACTIVE_HIGH>,	/* Pin B */
+			<&gpiob 2 GPIO_ACTIVE_HIGH>;	/* Pin C */
 
 		soc_1 {
-			states = <1 0 2>;
+			states = <1 2 0>;	/* LED1 */
 		};
 
 		soc_2 {
-			states = <0 1 2>;
+			states = <0 2 1>;	/* LED2 */
 		};
 
 		soc_3 {
-			states = <1 2 0>;
-		};
-
-		rxtx {
-			states = <2 1 0>;
+			states = <1 0 2>;	/* LED3 */
 		};
 
 		load {
-			states = <2 0 1>;
+			states = <2 0 1>;	/* LED4 */
+		};
+
+		rxtx {
+			states = <2 1 0>;	/* LED5 */
 		};
 	};
 
