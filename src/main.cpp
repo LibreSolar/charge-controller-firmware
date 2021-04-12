@@ -30,7 +30,9 @@
 
 void main(void)
 {
-    printf("Libre Solar Charge Controller: %s\n", CONFIG_BOARD);
+    printf("Hardware: Libre Solar %s (%s)\n",
+        DT_PROP(DT_PATH(pcb), type), DT_PROP(DT_PATH(pcb), version_str));
+    printf("Firmware: %s\n", FIRMWARE_VERSION_ID);
 
     task_wdt_init(device_get_binding(DT_LABEL(DT_NODELABEL(iwdg))));
 
