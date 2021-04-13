@@ -85,9 +85,6 @@ static DataNode data_nodes[] = {
     TS_NODE_STRING(0x1D, "FirmwareVersion", firmware_version, 0,
         ID_INFO, TS_ANY_R, 0),
 
-    TS_NODE_UINT32(0x20, "Timestamp_s", &timestamp,
-        ID_INFO, TS_ANY_R | TS_ANY_W, PUB_SER | PUB_NVM),
-
     // CONFIGURATION //////////////////////////////////////////////////////////
     // using IDs >= 0x30 except for high priority data objects
 
@@ -238,6 +235,10 @@ static DataNode data_nodes[] = {
     // using IDs >= 0x70 except for high priority data objects
 
     TS_NODE_PATH(ID_OUTPUT, "output", 0, NULL),
+
+    // the timestamp currently reflects the time since last reset and not an actual timestamp
+    TS_NODE_UINT32(0x01, "Uptime_s", &timestamp,
+        ID_OUTPUT, TS_ANY_R, PUB_SER),
 
     // battery related data objects
     TS_NODE_FLOAT(0x71, "Bat_V", &bat_bus.voltage, 2,
