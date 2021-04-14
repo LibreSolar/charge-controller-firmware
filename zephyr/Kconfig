@@ -447,7 +447,7 @@ menuconfig CUSTOMIZATION
     bool "Firmware customization"
     help
       Activating this option allows to overwrite existing firmware functions
-      or add customizations independent of the master branch.
+      or add customizations independent of the main branch.
       Custom implementations should be stored in the
       src/custom subdirectory.
 

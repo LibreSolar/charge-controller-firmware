@@ -1,6 +1,6 @@
 # Libre Solar Charge Controller Firmware
 
-![build badge](https://travis-ci.com/LibreSolar/charge-controller-firmware.svg?branch=master)
+![build badge](https://travis-ci.com/LibreSolar/charge-controller-firmware.svg?branch=main)
 
 This repository contains the firmware for the different Libre Solar Charge Controllers based on [Zephyr RTOS](https://www.zephyrproject.org/).
 
@@ -8,11 +8,11 @@ Coding style is described [here](https://github.com/LibreSolar/coding-style).
 
 ## Development and release model
 
-The `master` branch contains the latest release of the firmware plus some cherry-picked bug-fixes. So you can always pull this branch to get a stable and working firmware for your charge controller.
+The `main` branch contains the latest release of the firmware plus some cherry-picked bug-fixes. So you can always pull this branch to get a stable and working firmware for your charge controller.
 
-New features are developed in the `develop` branch and merged into master after passing tests with multiple boards. The `develop` branch is changed frequently and may even be rebased to fix previous commits. Use this branch only if you want to try out most recent features and be aware that something might be broken.
+New features are developed in the `develop` branch and merged into `main` after passing tests with multiple boards. The `develop` branch is changed frequently and may even be rebased to fix previous commits. Use this branch only if you want to try out most recent features and be aware that something might be broken.
 
-Releases are generated from master after significant changes have been made. The year is used as the major version number. The minor version number starts at zero and is increased for each release in that year.
+Releases are generated from `main` after significant changes have been made. The year is used as the major version number. The minor version number starts at zero and is increased for each release in that year.
 
 ## Supported devices
 

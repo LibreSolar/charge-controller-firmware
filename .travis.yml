@@ -35,4 +35,4 @@ deploy:
     github_token: $GH_REPO_TOKEN
     on:
         repo: LibreSolar/charge-controller-firmware
-        branch: master
+        branch: main
