@@ -87,6 +87,13 @@ endchoice
 
 menu "Battery default settings"
 
+config BAT_CAPACITY_AH
+    int "Battery nominal capacity in Ah"
+    range 10 1000
+    default 50
+    help
+      Nominal battery capacity or sum of parallel cells capacity
+
 choice
     prompt "Battery type"
     default BAT_TYPE_GEL
@@ -128,15 +135,8 @@ config BAT_TYPE
     default 5 if BAT_TYPE_NMC
     default 6 if BAT_TYPE_NMC_HV
 
-config BAT_CAPACITY_AH
-    int "Battery nominal capacity in Ah"
-    range 10 200
-    default 50
-    help
-      Nominal battery capacity or sum of parallel cells capacity
-
 config BAT_NUM_CELLS
-    int "Number of cells for single battery" if BAT_TYPE_CUSTOM
+    int "Number of cells for single battery"
     default 6 if BAT_TYPE_FLOODED || BAT_TYPE_GEL || BAT_TYPE_AGM
     default 4 if BAT_TYPE_LFP
     default 3 if BAT_TYPE_NMC || BAT_TYPE_NMC_HV
@@ -154,67 +154,68 @@ config BAT_NUM_CELLS
         is not exceeded.
 
 menu "Custom cell-level settings"
+    depends on BAT_TYPE_CUSTOM
 
 config CELL_ABS_MAX_VOLTAGE_MV
-    int "Absolute maximum voltage (mV)" if BAT_TYPE_CUSTOM
+    int "Absolute maximum voltage (mV)"
     default 2450
     help
       Above this voltage the battery or loads might get damaged.
 
 config CELL_TOPPING_VOLTAGE_MV
-    int "Topping voltage (mV)" if BAT_TYPE_CUSTOM
+    int "Topping voltage (mV)"
     default 2400
     help
       Charger target voltage, switching from CC to CV at this voltage threshold.
 
 config CELL_RECHARGE_VOLTAGE_MV
-    int "Recharge voltage (mV)" if BAT_TYPE_CUSTOM
+    int "Recharge voltage (mV)"
     default 2300
     help
       Start charging again if voltage of fully charged battery drops below this threshold.
 
 config CELL_RECONNECT_VOLTAGE_MV
-    int "Load reconnect cell voltage (mV)" if BAT_TYPE_CUSTOM
+    int "Load reconnect cell voltage (mV)"
     default 2100
     help
       Re-enable the load only after charged beyond this value.
 
 config CELL_DISCONNECT_VOLTAGE_MV
-    int "Load disconnect cell voltage (mV)" if BAT_TYPE_CUSTOM
+    int "Load disconnect cell voltage (mV)"
     default 1950
     help
       Load output is disabled if battery voltage is below this threshold.
 
 config CELL_ABS_MIN_VOLTAGE_MV
-    int "Topping voltage (mV)" if BAT_TYPE_CUSTOM
+    int "Topping voltage (mV)"
     default 1600
     help
       Below this voltage the battery is considered damaged.
 
 config CELL_OCV_FULL_MV
-    int "OCV full cell (mV)" if BAT_TYPE_CUSTOM
+    int "OCV full cell (mV)"
     default 2150
     help
       Voltages during idle (no charging/discharging current)
 
 config CELL_OCV_EMPTY_MV
-    int "OCV empty cell (mV)" if BAT_TYPE_CUSTOM
+    int "OCV empty cell (mV)"
     default 1900
     help
       Voltages during idle (no charging/discharging current)
 
 config CELL_TRICKLE
-    bool "Enable trickle charging phase" if BAT_TYPE_CUSTOM
+    bool "Enable trickle charging phase"
     default y
 
 config CELL_TRICKLE_VOLTAGE_MV
-    int "Trickle charging cell voltage (mV)" if BAT_TYPE_CUSTOM && CELL_TRICKLE
+    int "Trickle charging cell voltage (mV)" if CELL_TRICKLE
     default 2300
     help
       Charger target voltage for trickle charging of lead-acid batteries
 
 config CELL_TRICKLE_RECHARGE_TIME
-    int "Trickle recharge time (s)" if BAT_TYPE_CUSTOM && CELL_TRICKLE
+    int "Trickle recharge time (s)" if CELL_TRICKLE
     default 1800
     help
       If the trickle voltage is not reached anymore (e.g. because of lack of solar
@@ -222,68 +223,69 @@ config CELL_TRICKLE_RECHARGE_TIME
       into CC/bulk charging mode.
 
 config CELL_EQUALIZATION
-    bool "Enable equalization phase" if BAT_TYPE_CUSTOM
+    bool "Enable equalization phase"
     default n
     help
       Enable for flooded batteries only.
 
 config CELL_EQUALIZATION_VOLTAGE_MV
-    int "Equalization phase cell voltage (mV)" if BAT_TYPE_CUSTOM && CELL_EQUALIZATION
+    int "Equalization phase cell voltage (mV)" if CELL_EQUALIZATION
     default 2450
     help
       Charger target voltage for equalization charging of lead-acid batteries
 
 config CELL_EQUALIZATION_DURATION
-    int "Equalization duration (seconds)" if BAT_TYPE_CUSTOM && CELL_EQUALIZATION
+    int "Equalization duration (seconds)" if CELL_EQUALIZATION
     default 3600
     help
       After this time, equalization charging is stopped.
 
 config CELL_EQUALIZATION_TRIGGER_DAYS
-    int "Equalization time trigger (days)" if BAT_TYPE_CUSTOM && CELL_EQUALIZATION
+    int "Equalization time trigger (days)" if CELL_EQUALIZATION
     default 60
     help
       After passing specified amount of days, an equalization charge is triggered.
 
 config CELL_EQUALIZATION_TRIGGER_DEEP_CYCLES
-    int "Equalization deep cycle count trigger" if BAT_TYPE_CUSTOM && CELL_EQUALIZATION
+    int "Equalization deep cycle count trigger" if CELL_EQUALIZATION
     default 10
     help
       After specified number of deep discharges, an equalization charge is triggered.
 
 config CELL_TEMP_COMPENSATION_MV_K
-    int "Cell voltage temperature compenstaion (mV/K)" if BAT_TYPE_CUSTOM
+    int "Cell voltage temperature compenstaion (mV/K)"
     range -5 0
     default -3
     help
       Suggested value: -3 mV/K/cell for lead-acid batteries, 0 for Li-ion batteries
 
 config CELL_INTERNAL_RESISTANCE_MOHM
-    int "Cell internal resistance (mOhm)" if BAT_TYPE_CUSTOM
+    int "Cell internal resistance (mOhm)"
     range 1 30
     default 5
 
 endmenu # Custom cell-level settings
 
 menu "Custom temperature settings"
+    depends on BAT_TYPE_CUSTOM
 
 config BAT_CHARGE_TEMP_MAX
-    int "Maximum charge temperature (°C)" if BAT_TYPE_CUSTOM
+    int "Maximum charge temperature (°C)"
     range 0 60
     default 50
 
 config BAT_CHARGE_TEMP_MIN
-    int "Minimum charge temperature (°C)" if BAT_TYPE_CUSTOM
+    int "Minimum charge temperature (°C)"
     range -10 20
     default 0
 
 config BAT_DISCHARGE_TEMP_MAX
-    int "Maximum discharge temperature (°C)" if BAT_TYPE_CUSTOM
+    int "Maximum discharge temperature (°C)"
     range 0 60
     default 50
 
 config BAT_DISCHARGE_TEMP_MIN
-    int "Minimum discharge temperature (°C)" if BAT_TYPE_CUSTOM
+    int "Minimum discharge temperature (°C)"
     range -20 20
     default -10
 

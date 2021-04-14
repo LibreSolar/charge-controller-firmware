@@ -136,9 +136,22 @@ In order to overwrite the default devicetree specification, so-called overlays c
 
 For configuration of the application-specific features, Zephyr uses the [Kconfig system](https://docs.zephyrproject.org/latest/guides/kconfig/index.html).
 
-The configuration can be changed using `west build -t menuconfig` command or manually by changing the prj.conf file.
+The configuration can be changed using `west build -t menuconfig` command or manually by changing the prj.conf file (see `Kconfig` file for possible options).
 
-Similar to DTS overlays, the Kconfig can also be customized for each board. Copy the default `prj.conf` to a file `prj_board_name.conf` to use this file instead of `prj.conf`. Please not that, in contrast to overlays, the board-specific Kconfig files are not **added** to the default `prj.conf`, but they **replace** the default configuration instead.
+Similar to DTS overlays, Kconfig can also be customized per board. Create a folder `zephyr/boards` and a file `board_name.conf` in that folder. The configuration from this file will be merged with the `prj.conf` automatically.
+
+#### Change the battery type
+
+By default, the charge controller is configured for maintainance-free VRLA gel battery (`CONFIG_BAT_TYPE_GEL`). Possible other pre-defined options are `CONFIG_BAT_TYPE_FLOODED`, `CONFIG_BAT_TYPE_AGM`, `CONFIG_BAT_TYPE_LFP`, `CONFIG_BAT_TYPE_NMC` and `CONFIG_BAT_TYPE_NMC_HV`.
+
+The number of cells is automatically selected by Kconfig to get 12V nominal voltage. It can also be manually specified via `CONFIG_BAT_NUM_CELLS`.
+
+To compile the firmware with default settings for 12V LiFePO4 batteries, add the following to `prj.conf` or the board-specific `.conf` file:
+
+```
+CONFIG_BAT_TYPE_LFP=y
+CONFIG_BAT_NUM_CELLS=4
+```
 
 ### Custom functions (separate C/C++ files)
 

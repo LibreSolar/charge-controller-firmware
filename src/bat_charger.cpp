@@ -149,6 +149,7 @@ void battery_conf_init(BatConf *bat, int type, int num_cells, float nominal_capa
             break;
 
         case BAT_TYPE_CUSTOM:
+#ifdef CONFIG_BAT_TYPE_CUSTOM
             bat->voltage_absolute_max = 0.001F *
                 static_cast<float>(CONFIG_BAT_NUM_CELLS * CONFIG_CELL_ABS_MAX_VOLTAGE_MV);
 
@@ -198,6 +199,9 @@ void battery_conf_init(BatConf *bat, int type, int num_cells, float nominal_capa
             bat->charge_temp_min    = CONFIG_BAT_CHARGE_TEMP_MIN;
             bat->discharge_temp_max = CONFIG_BAT_DISCHARGE_TEMP_MAX;
             bat->discharge_temp_min = CONFIG_BAT_DISCHARGE_TEMP_MIN;
+#else
+            LOG_ERR("Custom battery type cannot be initialized at runtime.");
+#endif
             break;
     }
 }
