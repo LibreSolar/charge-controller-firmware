@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#if CONFIG_EXT_OLED_DISPLAY
+#if CONFIG_UEXT_OLED_DISPLAY
 
 #include <math.h>
 #include <stdio.h>
@@ -178,7 +178,7 @@ void oled_thread()
         DT_GPIO_FLAGS(UEXT_EN_GPIO, gpios) | GPIO_OUTPUT_ACTIVE);
 #endif
 
-    oled.init(CONFIG_EXT_OLED_BRIGHTNESS);
+    oled.init(CONFIG_UEXT_OLED_BRIGHTNESS);
 
     while (true) {
         oled_update();
@@ -188,4 +188,4 @@ void oled_thread()
 
 K_THREAD_DEFINE(oled_thread_id, 1024, oled_thread, NULL, NULL, NULL, 6, 0, 1000);
 
-#endif /* CONFIG_EXT_OLED_DISPLAY */
+#endif /* CONFIG_UEXT_OLED_DISPLAY */

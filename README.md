@@ -86,40 +86,6 @@ Report of used memory (RAM and flash):
         west build -t rom_report
         west build -t ram_report
 
-### Troubleshooting
-
-#### Errors with STM32L072 MCU using OpenOCD
-
-The standard OpenOCD settings sometimes fail to flash firmware to this MCU, which is used in the MPPT 1210 HUS and the PWM charge controller.
-
-Try one of these workarounds:
-
-1. Change OpenOCD settings to `adapter_khz 500` in line 70 in `~/.platformio/packages/tool-openocd/scripts/target/stm32l0.cfg`.
-
-2. Use other tools or debug probes such as [STM32CubeProgrammer](https://www.st.com/en/development-tools/stm32cubeprog.html) or [Segger J-Link](https://www.segger.com/products/debug-probes/j-link/).
-
-#### Connection failures
-
-If flashing fails like this in PlatformIO:
-
-```
-Error: init mode failed (unable to connect to the target)
-in procedure 'program'
-** OpenOCD init failed **
-shutdown command invoked
-```
-
-or with ST-Link:
-
-```bash
-$ st-flash write .pio/build/mppt-1210-hus-v0.4/firmware.bin 0x08000000
-st-flash 1.5.1
-2019-06-21T18:13:03 INFO common.c: Loading device parameters....
-2019-06-21T18:13:03 WARN common.c: unknown chip id! 0x5fa0004
-```
-
-check the connection between the programmer (for example the ST-Link of the Nucleo board) and the charge controller.
-
 ## Firmware customization
 
 This firmware is developed to allow easy customization for individual use-cases. Below options based on the Zephyr devicetree and Kconfig systems try to allow customization without changing any of the files tracked by git, so that a `git pull` does not lead to conflicts with local changes.
@@ -153,7 +119,7 @@ CONFIG_BAT_TYPE_LFP=y
 CONFIG_BAT_NUM_CELLS=4
 ```
 
-#### Define serial for ThingSet protocol
+#### Configure serial for ThingSet protocol
 
 By default, the charge controller uses the serial interface in the UEXT connector for the [ThingSet protocol](https://libre.solar/thingset/). This allows to use WiFi modules with ESP32 without any firmware change.
 
@@ -161,6 +127,12 @@ Add the following configuration if you prefer to use the serial of the LS.one po
 
 ```
 CONFIG_UEXT_SERIAL_THINGSET=n
+```
+
+To disable regular data publication in one-second interval on ThingSet serial at startup add the following configuration:
+
+```
+CONFIG_THINGSET_SERIAL_PUB_DEFAULT=n
 ```
 
 ### Custom functions (separate C/C++ files)
@@ -200,3 +172,37 @@ PlatformIO integrates cppcheck and clangtidy. The following command is an exampl
 - [Charge controller basic concepts](docs/charger-concepts.md)
 
 - [Firmware module overview](docs/module-overview.md)
+
+## Troubleshooting
+
+### Errors with STM32L072 MCU using OpenOCD
+
+The standard OpenOCD settings sometimes fail to flash firmware to this MCU, which is used in the MPPT 1210 HUS and the PWM charge controller.
+
+Try one of these workarounds:
+
+1. Change OpenOCD settings to `adapter_khz 500` in line 70 in `~/.platformio/packages/tool-openocd/scripts/target/stm32l0.cfg`.
+
+2. Use other tools or debug probes such as [STM32CubeProgrammer](https://www.st.com/en/development-tools/stm32cubeprog.html) or [Segger J-Link](https://www.segger.com/products/debug-probes/j-link/).
+
+### Connection failures
+
+If flashing fails like this in PlatformIO:
+
+```
+Error: init mode failed (unable to connect to the target)
+in procedure 'program'
+** OpenOCD init failed **
+shutdown command invoked
+```
+
+or with ST-Link:
+
+```bash
+$ st-flash write .pio/build/mppt-1210-hus-v0.4/firmware.bin 0x08000000
+st-flash 1.5.1
+2019-06-21T18:13:03 INFO common.c: Loading device parameters....
+2019-06-21T18:13:03 WARN common.c: unknown chip id! 0x5fa0004
+```
+
+check the connection between the programmer (for example the ST-Link of the Nucleo board) and the charge controller.
