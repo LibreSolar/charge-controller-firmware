@@ -153,6 +153,16 @@ CONFIG_BAT_TYPE_LFP=y
 CONFIG_BAT_NUM_CELLS=4
 ```
 
+#### Define serial for ThingSet protocol
+
+By default, the charge controller uses the serial interface in the UEXT connector for the [ThingSet protocol](https://libre.solar/thingset/). This allows to use WiFi modules with ESP32 without any firmware change.
+
+Add the following configuration if you prefer to use the serial of the LS.one port or the additional debug RX/TX pins present on most boards:
+
+```
+CONFIG_UEXT_SERIAL_THINGSET=n
+```
+
 ### Custom functions (separate C/C++ files)
 
 If you want experiment with some completely new functions for the charge controller, new files should be stored in a subfolder `src/custom`.
