@@ -6,9 +6,12 @@
 
 #include "data_nodes.h"
 
-#ifndef UNIT_TEST
 #include <zephyr.h>
+#include <soc.h>
+
+#ifndef UNIT_TEST
 #include <drivers/hwinfo.h>
+#include <stm32_ll_utils.h>
 #include <sys/crc.h>
 #include <logging/log.h>
 LOG_MODULE_REGISTER(data_nodes, CONFIG_DATA_NODES_LOG_LEVEL);
@@ -17,21 +20,22 @@ LOG_MODULE_REGISTER(data_nodes, CONFIG_DATA_NODES_LOG_LEVEL);
 #include <stdio.h>
 #include <string.h>
 
+#include "data_storage.h"
+#include "dcdc.h"
+#include "hardware.h"
 #include "setup.h"
+#include "thingset.h"
 
 // can be used to configure custom data objects in separate file instead
 // (e.g. data_nodes_custom.cpp)
 #ifndef CONFIG_CUSTOM_DATA_NODES_FILE
 
-#include "thingset.h"
-#include "hardware.h"
-#include "dcdc.h"
-#include "data_storage.h"
-
 const char manufacturer[] = "Libre Solar";
 const char device_type[] = DT_PROP(DT_PATH(pcb), type);
 const char hardware_version[] = DT_PROP(DT_PATH(pcb), version_str);
 const char firmware_version[] = FIRMWARE_VERSION_ID;
+uint32_t flash_size = LL_GetFlashSize();
+uint32_t flash_page_size = FLASH_PAGE_SIZE;
 char device_id[9];
 
 static char auth_password[11];
@@ -456,7 +460,7 @@ static DataNode data_nodes[] = {
     TS_NODE_PATH(ID_EXEC, "exec", 0, NULL),
 
     TS_NODE_EXEC(0xE1, "reset", &reset_device, ID_EXEC, TS_ANY_RW),
-    TS_NODE_EXEC(0xE2, "bootloader-stm", &start_stm32_bootloader, ID_EXEC, TS_ANY_RW),
+    /* 0xE2 reserved (previously used for bootloader-stm) */
     TS_NODE_EXEC(0xE3, "save-settings", &data_storage_write, ID_EXEC, TS_ANY_RW),
 
     TS_NODE_EXEC(0xEE, "auth", &thingset_auth, 0, TS_ANY_RW),
@@ -476,6 +480,15 @@ static DataNode data_nodes[] = {
     TS_NODE_BOOL(0xF6, "Enable", &pub_can_enable, 0xF5, TS_ANY_RW, 0),
     TS_NODE_PUBSUB(0xF7, "IDs", PUB_CAN, 0xF5, TS_ANY_RW, 0),
 #endif
+
+    // DEVICE FIRMWARE UPGRADE (DFU) //////////////////////////////////////////
+    // using IDs >= 0x100
+
+    TS_NODE_PATH(0x100, "dfu", 0, NULL),
+
+    TS_NODE_EXEC(0x101, "bootloader-stm", &start_stm32_bootloader, 0x100, TS_ANY_RW),
+    TS_NODE_UINT32(0x102, "FlashSize_KiB", &flash_size, 0x100, TS_ANY_R, 0),
+    TS_NODE_UINT32(0x103, "FlashPageSize_B", &flash_page_size, 0x100, TS_ANY_R, 0),
 };
 
 ThingSet ts(data_nodes, sizeof(data_nodes)/sizeof(DataNode));
