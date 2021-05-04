@@ -212,4 +212,4 @@ With PlatformIO on Linux:
 Error: libusb_open() failed with LIBUSB_ERROR_ACCESS
 Error: open failed
 ```
-udev rule is missing. The following file https://github.com/bcmi-labs/OpenOCD/blob/master/contrib/99-openocd.rules needs to be added to /etc/udev/rules.d/ depending on linux system. And the group plugdev added to user executing PlatfromIO. 
+means that a udev rule is missing. The [openocd.rules file](https://sourceforge.net/p/openocd/code/ci/master/tree/contrib/60-openocd.rules) needs to be copied to `/etc/udev/rules.d/` and the user executing PlatformIO should be added to the group `plugdev`.
