@@ -43,9 +43,9 @@ It is suggested to use Visual Studio Code and PlatformIO for firmware developmen
 
 2. Adjust configuration in `zephyr/prj.conf` if necessary.
 
-3. Select the correct board in `platformio.ini` by removing the comment before the board name under `[platformio]` or create a file `custom.ini` with your personal settings. PlatformIO is configured for latest revision of the boards (see table above). For older revisions adjust `platformio.ini` and the `.json` files in `boards` folder manually or use native Zephyr environment.
+3. Select the correct board in `platformio.ini` by setting the variable `default_envs` under `[platformio]` to your board or create a file `custom.ini` with your personal settings. PlatformIO is configured for latest revision of the boards (see table above). For older revisions adjust `platformio.ini` and the `.json` files in `boards` folder manually or use native Zephyr environment.
 
-4. Connect the board via a programmer. See the Libre Solar website for [further project-agnostic instructions](http://libre.solar/docs/flashing).
+4. Connect the board via a programmer. See the Libre Solar website for [further project-agnostic instructions](https://learn.libre.solar/development/flashing_debugging.html ).
 
 5. Press the upload button at the bottom left corner in VS Code.
 
