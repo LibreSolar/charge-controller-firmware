@@ -206,3 +206,10 @@ st-flash 1.5.1
 ```
 
 check the connection between the programmer (for example the ST-Link of the Nucleo board) and the charge controller.
+
+With PlatformIO on Linux:
+```
+Error: libusb_open() failed with LIBUSB_ERROR_ACCESS
+Error: open failed
+```
+means that a udev rule is missing. The [openocd.rules file](https://sourceforge.net/p/openocd/code/ci/master/tree/contrib/60-openocd.rules) needs to be copied to `/etc/udev/rules.d/` and the user executing PlatformIO should be added to the group `plugdev`.
