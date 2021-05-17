@@ -294,24 +294,24 @@ void Dcdc::test()
         if (half_bridge_get_duty_cycle() > 0.5) {
             half_bridge_set_ccr(half_bridge_get_ccr() - 1);
         }
+        else {
+            half_bridge_set_ccr(half_bridge_get_ccr() + 1);
+        }
     }
     else {
-        static int startup_delay_counter = 0;
-
-        // wait at least 100 ms for voltages to settle
-        static const int num_wait_calls =
-            (CONFIG_CONTROL_FREQUENCY / 10 >= 1) ? (CONFIG_CONTROL_FREQUENCY / 10) : 1;
-
-        if (startup_delay_counter > num_wait_calls) {
-            if (check_start_conditions() != DCDC_MODE_OFF) {
-                half_bridge_set_duty_cycle(lvb->voltage / hvb->voltage);
-                half_bridge_start();
-                printf("DC/DC test mode start (HV: %.2fV, LV: %.2fV, PWM: %.1f).\n",
-                    hvb->voltage, lvb->voltage, half_bridge_get_duty_cycle() * 100);
+        if (check_start_conditions() != DCDC_MODE_OFF) {
+            // startup allowed, but we need to wait until voltages settle
+            if (startup_inhibit()) {
+                return;
             }
+
+            half_bridge_set_duty_cycle(lvb->voltage / hvb->voltage);
+            half_bridge_start();
+            printf("DC/DC test mode start (HV: %.2fV, LV: %.2fV, PWM: %.1f).\n",
+                hvb->voltage, lvb->voltage, half_bridge_get_duty_cycle() * 100);
         }
         else {
-            startup_delay_counter++;
+            startup_inhibit(true);      // reset inhibit counter
         }
     }
 }
