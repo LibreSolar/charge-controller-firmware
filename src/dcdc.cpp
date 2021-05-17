@@ -208,20 +208,15 @@ bool Dcdc::check_hs_mosfet_short()
 
 bool Dcdc::startup_inhibit(bool reset)
 {
-    // wait at least 100 ms for voltages to settle
-    static const int num_wait_calls =
-        (CONFIG_CONTROL_FREQUENCY / 10 >= 1) ? (CONFIG_CONTROL_FREQUENCY / 10) : 1;
-
-    static int startup_delay_counter = 0;
+    static uint32_t inhibit_start;
 
     if (reset) {
-        startup_delay_counter = 0;
+        inhibit_start = uptime();
+        return true;
     }
     else {
-        startup_delay_counter++;
+        return (uptime() < inhibit_start + DCDC_STARTUP_INHIBIT_TIME);
     }
-
-    return (startup_delay_counter < num_wait_calls);
 }
 
 __weak void Dcdc::control()

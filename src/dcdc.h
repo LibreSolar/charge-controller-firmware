@@ -20,6 +20,8 @@
 
 #include "power_port.h"
 
+#define DCDC_STARTUP_INHIBIT_TIME 3     // seconds
+
 /**
  * DC/DC operation mode
  *
