@@ -1129,8 +1129,8 @@ static DataNode data_nodes[] = {
         }
     }*/
     TS_NODE_EXEC(0xE1, "reset", &reset_device, ID_EXEC, TS_ANY_RW),
+
     /* 0xE2 reserved (previously used for bootloader-stm) */
-    TS_NODE_EXEC(0xE3, "save-settings", &data_storage_write, ID_EXEC, TS_ANY_RW),
 
     /*{
         "title": {
