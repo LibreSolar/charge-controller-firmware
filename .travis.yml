@@ -21,11 +21,7 @@ addons:
             - doxygen
 
 script:
-    # check for trailing white spaces (comparing with first commit in git log)
-    - git diff --check `git rev-list HEAD | tail -n 1`..
-    - platformio run -e mppt_2420_lc -e mppt_1210_hus -e mppt_2420_hc -e pwm_2420_lus
-    - platformio test -e unit_test
-    - platformio check -e mppt_1210_hus -e pwm_2420_lus --skip-packages --fail-on-defect high
+    - bash scripts/check.sh
     - doxygen Doxyfile
 
 deploy:

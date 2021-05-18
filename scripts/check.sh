@@ -1,7 +1,6 @@
 #!/bin/bash
 #
-# This file performs the same checks as TravisCI and should be run after each commit and before
-# pushing the commits
+# This file performs continuous integration checks and should be run before pushing new commits
 #
 
 echo "---------- Trailing whitespace check -------------"
