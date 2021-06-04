@@ -180,14 +180,15 @@ void usb_out_set(bool status)
 
 #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), charge_pump))
 
-#define CP_PWM_CONTROLLER (DT_PWMS_LABEL(DT_CHILD(DT_PATH(outputs), charge_pump)))
-#define CP_PWM_PERIOD (DT_PHA(DT_CHILD(DT_PATH(outputs), charge_pump), pwms, period))
-#define CP_PWM_CHANNEL (DT_PHA(DT_CHILD(DT_PATH(outputs), charge_pump), pwms, channel))
+#define CP_PWMS             DT_CHILD(DT_PATH(outputs), charge_pump)
+#define CP_PWM_CONTROLLER   DT_PWMS_CTLR(CP_PWMS)
+#define CP_PWM_PERIOD       DT_PWMS_PERIOD(CP_PWMS)
+#define CP_PWM_CHANNEL      DT_PWMS_CHANNEL(CP_PWMS)
 
 void load_cp_enable()
 {
-	const struct device *pwm_dev = device_get_binding(CP_PWM_CONTROLLER);
-	if (pwm_dev) {
+	const struct device *pwm_dev = DEVICE_DT_GET(CP_PWM_CONTROLLER);
+	if (device_is_ready(pwm_dev)) {
         // set to 50% duty cycle
         pwm_pin_set_nsec(pwm_dev, CP_PWM_CHANNEL, CP_PWM_PERIOD, CP_PWM_PERIOD / 2, 0);
 	}
