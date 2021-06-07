@@ -20,7 +20,6 @@
 
 #include <power/reboot.h>
 #include <drivers/gpio.h>
-#include <drivers/flash.h>
 
 #include <logging/log.h>
 LOG_MODULE_REGISTER(hardware, CONFIG_HW_LOG_LEVEL);
@@ -36,8 +35,12 @@ void start_stm32_bootloader()
     k_sleep(K_MSEC(100));   // wait for capacitor at BOOT0 pin to charge up
     reset_device();
 #elif defined(CONFIG_SOC_SERIES_STM32G4X)
-    const struct device *flash = device_get_binding(DT_LABEL(DT_NODELABEL(flash0)));
-    flash_write_protection_set(flash, false);
+    if ((FLASH->CR & FLASH_CR_OPTLOCK) != 0U) {
+        /* Authorizes the Option Byte register programming */
+        FLASH->OPTKEYR = FLASH_OPTKEY1;
+        FLASH->OPTKEYR = FLASH_OPTKEY2;
+    }
+
     // Set proper bits for booting the embedded bootloader (see table
     // 5 in section 2.6.1 in document RM0440)
 
@@ -60,7 +63,7 @@ void start_stm32_bootloader()
 
     // If OBL_LAUNCH did not reset (it should), we'll force it by
     // first locking back the flash registers and going for a reboot.
-    flash_write_protection_set(flash, true);
+    FLASH->CR |= FLASH_CR_OPTLOCK;
     reset_device();
 #endif
 }
