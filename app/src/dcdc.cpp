@@ -179,8 +179,10 @@ __weak DcdcOperationMode Dcdc::check_start_conditions()
 
 bool Dcdc::check_hs_mosfet_short()
 {
-    static uint32_t first_time_detected = 0;
-    if (inductor_current > 0.5 && half_bridge_enabled() == false) {
+    static uint32_t first_time_detected;
+    if (half_bridge_enabled() == false && inductor_current > 0.5F
+        && lvb->voltage_filtered > lvb->sink_control_voltage())
+    {
         // if there is current even though the DC/DC is switched off, the
         // high-side MOSFET must be broken --> set flag and let main() decide
         // what to do... (e.g. call dcdc_self_destruction)
@@ -189,10 +191,13 @@ bool Dcdc::check_hs_mosfet_short()
         if (first_time_detected == 0) {
             first_time_detected = now;
         }
-        else if (now - first_time_detected > 2) {
-            // waited >1s before setting the flag
+        else if (now - first_time_detected > 10) {
+            // waited approx 10s before setting the flag
             dev_stat.set_error(ERR_DCDC_HS_MOSFET_SHORT);
         }
+    }
+    else {
+        first_time_detected = 0;
     }
 
     return dev_stat.has_error(ERR_DCDC_HS_MOSFET_SHORT);
