@@ -286,11 +286,24 @@ __weak void Dcdc::control()
 void Dcdc::test()
 {
     if (half_bridge_enabled()) {
-        if (half_bridge_get_duty_cycle() > 0.5) {
-            half_bridge_set_ccr(half_bridge_get_ccr() - 1);
+        const char *stop_reason = NULL;
+        if (lvb->voltage > ls_voltage_max || hvb->voltage > hs_voltage_max) {
+            stop_reason = "emergency (voltage limits exceeded)";
+        }
+        else if (enable == false) {
+            stop_reason = "disabled";
         }
         else {
-            half_bridge_set_ccr(half_bridge_get_ccr() + 1);
+            if (half_bridge_get_duty_cycle() > 0.50) {
+                half_bridge_set_ccr(half_bridge_get_ccr() - 1);
+            }
+            else {
+                half_bridge_set_ccr(half_bridge_get_ccr() + 1);
+            }
+        }
+        if (stop_reason != NULL) {
+            stop();
+            printf("DC/DC Stop: %s.\n", stop_reason);
         }
     }
     else {

@@ -110,7 +110,7 @@ public:
     void control();
 
     /**
-     * Test mode for DC/DC, ramping up to 50% duty cycle
+     * Test mode for DC/DC, ramping up/down to 50% duty cycle
      */
     void test();
 
