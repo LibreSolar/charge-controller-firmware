@@ -135,6 +135,20 @@ K_THREAD_DEFINE(can_isotp, RX_THREAD_STACK_SIZE, can_isotp_thread, NULL, NULL, N
 
 #endif /* CONFIG_ISOTP */
 
+// below defines should go into the ThingSet library
+#define TS_CAN_SOURCE_GET(id)           (((uint32_t)id & TS_CAN_SOURCE_MASK) >> TS_CAN_SOURCE_POS)
+#define TS_CAN_DATA_ID_GET(id)          (((uint32_t)id & TS_CAN_DATA_ID_MASK) >> TS_CAN_DATA_ID_POS)
+
+CAN_DEFINE_MSGQ(sub_msgq, 10);
+
+const struct zcan_filter ctrl_filter = {
+    .id = TS_CAN_BASE_CONTROL,
+    .rtr = CAN_DATAFRAME,
+    .id_type = CAN_EXTENDED_IDENTIFIER,
+    .id_mask = TS_CAN_TYPE_MASK,
+    .rtr_mask = 1
+};
+
 void can_pub_isr(uint32_t err_flags, void *arg)
 {
 	// Do nothing. Publication messages are fire and forget.
@@ -146,6 +160,7 @@ void can_pubsub_thread()
 
     unsigned int can_id;
     uint8_t can_data[8];
+    struct zcan_frame rx_frame;
 
     const struct device *can_en_dev = device_get_binding(DT_GPIO_LABEL(CAN_EN_GPIO, gpios));
     gpio_pin_configure(can_en_dev, DT_GPIO_PIN(CAN_EN_GPIO, gpios),
@@ -155,7 +170,13 @@ void can_pubsub_thread()
         return;
     }
 
-    int64_t t_start = k_uptime_get();
+    int filter_id = can_attach_msgq(can_dev, &sub_msgq, &ctrl_filter);
+    if (filter_id < 0) {
+        LOG_ERR("Unable to attach ISR [%d]", filter_id);
+        return;
+    }
+
+    int64_t next_pub = k_uptime_get();
 
     while (1) {
 
@@ -183,8 +204,19 @@ void can_pubsub_thread()
             }
         }
 
-        t_start += 1000;
-        k_sleep(K_TIMEOUT_ABS_MS(t_start));
+        // wait for incoming messages until the next pub message has to be sent out
+        while (k_msgq_get(&sub_msgq, &rx_frame, K_TIMEOUT_ABS_MS(next_pub)) != -EAGAIN) {
+            // process message
+            uint16_t data_id = TS_CAN_DATA_ID_GET(rx_frame.id);
+            uint8_t sender_addr = TS_CAN_SOURCE_GET(rx_frame.id);
+            printk("Received %d bytes from address 0x%X, ID 0x%X = "
+                "%.2X %.2X %.2X %.2X %.2X %.2X %.2X %.2X\n",
+                rx_frame.dlc, sender_addr, data_id,
+                rx_frame.data[0], rx_frame.data[1], rx_frame.data[2], rx_frame.data[3],
+                rx_frame.data[4], rx_frame.data[5], rx_frame.data[6], rx_frame.data[7]);
+        }
+
+        next_pub += 1000;       // 1 second period (currently fixed)
     }
 }
 
