@@ -30,7 +30,7 @@ LOG_MODULE_REGISTER(ext_can, CONFIG_CAN_LOG_LEVEL);
 extern ThingSet ts;
 extern uint16_t can_node_addr;
 
-static const struct device *can_dev;
+static const struct device *can_dev = DEVICE_DT_GET(DT_NODELABEL(can1));
 
 #ifdef CONFIG_ISOTP
 
@@ -63,13 +63,17 @@ void send_complete_cb(int error_nr, void *arg)
     LOG_DBG("TX complete callback, err: %d", error_nr);
 }
 
-void can_rx_thread()
+void can_isotp_thread()
 {
     int ret, rem_len, resp_len;
     unsigned int req_len;
     struct net_buf *buf;
     static uint8_t rx_buffer[600];      // large enough to receive a 512k flash page for DFU
     static uint8_t tx_buffer[1000];
+
+    if (!device_is_ready(can_dev)) {
+        return;
+    }
 
     while (1) {
         /* re-assign address in every loop as it may have been changed via ThingSet */
@@ -126,7 +130,7 @@ void can_rx_thread()
     }
 }
 
-K_THREAD_DEFINE(can_rx, RX_THREAD_STACK_SIZE, can_rx_thread, NULL, NULL, NULL,
+K_THREAD_DEFINE(can_isotp, RX_THREAD_STACK_SIZE, can_isotp_thread, NULL, NULL, NULL,
     RX_THREAD_PRIORITY, 0, 1500);
 
 #endif /* CONFIG_ISOTP */
@@ -136,7 +140,7 @@ void can_pub_isr(uint32_t err_flags, void *arg)
 	// Do nothing. Publication messages are fire and forget.
 }
 
-void can_pub_thread()
+void can_pubsub_thread()
 {
     int wdt_channel = task_wdt_add(2000, task_wdt_callback, (void *)k_current_get());
 
@@ -147,11 +151,13 @@ void can_pub_thread()
     gpio_pin_configure(can_en_dev, DT_GPIO_PIN(CAN_EN_GPIO, gpios),
         DT_GPIO_FLAGS(CAN_EN_GPIO, gpios) | GPIO_OUTPUT_ACTIVE);
 
-    can_dev = device_get_binding("CAN_1");
+    if (!device_is_ready(can_dev)) {
+        return;
+    }
 
     int64_t t_start = k_uptime_get();
 
-    while (true) {
+    while (1) {
 
         task_wdt_feed(wdt_channel);
 
@@ -182,6 +188,6 @@ void can_pub_thread()
     }
 }
 
-K_THREAD_DEFINE(can_pub, 1024, can_pub_thread, NULL, NULL, NULL, 6, 0, 1000);
+K_THREAD_DEFINE(can_pubsub, 1024, can_pubsub_thread, NULL, NULL, NULL, 6, 0, 1000);
 
 #endif /* CONFIG_THINGSET_CAN */
