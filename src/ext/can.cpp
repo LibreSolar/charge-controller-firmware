@@ -69,7 +69,7 @@ void can_rx_thread()
     unsigned int req_len;
     struct net_buf *buf;
     static uint8_t rx_buffer[600];      // large enough to receive a 512k flash page for DFU
-    static uint8_t tx_buffer[500];
+    static uint8_t tx_buffer[1000];
 
     while (1) {
         /* re-assign address in every loop as it may have been changed via ThingSet */
