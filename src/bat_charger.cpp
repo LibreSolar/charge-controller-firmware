@@ -459,6 +459,10 @@ void Charger::charge_control(BatConf *bat_conf)
         dev_stat.clear_error(ERR_BAT_OVERVOLTAGE);
     }
 
+    if (state != CHG_STATE_FOLLOWER && (uptime() - time_last_ctrl_msg) <= 1) {
+        enter_state(CHG_STATE_FOLLOWER);
+    }
+
     // state machine
     switch (state) {
         case CHG_STATE_IDLE: {
@@ -475,6 +479,7 @@ void Charger::charge_control(BatConf *bat_conf)
                 port->bus->sink_voltage_intercept = bat_conf->topping_voltage +
                     bat_conf->temperature_compensation * (bat_temperature - 25);
                 port->pos_current_limit = bat_conf->charge_current_max;
+                target_current_control = port->pos_current_limit;
                 full = false;
                 dev_stat.clear_error(ERR_BAT_CHG_OVERTEMP);
                 dev_stat.clear_error(ERR_BAT_CHG_UNDERTEMP);
@@ -498,6 +503,9 @@ void Charger::charge_control(BatConf *bat_conf)
             // continuously adjust voltage setting for temperature compensation
             port->bus->sink_voltage_intercept = bat_conf->topping_voltage +
                 bat_conf->temperature_compensation * (bat_temperature - 25);
+
+            // power sharing: multiple devices in parallel supply the same current
+            target_current_control = port->current_filtered;
 
             if (port->bus->voltage_filtered >= port->bus->sink_control_voltage() - 0.05F) {
                 // battery is full if topping target voltage is still reached (i.e. sufficient
@@ -546,6 +554,8 @@ void Charger::charge_control(BatConf *bat_conf)
             port->bus->sink_voltage_intercept = bat_conf->trickle_voltage +
                 bat_conf->temperature_compensation * (bat_temperature - 25);
 
+            target_current_control = port->current_filtered;
+
             if (port->bus->voltage >= port->bus->sink_control_voltage()) {
                 time_target_voltage_reached = uptime();
             }
@@ -568,6 +578,8 @@ void Charger::charge_control(BatConf *bat_conf)
             port->bus->sink_voltage_intercept = bat_conf->equalization_voltage +
                 bat_conf->temperature_compensation * (bat_temperature - 25);
 
+            target_current_control = port->current_filtered;
+
             // current or time limit for equalization reached
             if (uptime() - time_state_changed > bat_conf->equalization_duration)
             {
@@ -586,6 +598,20 @@ void Charger::charge_control(BatConf *bat_conf)
                     port->pos_current_limit = 0;
                     enter_state(CHG_STATE_IDLE);
                 }
+            }
+            break;
+        }
+        case CHG_STATE_FOLLOWER: {
+            if ((uptime() - time_last_ctrl_msg) > 1) {
+                // go back to normal state machine
+                port->pos_current_limit = bat_conf->charge_current_max;
+                enter_state(CHG_STATE_BULK);
+            }
+            else {
+                // set current target as received from external device
+                port->pos_current_limit = target_current_control;
+                // set safety limit for voltage
+                port->bus->sink_voltage_intercept = bat_conf->voltage_absolute_max;
             }
             break;
         }

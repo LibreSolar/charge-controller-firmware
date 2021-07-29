@@ -322,7 +322,16 @@ enum ChargerState {
      * components attached to the battery. (currently, no equalization charging is
      * enabled in the software)
      */
-    CHG_STATE_EQUALIZATION
+    CHG_STATE_EQUALIZATION,
+
+    /**
+     * Parallel operation of multiple converters
+     *
+     * This mode is enabled if the device receives commands from an external controller with
+     * higher priority on the CAN bus. The device goes in current control modes and tries to
+     * match the current of the other controller.
+     */
+    CHG_STATE_FOLLOWER
 };
 
 /**
@@ -416,6 +425,17 @@ public:
      * Flag to indicate if battery was completely discharged
      */
     bool empty;
+
+    /**
+     * Last time a control message from external device was received
+     */
+    time_t time_last_ctrl_msg = CHARGER_TIME_NEVER;
+
+    /**
+     * Target current of the converter if operating in follower mode (received from external
+     * converter with higher priority via CAN)
+     */
+    float target_current_control;
 
     /**
      * Detect if two batteries are connected in series (12V/24V auto-detection)
