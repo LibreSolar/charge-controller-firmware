@@ -22,6 +22,8 @@ LOG_MODULE_REGISTER(ext_can, CONFIG_CAN_LOG_LEVEL);
 #include "data_nodes.h"
 #include "hardware.h"
 #include "thingset.h"
+#include "bat_charger.h"
+#include "helper.h"
 
 #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), can_en))
 #define CAN_EN_GPIO DT_CHILD(DT_PATH(outputs), can_en)
@@ -29,6 +31,7 @@ LOG_MODULE_REGISTER(ext_can, CONFIG_CAN_LOG_LEVEL);
 
 extern ThingSet ts;
 extern uint16_t can_node_addr;
+extern Charger charger;
 
 static const struct device *can_dev = DEVICE_DT_GET(DT_NODELABEL(can1));
 
@@ -154,6 +157,23 @@ void can_pub_isr(uint32_t err_flags, void *arg)
 	// Do nothing. Publication messages are fire and forget.
 }
 
+void can_pub_send(uint32_t can_id, uint8_t can_data[8], uint8_t data_len)
+{
+    struct zcan_frame frame = {0};
+    frame.id_type = CAN_EXTENDED_IDENTIFIER;
+    frame.rtr     = CAN_DATAFRAME;
+    frame.id      = can_id;
+    memcpy(frame.data, can_data, 8);
+
+    if (data_len >= 0) {
+        frame.dlc = data_len;
+
+        if (can_send(can_dev, &frame, K_MSEC(10), can_pub_isr, NULL) != CAN_TX_OK) {
+            LOG_DBG("Error sending CAN frame");
+        }
+    }
+}
+
 void can_pubsub_thread()
 {
     int wdt_channel = task_wdt_add(2000, task_wdt_callback, (void *)k_current_get());
@@ -177,6 +197,7 @@ void can_pubsub_thread()
     }
 
     int64_t next_pub = k_uptime_get();
+    uint32_t count = 0;
 
     while (1) {
 
@@ -185,21 +206,28 @@ void can_pubsub_thread()
         if (pub_can_enable) {
             int data_len = 0;
             int start_pos = 0;
-            while ((data_len = ts.bin_pub_can(start_pos, PUB_CAN, can_node_addr, can_id, can_data))
-                     != -1)
-            {
-                struct zcan_frame frame = {0};
-                frame.id_type = CAN_EXTENDED_IDENTIFIER;
-                frame.rtr     = CAN_DATAFRAME;
-                frame.id      = can_id;
-                memcpy(frame.data, can_data, 8);
+            while (count % 10 == 0) {
+                // normal objects: only every second
+                data_len = ts.bin_pub_can(start_pos, PUB_CAN, can_node_addr, can_id, can_data);
+                if (data_len < 0) {
+                    // finished with all IDs
+                    break;
+                }
+                else {
+                    can_pub_send(can_id, can_data, data_len);
+                }
+            }
 
-                if (data_len >= 0) {
-                    frame.dlc = data_len;
-
-                    if (can_send(can_dev, &frame, K_MSEC(10), can_pub_isr, NULL) != CAN_TX_OK) {
-                        LOG_DBG("Error sending CAN frame");
-                    }
+            data_len = 0;
+            start_pos = 0;
+            while (true) {
+                // control objects: every 100 ms
+                data_len = ts.bin_pub_can(start_pos, PUBSUB_CTRL, can_node_addr, can_id, can_data);
+                if (data_len < 0) {
+                    break;
+                }
+                else {
+                    can_pub_send(can_id, can_data, data_len);
                 }
             }
         }
@@ -209,14 +237,26 @@ void can_pubsub_thread()
             // process message
             uint16_t data_id = TS_CAN_DATA_ID_GET(rx_frame.id);
             uint8_t sender_addr = TS_CAN_SOURCE_GET(rx_frame.id);
-            printk("Received %d bytes from address 0x%X, ID 0x%X = "
-                "%.2X %.2X %.2X %.2X %.2X %.2X %.2X %.2X\n",
-                rx_frame.dlc, sender_addr, data_id,
-                rx_frame.data[0], rx_frame.data[1], rx_frame.data[2], rx_frame.data[3],
-                rx_frame.data[4], rx_frame.data[5], rx_frame.data[6], rx_frame.data[7]);
+
+            // control message received?
+            if (data_id > 0x8000 && sender_addr < can_node_addr) {
+                uint8_t buf[5 + 8];     // ThingSet bin headers + CAN frame payload
+                buf[0] = 0x1F;          // ThingSet pub message
+                buf[1] = 0xA1;          // CBOR: map with 1 element
+                buf[2] = 0x19;          // CBOR: uint16 follows
+                buf[3] = data_id >> 8;
+                buf[4] = data_id;
+                memcpy(&buf[5], rx_frame.data, 8);
+
+                int status = ts.bin_sub(buf, 5 + rx_frame.dlc, TS_WRITE_MASK, PUBSUB_CTRL);
+                if (status == TS_STATUS_CHANGED) {
+                    charger.time_last_ctrl_msg = uptime();
+                }
+            }
         }
 
-        next_pub += 1000;       // 1 second period (currently fixed)
+        next_pub += 100;       // 100 ms period (currently fixed)
+        count++;
     }
 }
 

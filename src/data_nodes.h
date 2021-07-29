@@ -30,6 +30,7 @@
 #define ID_PUB      0xF0        // publication setup
 #define ID_SUB      0xF1        // subscription setup
 #define ID_LOG      0x100       // access log data
+#define ID_CTRL     0x8000      // control functions
 
 /*
  * Publish/subscribe channels
@@ -37,6 +38,7 @@
 #define PUB_SER     (1U << 0)   // UART serial
 #define PUB_CAN     (1U << 1)   // CAN bus
 #define PUB_NVM     (1U << 2)   // data that should be stored in EEPROM
+#define PUBSUB_CTRL (1U << 3)   // control data sent and received via CAN
 
 /*
  * Data node versioning for EEPROM
@@ -75,5 +77,10 @@ const char alphabet_crockford[] = "0123456789abcdefghjkmnpqrstvwxyz";
  * Convert numeric device ID to base32 string
  */
 void uint64_to_base32(uint64_t in, char *out, size_t size, const char *alphabet);
+
+/**
+ * Update control values received via CAN
+ */
+void update_control();
 
 #endif /* DATA_OBJECTS_H */

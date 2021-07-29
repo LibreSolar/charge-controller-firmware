@@ -25,6 +25,7 @@ LOG_MODULE_REGISTER(data_nodes, CONFIG_DATA_NODES_LOG_LEVEL);
 #include "hardware.h"
 #include "setup.h"
 #include "thingset.h"
+#include "helper.h"
 
 // can be used to configure custom data objects in separate file instead
 // (e.g. data_nodes_custom.cpp)
@@ -647,7 +648,6 @@ static DataNode data_nodes[] = {
     TS_NODE_FLOAT(0x7B, "ChgTarget_A", &bat_terminal.pos_current_limit, 2,
         ID_OUTPUT, TS_ANY_R, 0),
 
-
     /*{
         "title": {
             "en": "Charger State",
@@ -1208,6 +1208,24 @@ static DataNode data_nodes[] = {
         "unit": "B"
     }*/
     TS_NODE_UINT32(0x103, "FlashPageSize_B", &flash_page_size, 0x100, TS_ANY_R, 0),
+
+    /*{
+        "title": {
+            "en": "Control parameters",
+            "de": "Regelgrößen"
+        }
+    }*/
+    TS_NODE_PATH(ID_CTRL, "ctrl", ID_PUB, NULL),
+
+    /*{
+        "title": {
+            "en": "Current control target",
+            "de": "Sollwert Strom-Regelung"
+        },
+        "unit": "A"
+    }*/
+    TS_NODE_FLOAT(0x8001, "CtrlTarget_A", &charger.target_current_control, 1,
+        ID_CTRL, TS_ANY_RW, PUBSUB_CTRL),
 };
 
 ThingSet ts(data_nodes, sizeof(data_nodes)/sizeof(DataNode));
@@ -1301,5 +1319,9 @@ void uint64_to_base32(uint64_t in, char *out, size_t size, const char *alphabet)
     out[len] = '\0';
 }
 
+void update_control()
+{
+    charger.time_last_ctrl_msg = uptime();
+}
 
 #endif /* CUSTOM_DATA_NODES_FILE */
