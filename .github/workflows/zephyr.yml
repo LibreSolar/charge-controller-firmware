@@ -1,0 +1,35 @@
+name: Build with Zephyr toolchain
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: zephyrprojectrtos/ci:latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          path: charge-controller-firmware
+          submodules: recursive
+
+      - name: Set up Python
+        uses: actions/setup-python@v1
+
+      - name: Initialize
+        working-directory: charge-controller-firmware
+        run: |
+          pip3 install -U west
+          cd zephyr
+          west init -l .
+          west update
+          pip3 install -r rtos/scripts/requirements-base.txt
+
+      - name: Build firmware
+        working-directory: charge-controller-firmware
+        run: |
+          cd zephyr
+          west build -b mppt_2420_hc@0.2 -p
+          west build -b mppt_2420_lc -p
+          west build -b mppt_1210_hus@0.7 -p
+          west build -b pwm_2420_lus@0.3 -p
