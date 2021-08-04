@@ -26,7 +26,7 @@
 #include "load.h"               // load and USB output management
 #include "leds.h"               // LED switching using charlieplexing
 #include "device_status.h"      // log data (error memory, min/max measurements, etc.)
-#include "data_nodes.h"         // for access to internal data via ThingSet
+#include "data_objects.h"         // for access to internal data via ThingSet
 
 void main(void)
 {
@@ -54,7 +54,7 @@ void main(void)
     #endif
 
     // read custom configuration from EEPROM
-    data_nodes_init();
+    data_objects_init();
 
     // Data Acquisition (DAQ) setup
     daq_setup();

@@ -10,7 +10,7 @@
 
 #include "mcu.h"
 #include "thingset.h"
-#include "data_nodes.h"
+#include "data_objects.h"
 #include "helper.h"
 
 #include <stdio.h>
@@ -61,7 +61,7 @@ uint32_t _calc_crc(const uint8_t *buf, size_t len)
 
 /*
  * EEPROM header bytes:
- * - 0-1: Data nodes version number
+ * - 0-1: Data objects version number
  * - 2-3: Number of data bytes
  * - 4-7: CRC32
  *
@@ -90,7 +90,7 @@ void data_storage_read()
         buf_header[0], buf_header[1], buf_header[2], buf_header[3],
         buf_header[4], buf_header[5], buf_header[6], buf_header[7]);
 
-    if (version == DATA_NODES_VERSION && len <= sizeof(buf)) {
+    if (version == DATA_OBJECTS_VERSION && len <= sizeof(buf)) {
         k_mutex_lock(&data_buf_lock, K_FOREVER);
         err = eeprom_read(eeprom_dev, EEPROM_HEADER_SIZE, buf, len);
 
@@ -99,7 +99,7 @@ void data_storage_read()
 
         if (_calc_crc(buf, len) == crc) {
             int status = ts.bin_sub(buf, sizeof(buf), TS_WRITE_MASK, PUB_NVM);
-            LOG_INF("EEPROM read and data nodes updated, ThingSet result: 0x%x", status);
+            LOG_INF("EEPROM read and data objects updated, ThingSet result: 0x%x", status);
         }
         else {
             LOG_ERR("EEPROM data CRC invalid, expected 0x%x (data_len = %d)",
@@ -123,7 +123,7 @@ void data_storage_write()
     int len = ts.bin_pub(buf + EEPROM_HEADER_SIZE, sizeof(buf) - EEPROM_HEADER_SIZE, PUB_NVM);
     uint32_t crc = _calc_crc(buf + EEPROM_HEADER_SIZE, len);
 
-    *((uint16_t*)&buf[0]) = (uint16_t)DATA_NODES_VERSION;
+    *((uint16_t*)&buf[0]) = (uint16_t)DATA_OBJECTS_VERSION;
     *((uint16_t*)&buf[2]) = (uint16_t)(len);
     *((uint32_t*)&buf[4]) = crc;
 
@@ -156,7 +156,7 @@ void data_storage_write()
 
 /*
  * NVS header bytes:
- * - 0-1: Data nodes version number
+ * - 0-1: Data objects version number
  *
  * Data starts from byte 2
  */
@@ -208,12 +208,12 @@ void data_storage_read()
 
     uint16_t version = *((uint16_t*)&buf[0]);
 
-    if (version == DATA_NODES_VERSION) {
+    if (version == DATA_OBJECTS_VERSION) {
         k_mutex_lock(&data_buf_lock, K_FOREVER);
 
         int status = ts.bin_sub(buf + NVS_HEADER_SIZE, num_bytes - NVS_HEADER_SIZE,
             TS_WRITE_MASK, PUB_NVM);
-        LOG_INF("NVS read and data nodes updated, ThingSet result: 0x%x", status);
+        LOG_INF("NVS read and data objects updated, ThingSet result: 0x%x", status);
 
         k_mutex_unlock(&data_buf_lock);
     }
@@ -230,7 +230,7 @@ void data_storage_write()
 
     k_mutex_lock(&data_buf_lock, K_FOREVER);
 
-    *((uint16_t*)&buf[0]) = (uint16_t)DATA_NODES_VERSION;
+    *((uint16_t*)&buf[0]) = (uint16_t)DATA_OBJECTS_VERSION;
 
     int len = ts.bin_pub(buf + NVS_HEADER_SIZE, sizeof(buf) - NVS_HEADER_SIZE, PUB_NVM);
 

@@ -399,8 +399,8 @@ config DAQ_LOG_LEVEL
     help
       Log level for the DAQ module. 0=off, 1=ERR, 2=WRN, 3=INF, 4=DBG
 
-config DATA_NODES_LOG_LEVEL
-    int "Log level for the data nodes module"
+config DATA_OBJECTS_LOG_LEVEL
+    int "Log level for the data objects module"
     default 2
     depends on LOG
     help
@@ -453,12 +453,12 @@ menuconfig CUSTOMIZATION
 
 if CUSTOMIZATION
 
-config CUSTOM_DATA_NODES_FILE
+config CUSTOM_DATA_OBJECTS_FILE
     bool "Use custom data nodes file"
     default n
     help
-      Use a custom file instead of default data_nodes.cpp for
-      ThingSet configuration.
+      Use the file data_objects_custom.cpp instead of the default data_objects.cpp
+      for ThingSet configuration.
 
 config CUSTOM_DCDC_CONTROLLER
     bool "Custom implementation of DC/DC controller"

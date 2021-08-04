@@ -18,7 +18,7 @@ def append_stuff(temp_obj):
         main_obj[current_key] = temp_obj.copy()
         temp_obj.clear()
 
-with open("src/data_nodes.cpp", 'r') as fd:
+with open("src/data_objects.cpp", 'r') as fd:
     for (num, line) in enumerate(fd, 1):
         if line =="\n":
             continue

@@ -4,7 +4,7 @@ zephyr_include_directories(.)
 
 target_sources(app PRIVATE
         bat_charger.cpp
-        data_nodes.cpp
+        data_objects.cpp
         data_storage.cpp
         daq.cpp
         daq_driver.c
@@ -24,8 +24,8 @@ target_sources(app PRIVATE
 
 add_subdirectory(ext)
 
-if(${CONFIG_CUSTOM_DATA_NODES_FILE})
-        target_sources(app PRIVATE data_nodes_custom.cpp)
+if(${CONFIG_CUSTOM_DATA_OBJECTS_FILE})
+        target_sources(app PRIVATE data_objects_custom.cpp)
 endif()
 
 # Using this option enables user-specific customization of the firmware. The

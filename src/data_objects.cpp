@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "data_nodes.h"
+#include "data_objects.h"
 
 #include <zephyr.h>
 #include <soc.h>
@@ -14,7 +14,7 @@
 #include <stm32_ll_utils.h>
 #include <sys/crc.h>
 #include <logging/log.h>
-LOG_MODULE_REGISTER(data_nodes, CONFIG_DATA_NODES_LOG_LEVEL);
+LOG_MODULE_REGISTER(data_objects, CONFIG_DATA_OBJECTS_LOG_LEVEL);
 #endif
 
 #include <stdio.h>
@@ -28,8 +28,8 @@ LOG_MODULE_REGISTER(data_nodes, CONFIG_DATA_NODES_LOG_LEVEL);
 #include "helper.h"
 
 // can be used to configure custom data objects in separate file instead
-// (e.g. data_nodes_custom.cpp)
-#ifndef CONFIG_CUSTOM_DATA_NODES_FILE
+// (e.g. data_objects_custom.cpp)
+#ifndef CONFIG_CUSTOM_DATA_OBJECTS_FILE
 
 const char manufacturer[] = "Libre Solar";
 const char device_type[] = DT_PROP(DT_PATH(pcb), type);
@@ -68,7 +68,7 @@ uint16_t can_node_addr = CONFIG_THINGSET_CAN_DEFAULT_NODE_ID;
  *
  * Normal priority data objects (consuming 2 or more bytes) start from IDs > 23 = 0x17
  */
-static DataNode data_nodes[] = {
+static DataNode data_objects[] = {
 
     // DEVICE INFORMATION /////////////////////////////////////////////////////
     // using IDs >= 0x18
@@ -123,7 +123,7 @@ static DataNode data_nodes[] = {
     // CONFIGURATION //////////////////////////////////////////////////////////
     // using IDs >= 0x30 except for high priority data objects
 
-    TS_NODE_PATH(ID_CONF, "conf", 0, &data_nodes_update_conf),
+    TS_NODE_PATH(ID_CONF, "conf", 0, &data_objects_update_conf),
 
     // battery settings
     /*{
@@ -1228,9 +1228,9 @@ static DataNode data_nodes[] = {
         ID_CTRL, TS_ANY_RW, PUBSUB_CTRL),
 };
 
-ThingSet ts(data_nodes, sizeof(data_nodes)/sizeof(DataNode));
+ThingSet ts(data_objects, sizeof(data_objects)/sizeof(DataNode));
 
-void data_nodes_update_conf()
+void data_objects_update_conf()
 {
     bool changed;
     if (battery_conf_check(&bat_conf_user)) {
@@ -1256,7 +1256,7 @@ void data_nodes_update_conf()
     }
 }
 
-void data_nodes_init()
+void data_objects_init()
 {
 #ifndef UNIT_TEST
     uint8_t buf[12];
@@ -1324,4 +1324,4 @@ void update_control()
     charger.time_last_ctrl_msg = uptime();
 }
 
-#endif /* CUSTOM_DATA_NODES_FILE */
+#endif /* CUSTOM_DATA_OBJECTS_FILE */

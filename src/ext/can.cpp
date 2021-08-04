@@ -19,7 +19,7 @@
 #include <logging/log.h>
 LOG_MODULE_REGISTER(ext_can, CONFIG_CAN_LOG_LEVEL);
 
-#include "data_nodes.h"
+#include "data_objects.h"
 #include "hardware.h"
 #include "thingset.h"
 #include "bat_charger.h"
