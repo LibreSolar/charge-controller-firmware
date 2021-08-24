@@ -98,7 +98,7 @@ void data_storage_read()
         //for (int i = 0; i < len; i++) printf("%.2x ", buf[i]);
 
         if (_calc_crc(buf, len) == crc) {
-            int status = ts.bin_sub(buf, sizeof(buf), TS_WRITE_MASK, PUB_NVM);
+            int status = ts.bin_import(buf, sizeof(buf), TS_WRITE_MASK, SUBSET_NVM);
             LOG_INF("EEPROM read and data objects updated, ThingSet result: 0x%x", status);
         }
         else {
@@ -120,7 +120,7 @@ void data_storage_write()
 
     k_mutex_lock(&data_buf_lock, K_FOREVER);
 
-    int len = ts.bin_pub(buf + EEPROM_HEADER_SIZE, sizeof(buf) - EEPROM_HEADER_SIZE, PUB_NVM);
+    int len = ts.bin_export(buf + EEPROM_HEADER_SIZE, sizeof(buf) - EEPROM_HEADER_SIZE, SUBSET_NVM);
     uint32_t crc = _calc_crc(buf + EEPROM_HEADER_SIZE, len);
 
     *((uint16_t*)&buf[0]) = (uint16_t)DATA_OBJECTS_VERSION;
@@ -211,8 +211,8 @@ void data_storage_read()
     if (version == DATA_OBJECTS_VERSION) {
         k_mutex_lock(&data_buf_lock, K_FOREVER);
 
-        int status = ts.bin_sub(buf + NVS_HEADER_SIZE, num_bytes - NVS_HEADER_SIZE,
-            TS_WRITE_MASK, PUB_NVM);
+        int status = ts.bin_import(buf + NVS_HEADER_SIZE, num_bytes - NVS_HEADER_SIZE,
+            TS_WRITE_MASK, SUBSET_NVM);
         LOG_INF("NVS read and data objects updated, ThingSet result: 0x%x", status);
 
         k_mutex_unlock(&data_buf_lock);
@@ -232,7 +232,7 @@ void data_storage_write()
 
     *((uint16_t*)&buf[0]) = (uint16_t)DATA_OBJECTS_VERSION;
 
-    int len = ts.bin_pub(buf + NVS_HEADER_SIZE, sizeof(buf) - NVS_HEADER_SIZE, PUB_NVM);
+    int len = ts.bin_export(buf + NVS_HEADER_SIZE, sizeof(buf) - NVS_HEADER_SIZE, SUBSET_NVM);
 
     if (len == 0) {
         LOG_ERR("NVS data could not be stored. ThingSet error (len = %d)", len);

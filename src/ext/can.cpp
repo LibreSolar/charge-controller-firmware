@@ -208,7 +208,7 @@ void can_pubsub_thread()
             int start_pos = 0;
             while (count % 10 == 0) {
                 // normal objects: only every second
-                data_len = ts.bin_pub_can(start_pos, PUB_CAN, can_node_addr, can_id, can_data);
+                data_len = ts.bin_pub_can(start_pos, SUBSET_CAN, can_node_addr, can_id, can_data);
                 if (data_len < 0) {
                     // finished with all IDs
                     break;
@@ -222,7 +222,7 @@ void can_pubsub_thread()
             start_pos = 0;
             while (true) {
                 // control objects: every 100 ms
-                data_len = ts.bin_pub_can(start_pos, PUBSUB_CTRL, can_node_addr, can_id, can_data);
+                data_len = ts.bin_pub_can(start_pos, SUBSET_CTRL, can_node_addr, can_id, can_data);
                 if (data_len < 0) {
                     break;
                 }
@@ -240,15 +240,14 @@ void can_pubsub_thread()
 
             // control message received?
             if (data_id > 0x8000 && sender_addr < can_node_addr) {
-                uint8_t buf[5 + 8];     // ThingSet bin headers + CAN frame payload
-                buf[0] = 0x1F;          // ThingSet pub message
-                buf[1] = 0xA1;          // CBOR: map with 1 element
-                buf[2] = 0x19;          // CBOR: uint16 follows
-                buf[3] = data_id >> 8;
-                buf[4] = data_id;
-                memcpy(&buf[5], rx_frame.data, 8);
+                uint8_t buf[4 + 8];     // ThingSet bin headers + CAN frame payload
+                buf[0] = 0xA1;          // CBOR: map with 1 element
+                buf[1] = 0x19;          // CBOR: uint16 follows
+                buf[2] = data_id >> 8;
+                buf[3] = data_id;
+                memcpy(&buf[4], rx_frame.data, 8);
 
-                int status = ts.bin_sub(buf, 5 + rx_frame.dlc, TS_WRITE_MASK, PUBSUB_CTRL);
+                int status = ts.bin_import(buf, 4 + rx_frame.dlc, TS_WRITE_MASK, SUBSET_CTRL);
                 if (status == TS_STATUS_CHANGED) {
                     charger.time_last_ctrl_msg = uptime();
                 }

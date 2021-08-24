@@ -68,12 +68,12 @@ uint16_t can_node_addr = CONFIG_THINGSET_CAN_DEFAULT_NODE_ID;
  *
  * Normal priority data objects (consuming 2 or more bytes) start from IDs > 23 = 0x17
  */
-static DataNode data_objects[] = {
+static ThingSetDataObject data_objects[] = {
 
     // DEVICE INFORMATION /////////////////////////////////////////////////////
     // using IDs >= 0x18
 
-    TS_NODE_PATH(ID_INFO, "info", 0, NULL),
+    TS_GROUP(ID_INFO, "info", TS_NO_CALLBACK, ID_ROOT),
 
     /*{
         "title": {
@@ -81,8 +81,8 @@ static DataNode data_objects[] = {
             "de": "Geräte-ID"
         }
     }*/
-    TS_NODE_STRING(0x19, "DeviceID", device_id, sizeof(device_id),
-        ID_INFO, TS_ANY_R | TS_MKR_W, PUB_NVM),
+    TS_ITEM_STRING(0x19, "DeviceID", device_id, sizeof(device_id),
+        ID_INFO, TS_ANY_R | TS_MKR_W, SUBSET_NVM),
 
     /*{
         "title": {
@@ -90,7 +90,7 @@ static DataNode data_objects[] = {
             "de": "Hersteller"
         }
     }*/
-    TS_NODE_STRING(0x1A, "Manufacturer", manufacturer, 0,
+    TS_ITEM_STRING(0x1A, "Manufacturer", manufacturer, 0,
         ID_INFO, TS_ANY_R, 0),
 
     /*{
@@ -99,7 +99,7 @@ static DataNode data_objects[] = {
             "de": "Gerätetyp"
         }
     }*/
-    TS_NODE_STRING(0x1B, "DeviceType", device_type, 0,
+    TS_ITEM_STRING(0x1B, "DeviceType", device_type, 0,
         ID_INFO, TS_ANY_R, 0),
 
     /*{
@@ -108,7 +108,7 @@ static DataNode data_objects[] = {
             "de": "Hardware-Version"
         }
     }*/
-    TS_NODE_STRING(0x1C, "HardwareVersion", hardware_version, 0,
+    TS_ITEM_STRING(0x1C, "HardwareVersion", hardware_version, 0,
         ID_INFO, TS_ANY_R, 0),
 
     /*{
@@ -117,13 +117,13 @@ static DataNode data_objects[] = {
             "de": "Firmware-Version"
         }
     }*/
-    TS_NODE_STRING(0x1D, "FirmwareVersion", firmware_version, 0,
+    TS_ITEM_STRING(0x1D, "FirmwareVersion", firmware_version, 0,
         ID_INFO, TS_ANY_R, 0),
 
     // CONFIGURATION //////////////////////////////////////////////////////////
     // using IDs >= 0x30 except for high priority data objects
 
-    TS_NODE_PATH(ID_CONF, "conf", 0, &data_objects_update_conf),
+    TS_GROUP(ID_CONF, "conf", &data_objects_update_conf, ID_ROOT),
 
     // battery settings
     /*{
@@ -135,8 +135,8 @@ static DataNode data_objects[] = {
         "min": 1,
         "max": 1000
     }*/
-    TS_NODE_FLOAT(0x31, "BatNom_Ah", &bat_conf_user.nominal_capacity, 1,
-        ID_CONF, TS_ANY_R | TS_ANY_W, PUB_NVM),
+    TS_ITEM_FLOAT(0x31, "BatNom_Ah", &bat_conf_user.nominal_capacity, 1,
+        ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
         "title": {
@@ -147,8 +147,8 @@ static DataNode data_objects[] = {
         "min": 10.0,
         "max": 30.0
     }*/
-    TS_NODE_FLOAT(0x32, "BatRecharge_V", &bat_conf_user.voltage_recharge, 2,
-        ID_CONF, TS_ANY_R | TS_ANY_W, PUB_NVM),
+    TS_ITEM_FLOAT(0x32, "BatRecharge_V", &bat_conf_user.voltage_recharge, 2,
+        ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
         "title": {
@@ -159,8 +159,8 @@ static DataNode data_objects[] = {
         "min": 8.0,
         "max": 30.0
     }*/
-    TS_NODE_FLOAT(0x33, "BatAbsMin_V", &bat_conf_user.voltage_absolute_min, 2,
-        ID_CONF, TS_ANY_R | TS_ANY_W, PUB_NVM),
+    TS_ITEM_FLOAT(0x33, "BatAbsMin_V", &bat_conf_user.voltage_absolute_min, 2,
+        ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
         "title": {
@@ -171,8 +171,8 @@ static DataNode data_objects[] = {
         "min": 10.0,
         "max": 30.0
     }*/
-    TS_NODE_FLOAT(0x34, "BatChgMax_A", &bat_conf_user.charge_current_max, 1,
-        ID_CONF, TS_ANY_R | TS_ANY_W, PUB_NVM),
+    TS_ITEM_FLOAT(0x34, "BatChgMax_A", &bat_conf_user.charge_current_max, 1,
+        ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
         "title": {
@@ -183,8 +183,8 @@ static DataNode data_objects[] = {
         "min": 10.0,
         "max": 30.0
     }*/
-    TS_NODE_FLOAT(0x35, "Topping_V", &bat_conf_user.topping_voltage, 2,
-        ID_CONF, TS_ANY_R | TS_ANY_W, PUB_NVM),
+    TS_ITEM_FLOAT(0x35, "Topping_V", &bat_conf_user.topping_voltage, 2,
+        ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
         "title": {
@@ -195,8 +195,8 @@ static DataNode data_objects[] = {
         "min": 0.0,
         "max": 20.0
     }*/
-    TS_NODE_FLOAT(0x36, "ToppingCutoff_A", &bat_conf_user.topping_current_cutoff, 1,
-        ID_CONF, TS_ANY_R | TS_ANY_W, PUB_NVM),
+    TS_ITEM_FLOAT(0x36, "ToppingCutoff_A", &bat_conf_user.topping_current_cutoff, 1,
+        ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
         "title": {
@@ -205,8 +205,8 @@ static DataNode data_objects[] = {
         },
         "unit": "s"
     }*/
-    TS_NODE_INT32(0x37, "ToppingCutoff_s", &bat_conf_user.topping_duration,
-        ID_CONF, TS_ANY_R | TS_ANY_W, PUB_NVM),
+    TS_ITEM_INT32(0x37, "ToppingCutoff_s", &bat_conf_user.topping_duration,
+        ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
         "title": {
@@ -214,8 +214,8 @@ static DataNode data_objects[] = {
             "de": "Erhaltungsladung einschalten"
         }
     }*/
-    TS_NODE_BOOL(0x38, "TrickleEn", &bat_conf_user.trickle_enabled,
-        ID_CONF, TS_ANY_R | TS_ANY_W, PUB_NVM),
+    TS_ITEM_BOOL(0x38, "TrickleEn", &bat_conf_user.trickle_enabled,
+        ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
         "title": {
@@ -224,8 +224,8 @@ static DataNode data_objects[] = {
         },
         "unit": "V"
     }*/
-    TS_NODE_FLOAT(0x39, "Trickle_V", &bat_conf_user.trickle_voltage, 2,
-        ID_CONF, TS_ANY_R | TS_ANY_W, PUB_NVM),
+    TS_ITEM_FLOAT(0x39, "Trickle_V", &bat_conf_user.trickle_voltage, 2,
+        ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
         "title": {
@@ -234,8 +234,8 @@ static DataNode data_objects[] = {
         },
         "unit": "s"
     }*/
-    TS_NODE_INT32(0x3A, "TrickleRecharge_s", &bat_conf_user.trickle_recharge_time,
-        ID_CONF, TS_ANY_R | TS_ANY_W, PUB_NVM),
+    TS_ITEM_INT32(0x3A, "TrickleRecharge_s", &bat_conf_user.trickle_recharge_time,
+        ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
         "title": {
@@ -243,8 +243,8 @@ static DataNode data_objects[] = {
             "de": "Ausgleichsladung einschalten"
         }
     }*/
-    TS_NODE_BOOL(0x3B, "EqlEn", &bat_conf_user.equalization_enabled,
-        ID_CONF, TS_ANY_R | TS_ANY_W, PUB_NVM),
+    TS_ITEM_BOOL(0x3B, "EqlEn", &bat_conf_user.equalization_enabled,
+        ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
         "title": {
@@ -253,8 +253,8 @@ static DataNode data_objects[] = {
         },
         "unit": "V"
     }*/
-    TS_NODE_FLOAT(0x3C, "Eql_V", &bat_conf_user.equalization_voltage, 2,
-        ID_CONF, TS_ANY_R | TS_ANY_W, PUB_NVM),
+    TS_ITEM_FLOAT(0x3C, "Eql_V", &bat_conf_user.equalization_voltage, 2,
+        ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
         "title": {
@@ -263,8 +263,8 @@ static DataNode data_objects[] = {
         },
         "unit": "A"
     }*/
-    TS_NODE_FLOAT(0x3D, "Eql_A", &bat_conf_user.equalization_current_limit, 2,
-        ID_CONF, TS_ANY_R | TS_ANY_W, PUB_NVM),
+    TS_ITEM_FLOAT(0x3D, "Eql_A", &bat_conf_user.equalization_current_limit, 2,
+        ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
         "title": {
@@ -273,8 +273,8 @@ static DataNode data_objects[] = {
         },
         "unit": "s"
     }*/
-    TS_NODE_INT32(0x3E, "EqlDuration_s", &bat_conf_user.equalization_duration,
-        ID_CONF, TS_ANY_R | TS_ANY_W, PUB_NVM),
+    TS_ITEM_INT32(0x3E, "EqlDuration_s", &bat_conf_user.equalization_duration,
+        ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
         "title": {
@@ -283,8 +283,8 @@ static DataNode data_objects[] = {
         },
         "unit": "d"
     }*/
-    TS_NODE_INT32(0x3F, "EqlInterval_d", &bat_conf_user.equalization_trigger_days,
-        ID_CONF, TS_ANY_R | TS_ANY_W, PUB_NVM),
+    TS_ITEM_INT32(0x3F, "EqlInterval_d", &bat_conf_user.equalization_trigger_days,
+        ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
         "title": {
@@ -292,8 +292,8 @@ static DataNode data_objects[] = {
             "de": "Max. Tiefenentladungszyklen zwischen Ausgleichsladungen"
         }
     }*/
-    TS_NODE_INT32(0x40, "EqlDeepDisTrigger", &bat_conf_user.equalization_trigger_deep_cycles,
-        ID_CONF, TS_ANY_R | TS_ANY_W, PUB_NVM),
+    TS_ITEM_INT32(0x40, "EqlDeepDisTrigger", &bat_conf_user.equalization_trigger_deep_cycles,
+        ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
         "title": {
@@ -302,8 +302,8 @@ static DataNode data_objects[] = {
         },
         "unit": "mV/K"
     }*/
-    TS_NODE_FLOAT(0x41, "BatTempComp_mV-K", &bat_conf_user.temperature_compensation, 3,
-        ID_CONF, TS_ANY_R | TS_ANY_W, PUB_NVM),
+    TS_ITEM_FLOAT(0x41, "BatTempComp_mV-K", &bat_conf_user.temperature_compensation, 3,
+        ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
         "title": {
@@ -312,8 +312,8 @@ static DataNode data_objects[] = {
         },
         "unit": "Ohm"
     }*/
-    TS_NODE_FLOAT(0x42, "BatInt_Ohm", &bat_conf_user.internal_resistance, 3,
-        ID_CONF, TS_ANY_R | TS_ANY_W, PUB_NVM),
+    TS_ITEM_FLOAT(0x42, "BatInt_Ohm", &bat_conf_user.internal_resistance, 3,
+        ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
         "title": {
@@ -322,8 +322,8 @@ static DataNode data_objects[] = {
         },
         "unit": "Ohm"
     }*/
-    TS_NODE_FLOAT(0x43, "BatWire_Ohm", &bat_conf_user.wire_resistance, 3,
-        ID_CONF, TS_ANY_R | TS_ANY_W, PUB_NVM),
+    TS_ITEM_FLOAT(0x43, "BatWire_Ohm", &bat_conf_user.wire_resistance, 3,
+        ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
         "title": {
@@ -332,8 +332,8 @@ static DataNode data_objects[] = {
         },
         "unit": "°C"
     }*/
-    TS_NODE_FLOAT(0x44, "BatChgMax_degC", &bat_conf_user.charge_temp_max, 1,
-        ID_CONF, TS_ANY_R | TS_ANY_W, PUB_NVM),
+    TS_ITEM_FLOAT(0x44, "BatChgMax_degC", &bat_conf_user.charge_temp_max, 1,
+        ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
         "title": {
@@ -342,8 +342,8 @@ static DataNode data_objects[] = {
         },
         "unit": "°C"
     }*/
-    TS_NODE_FLOAT(0x45, "BatChgMin_degC", &bat_conf_user.charge_temp_min, 1,
-        ID_CONF, TS_ANY_R | TS_ANY_W, PUB_NVM),
+    TS_ITEM_FLOAT(0x45, "BatChgMin_degC", &bat_conf_user.charge_temp_min, 1,
+        ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
         "title": {
@@ -352,8 +352,8 @@ static DataNode data_objects[] = {
         },
         "unit": "°C"
     }*/
-    TS_NODE_FLOAT(0x46, "BatDisMax_degC", &bat_conf_user.discharge_temp_max, 1,
-        ID_CONF, TS_ANY_R | TS_ANY_W, PUB_NVM),
+    TS_ITEM_FLOAT(0x46, "BatDisMax_degC", &bat_conf_user.discharge_temp_max, 1,
+        ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
         "title": {
@@ -362,8 +362,8 @@ static DataNode data_objects[] = {
         },
         "unit": "°C"
     }*/
-    TS_NODE_FLOAT(0x47, "BatDisMin_degC", &bat_conf_user.discharge_temp_min, 1,
-        ID_CONF, TS_ANY_R | TS_ANY_W, PUB_NVM),
+    TS_ITEM_FLOAT(0x47, "BatDisMin_degC", &bat_conf_user.discharge_temp_min, 1,
+        ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     // load settings
 #if BOARD_HAS_LOAD_OUTPUT
@@ -374,8 +374,8 @@ static DataNode data_objects[] = {
             "de": "Last-Ausgang automatisch einschalten"
         }
     }*/
-    TS_NODE_BOOL(0x50, "LoadEnDefault", &load.enable,
-        ID_CONF, TS_ANY_R | TS_ANY_W, PUB_NVM),
+    TS_ITEM_BOOL(0x50, "LoadEnDefault", &load.enable,
+        ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
         "title": {
@@ -384,8 +384,8 @@ static DataNode data_objects[] = {
         },
         "unit": "V"
     }*/
-    TS_NODE_FLOAT(0x51, "LoadDisconnect_V", &bat_conf_user.voltage_load_disconnect, 2,
-        ID_CONF, TS_ANY_R | TS_ANY_W, PUB_NVM),
+    TS_ITEM_FLOAT(0x51, "LoadDisconnect_V", &bat_conf_user.voltage_load_disconnect, 2,
+        ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
         "title": {
@@ -394,8 +394,8 @@ static DataNode data_objects[] = {
         },
         "unit": "V"
     }*/
-    TS_NODE_FLOAT(0x52, "LoadReconnect_V", &bat_conf_user.voltage_load_reconnect, 2,
-        ID_CONF, TS_ANY_R | TS_ANY_W, PUB_NVM),
+    TS_ITEM_FLOAT(0x52, "LoadReconnect_V", &bat_conf_user.voltage_load_reconnect, 2,
+        ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
         "title": {
@@ -404,8 +404,8 @@ static DataNode data_objects[] = {
         },
         "unit": "s"
     }*/
-    TS_NODE_INT32(0x53, "LoadOCRecovery_s", &load.oc_recovery_delay,
-        ID_CONF, TS_ANY_R | TS_ANY_W, PUB_NVM),
+    TS_ITEM_INT32(0x53, "LoadOCRecovery_s", &load.oc_recovery_delay,
+        ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
         "title": {
@@ -414,8 +414,8 @@ static DataNode data_objects[] = {
         },
         "unit": "s"
     }*/
-    TS_NODE_INT32(0x54, "LoadUVRecovery_s", &load.lvd_recovery_delay,
-        ID_CONF, TS_ANY_R | TS_ANY_W, PUB_NVM),
+    TS_ITEM_INT32(0x54, "LoadUVRecovery_s", &load.lvd_recovery_delay,
+        ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 #endif
 
 #if BOARD_HAS_USB_OUTPUT
@@ -426,14 +426,14 @@ static DataNode data_objects[] = {
         },
         "unit": "s"
     }*/
-    TS_NODE_BOOL(0x55, "UsbEnDefault", &usb_pwr.enable,
-        ID_CONF, TS_ANY_R | TS_ANY_W, PUB_NVM),
+    TS_ITEM_BOOL(0x55, "UsbEnDefault", &usb_pwr.enable,
+        ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
-    //TS_NODE_FLOAT(0x56, "UsbDisconnect_V", &bat_conf_user.voltage_load_disconnect, 2,
-    //    ID_CONF, TS_ANY_R | TS_ANY_W, PUB_NVM),
+    //TS_ITEM_FLOAT(0x56, "UsbDisconnect_V", &bat_conf_user.voltage_load_disconnect, 2,
+    //    ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
-    //TS_NODE_FLOAT(0x57, "UsbReconnect_V", &bat_conf_user.voltage_load_reconnect, 2,
-    //    ID_CONF, TS_ANY_R | TS_ANY_W, PUB_NVM),
+    //TS_ITEM_FLOAT(0x57, "UsbReconnect_V", &bat_conf_user.voltage_load_reconnect, 2,
+    //    ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
         "title": {
@@ -442,8 +442,8 @@ static DataNode data_objects[] = {
         },
         "unit": "s"
     }*/
-    TS_NODE_INT32(0x58, "UsbUVRecovery_s", &usb_pwr.lvd_recovery_delay,
-        ID_CONF, TS_ANY_R | TS_ANY_W, PUB_NVM),
+    TS_ITEM_INT32(0x58, "UsbUVRecovery_s", &usb_pwr.lvd_recovery_delay,
+        ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 #endif
 
 #if CONFIG_THINGSET_CAN
@@ -453,14 +453,14 @@ static DataNode data_objects[] = {
             "de": "CAN Node-Adresse"
         }
     }*/
-    TS_NODE_UINT16(0x59, "CanNodeId", &can_node_addr,
-        ID_CONF, TS_ANY_R | TS_ANY_W, PUB_NVM),
+    TS_ITEM_UINT16(0x59, "CanNodeId", &can_node_addr,
+        ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 #endif
 
     // INPUT DATA /////////////////////////////////////////////////////////////
     // using IDs >= 0x60
 
-    TS_NODE_PATH(ID_INPUT, "input", 0, NULL),
+    TS_GROUP(ID_INPUT, "input", TS_NO_CALLBACK, ID_ROOT),
 
 #if BOARD_HAS_LOAD_OUTPUT
     /*{
@@ -469,7 +469,7 @@ static DataNode data_objects[] = {
             "de": "Last einschalten"
         }
     }*/
-    TS_NODE_BOOL(0x61, "LoadEn", &load.enable,
+    TS_ITEM_BOOL(0x61, "LoadEn", &load.enable,
         ID_INPUT, TS_ANY_R | TS_ANY_W, 0),
 #endif
 
@@ -480,7 +480,7 @@ static DataNode data_objects[] = {
             "de": "USB einschalten"
         }
     }*/
-    TS_NODE_BOOL(0x62, "UsbEn", &usb_pwr.enable,
+    TS_ITEM_BOOL(0x62, "UsbEn", &usb_pwr.enable,
         ID_INPUT, TS_ANY_R | TS_ANY_W, 0),
 #endif
 
@@ -491,7 +491,7 @@ static DataNode data_objects[] = {
             "de": "DC/DC einschalten"
         }
     }*/
-    TS_NODE_BOOL(0x63, "DcdcEn", &dcdc.enable,
+    TS_ITEM_BOOL(0x63, "DcdcEn", &dcdc.enable,
         ID_INPUT, TS_ANY_R | TS_ANY_W, 0),
 #endif
 
@@ -502,7 +502,7 @@ static DataNode data_objects[] = {
             "de": "PWM Solar-Eingang einschalten"
         }
     }*/
-    TS_NODE_BOOL(0x64, "PwmEn", &pwm_switch.enable,
+    TS_ITEM_BOOL(0x64, "PwmEn", &pwm_switch.enable,
         ID_INPUT, TS_ANY_R | TS_ANY_W, 0),
 #endif
 
@@ -514,7 +514,7 @@ static DataNode data_objects[] = {
         },
         "unit": "V"
     }*/
-    TS_NODE_FLOAT(0x65, "GridSink_V", &hv_bus.sink_voltage_intercept, 2,
+    TS_ITEM_FLOAT(0x65, "GridSink_V", &hv_bus.sink_voltage_intercept, 2,
         ID_INPUT, TS_ANY_R | TS_ANY_W, 0),
 
     /*{
@@ -524,18 +524,18 @@ static DataNode data_objects[] = {
         },
         "unit": "V"
     }*/
-    TS_NODE_FLOAT(0x66, "GridSrc_V", &hv_bus.src_voltage_intercept, 2,
+    TS_ITEM_FLOAT(0x66, "GridSrc_V", &hv_bus.src_voltage_intercept, 2,
         ID_INPUT, TS_ANY_R | TS_ANY_W, 0),
 #endif
 
     // OUTPUT DATA ////////////////////////////////////////////////////////////
     // using IDs >= 0x70 except for high priority data objects
 
-    TS_NODE_PATH(ID_OUTPUT, "output", 0, NULL),
+    TS_GROUP(ID_MEAS, "meas", TS_NO_CALLBACK, ID_ROOT),
 
     // the timestamp currently reflects the time since last reset and not an actual timestamp
-    TS_NODE_UINT32(0x01, "Uptime_s", &timestamp,
-        ID_OUTPUT, TS_ANY_R, PUB_SER),
+    TS_ITEM_UINT32(0x01, "Uptime_s", &timestamp,
+        ID_MEAS, TS_ANY_R, SUBSET_SER),
 
     // battery related data objects
     /*{
@@ -545,8 +545,8 @@ static DataNode data_objects[] = {
         },
         "unit": "V"
     }*/
-    TS_NODE_FLOAT(0x71, "Bat_V", &bat_bus.voltage, 2,
-        ID_OUTPUT, TS_ANY_R, PUB_SER | PUB_CAN),
+    TS_ITEM_FLOAT(0x71, "Bat_V", &bat_bus.voltage, 2,
+        ID_MEAS, TS_ANY_R, SUBSET_SER | SUBSET_CAN),
 
     /*{
         "title": {
@@ -555,8 +555,8 @@ static DataNode data_objects[] = {
         },
         "unit": "A"
     }*/
-    TS_NODE_FLOAT(0x72, "Bat_A", &bat_terminal.current, 2,
-        ID_OUTPUT, TS_ANY_R, PUB_SER | PUB_CAN),
+    TS_ITEM_FLOAT(0x72, "Bat_A", &bat_terminal.current, 2,
+        ID_MEAS, TS_ANY_R, SUBSET_SER | SUBSET_CAN),
 
     /*{
         "title": {
@@ -565,8 +565,8 @@ static DataNode data_objects[] = {
         },
         "unit": "W"
     }*/
-    TS_NODE_FLOAT(0x73, "Bat_W", &bat_terminal.power, 2,
-        ID_OUTPUT, TS_ANY_R, 0),
+    TS_ITEM_FLOAT(0x73, "Bat_W", &bat_terminal.power, 2,
+        ID_MEAS, TS_ANY_R, 0),
 
     /*{
         "title": {
@@ -575,8 +575,8 @@ static DataNode data_objects[] = {
         },
         "unit": "°C"
     }*/
-    TS_NODE_FLOAT(0x74, "Bat_degC", &charger.bat_temperature, 1,
-        ID_OUTPUT, TS_ANY_R, 0),
+    TS_ITEM_FLOAT(0x74, "Bat_degC", &charger.bat_temperature, 1,
+        ID_MEAS, TS_ANY_R, 0),
 
     /*{
         "title": {
@@ -584,8 +584,8 @@ static DataNode data_objects[] = {
             "de": "Externer Temperatursensor"
         }
     }*/
-    TS_NODE_BOOL(0x75, "BatTempExt", &charger.ext_temp_sensor,
-        ID_OUTPUT, TS_ANY_R, 0),
+    TS_ITEM_BOOL(0x75, "BatTempExt", &charger.ext_temp_sensor,
+        ID_MEAS, TS_ANY_R, 0),
 
     /*{
         "title": {
@@ -594,8 +594,8 @@ static DataNode data_objects[] = {
         },
         "unit": "%"
     }*/
-    TS_NODE_UINT16(0x76, "SOC_pct", &charger.soc, // output will be uint8_t
-        ID_OUTPUT, TS_ANY_R, PUB_SER | PUB_CAN),
+    TS_ITEM_UINT16(0x76, "SOC_pct", &charger.soc, // output will be uint8_t
+        ID_MEAS, TS_ANY_R, SUBSET_SER | SUBSET_CAN),
 
     /*{
         "title": {
@@ -603,8 +603,8 @@ static DataNode data_objects[] = {
             "de": "Anzahl Batterien"
         }
     }*/
-    TS_NODE_INT16(0x77, "NumBatteries", &lv_bus.series_multiplier,
-        ID_OUTPUT, TS_ANY_R, 0),
+    TS_ITEM_INT16(0x77, "NumBatteries", &lv_bus.series_multiplier,
+        ID_MEAS, TS_ANY_R, 0),
 
     /*{
         "title": {
@@ -613,8 +613,8 @@ static DataNode data_objects[] = {
         },
         "unit": "°C"
     }*/
-    TS_NODE_FLOAT(0x78, "Int_degC", &dev_stat.internal_temp, 1,
-        ID_OUTPUT, TS_ANY_R, 0),
+    TS_ITEM_FLOAT(0x78, "Int_degC", &dev_stat.internal_temp, 1,
+        ID_MEAS, TS_ANY_R, 0),
 
 #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(adc_inputs), temp_fets))
     /*{
@@ -624,8 +624,8 @@ static DataNode data_objects[] = {
         },
         "unit": "°C"
     }*/
-    TS_NODE_FLOAT(0x79, "Mosfet_degC", &dcdc.temp_mosfets, 1,
-        ID_OUTPUT, TS_ANY_R, 0),
+    TS_ITEM_FLOAT(0x79, "Mosfet_degC", &dcdc.temp_mosfets, 1,
+        ID_MEAS, TS_ANY_R, 0),
 #endif
 
     /*{
@@ -635,8 +635,8 @@ static DataNode data_objects[] = {
         },
         "unit": "V"
     }*/
-    TS_NODE_FLOAT(0x7A, "ChgTarget_V", &bat_bus.sink_voltage_intercept, 2,
-        ID_OUTPUT, TS_ANY_R, 0),
+    TS_ITEM_FLOAT(0x7A, "ChgTarget_V", &bat_bus.sink_voltage_intercept, 2,
+        ID_MEAS, TS_ANY_R, 0),
 
     /*{
         "title": {
@@ -645,8 +645,8 @@ static DataNode data_objects[] = {
         },
         "unit": "A"
     }*/
-    TS_NODE_FLOAT(0x7B, "ChgTarget_A", &bat_terminal.pos_current_limit, 2,
-        ID_OUTPUT, TS_ANY_R, 0),
+    TS_ITEM_FLOAT(0x7B, "ChgTarget_A", &bat_terminal.pos_current_limit, 2,
+        ID_MEAS, TS_ANY_R, 0),
 
     /*{
         "title": {
@@ -654,8 +654,8 @@ static DataNode data_objects[] = {
             "de": "Ladegerät-Zustand"
         }
     }*/
-    TS_NODE_UINT32(0x7C, "ChgState", &charger.state,
-        ID_OUTPUT, TS_ANY_R, PUB_SER | PUB_CAN),
+    TS_ITEM_UINT32(0x7C, "ChgState", &charger.state,
+        ID_MEAS, TS_ANY_R, SUBSET_SER | SUBSET_CAN),
 
 #if BOARD_HAS_DCDC
 
@@ -665,8 +665,8 @@ static DataNode data_objects[] = {
             "de": "DC/DC-Zustand"
         }
     }*/
-    TS_NODE_UINT16(0x7D, "DCDCState", &dcdc.state,
-        ID_OUTPUT, TS_ANY_R, PUB_SER | PUB_CAN),
+    TS_ITEM_UINT16(0x7D, "DCDCState", &dcdc.state,
+        ID_MEAS, TS_ANY_R, SUBSET_SER | SUBSET_CAN),
 #endif
 
 #if CONFIG_HV_TERMINAL_SOLAR || CONFIG_LV_TERMINAL_SOLAR
@@ -678,11 +678,11 @@ static DataNode data_objects[] = {
         },
         "unit": "V"
     }*/
-    TS_NODE_FLOAT(0x80, "Solar_V", &solar_bus.voltage, 2,
-        ID_OUTPUT, TS_ANY_R, PUB_SER | PUB_CAN),
+    TS_ITEM_FLOAT(0x80, "Solar_V", &solar_bus.voltage, 2,
+        ID_MEAS, TS_ANY_R, SUBSET_SER | SUBSET_CAN),
 #elif CONFIG_PWM_TERMINAL_SOLAR
-    TS_NODE_FLOAT(0x80, "Solar_V", &pwm_switch.ext_voltage, 2,
-        ID_OUTPUT, TS_ANY_R, PUB_SER | PUB_CAN),
+    TS_ITEM_FLOAT(0x80, "Solar_V", &pwm_switch.ext_voltage, 2,
+        ID_MEAS, TS_ANY_R, SUBSET_SER | SUBSET_CAN),
 #endif
 
 #if CONFIG_HV_TERMINAL_SOLAR || CONFIG_LV_TERMINAL_SOLAR || CONFIG_PWM_TERMINAL_SOLAR
@@ -693,8 +693,8 @@ static DataNode data_objects[] = {
         },
         "unit": "A"
     }*/
-    TS_NODE_FLOAT(0x81, "Solar_A", &solar_terminal.current, 2,
-        ID_OUTPUT, TS_ANY_R, PUB_SER | PUB_CAN),
+    TS_ITEM_FLOAT(0x81, "Solar_A", &solar_terminal.current, 2,
+        ID_MEAS, TS_ANY_R, SUBSET_SER | SUBSET_CAN),
 #endif
 
 #if CONFIG_HV_TERMINAL_SOLAR || CONFIG_LV_TERMINAL_SOLAR || CONFIG_PWM_TERMINAL_SOLAR
@@ -705,8 +705,8 @@ static DataNode data_objects[] = {
         },
         "unit": "W"
     }*/
-    TS_NODE_FLOAT(0x82, "Solar_W", &solar_terminal.power, 2,
-        ID_OUTPUT, TS_ANY_R, 0),
+    TS_ITEM_FLOAT(0x82, "Solar_W", &solar_terminal.power, 2,
+        ID_MEAS, TS_ANY_R, 0),
 #endif
 
 #if BOARD_HAS_LOAD_OUTPUT
@@ -717,8 +717,8 @@ static DataNode data_objects[] = {
         },
         "unit": "A"
     }*/
-    TS_NODE_FLOAT(0x89, "Load_A", &load.current, 2,
-        ID_OUTPUT, TS_ANY_R, PUB_SER | PUB_CAN),
+    TS_ITEM_FLOAT(0x89, "Load_A", &load.current, 2,
+        ID_MEAS, TS_ANY_R, SUBSET_SER | SUBSET_CAN),
 
     /*{
         "title": {
@@ -727,8 +727,8 @@ static DataNode data_objects[] = {
         },
         "unit": "W"
     }*/
-    TS_NODE_FLOAT(0x8A, "Load_W", &load.power, 2,
-        ID_OUTPUT, TS_ANY_R, 0),
+    TS_ITEM_FLOAT(0x8A, "Load_W", &load.power, 2,
+        ID_MEAS, TS_ANY_R, 0),
 
     /*{
         "title": {
@@ -736,8 +736,8 @@ static DataNode data_objects[] = {
             "de": "Last-Info"
         }
     }*/
-    TS_NODE_INT32(0x8B, "LoadInfo", &load.info,
-        ID_OUTPUT, TS_ANY_R, PUB_SER | PUB_CAN),
+    TS_ITEM_INT32(0x8B, "LoadInfo", &load.info,
+        ID_MEAS, TS_ANY_R, SUBSET_SER | SUBSET_CAN),
 #endif
 
 #if BOARD_HAS_USB_OUTPUT
@@ -747,8 +747,8 @@ static DataNode data_objects[] = {
             "de": "USB-Info"
         }
     }*/
-    TS_NODE_INT32(0x8C, "UsbInfo", &usb_pwr.info,
-        ID_OUTPUT, TS_ANY_R, PUB_SER | PUB_CAN),
+    TS_ITEM_INT32(0x8C, "UsbInfo", &usb_pwr.info,
+        ID_MEAS, TS_ANY_R, SUBSET_SER | SUBSET_CAN),
 #endif
 
 #if CONFIG_HV_TERMINAL_NANOGRID
@@ -759,8 +759,8 @@ static DataNode data_objects[] = {
         },
         "unit": "V"
     }*/
-    TS_NODE_FLOAT(0x90, "Grid_V", &hv_bus.voltage, 2,
-        ID_OUTPUT, TS_ANY_R, PUB_SER | PUB_CAN),
+    TS_ITEM_FLOAT(0x90, "Grid_V", &hv_bus.voltage, 2,
+        ID_MEAS, TS_ANY_R, SUBSET_SER | SUBSET_CAN),
 
     /*{
         "title": {
@@ -769,8 +769,8 @@ static DataNode data_objects[] = {
         },
         "unit": "A"
     }*/
-    TS_NODE_FLOAT(0x91, "Grid_A", &hv_terminal.current, 2,
-        ID_OUTPUT, TS_ANY_R, PUB_SER | PUB_CAN),
+    TS_ITEM_FLOAT(0x91, "Grid_A", &hv_terminal.current, 2,
+        ID_MEAS, TS_ANY_R, SUBSET_SER | SUBSET_CAN),
 
     /*{
         "title": {
@@ -779,8 +779,8 @@ static DataNode data_objects[] = {
         },
         "unit": "W"
     }*/
-    TS_NODE_FLOAT(0x92, "Grid_W", &hv_terminal.power, 2,
-        ID_OUTPUT, TS_ANY_R, PUB_SER | PUB_CAN),
+    TS_ITEM_FLOAT(0x92, "Grid_W", &hv_terminal.power, 2,
+        ID_MEAS, TS_ANY_R, SUBSET_SER | SUBSET_CAN),
 #endif
 
     /*{
@@ -789,13 +789,13 @@ static DataNode data_objects[] = {
             "de": "Fehlercode"
         }
     }*/
-    TS_NODE_UINT32(0x9F, "ErrorFlags", &dev_stat.error_flags,
-        ID_OUTPUT, TS_ANY_R, PUB_SER | PUB_CAN),
+    TS_ITEM_UINT32(0x9F, "ErrorFlags", &dev_stat.error_flags,
+        ID_MEAS, TS_ANY_R, SUBSET_SER | SUBSET_CAN),
 
     // RECORDED DATA ///////////////////////////////////////////////////////
     // using IDs >= 0xA0
 
-    TS_NODE_PATH(ID_REC, "rec", 0, NULL),
+    TS_GROUP(ID_REC, "rec", TS_NO_CALLBACK, ID_ROOT),
 
     // accumulated data
     /*{
@@ -805,8 +805,8 @@ static DataNode data_objects[] = {
         },
         "unit": "Wh"
     }*/
-    TS_NODE_UINT32(0x08, "SolarInTotal_Wh", &dev_stat.solar_in_total_Wh,
-        ID_REC, TS_ANY_R | TS_MKR_W, PUB_NVM),
+    TS_ITEM_UINT32(0x08, "SolarInTotal_Wh", &dev_stat.solar_in_total_Wh,
+        ID_REC, TS_ANY_R | TS_MKR_W, SUBSET_NVM),
 
 #if BOARD_HAS_LOAD_OUTPUT
         /*{
@@ -816,8 +816,8 @@ static DataNode data_objects[] = {
         },
         "unit": "W"
     }*/
-    TS_NODE_UINT32(0x09, "LoadOutTotal_Wh", &dev_stat.load_out_total_Wh,
-        ID_REC, TS_ANY_R | TS_MKR_W, PUB_NVM),
+    TS_ITEM_UINT32(0x09, "LoadOutTotal_Wh", &dev_stat.load_out_total_Wh,
+        ID_REC, TS_ANY_R | TS_MKR_W, SUBSET_NVM),
 #endif
 
 #if CONFIG_HV_TERMINAL_NANOGRID
@@ -828,8 +828,8 @@ static DataNode data_objects[] = {
         },
         "unit": "Wh"
     }*/
-    TS_NODE_UINT32(0xC1, "GridImportTotal_Wh", &dev_stat.grid_import_total_Wh,
-        ID_REC, TS_ANY_R | TS_MKR_W, PUB_NVM),
+    TS_ITEM_UINT32(0xC1, "GridImportTotal_Wh", &dev_stat.grid_import_total_Wh,
+        ID_REC, TS_ANY_R | TS_MKR_W, SUBSET_NVM),
 
     /*{
         "title": {
@@ -838,8 +838,8 @@ static DataNode data_objects[] = {
         },
         "unit": "Wh"
     }*/
-    TS_NODE_UINT32(0xC2, "GridExportTotal_Wh", &dev_stat.grid_export_total_Wh,
-        ID_REC, TS_ANY_R | TS_MKR_W, PUB_NVM),
+    TS_ITEM_UINT32(0xC2, "GridExportTotal_Wh", &dev_stat.grid_export_total_Wh,
+        ID_REC, TS_ANY_R | TS_MKR_W, SUBSET_NVM),
 #endif
 
     /*{
@@ -849,8 +849,8 @@ static DataNode data_objects[] = {
         },
         "unit": "Wh"
     }*/
-    TS_NODE_UINT32(0x0A, "BatChgTotal_Wh", &dev_stat.bat_chg_total_Wh,
-        ID_REC, TS_ANY_R | TS_MKR_W, PUB_NVM),
+    TS_ITEM_UINT32(0x0A, "BatChgTotal_Wh", &dev_stat.bat_chg_total_Wh,
+        ID_REC, TS_ANY_R | TS_MKR_W, SUBSET_NVM),
 
 
     /*{
@@ -860,8 +860,8 @@ static DataNode data_objects[] = {
         },
         "unit": "Wh"
     }*/
-    TS_NODE_UINT32(0x0B, "BatDisTotal_Wh", &dev_stat.bat_dis_total_Wh,
-        ID_REC, TS_ANY_R | TS_MKR_W, PUB_NVM),
+    TS_ITEM_UINT32(0x0B, "BatDisTotal_Wh", &dev_stat.bat_dis_total_Wh,
+        ID_REC, TS_ANY_R | TS_MKR_W, SUBSET_NVM),
 
     /*{
         "title": {
@@ -869,8 +869,8 @@ static DataNode data_objects[] = {
             "de": "Zähler Vollladezyklen"
         }
     }*/
-    TS_NODE_UINT16(0x0C, "FullChgCount", &charger.num_full_charges,
-        ID_REC, TS_ANY_R | TS_MKR_W, PUB_NVM),
+    TS_ITEM_UINT16(0x0C, "FullChgCount", &charger.num_full_charges,
+        ID_REC, TS_ANY_R | TS_MKR_W, SUBSET_NVM),
 
     /*{
         "title": {
@@ -878,8 +878,8 @@ static DataNode data_objects[] = {
             "de": "Zähler Tiefentladungen"
         }
     }*/
-    TS_NODE_UINT16(0x0D, "DeepDisCount", &charger.num_deep_discharges,
-        ID_REC, TS_ANY_R | TS_MKR_W, PUB_SER | PUB_NVM),
+    TS_ITEM_UINT16(0x0D, "DeepDisCount", &charger.num_deep_discharges,
+        ID_REC, TS_ANY_R | TS_MKR_W, SUBSET_SER | SUBSET_NVM),
 
     /*{
         "title": {
@@ -888,8 +888,8 @@ static DataNode data_objects[] = {
         },
         "unit": "Wh"
     }*/
-    TS_NODE_FLOAT(0x0E, "BatUsable_Ah", &charger.usable_capacity, 1,
-        ID_REC, TS_ANY_R | TS_MKR_W, PUB_SER | PUB_NVM),
+    TS_ITEM_FLOAT(0x0E, "BatUsable_Ah", &charger.usable_capacity, 1,
+        ID_REC, TS_ANY_R | TS_MKR_W, SUBSET_SER | SUBSET_NVM),
 
     /*{
         "title": {
@@ -898,7 +898,7 @@ static DataNode data_objects[] = {
         },
         "unit": "W"
     }*/
-    TS_NODE_UINT16(0x0F, "SolarMaxDay_W", &dev_stat.solar_power_max_day,
+    TS_ITEM_UINT16(0x0F, "SolarMaxDay_W", &dev_stat.solar_power_max_day,
         ID_REC, TS_ANY_R | TS_MKR_W, 0),
 
 #if BOARD_HAS_LOAD_OUTPUT
@@ -909,7 +909,7 @@ static DataNode data_objects[] = {
         },
         "unit": "W"
     }*/
-    TS_NODE_UINT16(0x10, "LoadMaxDay_W", &dev_stat.load_power_max_day,
+    TS_ITEM_UINT16(0x10, "LoadMaxDay_W", &dev_stat.load_power_max_day,
         ID_REC, TS_ANY_R | TS_MKR_W, 0),
 #endif
 
@@ -921,8 +921,8 @@ static DataNode data_objects[] = {
         },
         "unit": "Wh"
     }*/
-    TS_NODE_FLOAT(0xA1, "SolarInDay_Wh", &solar_terminal.neg_energy_Wh, 2,
-        ID_REC, TS_ANY_R | TS_MKR_W, PUB_SER | PUB_CAN),
+    TS_ITEM_FLOAT(0xA1, "SolarInDay_Wh", &solar_terminal.neg_energy_Wh, 2,
+        ID_REC, TS_ANY_R | TS_MKR_W, SUBSET_SER | SUBSET_CAN),
 #endif
 
 #if BOARD_HAS_LOAD_OUTPUT
@@ -933,8 +933,8 @@ static DataNode data_objects[] = {
         },
         "unit": "Wh"
     }*/
-    TS_NODE_FLOAT(0xA2, "LoadOutDay_Wh", &load.pos_energy_Wh, 2,
-        ID_REC, TS_ANY_R | TS_MKR_W, PUB_SER | PUB_CAN),
+    TS_ITEM_FLOAT(0xA2, "LoadOutDay_Wh", &load.pos_energy_Wh, 2,
+        ID_REC, TS_ANY_R | TS_MKR_W, SUBSET_SER | SUBSET_CAN),
 #endif
     /*{
         "title": {
@@ -943,8 +943,8 @@ static DataNode data_objects[] = {
         },
         "unit": "Wh"
     }*/
-    TS_NODE_FLOAT(0xA3, "BatChgDay_Wh", &bat_terminal.pos_energy_Wh, 2,
-        ID_REC, TS_ANY_R | TS_MKR_W, PUB_SER | PUB_CAN),
+    TS_ITEM_FLOAT(0xA3, "BatChgDay_Wh", &bat_terminal.pos_energy_Wh, 2,
+        ID_REC, TS_ANY_R | TS_MKR_W, SUBSET_SER | SUBSET_CAN),
 
     /*{
         "title": {
@@ -953,8 +953,8 @@ static DataNode data_objects[] = {
         },
         "unit": "Wh"
     }*/
-    TS_NODE_FLOAT(0xA4, "BatDisDay_Wh", &bat_terminal.neg_energy_Wh, 2,
-        ID_REC, TS_ANY_R | TS_MKR_W, PUB_SER | PUB_CAN),
+    TS_ITEM_FLOAT(0xA4, "BatDisDay_Wh", &bat_terminal.neg_energy_Wh, 2,
+        ID_REC, TS_ANY_R | TS_MKR_W, SUBSET_SER | SUBSET_CAN),
 
     /*{
         "title": {
@@ -963,8 +963,8 @@ static DataNode data_objects[] = {
         },
         "unit": "Ah"
     }*/
-    TS_NODE_FLOAT(0xA5, "Dis_Ah", &charger.discharged_Ah, 0,   // coulomb counter
-        ID_REC, TS_ANY_R | TS_MKR_W, PUB_SER | PUB_CAN),
+    TS_ITEM_FLOAT(0xA5, "Dis_Ah", &charger.discharged_Ah, 0,   // coulomb counter
+        ID_REC, TS_ANY_R | TS_MKR_W, SUBSET_SER | SUBSET_CAN),
 
     /*{
         "title": {
@@ -973,7 +973,7 @@ static DataNode data_objects[] = {
         },
         "unit": "%"
     }*/
-    TS_NODE_UINT16(0xA6, "SOH_pct", &charger.soh,    // output will be uint8_t
+    TS_ITEM_UINT16(0xA6, "SOH_pct", &charger.soh,    // output will be uint8_t
         ID_REC, TS_ANY_R | TS_MKR_W, 0),
 
     /*{
@@ -982,8 +982,8 @@ static DataNode data_objects[] = {
             "de": "Tagzähler"
         }
     }*/
-    TS_NODE_UINT32(0xA7, "DayCount", &dev_stat.day_counter,
-        ID_REC, TS_ANY_R | TS_MKR_W, PUB_NVM),
+    TS_ITEM_UINT32(0xA7, "DayCount", &dev_stat.day_counter,
+        ID_REC, TS_ANY_R | TS_MKR_W, SUBSET_NVM),
 
 
     // min/max recordings
@@ -994,8 +994,8 @@ static DataNode data_objects[] = {
         },
         "unit": "W"
     }*/
-    TS_NODE_UINT16(0xB1, "SolarMaxTotal_W", &dev_stat.solar_power_max_total,
-        ID_REC, TS_ANY_R | TS_MKR_W, PUB_NVM),
+    TS_ITEM_UINT16(0xB1, "SolarMaxTotal_W", &dev_stat.solar_power_max_total,
+        ID_REC, TS_ANY_R | TS_MKR_W, SUBSET_NVM),
 
 #if BOARD_HAS_LOAD_OUTPUT
     /*{
@@ -1005,8 +1005,8 @@ static DataNode data_objects[] = {
         },
         "unit": "W"
     }*/
-    TS_NODE_UINT16(0xB2, "LoadMaxTotal_W", &dev_stat.load_power_max_total,
-        ID_REC, TS_ANY_R | TS_MKR_W, PUB_NVM),
+    TS_ITEM_UINT16(0xB2, "LoadMaxTotal_W", &dev_stat.load_power_max_total,
+        ID_REC, TS_ANY_R | TS_MKR_W, SUBSET_NVM),
 #endif
     /*{
         "title": {
@@ -1015,8 +1015,8 @@ static DataNode data_objects[] = {
         },
         "unit": "V"
     }*/
-    TS_NODE_FLOAT(0xB3, "BatMaxTotal_V", &dev_stat.battery_voltage_max, 2,
-        ID_REC, TS_ANY_R | TS_MKR_W, PUB_NVM),
+    TS_ITEM_FLOAT(0xB3, "BatMaxTotal_V", &dev_stat.battery_voltage_max, 2,
+        ID_REC, TS_ANY_R | TS_MKR_W, SUBSET_NVM),
 
     /*{
         "title": {
@@ -1025,8 +1025,8 @@ static DataNode data_objects[] = {
         },
         "unit": "V"
     }*/
-    TS_NODE_FLOAT(0xB4, "SolarMaxTotal_V", &dev_stat.solar_voltage_max, 2,
-        ID_REC, TS_ANY_R | TS_MKR_W, PUB_NVM),
+    TS_ITEM_FLOAT(0xB4, "SolarMaxTotal_V", &dev_stat.solar_voltage_max, 2,
+        ID_REC, TS_ANY_R | TS_MKR_W, SUBSET_NVM),
 
     /*{
         "title": {
@@ -1035,8 +1035,8 @@ static DataNode data_objects[] = {
         },
         "unit": "A"
     }*/
-    TS_NODE_FLOAT(0xB5, "DcdcMaxTotal_A", &dev_stat.dcdc_current_max, 2,
-        ID_REC, TS_ANY_R | TS_MKR_W, PUB_NVM),
+    TS_ITEM_FLOAT(0xB5, "DcdcMaxTotal_A", &dev_stat.dcdc_current_max, 2,
+        ID_REC, TS_ANY_R | TS_MKR_W, SUBSET_NVM),
 
 #if BOARD_HAS_LOAD_OUTPUT
     /*{
@@ -1046,8 +1046,8 @@ static DataNode data_objects[] = {
         },
         "unit": "A"
     }*/
-    TS_NODE_FLOAT(0xB6, "LoadMaxTotal_A", &dev_stat.load_current_max, 2,
-        ID_REC, TS_ANY_R | TS_MKR_W, PUB_NVM),
+    TS_ITEM_FLOAT(0xB6, "LoadMaxTotal_A", &dev_stat.load_current_max, 2,
+        ID_REC, TS_ANY_R | TS_MKR_W, SUBSET_NVM),
 #endif
 
     /*{
@@ -1057,8 +1057,8 @@ static DataNode data_objects[] = {
         },
         "unit": "°C"
     }*/
-    TS_NODE_INT16(0xB7, "BatMax_degC", &dev_stat.bat_temp_max,
-        ID_REC, TS_ANY_R | TS_MKR_W, PUB_NVM),
+    TS_ITEM_INT16(0xB7, "BatMax_degC", &dev_stat.bat_temp_max,
+        ID_REC, TS_ANY_R | TS_MKR_W, SUBSET_NVM),
 
     /*{
         "title": {
@@ -1067,8 +1067,8 @@ static DataNode data_objects[] = {
         },
         "unit": "°C"
     }*/
-    TS_NODE_INT16(0xB8, "IntMax_degC", &dev_stat.int_temp_max,
-        ID_REC, TS_ANY_R | TS_MKR_W, PUB_NVM),
+    TS_ITEM_INT16(0xB8, "IntMax_degC", &dev_stat.int_temp_max,
+        ID_REC, TS_ANY_R | TS_MKR_W, SUBSET_NVM),
 
     /*{
         "title": {
@@ -1077,13 +1077,13 @@ static DataNode data_objects[] = {
         },
         "unit": "°C"
     }*/
-    TS_NODE_INT16(0xB9, "MosfetMax_degC", &dev_stat.mosfet_temp_max,
-        ID_REC, TS_ANY_R | TS_MKR_W, PUB_NVM),
+    TS_ITEM_INT16(0xB9, "MosfetMax_degC", &dev_stat.mosfet_temp_max,
+        ID_REC, TS_ANY_R | TS_MKR_W, SUBSET_NVM),
 
     // CALIBRATION DATA ///////////////////////////////////////////////////////
     // using IDs >= 0xD0
 
-    TS_NODE_PATH(ID_CAL, "cal", 0, NULL),
+    TS_GROUP(ID_CAL, "cal", TS_NO_CALLBACK, ID_ROOT),
 
 #if BOARD_HAS_DCDC
     /*{
@@ -1093,8 +1093,8 @@ static DataNode data_objects[] = {
         },
         "unit": "W"
     }*/
-    TS_NODE_FLOAT(0xD1, "DcdcMin_W", &dcdc.output_power_min, 1,
-        ID_CAL, TS_ANY_R | TS_MKR_W, PUB_NVM),
+    TS_ITEM_FLOAT(0xD1, "DcdcMin_W", &dcdc.output_power_min, 1,
+        ID_CAL, TS_ANY_R | TS_MKR_W, SUBSET_NVM),
 
     /*{
         "title": {
@@ -1103,8 +1103,8 @@ static DataNode data_objects[] = {
         },
         "unit": "V"
     }*/
-    TS_NODE_FLOAT(0xD2, "SolarAbsMax_V", &dcdc.hs_voltage_max, 1,
-        ID_CAL, TS_ANY_R | TS_MKR_W, PUB_NVM),
+    TS_ITEM_FLOAT(0xD2, "SolarAbsMax_V", &dcdc.hs_voltage_max, 1,
+        ID_CAL, TS_ANY_R | TS_MKR_W, SUBSET_NVM),
 
     /*{
         "title": {
@@ -1113,14 +1113,14 @@ static DataNode data_objects[] = {
         },
         "unit": "s"
     }*/
-    TS_NODE_UINT32(0xD3, "DcdcRestart_s", &dcdc.restart_interval,
-        ID_CAL, TS_ANY_R | TS_MKR_W, PUB_NVM),
+    TS_ITEM_UINT32(0xD3, "DcdcRestart_s", &dcdc.restart_interval,
+        ID_CAL, TS_ANY_R | TS_MKR_W, SUBSET_NVM),
 #endif
 
     // FUNCTION CALLS (EXEC) //////////////////////////////////////////////////
     // using IDs >= 0xE0
 
-    TS_NODE_PATH(ID_EXEC, "exec", 0, NULL),
+    TS_GROUP(ID_RPC, "rpc", TS_NO_CALLBACK, ID_ROOT),
 
     /*{
         "title": {
@@ -1128,7 +1128,7 @@ static DataNode data_objects[] = {
             "de": "Gerät zurücksetzen"
         }
     }*/
-    TS_NODE_EXEC(0xE1, "reset", &reset_device, ID_EXEC, TS_ANY_RW),
+    TS_FUNCTION(0xE1, "x-reset", &reset_device, ID_RPC, TS_ANY_RW),
 
     /* 0xE2 reserved (previously used for bootloader-stm) */
 
@@ -1138,7 +1138,7 @@ static DataNode data_objects[] = {
             "de": "Einstellungen ins EEPROM schreiben"
         }
     }*/
-    TS_NODE_EXEC(0xE3, "save-settings", &data_storage_write, ID_EXEC, TS_ANY_RW),
+    TS_FUNCTION(0xE3, "x-save-settings", &data_storage_write, ID_RPC, TS_ANY_RW),
 
     /*{
         "title": {
@@ -1146,15 +1146,18 @@ static DataNode data_objects[] = {
             "de": "Thingset Anmeldung"
         }
     }*/
-    TS_NODE_EXEC(0xEE, "auth", &thingset_auth, 0, TS_ANY_RW),
-    TS_NODE_STRING(0xEF, "Password", auth_password, sizeof(auth_password), 0xEE, TS_ANY_RW, 0),
+    TS_FUNCTION(0xEE, "x-auth", &thingset_auth, ID_ROOT, TS_ANY_RW),
+    TS_ITEM_STRING(0xEF, "Password", auth_password, sizeof(auth_password), 0xEE, TS_ANY_RW, 0),
 
     // PUBLICATION DATA ///////////////////////////////////////////////////////
     // using IDs >= 0xF0
 
-    TS_NODE_PATH(ID_PUB, "pub", 0, NULL),
+    TS_SUBSET(0xF3, "serial", SUBSET_SER, ID_ROOT, TS_ANY_RW),
+    TS_SUBSET(0xF7, "can", SUBSET_CAN, ID_ROOT, TS_ANY_RW),
 
-    TS_NODE_PATH(0xF1, "serial", ID_PUB, NULL),
+    TS_GROUP(ID_PUB, ".pub", TS_NO_CALLBACK, ID_ROOT),
+
+    TS_GROUP(0xF1, "serial", NULL, ID_PUB),
 
     /*{
         "title": {
@@ -1162,11 +1165,10 @@ static DataNode data_objects[] = {
             "de": "Serielle Publikation (de)aktivieren"
         }
     }*/
-    TS_NODE_BOOL(0xF2, "Enable", &pub_serial_enable, 0xF1, TS_ANY_RW, 0),
-    TS_NODE_PUBSUB(0xF3, "IDs", PUB_SER, 0xF1, TS_ANY_RW, 0),
+    TS_ITEM_BOOL(0xF2, "Enable", &pub_serial_enable, 0xF1, TS_ANY_RW, 0),
 
 #if CONFIG_THINGSET_CAN
-    TS_NODE_PATH(0xF5, "can", ID_PUB, NULL),
+    TS_GROUP(0xF5, "can", TS_NO_CALLBACK, ID_PUB),
 
     /*{
         "title": {
@@ -1174,14 +1176,13 @@ static DataNode data_objects[] = {
             "de": "CAN Publikation (de)aktivieren"
         }
     }*/
-    TS_NODE_BOOL(0xF6, "Enable", &pub_can_enable, 0xF5, TS_ANY_RW, 0),
-    TS_NODE_PUBSUB(0xF7, "IDs", PUB_CAN, 0xF5, TS_ANY_RW, 0),
+    TS_ITEM_BOOL(0xF6, "Enable", &pub_can_enable, 0xF5, TS_ANY_RW, 0),
 #endif
 
     // DEVICE FIRMWARE UPGRADE (DFU) //////////////////////////////////////////
     // using IDs >= 0x100
 
-    TS_NODE_PATH(0x100, "dfu", 0, NULL),
+    TS_GROUP(0x100, "dfu", TS_NO_CALLBACK, ID_ROOT),
 
     /*{
         "title": {
@@ -1189,7 +1190,7 @@ static DataNode data_objects[] = {
             "de": "Bootloader starten"
         }
     }*/
-    TS_NODE_EXEC(0x101, "bootloader-stm", &start_stm32_bootloader, 0x100, TS_ANY_RW),
+    TS_FUNCTION(0x101, "bootloader-stm", &start_stm32_bootloader, 0x100, TS_ANY_RW),
 
     /*{
         "title": {
@@ -1198,7 +1199,7 @@ static DataNode data_objects[] = {
         },
         "unit": "KiB"
     }*/
-    TS_NODE_UINT32(0x102, "FlashSize_KiB", &flash_size, 0x100, TS_ANY_R, 0),
+    TS_ITEM_UINT32(0x102, "FlashSize_KiB", &flash_size, 0x100, TS_ANY_R, 0),
 
     /*{
         "title": {
@@ -1207,7 +1208,7 @@ static DataNode data_objects[] = {
         },
         "unit": "B"
     }*/
-    TS_NODE_UINT32(0x103, "FlashPageSize_B", &flash_page_size, 0x100, TS_ANY_R, 0),
+    TS_ITEM_UINT32(0x103, "FlashPageSize_B", &flash_page_size, 0x100, TS_ANY_R, 0),
 
     /*{
         "title": {
@@ -1215,7 +1216,7 @@ static DataNode data_objects[] = {
             "de": "Regelgrößen"
         }
     }*/
-    TS_NODE_PATH(ID_CTRL, "ctrl", ID_PUB, NULL),
+    TS_GROUP(ID_CTRL, "ctrl", TS_NO_CALLBACK, ID_PUB),
 
     /*{
         "title": {
@@ -1224,11 +1225,11 @@ static DataNode data_objects[] = {
         },
         "unit": "A"
     }*/
-    TS_NODE_FLOAT(0x8001, "CtrlTarget_A", &charger.target_current_control, 1,
-        ID_CTRL, TS_ANY_RW, PUBSUB_CTRL),
+    TS_ITEM_FLOAT(0x8001, "CtrlTarget_A", &charger.target_current_control, 1,
+        ID_CTRL, TS_ANY_RW, SUBSET_CTRL),
 };
 
-ThingSet ts(data_objects, sizeof(data_objects)/sizeof(DataNode));
+ThingSet ts(data_objects, sizeof(data_objects)/sizeof(ThingSetDataObject));
 
 void data_objects_update_conf()
 {
