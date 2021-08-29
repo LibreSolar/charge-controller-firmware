@@ -108,3 +108,6 @@ typedef uint32_t gpio_flags_t;
  * where the value is defined to 1, and 0 if not:
  */
 #define Z_IS_ENABLED3(ignore_this, val, ...) val
+
+#define Z_STRINGIFY(x) #x
+#define STRINGIFY(s) Z_STRINGIFY(s)

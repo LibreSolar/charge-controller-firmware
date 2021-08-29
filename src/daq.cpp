@@ -246,7 +246,7 @@ void daq_update()
     load.power = load.bus->voltage * load.current;
 #endif
 
-#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(adc_inputs), temp_bat))
+#if BOARD_HAS_TEMP_BAT
     // battery temperature calculation
     float bat_temp = ntc_temp(ADC_POS(temp_bat), vref, ADC_GAIN(temp_bat));
 
@@ -262,8 +262,7 @@ void daq_update()
     }
 #endif
 
-#if DT_NODE_EXISTS(DT_CHILD(DT_PATH(adc_inputs), temp_fets))
-    // MOSFET temperature calculation
+#if BOARD_HAS_TEMP_FETS
     dcdc.temp_mosfets = ntc_temp(ADC_POS(temp_fets), vref, ADC_GAIN(temp_fets));
 #endif
 

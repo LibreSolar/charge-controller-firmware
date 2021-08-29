@@ -27,9 +27,9 @@
 #define ID_CONF     0x06        // configurable settings
 #define ID_CAL      0x07        // calibration
 #define ID_REPORT   0x0A        // reports
-#define ID_DFU      0x0D        // device firmware upgrade
 #define ID_RPC      0x0E        // remote procedure calls
-#define ID_PUB      0x0F        // publication setup
+#define ID_DFU      0x0F        // device firmware upgrade
+#define ID_PUB      0x100       // publication setup
 #define ID_CTRL     0x8000      // control functions
 
 /*
@@ -46,7 +46,7 @@
  * Increment the version number each time any data object IDs stored in NVM are changed. Otherwise
  * data might get corrupted.
  */
-#define DATA_OBJECTS_VERSION 4
+#define DATA_OBJECTS_VERSION 05
 
 extern bool pub_serial_enable;
 extern bool pub_can_enable;
