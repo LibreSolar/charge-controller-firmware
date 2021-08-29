@@ -204,21 +204,21 @@ config CELL_OCV_EMPTY_MV
     help
       Voltages during idle (no charging/discharging current)
 
-config CELL_TRICKLE
-    bool "Enable trickle charging phase"
+config CELL_FLOAT
+    bool "Enable float charging phase"
     default y
 
-config CELL_TRICKLE_VOLTAGE_MV
-    int "Trickle charging cell voltage (mV)" if CELL_TRICKLE
+config CELL_FLOAT_VOLTAGE_MV
+    int "Float charging cell voltage (mV)" if CELL_FLOAT
     default 2300
     help
-      Charger target voltage for trickle charging of lead-acid batteries
+      Charger target voltage for float charging of lead-acid batteries
 
-config CELL_TRICKLE_RECHARGE_TIME
-    int "Trickle recharge time (s)" if CELL_TRICKLE
+config CELL_FLOAT_RECHARGE_TIME
+    int "Float recharge time (s)" if CELL_FLOAT
     default 1800
     help
-      If the trickle voltage is not reached anymore (e.g. because of lack of solar
+      If the float voltage is not reached anymore (e.g. because of lack of solar
       input power) for this period of time, the charger state machine goes back
       into CC/bulk charging mode.
 

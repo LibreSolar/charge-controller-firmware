@@ -776,26 +776,26 @@ static ThingSetDataObject data_objects[] = {
 
     /*{
         "title": {
-            "en": "Battery Maximum Charge Current",
-            "de": "Maximaler Batterie-Ladestrom"
+            "en": "Battery Maximum Charge Current (bulk)",
+            "de": "Maximaler Batterie-Ladestrom (bulk)"
         },
         "unit": "A",
         "min": 10.0,
         "max": 30.0
     }*/
-    TS_ITEM_FLOAT(0xA1, "BatChgMax_A", &bat_conf_user.charge_current_max, 1,
+    TS_ITEM_FLOAT(0xA1, "ChgMax_A", &bat_conf_user.charge_current_max, 1,
         ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
         "title": {
-            "en": "Battery Charge Voltage",
-            "de": "Batterie-Ladespannung"
+            "en": "Battery Charge Voltage (topping)",
+            "de": "Batterie-Ladespannung (topping)"
         },
         "unit": "V",
         "min": 10.0,
         "max": 30.0
     }*/
-    TS_ITEM_FLOAT(0xA2, "BatChg_V", &bat_conf_user.topping_voltage, 2,
+    TS_ITEM_FLOAT(0xA2, "Chg_V", &bat_conf_user.topping_voltage, 2,
         ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
@@ -807,7 +807,7 @@ static ThingSetDataObject data_objects[] = {
         "min": 0.0,
         "max": 20.0
     }*/
-    TS_ITEM_FLOAT(0xA3, "ToppingCutoff_A", &bat_conf_user.topping_current_cutoff, 1,
+    TS_ITEM_FLOAT(0xA3, "ChgCutoff_A", &bat_conf_user.topping_cutoff_current, 1,
         ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
@@ -817,36 +817,36 @@ static ThingSetDataObject data_objects[] = {
         },
         "unit": "s"
     }*/
-    TS_ITEM_INT32(0xA4, "ToppingCutoff_s", &bat_conf_user.topping_duration,
+    TS_ITEM_INT32(0xA4, "ChgCutoff_s", &bat_conf_user.topping_duration,
         ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
         "title": {
-            "en": "Enable Trickle Charging",
+            "en": "Enable Float Charging",
             "de": "Erhaltungsladung einschalten"
         }
     }*/
-    TS_ITEM_BOOL(0xA5, "TrickleEn", &bat_conf_user.trickle_enabled,
+    TS_ITEM_BOOL(0xA5, "FloatChgEn", &bat_conf_user.float_enabled,
         ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
         "title": {
-            "en": "Trickle Voltage",
+            "en": "Float Voltage",
             "de": "Spannung Erhaltungsladung"
         },
         "unit": "V"
     }*/
-    TS_ITEM_FLOAT(0xA6, "Trickle_V", &bat_conf_user.trickle_voltage, 2,
+    TS_ITEM_FLOAT(0xA6, "FloatChg_V", &bat_conf_user.float_voltage, 2,
         ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
         "title": {
-            "en": "Trickle Recharge Time",
+            "en": "Float Recharge Time",
             "de": "Wiedereinschaltdauer Erhaltungsladung"
         },
         "unit": "s"
     }*/
-    TS_ITEM_INT32(0xA7, "TrickleRecharge_s", &bat_conf_user.trickle_recharge_time,
+    TS_ITEM_INT32(0xA7, "FloatRechg_s", &bat_conf_user.float_recharge_time,
         ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
@@ -855,7 +855,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Ausgleichsladung einschalten"
         }
     }*/
-    TS_ITEM_BOOL(0xA8, "EqlEn", &bat_conf_user.equalization_enabled,
+    TS_ITEM_BOOL(0xA8, "EqlChgEn", &bat_conf_user.equalization_enabled,
         ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
@@ -865,7 +865,7 @@ static ThingSetDataObject data_objects[] = {
         },
         "unit": "V"
     }*/
-    TS_ITEM_FLOAT(0xA9, "Eql_V", &bat_conf_user.equalization_voltage, 2,
+    TS_ITEM_FLOAT(0xA9, "EqlChg_V", &bat_conf_user.equalization_voltage, 2,
         ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
@@ -875,7 +875,7 @@ static ThingSetDataObject data_objects[] = {
         },
         "unit": "A"
     }*/
-    TS_ITEM_FLOAT(0xAA, "Eql_A", &bat_conf_user.equalization_current_limit, 2,
+    TS_ITEM_FLOAT(0xAA, "EqlChg_A", &bat_conf_user.equalization_current_limit, 2,
         ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
@@ -916,7 +916,7 @@ static ThingSetDataObject data_objects[] = {
         "min": 10.0,
         "max": 30.0
     }*/
-    TS_ITEM_FLOAT(0xAE, "BatRecharge_V", &bat_conf_user.voltage_recharge, 2,
+    TS_ITEM_FLOAT(0xAE, "BatRechg_V", &bat_conf_user.recharge_voltage, 2,
         ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
@@ -928,7 +928,7 @@ static ThingSetDataObject data_objects[] = {
         "min": 8.0,
         "max": 30.0
     }*/
-    TS_ITEM_FLOAT(0xAF, "BatAbsMin_V", &bat_conf_user.voltage_absolute_min, 2,
+    TS_ITEM_FLOAT(0xAF, "BatAbsMin_V", &bat_conf_user.absolute_min_voltage, 2,
         ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
@@ -1018,7 +1018,7 @@ static ThingSetDataObject data_objects[] = {
         },
         "unit": "V"
     }*/
-    TS_ITEM_FLOAT(0xB8, "LoadDisconnect_V", &bat_conf_user.voltage_load_disconnect, 2,
+    TS_ITEM_FLOAT(0xB8, "LoadDisconnect_V", &bat_conf_user.load_disconnect_voltage, 2,
         ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
@@ -1028,7 +1028,7 @@ static ThingSetDataObject data_objects[] = {
         },
         "unit": "V"
     }*/
-    TS_ITEM_FLOAT(0xB9, "LoadReconnect_V", &bat_conf_user.voltage_load_reconnect, 2,
+    TS_ITEM_FLOAT(0xB9, "LoadReconnect_V", &bat_conf_user.load_reconnect_voltage, 2,
         ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
@@ -1063,10 +1063,10 @@ static ThingSetDataObject data_objects[] = {
     TS_ITEM_BOOL(0xBC, "UsbEnDefault", &usb_pwr.enable,
         ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
-    //TS_ITEM_FLOAT(0x56, "UsbDisconnect_V", &bat_conf_user.voltage_load_disconnect, 2,
+    //TS_ITEM_FLOAT(0x56, "UsbDisconnect_V", &bat_conf_user.load_disconnect_voltage, 2,
     //    ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
-    //TS_ITEM_FLOAT(0x57, "UsbReconnect_V", &bat_conf_user.voltage_load_reconnect, 2,
+    //TS_ITEM_FLOAT(0x57, "UsbReconnect_V", &bat_conf_user.load_reconnect_voltage, 2,
     //    ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
@@ -1248,8 +1248,8 @@ void data_objects_update_conf()
         LOG_INF("New config valid and activated.");
         battery_conf_overwrite(&bat_conf_user, &bat_conf, &charger);
 #if BOARD_HAS_LOAD_OUTPUT
-        load.set_voltage_limits(bat_conf.voltage_load_disconnect, bat_conf.voltage_load_reconnect,
-            bat_conf.voltage_absolute_max);
+        load.set_voltage_limits(bat_conf.load_disconnect_voltage, bat_conf.load_reconnect_voltage,
+            bat_conf.absolute_max_voltage);
 #endif
         changed = true;
     }

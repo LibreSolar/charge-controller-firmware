@@ -59,7 +59,7 @@ typedef struct
      * Remark: Setting the value too close to the max voltage will cause more charging stress on
      * lithium based batteries.
      */
-    float voltage_recharge;
+    float recharge_voltage;
 
     /**
      * Recharge time limit (sec)
@@ -73,14 +73,14 @@ typedef struct
      *
      * Above this voltage the battery or loads might get damaged.
      */
-    float voltage_absolute_max;
+    float absolute_max_voltage;
 
     /**
      * Absolute minimum voltage (V)
      *
      * Below this voltage the battery is considered damaged.
      */
-    float voltage_absolute_min;
+    float absolute_min_voltage;
 
     /**
      * Maximum charge current in *CC/bulk* phase (A)
@@ -108,7 +108,7 @@ typedef struct
      *
      * Constant voltage charging phase stopped if current is below this value.
      */
-    float topping_current_cutoff;
+    float topping_cutoff_current;
 
     /**
      * CV phase cut-off time limit (s)
@@ -120,30 +120,30 @@ typedef struct
     /**
      * Enable float/trickle charging
      *
-     * Caution: Do not enable trickle charging for lithium-ion batteries
+     * Caution: Do not enable float charging for lithium-ion batteries
      */
-    bool trickle_enabled;
+    bool float_enabled;
 
     /**
-     * Trickle voltage (V)
+     * Float voltage (V)
      *
-     * Charger target voltage for trickle charging of lead-acid batteries
+     * Charger target voltage for float charging of lead-acid batteries
      */
-    float trickle_voltage;
+    float float_voltage;
 
     /**
-     * Trickle recharge time (s)
+     * Float recharge time (s)
      *
-     * If the trickle voltage is not reached anymore (e.g. because of lack of solar
+     * If the float voltage is not reached anymore (e.g. because of lack of solar
      * input power) for this period of time, the charger state machine goes back
      * into CC/bulk charging mode.
      */
-    int32_t trickle_recharge_time;
+    int32_t float_recharge_time;
 
     /**
      * Enable equalization charging
      *
-     * Caution: Do not enable trickle charging for lithium-ion batteries
+     * Caution: Do not enable float charging for lithium-ion batteries
      */
     bool equalization_enabled;
 
@@ -188,11 +188,11 @@ typedef struct
      * Load output is disabled if battery voltage is below this threshold.
      *
      * The voltage is current-compensated using the battery internal resistance:
-     * threshold = voltage_load_disconnect + battery_current * internal_resistance
+     * threshold = load_disconnect_voltage + battery_current * internal_resistance
      *
      * (Remark: battery_current negative during discharge, internal_resistance positive)
      */
-    float voltage_load_disconnect;
+    float load_disconnect_voltage;
 
     /**
      * Load reconnect open circuit voltage (V)
@@ -200,11 +200,11 @@ typedef struct
      * Re-enable the load only after charged beyond this value.
      *
      * The voltage is current-compensated using the battery internal resistance:
-     * threshold = voltage_load_reconnect + battery_current * internal_resistance
+     * threshold = load_reconnect_voltage + battery_current * internal_resistance
      *
      * (Remark: battery_current positive during charge, internal_resistance positive)
      */
-    float voltage_load_reconnect;
+    float load_reconnect_voltage;
 
     /**
      * Battery internal resistance (Ohm)
@@ -299,19 +299,19 @@ enum ChargerState {
      *
      * Lead-acid batteries are charged for some time using a slightly higher charge
      * voltage. After a current cutoff limit or a time limit is reached, the charger
-     * goes into trickle or equalization mode for lead-acid batteries or back into
+     * goes into float or equalization mode for lead-acid batteries or back into
      * Standby for Li-ion batteries.
      */
     CHG_STATE_TOPPING,
 
     /**
-     * Trickle charging
+     * Float / trickle charging
      *
      * This mode is kept forever for a lead-acid battery and keeps the battery at
      * full state of charge. If too much power is drawn from the battery, the
      * charger switches back into CC / bulk charging mode.
      */
-    CHG_STATE_TRICKLE,
+    CHG_STATE_FLOAT,
 
     /**
      * Equalization charging

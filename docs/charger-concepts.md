@@ -36,8 +36,8 @@ During the topping (sometimes also called boost or absorption) the remaining 30 
 
 An additional equalization charging is beneficial for flooded lead-acid batteries only. It can be considered as a periodic controlled overcharge that brings the cells to the same charge level and removes the sulphation by increasing the voltage to a higher value than the peak charge voltage limit. The current during equlization is controlled at a very low value.
 
-### 4. Trickle stage
+### 4. Float stage
 
-The trickle or float charging stage is the final phase upon the completion of the absorption or equalization phase which maintains the battery at full charge. During this stage, the charge voltage is reduced and held constant. The current reduces to a very low value.
+The float or trickle charging stage is the final phase upon the completion of the absorption or equalization phase which maintains the battery at full charge. During this stage, the charge voltage is reduced and held constant. The current reduces to a very low value.
 
 ![Flow-chart of the MPPT charge controller state machine](images/charging-stages.png)

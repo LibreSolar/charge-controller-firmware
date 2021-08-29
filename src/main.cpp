@@ -63,13 +63,13 @@ void main(void)
     charger.init_terminal(&bat_conf);
 
     #if BOARD_HAS_LOAD_OUTPUT
-    load.set_voltage_limits(bat_conf.voltage_load_disconnect, bat_conf.voltage_load_reconnect,
-        bat_conf.voltage_absolute_max);
+    load.set_voltage_limits(bat_conf.load_disconnect_voltage, bat_conf.load_reconnect_voltage,
+        bat_conf.absolute_max_voltage);
     #endif
 
     #if BOARD_HAS_USB_OUTPUT
-    usb_pwr.set_voltage_limits(bat_conf.voltage_load_disconnect - 0.1, // keep on longer than load
-        bat_conf.voltage_load_reconnect, bat_conf.voltage_absolute_max);
+    usb_pwr.set_voltage_limits(bat_conf.load_disconnect_voltage - 0.1, // keep on longer than load
+        bat_conf.load_reconnect_voltage, bat_conf.absolute_max_voltage);
     #endif
 
     // wait until all threads are spawned before activating the watchdog
