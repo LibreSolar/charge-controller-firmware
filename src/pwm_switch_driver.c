@@ -25,7 +25,7 @@
 #include <stm32_ll_bus.h>
 
 #include <soc.h>
-#include <pinmux/stm32/pinmux_stm32.h>
+#include <pinmux/pinmux_stm32.h>
 
 #define DT_DRV_COMPAT st_stm32_pwm
 

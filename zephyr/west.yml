@@ -1,6 +1,6 @@
 manifest:
   remotes:
-    - name: zephyrproject-rtos
+    - name: zephyrproject
       url-base: https://github.com/zephyrproject-rtos
     - name: libresolar
       url-base: https://github.com/LibreSolar
@@ -8,15 +8,15 @@ manifest:
       url-base: https://github.com/ThingSet
   projects:
     - name: zephyr
-      remote: libresolar
-      revision: v2.6-branch
+      remote: zephyrproject
+      revision: v2.7-branch
       # path must be something else than zephyr as we get a Kconfig include recursion otherwise
       path: rtos
       import:
         # main zephyr modules should be placed in here into zephyr subdirectory
         path-prefix: zephyr
         # only get modules we actually need
-        name-whitelist:
+        name-allowlist:
           - cmsis
           - edtt
           - hal_stm32
