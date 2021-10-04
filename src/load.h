@@ -137,14 +137,14 @@ public:
                                 ///< battery is empty or any errors occured)
 
     time_t oc_timestamp;        ///< Time when last overcurrent event occured
-    int32_t oc_recovery_delay;  ///< Seconds before we attempt to re-enable the load
+    uint32_t oc_recovery_delay; ///< Seconds before we attempt to re-enable the load
                                 ///< after an overcurrent event
 
     float disconnect_voltage = 0;   ///< Low voltage disconnect (LVD) setpoint
     float reconnect_voltage = 0;    ///< Low voltage reconnect (LVD) setpoint
 
     time_t lvd_timestamp;       ///< Time when last low voltage disconnect happened
-    int32_t lvd_recovery_delay; ///< Seconds before we re-enable the load after a low voltage
+    uint32_t lvd_recovery_delay;///< Seconds before we re-enable the load after a low voltage
                                 ///< disconnect
 
     float junction_temperature; ///< calculated using thermal model based on current and ambient

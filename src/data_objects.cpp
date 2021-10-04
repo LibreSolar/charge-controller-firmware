@@ -817,7 +817,7 @@ static ThingSetDataObject data_objects[] = {
         },
         "unit": "s"
     }*/
-    TS_ITEM_INT32(0xA4, "ChgCutoff_s", &bat_conf_user.topping_duration,
+    TS_ITEM_UINT32(0xA4, "ChgCutoff_s", &bat_conf_user.topping_duration,
         ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
@@ -846,7 +846,7 @@ static ThingSetDataObject data_objects[] = {
         },
         "unit": "s"
     }*/
-    TS_ITEM_INT32(0xA7, "FloatRechg_s", &bat_conf_user.float_recharge_time,
+    TS_ITEM_UINT32(0xA7, "FloatRechg_s", &bat_conf_user.float_recharge_time,
         ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
@@ -885,7 +885,7 @@ static ThingSetDataObject data_objects[] = {
         },
         "unit": "s"
     }*/
-    TS_ITEM_INT32(0xAB, "EqlDuration_s", &bat_conf_user.equalization_duration,
+    TS_ITEM_UINT32(0xAB, "EqlDuration_s", &bat_conf_user.equalization_duration,
         ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
@@ -895,7 +895,7 @@ static ThingSetDataObject data_objects[] = {
         },
         "unit": "d"
     }*/
-    TS_ITEM_INT32(0xAC, "EqlInterval_d", &bat_conf_user.equalization_trigger_days,
+    TS_ITEM_UINT32(0xAC, "EqlInterval_d", &bat_conf_user.equalization_trigger_days,
         ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
@@ -904,7 +904,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Max. Tiefenentladungszyklen zwischen Ausgleichsladungen"
         }
     }*/
-    TS_ITEM_INT32(0xAD, "EqlDeepDisTrigger", &bat_conf_user.equalization_trigger_deep_cycles,
+    TS_ITEM_UINT32(0xAD, "EqlDeepDisTrigger", &bat_conf_user.equalization_trigger_deep_cycles,
         ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
@@ -1038,7 +1038,7 @@ static ThingSetDataObject data_objects[] = {
         },
         "unit": "s"
     }*/
-    TS_ITEM_INT32(0xBA, "LoadOCRecovery_s", &load.oc_recovery_delay,
+    TS_ITEM_UINT32(0xBA, "LoadOCRecovery_s", &load.oc_recovery_delay,
         ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
@@ -1048,7 +1048,7 @@ static ThingSetDataObject data_objects[] = {
         },
         "unit": "s"
     }*/
-    TS_ITEM_INT32(0xBB, "LoadUVRecovery_s", &load.lvd_recovery_delay,
+    TS_ITEM_UINT32(0xBB, "LoadUVRecovery_s", &load.lvd_recovery_delay,
         ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 #endif
 
@@ -1076,7 +1076,7 @@ static ThingSetDataObject data_objects[] = {
         },
         "unit": "s"
     }*/
-    TS_ITEM_INT32(0xBD, "UsbUVRecovery_s", &usb_pwr.lvd_recovery_delay,
+    TS_ITEM_UINT32(0xBD, "UsbUVRecovery_s", &usb_pwr.lvd_recovery_delay,
         ID_CONF, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 #endif
 

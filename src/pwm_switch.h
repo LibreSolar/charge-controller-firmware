@@ -91,7 +91,7 @@ public:
      * Interval to wait before retrying charging after low solar power cut-off or overvoltage
      * event (s)
      */
-    int restart_interval = 60;
+    uint32_t restart_interval = 60;
 
     /**
      * Time when charger was switched off last time

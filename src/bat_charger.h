@@ -66,7 +66,7 @@ typedef struct
      *
      * Start charging of previously fully charged battery earliest after this period of time.
      */
-    int32_t time_limit_recharge;
+    uint32_t time_limit_recharge;
 
     /**
      * Absolute maximum voltage (V)
@@ -115,7 +115,7 @@ typedef struct
      *
      * After this time, CV charging is stopped independent of current.
      */
-    int32_t topping_duration;
+    uint32_t topping_duration;
 
     /**
      * Enable float/trickle charging
@@ -138,7 +138,7 @@ typedef struct
      * input power) for this period of time, the charger state machine goes back
      * into CC/bulk charging mode.
      */
-    int32_t float_recharge_time;
+    uint32_t float_recharge_time;
 
     /**
      * Enable equalization charging
@@ -159,7 +159,7 @@ typedef struct
      *
      * After this time, equalization charging is stopped.
      */
-    int32_t equalization_duration;
+    uint32_t equalization_duration;
 
     /**
      * Equalization phase maximum current (A)
@@ -173,14 +173,14 @@ typedef struct
      *
      * After passing specified amount of days, an equalization charge is triggered.
      */
-    int32_t equalization_trigger_days;
+    uint32_t equalization_trigger_days;
 
     /**
      * Equalization trigger deep-discharge cycles
      *
      * After specified number of deep discharges, an equalization charge is triggered.
      */
-    int32_t equalization_trigger_deep_cycles;
+    uint32_t equalization_trigger_deep_cycles;
 
     /**
      * Load disconnect open circuit voltage (V)
@@ -404,7 +404,7 @@ public:
      * Counts the number of seconds during which the target voltage of current charging phase was
      * reached.
      */
-    int target_voltage_timer;
+    uint32_t target_voltage_timer;
 
     /**
      * Timestamp after finish of last equalization charge
@@ -414,7 +414,7 @@ public:
     /**
      * Deep discharge counter value after last equalization
      */
-    int deep_dis_last_equalization;
+    uint32_t deep_dis_last_equalization;
 
     /**
      * Flag to indicate if battery was fully charged
