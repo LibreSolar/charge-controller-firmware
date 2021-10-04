@@ -14,6 +14,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <stddef.h>
 
 class PowerPort;    // forward-declaration
 
@@ -28,7 +29,7 @@ public:
     /**
      * Measured bus voltage
      */
-    float voltage;
+    float voltage = 0;
 
     /**
      * Filtered bus voltage
@@ -53,7 +54,7 @@ public:
      * This value is the voltage at zero current. Values for other currents are calculated
      * using the droop resistance.
      */
-    float sink_voltage_intercept;
+    float sink_voltage_intercept = 0;
 
     /**
      * Lower voltage boundary where this bus may be used to source current.
@@ -61,33 +62,33 @@ public:
      * This value is the voltage at zero current. Values for other currents are calculated
      * using the droop resistance.
      */
-    float src_voltage_intercept;
+    float src_voltage_intercept = 0;
 
     /**
      * Droop resistance to adjust voltage bounds for current in sourcing direction
      *
      * control voltage = nominal voltage - droop_res * current
      */
-    float src_droop_res;
+    float src_droop_res = 0;
 
     /**
      * Droop resistance to adjust voltage bounds for current in sinking direction
      *
      * control voltage = nominal voltage - droop_res * current
      */
-    float sink_droop_res;
+    float sink_droop_res = 0;
 
     /**
      * Pointer to current measurement that is used to determine the droop. This is typically the
      * battery or nanogrid terminal.
      */
-    float *ref_current;
+    float *ref_current = NULL;
 
     /**
      * Available additional current towards the DC bus until limits of the connected ports are
      * reached
      */
-    float sink_current_margin;
+    float sink_current_margin = 0;
 
     /**
      * Available additional current from the DC bus until limits of the connected ports are reached
@@ -97,7 +98,7 @@ public:
      * we still get power via solar, current up to the amount of solar input can be diverted into
      * the load (until the margin gets 0 and the battery would be discharged).
      */
-    float src_current_margin;
+    float src_current_margin = 0;
 
     /**
      * Calculate current-compensated src control voltage, considering droop and series multiplier
@@ -183,7 +184,7 @@ public:
     /**
      * Each power port is connected to a DC bus, containing relevant voltage information
      */
-    DcBus *bus;
+    DcBus *bus = NULL;
 
     /**
      * Measured current through this port (positive sign = current into the external device)
