@@ -1,0 +1,163 @@
+/*
+ * Copyright (c) The Libre Solar Project Contributors
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/ {
+	/* delete conflicting nodes from Zephyr native_posix board */
+	/delete-node/ leds;
+	/delete-node/ aliases;
+
+	pcb {
+		compatible = "charge-controller";
+
+		type = "Native POSIX dummy";
+		version-str = "v0.1";
+		version-num = <1>;
+
+		hs-voltage-max = <80>;
+		ls-voltage-max = <32>;
+		dcdc-current-max = <20>;
+	};
+
+	chosen {
+		zephyr,console = &uart0;
+		zephyr,shell-uart = &uart0;
+		zephyr,flash = &flash0;
+	};
+
+	leds {
+		compatible = "charlieplexing-leds";
+		gpios = <&gpio0 6 GPIO_ACTIVE_LOW>,	/* chg red */
+			<&gpio0 14 GPIO_ACTIVE_LOW>,	/* chg green */
+			<&gpio0 9 GPIO_ACTIVE_LOW>,	/* dis red */
+			<&gpio0 15 GPIO_ACTIVE_LOW>;	/* dis green */
+
+		pwr {
+			states = <0 1 0 0>;
+		};
+
+		load {
+			states = <0 0 0 1>;
+		};
+	};
+
+	outputs {
+		compatible = "outputs";
+
+		pwm_switch {
+			label = "PWM power switch (solar panel)";
+			pwms = <&pwm3 2 (20*1000*1000) 0>; /* 20 ms period = 50 Hz */
+			current-max = <20>;
+			kconfig-flag;	/* make node visible in Kconfig */
+		};
+
+		load {
+			label = "Load output";
+			gpios = <&gpio0 2 GPIO_ACTIVE_LOW>;
+			current-max = <20>;
+			kconfig-flag;	/* make node visible in Kconfig */
+		};
+
+		can_en {
+			label = "CAN disable / standby";
+			gpios = <&gpio0 11 GPIO_ACTIVE_LOW>;
+		};
+	};
+
+        adc1: adc1 {
+		compatible = "zephyr,dummy-adc";
+		label = "ADC_1";
+		#io-channel-cells = <1>;
+        };
+
+	adc-inputs {
+		compatible = "adc-inputs";
+
+		v-low {
+			io-channels = <&adc1 12>;
+			multiplier = <105600>;
+			divider = <5600>;
+		};
+
+		v-high {
+			io-channels = <&adc1 15>;
+			multiplier = <102200>;
+			divider = <2200>;
+		};
+
+		v-pwm {
+			io-channels = <&adc1 4>;
+			multiplier = <25224>;	// (12*8.2 + 120*8.2 + 120*12) * 10
+			divider = <984>;	// (8.2*12) * 10
+			offset = <37414>;	// 65536 / (1 + 8.2/120 + 8.2/12)
+		};
+
+		temp-fets {
+			io-channels = <&adc1 11>;
+			multiplier = <10000>;	// 10k NTC series resistor
+			divider = <1>;
+		};
+
+		vref-mcu {
+			io-channels = <&adc1 18>;
+			multiplier = <1>;
+			divider = <1>;
+		};
+
+		temp-mcu {
+			io-channels = <&adc1 16>;
+			multiplier = <1>;
+			divider = <1>;
+		};
+
+		i-dcdc {
+			io-channels = <&adc1 1>;
+			// amp gain: 25, resistor: 2 mOhm
+			multiplier = <1000>;	// 1000
+			divider = <50>;	// 2*25
+		};
+
+		i-load {
+			io-channels = <&adc1 2>;
+			// amp gain: 25, resistor: 2 mOhm
+			multiplier = <1000>;	// 1000
+			divider = <50>;	// 2*25
+		};
+
+		i-pwm {
+			io-channels = <&adc1 5>;
+			// amp gain: 68/2.2, resistor: 2 mOhm
+			multiplier = <2200>;	// 1000*2.2
+			divider = <136>;	// 2*68
+		};
+	};
+
+        timers1: timers1 {
+                status = "okay";
+
+                halfbridge {
+                        compatible = "half-bridge";
+                        frequency = <70000>;
+                        deadtime = <300>;
+                };
+        };
+
+	timers3: timers {
+		status = "okay";
+
+		pwm3: pwm3 {
+                        compatible = "zephyr,dummy-pwm";
+			label = "PWM_3";
+			#pwm-cells = <3>;
+		};
+	};
+
+	aliases {
+		uart-dbg = &uart0;
+		uart-uext = &uart0;
+//		spi-uext = &spi1;
+//		i2c-uext = &i2c1;
+	};
+};

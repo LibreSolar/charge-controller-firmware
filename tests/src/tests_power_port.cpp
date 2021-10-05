@@ -91,7 +91,7 @@ void load_output_energy_calculation_valid()
     TEST_ASSERT_EQUAL_FLOAT(round((sun_hours + night_hours) * lv_terminal.bus->voltage * adcval.load_current), round(load.pos_energy_Wh));
 }
 
-void power_port_tests()
+int power_port_tests()
 {
     energy_calculation_init();
 
@@ -103,5 +103,5 @@ void power_port_tests()
     RUN_TEST(solar_input_energy_calculation_valid);
     RUN_TEST(load_output_energy_calculation_valid);
 
-    UNITY_END();
+    return UNITY_END();
 }

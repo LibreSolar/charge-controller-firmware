@@ -157,9 +157,10 @@ the same tests locally (recommended before pushing to the server) use the script
 
 ### Unit-tests
 
-Core functions of the firmware are covered by unit-tests (located in test directory). Run the tests with the following command:
+Core functions of the firmware are covered by unit-tests (located in `tests` directory). Build and run the tests with the following command:
 
-    platformio test -e unit_test
+    cd tests
+    west build -p -b native_posix -t run
 
 ### Static code analysis
 

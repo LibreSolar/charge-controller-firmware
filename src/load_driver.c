@@ -6,7 +6,7 @@
 
 #include "load.h"
 
-#ifndef UNIT_TEST
+#ifdef CONFIG_SOC_FAMILY_STM32
 
 #include <zephyr.h>
 #include <device.h>
@@ -229,7 +229,7 @@ bool pgood_check()
 #endif
 }
 
-#else // UNIT_TEST
+#else // CONFIG_SOC_FAMILY_STM32
 
 void load_out_init() {;}
 void usb_out_init() {;}

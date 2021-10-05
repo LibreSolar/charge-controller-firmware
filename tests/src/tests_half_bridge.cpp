@@ -71,7 +71,7 @@ void half_bridge_ccr_limits_not_violated()
     TEST_ASSERT_FLOAT_WITHIN(duty_epsilon, MIN_PWM_DUTY, half_bridge_get_duty_cycle());
 }
 
-void half_bridge_tests()
+int half_bridge_tests()
 {
     init_structs();
 
@@ -84,5 +84,5 @@ void half_bridge_tests()
     RUN_TEST(half_bridge_duty_limits_not_violated);
     RUN_TEST(half_bridge_ccr_limits_not_violated);
 
-    UNITY_END();
+    return UNITY_END();
 }

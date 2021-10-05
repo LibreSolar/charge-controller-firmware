@@ -296,7 +296,7 @@ void no_soc_below_0()
     TEST_ASSERT(0);
 }
 
-void bat_charger_tests()
+int bat_charger_tests()
 {
     UNITY_BEGIN();
 
@@ -338,5 +338,5 @@ void bat_charger_tests()
     //RUN_TEST(no_soc_above_100);
     //RUN_TEST(no_soc_below_0);
 
-    UNITY_END();
+    return UNITY_END();
 }

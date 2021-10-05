@@ -7,10 +7,8 @@
 #include "leds.h"
 
 #include <zephyr.h>
-#ifndef UNIT_TEST
 #include <drivers/gpio.h>
 #include <task_wdt/task_wdt.h>
-#endif
 
 #include "hardware.h"
 

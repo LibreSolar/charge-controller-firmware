@@ -413,7 +413,7 @@ void boost_correct_mppt_operation()
     TEST_ASSERT(pwm3 > pwm2);
 }
 
-void dcdc_tests()
+int dcdc_tests()
 {
     UNITY_BEGIN();
 
@@ -472,5 +472,5 @@ void dcdc_tests()
     RUN_TEST(boost_stop_high_voltage_emergency);
     RUN_TEST(boost_correct_mppt_operation);
 
-    UNITY_END();
+    return UNITY_END();
 }

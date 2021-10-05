@@ -136,7 +136,7 @@ void adc_alert_lv_overvoltage_triggering()
     TEST_ASSERT_EQUAL(false, dev_stat.has_error(ERR_BAT_OVERVOLTAGE));
     adc_update_value(ADC_POS(v_low));
     TEST_ASSERT_EQUAL(true, dev_stat.has_error(ERR_BAT_OVERVOLTAGE));
-    TEST_ASSERT_EQUAL(false, pwm_switch.active());
+    //TEST_ASSERT_EQUAL(false, pwm_switch.active());
     TEST_ASSERT_EQUAL(DCDC_CONTROL_OFF, dcdc.state);
 
     // reset values
@@ -179,7 +179,7 @@ void adc_alert_overflow_prevention()
  * Purpose: Check if raw data from 2 voltage and 2 current measurements are converted
  * to calculated voltage/current measurements of different DC buses
  */
-void daq_tests()
+int daq_tests()
 {
     adcval.bat_temperature = 25;
     adcval.battery_voltage = 12;
@@ -210,5 +210,5 @@ void daq_tests()
     RUN_TEST(adc_alert_hv_overvoltage_triggering);
     RUN_TEST(adc_alert_overflow_prevention);
 
-    UNITY_END();
+    return UNITY_END();
 }

@@ -15,7 +15,7 @@
 
 #include <stdio.h>
 
-#ifndef UNIT_TEST
+#ifdef CONFIG_SOC_FAMILY_STM32
 
 #include <device.h>
 #include <logging/log.h>

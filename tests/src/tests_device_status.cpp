@@ -119,7 +119,7 @@ void dev_stat_new_int_temp_max()
     TEST_ASSERT_EQUAL(22, dev_stat.int_temp_max);
 }
 
-void device_status_tests()
+int device_status_tests()
 {
     UNITY_BEGIN();
 
@@ -135,5 +135,5 @@ void device_status_tests()
     RUN_TEST(dev_stat_new_bat_temp_max);
     RUN_TEST(dev_stat_new_int_temp_max);
 
-    UNITY_END();
+    return UNITY_END();
 }

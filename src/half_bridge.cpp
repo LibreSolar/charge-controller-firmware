@@ -13,7 +13,7 @@
 #include "mcu.h"
 #include "setup.h"
 
-#ifndef UNIT_TEST
+#ifdef CONFIG_SOC_FAMILY_STM32
 #include <soc.h>
 #include <pinmux/pinmux_stm32.h>
 #include <stm32_ll_bus.h>
@@ -44,7 +44,7 @@ static uint16_t clamp_ccr(uint16_t ccr_target)
     }
 }
 
-#ifndef UNIT_TEST
+#ifdef CONFIG_SOC_FAMILY_STM32
 
 static const struct soc_gpio_pinctrl tim_pinctrl[] = ST_STM32_DT_INST_PINCTRL(0, 0);
 

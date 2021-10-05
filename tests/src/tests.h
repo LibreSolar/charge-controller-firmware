@@ -7,21 +7,21 @@
 #include <unity.h>
 #include <time.h>
 
-void bat_charger_tests();
+int bat_charger_tests();
 
-void daq_tests();
+int daq_tests();
 
-void power_port_tests();
+int power_port_tests();
 
-void half_bridge_tests();
+int half_bridge_tests();
 
-void dcdc_tests();
+int dcdc_tests();
 
-void device_status_tests();
+int device_status_tests();
 
-void load_tests();
+int load_tests();
 
 // activate this via build_flags in platformio.ini or custom.ini
 #ifdef CUSTOM_TESTS
-void custom_tests();
+int custom_tests();
 #endif

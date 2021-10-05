@@ -288,7 +288,7 @@ void control_off_short_circuit_flag_reset()
     TEST_ASSERT_EQUAL(LOAD_STATE_ON, load_out.state);
 }
 
-void load_tests()
+int load_tests()
 {
     UNITY_BEGIN();
 
@@ -311,5 +311,5 @@ void load_tests()
 
     // ToDo: What to do if port current is above the limit, but the hardware can still handle it?
 
-    UNITY_END();
+    return UNITY_END();
 }

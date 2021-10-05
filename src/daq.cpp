@@ -8,10 +8,8 @@
 
 #include <zephyr.h>
 
-#ifndef UNIT_TEST
 #include <logging/log.h>
 LOG_MODULE_REGISTER(daq, CONFIG_DAQ_LOG_LEVEL);
-#endif
 
 #include <math.h>       // log for thermistor calculation
 #include <assert.h>
@@ -364,9 +362,9 @@ void daq_set_hv_limit(float hv_overvoltage)
 }
 #endif
 
-#if defined(UNIT_TEST)
+#if !defined(CONFIG_SOC_FAMILY_STM32)
 
-#include "../test/daq_stub.h"
+#include "daq_stub.h"
 
 void prepare_adc_readings(AdcValues values)
 {

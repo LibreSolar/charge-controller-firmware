@@ -8,10 +8,8 @@
 
 #include <zephyr.h>
 
-#ifndef UNIT_TEST
 #include <logging/log.h>
 LOG_MODULE_REGISTER(pwm_switch, CONFIG_PWM_LOG_LEVEL);
-#endif
 
 #include <stdio.h>
 #include <time.h>

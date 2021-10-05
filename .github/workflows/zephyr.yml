@@ -37,3 +37,9 @@ jobs:
           west build -b mppt_2420_lc -p
           west build -b mppt_1210_hus@0.7 -p
           west build -b pwm_2420_lus@0.3 -p
+
+      - name: Run unit-tests
+        working-directory: charge-controller-firmware
+        run: |
+          cd tests
+          west build -b native_posix -t run

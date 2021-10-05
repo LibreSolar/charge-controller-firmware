@@ -9,12 +9,13 @@
 #include <zephyr.h>
 #include <soc.h>
 
-#ifndef UNIT_TEST
 #include <drivers/hwinfo.h>
-#include <stm32_ll_utils.h>
 #include <sys/crc.h>
 #include <logging/log.h>
 LOG_MODULE_REGISTER(data_objects, CONFIG_DATA_OBJECTS_LOG_LEVEL);
+
+#ifdef CONFIG_SOC_FAMILY_STM32
+#include <stm32_ll_utils.h>
 #endif
 
 #include <stdio.h>
@@ -37,9 +38,15 @@ const char metadata_url[] =
 const char device_type[] = DT_PROP(DT_PATH(pcb), type);
 const char hardware_version[] = DT_PROP(DT_PATH(pcb), version_str);
 const char firmware_version[] = FIRMWARE_VERSION_ID;
+char device_id[9];
+
+#ifdef CONFIG_SOC_FAMILY_STM32
 uint32_t flash_size = LL_GetFlashSize();
 uint32_t flash_page_size = FLASH_PAGE_SIZE;
-char device_id[9];
+#else
+uint32_t flash_size = 128;
+uint32_t flash_page_size = 0x800;
+#endif
 
 static char auth_password[11];
 

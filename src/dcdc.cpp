@@ -8,13 +8,11 @@
 
 #include <zephyr.h>
 
-#ifndef UNIT_TEST
 #include <device.h>
 #include <drivers/gpio.h>
 
 #include <logging/log.h>
 LOG_MODULE_REGISTER(dcdc, CONFIG_DCDC_LOG_LEVEL);
-#endif
 
 #include <math.h>       // for fabs function
 #include <stdlib.h>     // for min/max function
