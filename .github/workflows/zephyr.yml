@@ -29,6 +29,11 @@ jobs:
           west update
           pip3 install -r rtos/scripts/requirements-base.txt
 
+      - name: Trailing whitespace check
+        working-directory: charge-controller-firmware
+        run: |
+          git diff --check `git rev-list --max-parents=0 HEAD`..HEAD
+
       - name: Build firmware
         working-directory: charge-controller-firmware
         run: |

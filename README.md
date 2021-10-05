@@ -35,25 +35,9 @@ git clone --recursive https://github.com/LibreSolar/charge-controller-firmware
 
 Unfortunately, the green GitHub "Clone or download" button does not include submodules. If you cloned the repository already and want to pull the submodules, run `git submodule update --init --recursive`.
 
-### PlatformIO
+Building the firmware requires the native Zephyr build system.
 
-It is suggested to use Visual Studio Code and PlatformIO for firmware development, as it simplifies compiling and uploading the code a lot:
-
-1. Install Visual Studio Code and [PlatformIO](https://platformio.org/platformio-ide) to build the firmware.
-
-2. Adjust configuration in `zephyr/prj.conf` if necessary.
-
-3. Select the correct board in `platformio.ini` by removing the comment before the board name under `[platformio]` or create a file `custom.ini` with your personal settings. PlatformIO is configured for latest revision of the boards (see table above). For older revisions adjust `platformio.ini` and the `.json` files in `boards` folder manually or use native Zephyr environment.
-
-4. Connect the board via a programmer. See the Libre Solar website for [further project-agnostic instructions](http://libre.solar/docs/flashing).
-
-5. Press the upload button at the bottom left corner in VS Code.
-
-### Native Zephyr environment
-
-You can also use the Zephyr build system directly for advanced configuration with `menuconfig` or if you need more recently added features.
-
-This guide assumes you have already installed the Zephyr SDK and the west tool according to the [Zephyr documentation](https://docs.zephyrproject.org/latest/getting_started/). Also make sure that `west` is at least at version `0.8.0`.
+This guide assumes you have already installed the Zephyr SDK and the west tool according to the [Zephyr documentation](https://docs.zephyrproject.org/latest/getting_started/).
 
 Now after you cloned the repository (see above), go into the root firmware directory and initialize a west workspace:
 
@@ -162,12 +146,6 @@ Core functions of the firmware are covered by unit-tests (located in `tests` dir
     cd tests
     west build -p -b native_posix -t run
 
-### Static code analysis
-
-PlatformIO integrates cppcheck and clangtidy. The following command is an example to run the checks for MPPT 1210 HUS charge controller code:
-
-    platformio check -e mppt_1210_hus
-
 ## Additional firmware documentation (docs folder)
 
 - [Charge controller basic concepts](docs/charger-concepts.md)
@@ -182,28 +160,6 @@ The standard OpenOCD settings sometimes fail to flash firmware to this MCU, whic
 
 Try one of these workarounds:
 
-1. Change OpenOCD settings to `adapter_khz 500` in line 70 in `~/.platformio/packages/tool-openocd/scripts/target/stm32l0.cfg`.
+1. Change OpenOCD settings to `adapter_khz 500` in `openocd-path/scripts/target/stm32l0.cfg`.
 
 2. Use other tools or debug probes such as [STM32CubeProgrammer](https://www.st.com/en/development-tools/stm32cubeprog.html) or [Segger J-Link](https://www.segger.com/products/debug-probes/j-link/).
-
-### Connection failures
-
-If flashing fails like this in PlatformIO:
-
-```
-Error: init mode failed (unable to connect to the target)
-in procedure 'program'
-** OpenOCD init failed **
-shutdown command invoked
-```
-
-or with ST-Link:
-
-```bash
-$ st-flash write .pio/build/mppt-1210-hus-v0.4/firmware.bin 0x08000000
-st-flash 1.5.1
-2019-06-21T18:13:03 INFO common.c: Loading device parameters....
-2019-06-21T18:13:03 WARN common.c: unknown chip id! 0x5fa0004
-```
-
-check the connection between the programmer (for example the ST-Link of the Nucleo board) and the charge controller.

@@ -21,7 +21,6 @@ int device_status_tests();
 
 int load_tests();
 
-// activate this via build_flags in platformio.ini or custom.ini
-#ifdef CUSTOM_TESTS
+#ifdef CONFIG_CUSTOM_TESTS
 int custom_tests();
 #endif
