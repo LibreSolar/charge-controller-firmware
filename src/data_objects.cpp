@@ -1178,7 +1178,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Bootloader starten"
         }
     }*/
-    TS_FUNCTION(0xF0, "bootloader-stm", &start_stm32_bootloader, 0x100, TS_ANY_RW),
+    TS_FUNCTION(0xF0, "bootloader-stm", &start_stm32_bootloader, 0xF0, TS_ANY_RW),
 
     /*{
         "title": {
@@ -1187,7 +1187,7 @@ static ThingSetDataObject data_objects[] = {
         },
         "unit": "KiB"
     }*/
-    TS_ITEM_UINT32(0xF1, "FlashSize_KiB", &flash_size, 0x100, TS_ANY_R, 0),
+    TS_ITEM_UINT32(0xF1, "FlashSize_KiB", &flash_size, 0xF0, TS_ANY_R, 0),
 
     /*{
         "title": {
@@ -1196,17 +1196,19 @@ static ThingSetDataObject data_objects[] = {
         },
         "unit": "B"
     }*/
-    TS_ITEM_UINT32(0xF2, "FlashPageSize_B", &flash_page_size, 0x100, TS_ANY_R, 0),
+    TS_ITEM_UINT32(0xF2, "FlashPageSize_B", &flash_page_size, 0xF0, TS_ANY_R, 0),
 
     // PUBLICATION DATA ///////////////////////////////////////////////////////
     // using IDs >= 0x100
 
     TS_SUBSET(0x0A, "serial", SUBSET_SER, ID_ROOT, TS_ANY_RW),
+#if CONFIG_THINGSET_CAN
     TS_SUBSET(0x0B, "can", SUBSET_CAN, ID_ROOT, TS_ANY_RW),
+#endif
 
     TS_GROUP(ID_PUB, ".pub", TS_NO_CALLBACK, ID_ROOT),
 
-    TS_GROUP(0x100, "serial", NULL, ID_PUB),
+    TS_GROUP(0x101, "serial", NULL, ID_PUB),
 
     /*{
         "title": {
@@ -1214,10 +1216,10 @@ static ThingSetDataObject data_objects[] = {
             "de": "Serielle Publikation (de)aktivieren"
         }
     }*/
-    TS_ITEM_BOOL(0x101, "Enable", &pub_serial_enable, 0xF1, TS_ANY_RW, 0),
+    TS_ITEM_BOOL(0x102, "Enable", &pub_serial_enable, 0x101, TS_ANY_RW, 0),
 
 #if CONFIG_THINGSET_CAN
-    TS_GROUP(0x102, "can", TS_NO_CALLBACK, ID_PUB),
+    TS_GROUP(0x103, "can", TS_NO_CALLBACK, ID_PUB),
 
     /*{
         "title": {
@@ -1225,7 +1227,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "CAN Publikation (de)aktivieren"
         }
     }*/
-    TS_ITEM_BOOL(0x103, "Enable", &pub_can_enable, 0xF5, TS_ANY_RW, 0),
+    TS_ITEM_BOOL(0x104, "Enable", &pub_can_enable, 0x103, TS_ANY_RW, 0),
 #endif
 
     /*
