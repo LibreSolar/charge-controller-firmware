@@ -11,9 +11,6 @@
 #include <device.h>
 #include <drivers/gpio.h>
 
-#include <logging/log.h>
-LOG_MODULE_REGISTER(dcdc, CONFIG_DCDC_LOG_LEVEL);
-
 #include <math.h>       // for fabs function
 #include <stdlib.h>     // for min/max function
 #include <stdio.h>
@@ -23,6 +20,8 @@ LOG_MODULE_REGISTER(dcdc, CONFIG_DCDC_LOG_LEVEL);
 #include "half_bridge.h"
 #include "data_storage.h"
 #include "setup.h"
+
+LOG_MODULE_REGISTER(dcdc, CONFIG_DCDC_LOG_LEVEL);
 
 extern DeviceStatus dev_stat;
 

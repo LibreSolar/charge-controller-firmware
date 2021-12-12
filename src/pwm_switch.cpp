@@ -8,9 +8,6 @@
 
 #include <zephyr.h>
 
-#include <logging/log.h>
-LOG_MODULE_REGISTER(pwm_switch, CONFIG_PWM_LOG_LEVEL);
-
 #include <stdio.h>
 #include <time.h>
 
@@ -18,6 +15,8 @@ LOG_MODULE_REGISTER(pwm_switch, CONFIG_PWM_LOG_LEVEL);
 #include "daq.h"
 #include "helper.h"
 #include "setup.h"
+
+LOG_MODULE_REGISTER(pwm_switch, CONFIG_PWM_LOG_LEVEL);
 
 #if BOARD_HAS_PWM_PORT
 

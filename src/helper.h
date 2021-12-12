@@ -17,6 +17,28 @@
 #include <stdint.h>
 #include <time.h>
 
+#ifdef __INTELLISENSE__
+/*
+ * VS Code intellisense can't cope with all the Zephyr macro layers for logging, so provide it
+ * with something more simple and make it silent.
+ */
+
+#define LOG_DBG(...) printf(__VA_ARGS__)
+
+#define LOG_INF(...) printf(__VA_ARGS__)
+
+#define LOG_WRN(...) printf(__VA_ARGS__)
+
+#define LOG_ERR(...) printf(__VA_ARGS__)
+
+#define LOG_MODULE_REGISTER(...)
+
+#else
+
+#include <logging/log.h>
+
+#endif /* VSCODE_INTELLISENSE_HACK */
+
 #include <zephyr.h>
 
 #ifdef __cplusplus

@@ -18,9 +18,9 @@
 #ifdef CONFIG_SOC_FAMILY_STM32
 
 #include <device.h>
-#include <logging/log.h>
-LOG_MODULE_REGISTER(nvs, CONFIG_DATA_STORAGE_LOG_LEVEL);
 #include <stm32_ll_bus.h>
+
+LOG_MODULE_REGISTER(nvs, CONFIG_DATA_STORAGE_LOG_LEVEL);
 
 K_MUTEX_DEFINE(data_buf_lock);
 

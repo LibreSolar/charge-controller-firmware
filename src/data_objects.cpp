@@ -11,8 +11,6 @@
 
 #include <drivers/hwinfo.h>
 #include <sys/crc.h>
-#include <logging/log.h>
-LOG_MODULE_REGISTER(data_objects, CONFIG_DATA_OBJECTS_LOG_LEVEL);
 
 #ifdef CONFIG_SOC_FAMILY_STM32
 #include <stm32_ll_utils.h>
@@ -27,6 +25,8 @@ LOG_MODULE_REGISTER(data_objects, CONFIG_DATA_OBJECTS_LOG_LEVEL);
 #include "setup.h"
 #include "thingset.h"
 #include "helper.h"
+
+LOG_MODULE_REGISTER(data_objects, CONFIG_DATA_OBJECTS_LOG_LEVEL);
 
 // can be used to configure custom data objects in separate file instead
 // (e.g. data_objects_custom.cpp)

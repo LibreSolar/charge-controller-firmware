@@ -473,5 +473,9 @@ endif
 # include custom Kconfig if existing
 orsource "../src/custom/Kconfig"
 
+#if 0
+#orsource "modules/thingset/zephyr/Kconfig.thingset"
+#endif
+
 # include main Zephyr menu entries from Zephyr root directory
 source "Kconfig.zephyr"

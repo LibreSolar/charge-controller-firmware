@@ -8,6 +8,7 @@
 
 #include "mcu.h"
 #include "load.h"
+#include "helper.h"
 #include "half_bridge.h"
 #include "leds.h"
 #include "setup.h"
@@ -21,7 +22,6 @@
 #include <power/reboot.h>
 #include <drivers/gpio.h>
 
-#include <logging/log.h>
 LOG_MODULE_REGISTER(hardware, CONFIG_HW_LOG_LEVEL);
 
 void start_stm32_bootloader()
