@@ -1,0 +1,481 @@
+# Copyright (c) The Libre Solar Project Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+mainmenu "Libre Solar Charge Controller Firmware"
+
+#
+# Invisible (board-specific) Kconfig symbols
+#
+
+config CONTROL_FREQUENCY
+    int
+    default 10
+    help
+      Main control function frequency (Hz)
+
+      Frequencies higher than 10 Hz caused issues with MPPT control during lab test with
+      PV simulator. Might be different with actual solar panel.
+
+config LIBRE_SOLAR_TYPE_ID
+    int
+    help
+      Numeric Libre Solar hardware type ID
+
+config HS_MOSFET_FAIL_SAFE_PROTECTION
+    bool
+    default y
+    help
+      If enabled, the DC/DC control function will will detect if the high-side MOSFET has failed
+      short and trip the fuse by switching the low-side MOSFET continuously on. This will prevent
+      accidental overcharging of the battery.
+
+#
+# Visible (user-configurable) Kconfig symbols
+#
+
+menu "Charge Controller Setup"
+
+choice
+    prompt "High-voltage terminal"
+    depends on $(dt_compat_enabled,half-bridge)
+    help
+      Select the device connected to the high-voltage
+      side terminal of the DC/DC converter.
+
+    config HV_TERMINAL_SOLAR
+        bool "Solar panel"
+
+    config HV_TERMINAL_NANOGRID
+        bool "DC nanogrid"
+
+    config HV_TERMINAL_GENERATOR
+        bool "DC generator, e.g. wind turbine"
+
+    config HV_TERMINAL_BATTERY
+        bool "Battery, e.g. electric bicycle"
+endchoice
+
+
+choice
+    prompt "Low-voltage terminal"
+    help
+      Select the device connected to the low-voltage side
+      of the charge controller (usually battery terminal).
+
+    config LV_TERMINAL_BATTERY
+        depends on !HV_TERMINAL_BATTERY
+        bool "Battery 12V/24V"
+
+    config LV_TERMINAL_SOLAR
+        depends on HV_TERMINAL_BATTERY || HV_TERMINAL_NANOGRID
+        bool "Solar panel"
+endchoice
+
+
+choice
+    prompt "PWM terminal"
+    depends on $(dt_node_has_bool_prop,/outputs/pwm_switch,kconfig-flag)
+    help
+      Select the device connected to the PWM switch (currently
+      only solar panel possible)
+
+    config PWM_TERMINAL_SOLAR
+        depends on LV_TERMINAL_BATTERY && !HV_TERMINAL_SOLAR
+        bool "Solar panel"
+endchoice
+
+
+menu "Battery default settings"
+
+config BAT_CAPACITY_AH
+    int "Battery nominal capacity in Ah"
+    range 10 1000
+    default 50
+    help
+      Nominal battery capacity or sum of parallel cells capacity
+
+choice
+    prompt "Battery type"
+    default BAT_TYPE_GEL
+    help
+      Select the type of the single cells inside the battery
+      to determine voltage set points. Total voltage set points
+      are multiplied with the selected number of cells.
+
+    config BAT_TYPE_CUSTOM
+        bool "Custom type"
+
+    config BAT_TYPE_FLOODED
+        bool "Flooded (wet) lead-acid"
+
+    config BAT_TYPE_GEL
+        bool "VRLA gel, maintainance-free"
+
+    config BAT_TYPE_AGM
+        bool "AGM, maintainance-free"
+
+    config BAT_TYPE_LFP
+        bool "LiFePO4 Li-ion, 3.3V nominal"
+
+    config BAT_TYPE_NMC
+        bool "NMC/Graphite Li-ion, 3.7V nominal, 4.2V max"
+
+    config BAT_TYPE_NMC_HV
+        bool "NMC/Graphite High Voltage Li-ion, 3.7V nominal, 4.35 max"
+endchoice
+
+# values must match enum BatType in bat_charger.h
+config BAT_TYPE
+    int
+    default 0 if BAT_TYPE_CUSTOM
+    default 1 if BAT_TYPE_FLOODED
+    default 2 if BAT_TYPE_GEL
+    default 3 if BAT_TYPE_AGM
+    default 4 if BAT_TYPE_LFP
+    default 5 if BAT_TYPE_NMC
+    default 6 if BAT_TYPE_NMC_HV
+
+config BAT_NUM_CELLS
+    int "Number of cells for single battery"
+    default 6 if BAT_TYPE_FLOODED || BAT_TYPE_GEL || BAT_TYPE_AGM
+    default 4 if BAT_TYPE_LFP
+    default 3 if BAT_TYPE_NMC || BAT_TYPE_NMC_HV
+    range 3 16
+    help
+      Typical choices:
+      - 6 for 12V lead-acid battery
+      - 4 for 12V LiFePO4 battery
+      - 3 for 12V NMC Li-ion battery
+
+      Remarks:
+      - If you choose settings for 12V system, 24V systems
+        (2 batteries in series) are recognized automatically
+      - Make sure the voltage of the used charge controller
+        is not exceeded.
+
+menu "Custom cell-level settings"
+    depends on BAT_TYPE_CUSTOM
+
+config CELL_ABS_MAX_VOLTAGE_MV
+    int "Absolute maximum voltage (mV)"
+    default 2450
+    help
+      Above this voltage the battery or loads might get damaged.
+
+config CELL_TOPPING_VOLTAGE_MV
+    int "Topping voltage (mV)"
+    default 2400
+    help
+      Charger target voltage, switching from CC to CV at this voltage threshold.
+
+config CELL_RECHARGE_VOLTAGE_MV
+    int "Recharge voltage (mV)"
+    default 2300
+    help
+      Start charging again if voltage of fully charged battery drops below this threshold.
+
+config CELL_RECONNECT_VOLTAGE_MV
+    int "Load reconnect cell voltage (mV)"
+    default 2100
+    help
+      Re-enable the load only after charged beyond this value.
+
+config CELL_DISCONNECT_VOLTAGE_MV
+    int "Load disconnect cell voltage (mV)"
+    default 1950
+    help
+      Load output is disabled if battery voltage is below this threshold.
+
+config CELL_ABS_MIN_VOLTAGE_MV
+    int "Topping voltage (mV)"
+    default 1600
+    help
+      Below this voltage the battery is considered damaged.
+
+config CELL_OCV_FULL_MV
+    int "OCV full cell (mV)"
+    default 2150
+    help
+      Voltages during idle (no charging/discharging current)
+
+config CELL_OCV_EMPTY_MV
+    int "OCV empty cell (mV)"
+    default 1900
+    help
+      Voltages during idle (no charging/discharging current)
+
+config CELL_FLOAT
+    bool "Enable float charging phase"
+    default y
+
+config CELL_FLOAT_VOLTAGE_MV
+    int "Float charging cell voltage (mV)" if CELL_FLOAT
+    default 2300
+    help
+      Charger target voltage for float charging of lead-acid batteries
+
+config CELL_FLOAT_RECHARGE_TIME
+    int "Float recharge time (s)" if CELL_FLOAT
+    default 1800
+    help
+      If the float voltage is not reached anymore (e.g. because of lack of solar
+      input power) for this period of time, the charger state machine goes back
+      into CC/bulk charging mode.
+
+config CELL_EQUALIZATION
+    bool "Enable equalization phase"
+    default n
+    help
+      Enable for flooded batteries only.
+
+config CELL_EQUALIZATION_VOLTAGE_MV
+    int "Equalization phase cell voltage (mV)" if CELL_EQUALIZATION
+    default 2450
+    help
+      Charger target voltage for equalization charging of lead-acid batteries
+
+config CELL_EQUALIZATION_DURATION
+    int "Equalization duration (seconds)" if CELL_EQUALIZATION
+    default 3600
+    help
+      After this time, equalization charging is stopped.
+
+config CELL_EQUALIZATION_TRIGGER_DAYS
+    int "Equalization time trigger (days)" if CELL_EQUALIZATION
+    default 60
+    help
+      After passing specified amount of days, an equalization charge is triggered.
+
+config CELL_EQUALIZATION_TRIGGER_DEEP_CYCLES
+    int "Equalization deep cycle count trigger" if CELL_EQUALIZATION
+    default 10
+    help
+      After specified number of deep discharges, an equalization charge is triggered.
+
+config CELL_TEMP_COMPENSATION_MV_K
+    int "Cell voltage temperature compenstaion (mV/K)"
+    range -5 0
+    default -3
+    help
+      Suggested value: -3 mV/K/cell for lead-acid batteries, 0 for Li-ion batteries
+
+config CELL_INTERNAL_RESISTANCE_MOHM
+    int "Cell internal resistance (mOhm)"
+    range 1 30
+    default 5
+
+endmenu # Custom cell-level settings
+
+menu "Custom temperature settings"
+    depends on BAT_TYPE_CUSTOM
+
+config BAT_CHARGE_TEMP_MAX
+    int "Maximum charge temperature (°C)"
+    range 0 60
+    default 50
+
+config BAT_CHARGE_TEMP_MIN
+    int "Minimum charge temperature (°C)"
+    range -10 20
+    default 0
+
+config BAT_DISCHARGE_TEMP_MAX
+    int "Maximum discharge temperature (°C)"
+    range 0 60
+    default 50
+
+config BAT_DISCHARGE_TEMP_MIN
+    int "Minimum discharge temperature (°C)"
+    range -20 20
+    default -10
+
+endmenu # Custom temperature settings
+
+endmenu # Battery default settings
+
+
+menu "Load output settings"
+    depends on $(dt_node_has_bool_prop,/outputs/load,kconfig-flag)
+
+config LOAD_OC_RECOVERY_DELAY
+    int "Overcurrent recovery delay (s)"
+    default 300
+
+config LOAD_LVD_RECOVERY_DELAY
+    int "Low-voltage disconnect recovery delay (s)"
+    default 300
+    help
+      Prevents toggling load output in case of heavy load and low state of charge.
+
+endmenu # Load output settings
+
+
+endmenu # Charge controller setup
+
+
+menu "UEXT port"
+
+config UEXT_OLED_DISPLAY
+    select I2C
+    bool "OLED display"
+
+config UEXT_OLED_BRIGHTNESS
+    depends on UEXT_OLED_DISPLAY
+    int "OLED display brightness"
+    range 1 255
+    default 1
+
+config UEXT_SERIAL_THINGSET
+    depends on THINGSET_SERIAL
+    bool "Use UEXT serial for ThingSet interface"
+    default y
+    help
+      If the ThingSet interface is not attached to the serial port in the UEXT connector, the
+      serial in the LS.one port or the debug connector is used (if existing).
+
+endmenu # UEXT port
+
+
+menu "ThingSet interfaces"
+
+config THINGSET_SERIAL
+    bool "ThingSet serial interface"
+
+config THINGSET_SERIAL_RX_BUF_SIZE
+    depends on THINGSET_SERIAL
+    int "ThingSet serial RX buffer size"
+    range 64 2048
+    default 512
+
+config THINGSET_SERIAL_TX_BUF_SIZE
+    depends on THINGSET_SERIAL
+    int "ThingSet serial TX buffer size"
+    range 256 2048
+    default 1024
+
+config THINGSET_SERIAL_PUB_DEFAULT
+    bool "Enable serial publication messages at startup"
+    depends on THINGSET_SERIAL
+    default y
+
+config THINGSET_CAN
+    depends on CAN
+    bool "ThingSet CAN interface"
+
+config THINGSET_CAN_PUB_DEFAULT
+    bool "Enable CAN publication messages at startup"
+    depends on THINGSET_CAN
+    default y
+
+config THINGSET_CAN_DEFAULT_NODE_ID
+    depends on THINGSET_CAN
+    int "ThingSet CAN default node ID"
+    range 0 255
+    default 20
+
+config THINGSET_EXPERT_PASSWORD
+    string "ThingSet expert user password"
+    default "expert123"
+
+config THINGSET_MAKER_PASSWORD
+    string "ThingSet maker password"
+    default "maker456"
+
+endmenu # ThingSet interfaces
+
+menu "Logging setup"
+
+config CAN_LOG_LEVEL
+    int "Log level for the CAN module (if included)"
+    default 2
+    depends on LOG
+    help
+      Log level for the CAN module (if included). 0=off, 1=ERR, 2=WRN, 3=INF, 4=DBG
+
+config DAQ_LOG_LEVEL
+    int "Log level for the DAQ module"
+    default 2
+    depends on LOG
+    help
+      Log level for the DAQ module. 0=off, 1=ERR, 2=WRN, 3=INF, 4=DBG
+
+config DATA_OBJECTS_LOG_LEVEL
+    int "Log level for the data objects module"
+    default 2
+    depends on LOG
+    help
+      Log level for the data nodes module. 0=off, 1=ERR, 2=WRN, 3=INF, 4=DBG
+
+config DATA_STORAGE_LOG_LEVEL
+    int "Log level for the data storage module"
+    default 2
+    depends on LOG
+    help
+      Log level for the data storage module. 0=off, 1=ERR, 2=WRN, 3=INF, 4=DBG
+
+config DCDC_LOG_LEVEL
+    int "Log level for the DCDC module (if included)"
+    default 2
+    depends on LOG
+    help
+      Log level for the DCDC module (if included). 0=off, 1=ERR, 2=WRN, 3=INF, 4=DBG
+
+config HW_LOG_LEVEL
+    int "Log level for the hardware module"
+    default 2
+    depends on LOG
+    help
+      Log level for the hardware module. 0=off, 1=ERR, 2=WRN, 3=INF, 4=DBG
+
+config BAT_LOG_LEVEL
+    int "Log level for the battery module"
+    default 2
+    depends on LOG
+    help
+      Log level for the battery module. 0=off, 1=ERR, 2=WRN, 3=INF, 4=DBG
+
+config PWM_LOG_LEVEL
+    int "Log level for the PWM module (if included)"
+    default 2
+    depends on LOG
+    help
+      Log level for the PWM module (if included). 0=off, 1=ERR, 2=WRN, 3=INF, 4=DBG
+
+endmenu # Logging setup
+
+menuconfig CUSTOMIZATION
+    bool "Firmware customization"
+    help
+      Activating this option allows to overwrite existing firmware functions
+      or add customizations independent of the main branch.
+      Custom implementations should be stored in the
+      src/custom subdirectory.
+
+if CUSTOMIZATION
+
+config CUSTOM_DATA_OBJECTS_FILE
+    bool "Use custom data nodes file"
+    default n
+    help
+      Use the file data_objects_custom.cpp instead of the default data_objects.cpp
+      for ThingSet configuration.
+
+config CUSTOM_DCDC_CONTROLLER
+    bool "Custom implementation of DC/DC controller"
+    depends on $(dt_compat_enabled,half-bridge)
+    default n
+    help
+      Use a custom implementation instead of the default perturb & observe
+      MPPT control.
+
+endif
+
+# include custom Kconfig if existing
+orsource "../src/custom/Kconfig"
+
+#if 0
+#orsource "modules/thingset/zephyr/Kconfig.thingset"
+#endif
+
+# include main Zephyr menu entries from Zephyr root directory
+source "Kconfig.zephyr"

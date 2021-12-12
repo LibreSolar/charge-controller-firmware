@@ -1,0 +1,27 @@
+manifest:
+  remotes:
+    - name: zephyrproject
+      url-base: https://github.com/zephyrproject-rtos
+    - name: libresolar
+      url-base: https://github.com/LibreSolar
+    - name: thingset
+      url-base: https://github.com/ThingSet
+    - name: throwtheswitch
+      url-base: https://github.com/ThrowTheSwitch
+  projects:
+    - name: zephyr
+      remote: zephyrproject
+      revision: v2.7-branch
+      import:
+        name-allowlist:
+          - cmsis
+          - edtt
+          - hal_stm32
+    - name: thingset-device-library
+      remote: thingset
+      revision: 1eaa305a9f1873f676b77b8dd0f9d34f1944ecd1
+      path: modules/thingset
+    - name: unity
+      path: modules/unity
+      revision: 74cde089e65c3435ce9aa87d5c69f4f16b7f6ade
+      remote: throwtheswitch
