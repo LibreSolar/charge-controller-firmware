@@ -12,12 +12,7 @@ manifest:
     - name: zephyr
       remote: zephyrproject
       revision: v2.7-branch
-      # path must be something else than zephyr as we get a Kconfig include recursion otherwise
-      path: rtos
       import:
-        # main zephyr modules should be placed in here into zephyr subdirectory
-        path-prefix: zephyr
-        # only get modules we actually need
         name-allowlist:
           - cmsis
           - edtt
@@ -25,8 +20,8 @@ manifest:
     - name: thingset-device-library
       remote: thingset
       revision: 1eaa305a9f1873f676b77b8dd0f9d34f1944ecd1
-      path: zephyr/modules/thingset
+      path: modules/thingset
     - name: unity
-      path: zephyr/modules/unity
+      path: modules/unity
       revision: 74cde089e65c3435ce9aa87d5c69f4f16b7f6ade
       remote: throwtheswitch

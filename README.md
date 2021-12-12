@@ -37,19 +37,19 @@ Unfortunately, the green GitHub "Clone or download" button does not include subm
 
 Building the firmware requires the native Zephyr build system.
 
-This guide assumes you have already installed the Zephyr SDK and the west tool according to the [Zephyr documentation](https://docs.zephyrproject.org/latest/getting_started/).
+This guide assumes you have already installed the Zephyr SDK and the `west` tool according to the [Zephyr documentation](https://docs.zephyrproject.org/latest/getting_started/).
 
-Now after you cloned the repository (see above), go into the root firmware directory and initialize a west workspace:
+The repository root directory is the `west` workspace. The `app` subfolder contains all application source files, the CMake entry point and the `west` manifest, so we have to move into this folder:
 
-        west init -l zephyr
+        cd app
 
-This command will create a `.west/config` file and set up the repository as specified in `zephyr/west.yml` file. Afterwards the following command pulls the Zephyr source and all necessary modules, which might take a while:
+The following command initializes the west workspace:
+
+        west init -l .
+
+This command will create a `.west/config` file in the workspace root and set up the repository as specified in the `west.yml` file. Afterwards the following command pulls the Zephyr source and all necessary modules, which might take a while:
 
         west update
-
-The CMake entry point is in the `zephyr` subfolder, so you need to run `west build` and `west flash` command in that directory.
-
-        cd zephyr
 
 Initial board selection (see `boards` subfolder for correct names):
 
