@@ -11,8 +11,6 @@ project(libre_solar_charge_controller)
 
 add_subdirectory(src)
 
-add_subdirectory(../lib/oled-display build/oled-display)
-
 # determine git tag and commit hash for automatic firmware versioning
 find_package(Git)
 if(GIT_FOUND)
