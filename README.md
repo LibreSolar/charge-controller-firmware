@@ -25,55 +25,83 @@ The software is configurable to support different charge controller PCBs with ST
 | [Libre Solar MPPT 1210 HUS](https://github.com/LibreSolar/mppt-1210-hus)    | 0.7  | 0.4 |
 | [Libre Solar PWM 2420 LUS](https://github.com/LibreSolar/pwm-2420-lus)      | 0.3  | 0.2 |
 
-## Building and flashing the firmware
-
-This repository contains git submodules, so you need to clone (download) it by calling:
-
-```
-git clone --recursive https://github.com/LibreSolar/charge-controller-firmware
-```
-
-Unfortunately, the green GitHub "Clone or download" button does not include submodules. If you cloned the repository already and want to pull the submodules, run `git submodule update --init --recursive`.
-
-As the `main` branch may contain unstable code, make sure to select the desired release branch (see GitHub for a list of releases and branches):
-```
-git switch <your-release>-branch
-```
-
-Building the firmware requires the native Zephyr build system.
+## Workspace initialization
 
 This guide assumes you have already installed the Zephyr SDK and the `west` tool according to the [Zephyr documentation](https://docs.zephyrproject.org/latest/getting_started/).
 
-The repository root directory is the `west` workspace. The `app` subfolder contains all application source files, the CMake entry point and the `west` manifest, so we have to move into this folder:
+Below commands initialize a new workspace and pull all required source files:
 
-        cd app
+```bash
+# create a new west workspace and pull the charge controller firmware
+west init -m https://github.com/LibreSolar/charge-controller-firmware west-workspace
+cd west-workspace/charge-controller-firmware
 
-The following command initializes the west workspace:
+# pull Zephyr upstream repository and modules (may take a while)
+west update
+```
 
-        west init -l .
+Afterwards, most important folders in your workspace will look like this:
 
-This command will create a `.west/config` file in the workspace root and set up the repository as specified in the `west.yml` file. Afterwards the following command pulls the Zephyr source and all necessary modules, which might take a while:
+```
+west-workspace/                     # contains .west/config
+│
+├── charge-controller-firmware/     # application firmware repository
+│   ├── app/                        # application source files
+│   ├── boards/                     # board specifications
+│   ├── tests/                      # unit test source files
+│   └── west.yml                    # main manifest file
+│
+├── modules/                        # modules imported by Zephyr and CC firmware
+|
+├── tools/                          # tools used by Zephyr
+│
+└── zephyr/                         # upstream Zephyr repository
+```
 
-        west update
+If you already have a west workspace set up (e.g. for other Libre Solar firmware), you can also re-use it to avoid having many copies of upstream Zephyr and modules:
+
+```bash
+# go to your workspace directory
+cd your-zephyr-workspace
+
+# pull the charge controller firmware
+git clone https://github.com/LibreSolar/charge-controller-firmware
+cd charge-controller-firmware
+
+# re-configure and update the workspace
+# (to be done each time you switch between applications in same workspace)
+west config manifest.path charge-controller-firmware
+west update
+```
+
+## Building and flashing the application
+
+As the `main` branch may contain unstable code, make sure to select the desired release branch (see GitHub for a list of releases and branches):
+
+```
+git switch <your-release>-branch
+west update
+```
+
+The `app` subfolder contains all application source files and the CMake entry point to build the firmware, so we go into that directory first.
+
+```
+cd app
+```
 
 Initial board selection (see `boards` subfolder for correct names):
 
-        west build -b <board-name>@<revision>
+```
+west build -b <board-name>@<revision>
+```
 
 The appended `@<revision>` specifies the board version according to the above table. It can be omitted if only a single board revision is available or if the default (most recent) version should be used. See also [here](https://docs.zephyrproject.org/latest/application/index.html#application-board-version) for more details regarding board revision handling in Zephyr.
 
 Flash with specific debug probe (runner), e.g. J-Link:
 
-        west flash -r jlink
-
-User configuration using menuconfig:
-
-        west build -t menuconfig
-
-Report of used memory (RAM and flash):
-
-        west build -t rom_report
-        west build -t ram_report
+```
+west flash -r jlink
+```
 
 ## Firmware customization
 
