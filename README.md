@@ -1,6 +1,6 @@
 # Libre Solar Charge Controller Firmware
 
-![build badge](https://travis-ci.com/LibreSolar/charge-controller-firmware.svg?branch=main)
+![build badge](https://github.com/LibreSolar/charge-controller-firmware/actions/workflows/zephyr.yml/badge.svg)
 
 This repository contains the firmware for the different Libre Solar Charge Controllers based on [Zephyr RTOS](https://www.zephyrproject.org/).
 
