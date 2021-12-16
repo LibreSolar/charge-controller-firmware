@@ -13,6 +13,9 @@
  * @file
  *
  * @brief PWM timer functions for half bridge of DC/DC converter
+ *
+ * Generates the synchronous PWM signal for the half bridge in the DC/DC converter. Depending on
+ * the MCU, either the advanced timer TIM1 or the basic timer TIM3 is used.
  */
 
 /**

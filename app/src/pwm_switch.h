@@ -11,6 +11,8 @@
  * @file
  *
  * @brief PWM charger MOSFET switch control functions
+ *
+ * Only used for PWM solar charge controllers.
  */
 
 #include <stdbool.h>

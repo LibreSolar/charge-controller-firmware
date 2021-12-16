@@ -12,6 +12,9 @@
  *
  * @brief
  * Control of status LEDs with charlieplexing
+ *
+ * Provides higher-level access to different LEDs (e.g. blinking and flickering). Internally,
+ * charlieplexing is used for some boards to optimize power consumption and needed pin numbers.
  */
 
 #ifdef __cplusplus

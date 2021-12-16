@@ -11,6 +11,9 @@
  * @file
  *
  * @brief DC/DC buck/boost control functions
+ *
+ * High-level functions to control the DC/DC converter. This module does not directly access any
+ * hardware. The PWM signal for the half bridge is generated in a separate module.
  */
 
 #include <stdint.h>
