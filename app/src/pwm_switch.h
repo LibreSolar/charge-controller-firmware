@@ -113,13 +113,59 @@ public:
 extern "C" {
 #endif
 
+/**
+ * Read the currently set duty cycle
+ *
+ * @returns Duty cycle between 0.0 and 1.0
+ */
 float pwm_signal_get_duty_cycle();
+
+/**
+ * Set the duty cycle of the PWM signal
+ *
+ * @param duty Duty cycle between 0.0 and 1.0
+ */
 void pwm_signal_set_duty_cycle(float duty);
+
+/**
+ * Change raw timer capture/compare register by defined step
+ *
+ * @param delta Steps to be added/substracted from current CCR value
+ */
 void pwm_signal_duty_cycle_step(int delta);
+
+/**
+ * Initiatializes the registers to generate the PWM signal and sets duty
+ * cycle limits
+ *
+ * @param freq_Hz Switching frequency in Hz
+*/
 void pwm_signal_init_registers(int freq_Hz);
+
+/**
+ * Start the PWM generation
+ *
+ * @param duty Duty cycle between 0.0 and 1.0
+ */
 void pwm_signal_start(float pwm_duty);
+
+/**
+ * Stop the PWM generation
+ */
 void pwm_signal_stop();
+
+/**
+ * Check if the PWM pin voltage level is high (on-state)
+ *
+ * @returns true if pin is high, false if pin is low
+ */
 bool pwm_signal_high();
+
+/**
+ * Check if the PWM generation is active
+ *
+ * @returns true if PWM signal generation is active
+ */
 bool pwm_active();
 
 #ifdef __cplusplus
