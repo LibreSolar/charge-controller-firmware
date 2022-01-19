@@ -214,7 +214,10 @@ bool battery_conf_check(BatConf *bat_conf)
     // - capacity plausible
     //
 
-  	struct condition { std::function<bool()> func; const char* text;};
+    struct condition {
+        std::function<bool()> func; 
+        const char *text;
+    };
 
 	const condition conditions[] = {
 	{ .func = [bat_conf]() { return bat_conf->load_reconnect_voltage > (bat_conf->load_disconnect_voltage + 0.4); }, .text = "Load Reconnect Voltage must be higher than Load Disconnect Voltage + 0.4" },
