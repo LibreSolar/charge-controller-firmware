@@ -152,7 +152,7 @@ const struct zcan_filter ctrl_filter = {
     .rtr_mask = 1
 };
 
-void can_pub_isr(uint32_t err_flags, void *arg)
+void can_pub_isr(int error, void *arg)
 {
 	// Do nothing. Publication messages are fire and forget.
 }
