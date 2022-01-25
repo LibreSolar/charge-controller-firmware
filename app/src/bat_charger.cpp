@@ -13,6 +13,7 @@ LOG_MODULE_REGISTER(bat_charger, CONFIG_BAT_LOG_LEVEL);
 
 #include <math.h>       // for fabs function
 #include <stdio.h>
+#include <functional>
 
 #include "board.h"
 #include "helper.h"
@@ -211,36 +212,79 @@ bool battery_conf_check(BatConf *bat_conf)
     // - load_disconnect/reconnect hysteresis makes sense?
     // - cutoff current not extremely low/high
     // - capacity plausible
+    //
 
-    LOG_DBG("battery_conf_check: %d %d %d %d %d %d %d",
-        bat_conf->load_reconnect_voltage > (bat_conf->load_disconnect_voltage + 0.6),
-        bat_conf->recharge_voltage < (bat_conf->topping_voltage - 0.4),
-        bat_conf->recharge_voltage > (bat_conf->load_disconnect_voltage + 1),
-        bat_conf->load_disconnect_voltage > (bat_conf->absolute_min_voltage + 0.4),
-        bat_conf->topping_cutoff_current < (bat_conf->nominal_capacity / 10.0),
-        bat_conf->topping_cutoff_current > 0.01,
-        (bat_conf->float_enabled == false ||
-            (bat_conf->float_voltage < bat_conf->topping_voltage &&
-             bat_conf->float_voltage > bat_conf->load_disconnect_voltage))
-    );
+    struct condition {
+        std::function<bool()> func;
+        const char *text;
+    };
 
-    return (
-        bat_conf->load_reconnect_voltage > (bat_conf->load_disconnect_voltage + 0.4) &&
-        bat_conf->recharge_voltage < (bat_conf->topping_voltage - 0.4) &&
-        bat_conf->recharge_voltage > (bat_conf->load_disconnect_voltage + 1) &&
-        bat_conf->load_disconnect_voltage > (bat_conf->absolute_min_voltage + 0.4) &&
-        // max. 10% drop
-        bat_conf->internal_resistance < bat_conf->load_disconnect_voltage * 0.1 /
-            DISCHARGE_CURRENT_MAX &&
-        // max. 3% loss
-        bat_conf->wire_resistance < bat_conf->topping_voltage * 0.03 / DISCHARGE_CURRENT_MAX &&
-        // C/10 or lower current cutoff allowed
-        bat_conf->topping_cutoff_current < (bat_conf->nominal_capacity / 10.0) &&
-        bat_conf->topping_cutoff_current > 0.01 &&
-        (bat_conf->float_enabled == false ||
-            (bat_conf->float_voltage < bat_conf->topping_voltage &&
-             bat_conf->float_voltage > bat_conf->load_disconnect_voltage))
-    );
+    const condition conditions[] = {
+        {.func =
+             [bat_conf]() {
+                 return bat_conf->load_reconnect_voltage >
+                        (bat_conf->load_disconnect_voltage + 0.4);
+             },
+         .text = "Load Reconnect Voltage must be higher than Load Disconnect Voltage + 0.4"},
+        {.func =
+             [bat_conf]() {
+                 return bat_conf->recharge_voltage < (bat_conf->topping_voltage - 0.4);
+             },
+         .text = "Recharge Voltage must be lower than Topping Voltage - 0.4"},
+        {.func =
+             [bat_conf]() {
+                 return bat_conf->recharge_voltage > (bat_conf->load_disconnect_voltage + 1);
+             },
+         .text = "Recharge Voltage must be higher than Load Disconnect Voltage + 1.0"},
+        {.func =
+             [bat_conf]() {
+                 return bat_conf->load_disconnect_voltage > (bat_conf->absolute_min_voltage + 0.4);
+             },
+         .text = "Load Disconnecct Voltage must be higher than Absolute Min Voltage + 0.4"},
+        {.func =
+             [bat_conf]() {
+                 return bat_conf->internal_resistance <
+                        bat_conf->load_disconnect_voltage * 0.1 / DISCHARGE_CURRENT_MAX;
+             },
+         .text = "Internal Battery Resistance must not cause more than 10% drop at Max Discharge "
+                 "Current"},
+        {.func =
+             [bat_conf]() {
+                 return bat_conf->wire_resistance <
+                        bat_conf->topping_voltage * 0.03 / DISCHARGE_CURRENT_MAX;
+             },
+         .text = "Wire Resistances must not cause more than 3% drop at Max Discharge Current"},
+        {.func =
+             [bat_conf]() {
+                 return bat_conf->topping_cutoff_current < (bat_conf->nominal_capacity / 10.0);
+             },
+         .text = "Topping Cutoff Current must be less than 10% of Nominal Capacity (C/10)"},
+        {.func = [bat_conf]() { return bat_conf->topping_cutoff_current > 0.01; },
+         .text = "Topping Cutoff Current must be higher than 0.01A"},
+        {.func =
+             [bat_conf]() {
+                 return bat_conf->float_enabled == false ||
+                        bat_conf->float_voltage < bat_conf->topping_voltage;
+             },
+         .text = "Floating Charge Voltage must be lower than Topping Voltage"},
+        {.func =
+             [bat_conf]() {
+                 return bat_conf->float_enabled == false ||
+                        bat_conf->float_voltage > bat_conf->load_disconnect_voltage;
+             },
+         .text = "Floating Charge Voltage must be higher than Topping Voltage"},
+    };
+
+    bool result = true;
+    for (auto cond : conditions) {
+        bool cond_res = cond.func();
+        if (cond_res == false) {
+            LOG_ERR("battery_conf_check: failed condition '%s'", cond.text);
+        }
+        result = result && cond_res;
+    }
+
+    return result;
 }
 
 void battery_conf_overwrite(BatConf *source, BatConf *destination, Charger *charger)
