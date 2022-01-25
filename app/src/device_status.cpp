@@ -8,11 +8,11 @@
 
 #include <zephyr.h>
 
-#include <math.h>       // for fabs function
+#include <math.h> // for fabs function
 #include <stdio.h>
 
-#include "setup.h"
 #include "helper.h"
+#include "setup.h"
 
 //----------------------------------------------------------------------------
 // must be called exactly once per second, otherwise energy calculation gets wrong
@@ -27,10 +27,10 @@ void DeviceStatus::update_energy()
     static uint32_t load_out_total_Wh_prev;
     static uint32_t bat_chg_total_Wh_prev;
     static uint32_t bat_dis_total_Wh_prev;
-    #if CONFIG_HV_TERMINAL_NANOGRID
+#if CONFIG_HV_TERMINAL_NANOGRID
     static uint32_t grid_import_total_Wh_prev;
     static uint32_t grid_export_total_Wh_prev;
-    #endif
+#endif
 
     static bool first_call = true;
     if (first_call) {
@@ -39,10 +39,10 @@ void DeviceStatus::update_energy()
         load_out_total_Wh_prev = load_out_total_Wh;
         bat_chg_total_Wh_prev = bat_chg_total_Wh;
         bat_dis_total_Wh_prev = bat_dis_total_Wh;
-        #if CONFIG_HV_TERMINAL_NANOGRID
+#if CONFIG_HV_TERMINAL_NANOGRID
         grid_import_total_Wh_prev = grid_import_total_Wh;
         grid_export_total_Wh_prev = grid_export_total_Wh;
-        #endif
+#endif
         first_call = false;
     }
 
@@ -57,51 +57,50 @@ void DeviceStatus::update_energy()
     else {
         // solar voltage > battery voltage after 5 hours of night time means sunrise in the morning
         // --> reset daily energy counters
-        if (seconds_zero_solar > 60*60*5) {
+        if (seconds_zero_solar > 60 * 60 * 5) {
             day_counter++;
             solar_in_total_Wh_prev = solar_in_total_Wh;
             load_out_total_Wh_prev = load_out_total_Wh;
             bat_chg_total_Wh_prev = bat_chg_total_Wh;
             bat_dis_total_Wh_prev = bat_dis_total_Wh;
-            #if CONFIG_HV_TERMINAL_NANOGRID
+#if CONFIG_HV_TERMINAL_NANOGRID
             grid_import_total_Wh_prev = grid_import_total_Wh;
             grid_export_total_Wh_prev = grid_export_total_Wh;
-            #endif
+#endif
             solar_terminal.neg_energy_Wh = 0.0;
-            #if BOARD_HAS_LOAD_OUTPUT
+#if BOARD_HAS_LOAD_OUTPUT
             load.pos_energy_Wh = 0.0;
-            #endif
+#endif
             bat_terminal.pos_energy_Wh = 0.0;
             bat_terminal.neg_energy_Wh = 0.0;
-            #if CONFIG_HV_TERMINAL_NANOGRID
+#if CONFIG_HV_TERMINAL_NANOGRID
             grid_terminal.pos_energy_Wh = 0.0;
             grid_terminal.neg_energy_Wh = 0.0;
-            #endif
+#endif
         }
         seconds_zero_solar = 0;
     }
 #endif
 
-    bat_chg_total_Wh = bat_chg_total_Wh_prev +
-        (bat_terminal.pos_energy_Wh > 0 ? bat_terminal.pos_energy_Wh : 0);
-    bat_dis_total_Wh = bat_dis_total_Wh_prev +
-        (bat_terminal.neg_energy_Wh > 0 ? bat_terminal.neg_energy_Wh : 0);
+    bat_chg_total_Wh =
+        bat_chg_total_Wh_prev + (bat_terminal.pos_energy_Wh > 0 ? bat_terminal.pos_energy_Wh : 0);
+    bat_dis_total_Wh =
+        bat_dis_total_Wh_prev + (bat_terminal.neg_energy_Wh > 0 ? bat_terminal.neg_energy_Wh : 0);
 
 #if CONFIG_HV_TERMINAL_SOLAR || CONFIG_LV_TERMINAL_SOLAR || CONFIG_PWM_TERMINAL_SOLAR
-    solar_in_total_Wh = solar_in_total_Wh_prev +
-        (solar_terminal.neg_energy_Wh > 0 ? solar_terminal.neg_energy_Wh : 0);
+    solar_in_total_Wh = solar_in_total_Wh_prev
+                        + (solar_terminal.neg_energy_Wh > 0 ? solar_terminal.neg_energy_Wh : 0);
 #endif
 
 #if BOARD_HAS_LOAD_OUTPUT
-    load_out_total_Wh = load_out_total_Wh_prev +
-        (load.pos_energy_Wh > 0 ? load.pos_energy_Wh : 0);
+    load_out_total_Wh = load_out_total_Wh_prev + (load.pos_energy_Wh > 0 ? load.pos_energy_Wh : 0);
 #endif
 
 #if CONFIG_HV_TERMINAL_NANOGRID
-    grid_import_total_Wh = grid_import_total_Wh_prev +
-        (grid_terminal.neg_energy_Wh > 0 ? grid_terminal.neg_energy_Wh : 0);
-    grid_export_total_Wh = grid_export_total_Wh_prev +
-        (grid_terminal.pos_energy_Wh > 0 ? grid_terminal.pos_energy_Wh : 0);
+    grid_import_total_Wh = grid_import_total_Wh_prev
+                           + (grid_terminal.neg_energy_Wh > 0 ? grid_terminal.neg_energy_Wh : 0);
+    grid_export_total_Wh = grid_export_total_Wh_prev
+                           + (grid_terminal.pos_energy_Wh > 0 ? grid_terminal.pos_energy_Wh : 0);
 #endif
 }
 

@@ -14,8 +14,8 @@
 #include "setup.h"
 
 #ifdef CONFIG_SOC_FAMILY_STM32
-#include <soc.h>
 #include <pinmux/pinmux_stm32.h>
+#include <soc.h>
 #include <stm32_ll_bus.h>
 #endif
 
@@ -26,7 +26,7 @@
 // Get address of used timer from board dts
 #define TIMER_ADDR DT_REG_ADDR(DT_PARENT(DT_DRV_INST(0)))
 
-static uint16_t tim_ccr_min;        // capture/compare register min/max
+static uint16_t tim_ccr_min; // capture/compare register min/max
 static uint16_t tim_ccr_max;
 static uint16_t tim_dt_clocks = 0;
 
@@ -81,7 +81,7 @@ static void tim_init_registers(int freq_kHz)
     // Auto Reload Register
     // center-aligned mode counts up and down in each period, so we need half the clocks as
     // resolution for the given frequency.
-    TIM3->ARR = SystemCoreClock / (freq_kHz * 1000) / 2;;
+    TIM3->ARR = SystemCoreClock / (freq_kHz * 1000) / 2;
 }
 
 void half_bridge_start()
@@ -115,8 +115,8 @@ void half_bridge_set_ccr(uint16_t ccr)
 {
     uint16_t ccr_clamped = clamp_ccr(ccr);
 
-    TIM3->CCR3 = ccr_clamped;                   // high-side
-    TIM3->CCR4 = ccr_clamped + tim_dt_clocks;   // low-side
+    TIM3->CCR3 = ccr_clamped;                 // high-side
+    TIM3->CCR4 = ccr_clamped + tim_dt_clocks; // low-side
 }
 
 bool half_bridge_enabled()
@@ -162,7 +162,7 @@ static void tim_init_registers(int freq_kHz)
     TIM1->CCMR3 |= TIM_CCMR3_OC6M_2 | TIM_CCMR3_OC6M_1 | TIM_CCMR3_OC6PE;
     TIM1->CCER |= TIM_CCER_CC6E;
     // Trigger ADC via TIM1_TRGO2 on OC6ref falling edge signal event
-    TIM1->CR2 |= TIM_CR2_MMS2_3 | TIM_CR2_MMS2_2 |  TIM_CR2_MMS2_0;
+    TIM1->CR2 |= TIM_CR2_MMS2_3 | TIM_CR2_MMS2_2 | TIM_CR2_MMS2_0;
 #endif
 
     // Force update generation (UG = 1)
@@ -229,8 +229,8 @@ bool half_bridge_enabled()
  * possible higher resolution yet.
  */
 
-#include <stm32_ll_system.h>
 #include <stm32_ll_bus.h>
+#include <stm32_ll_system.h>
 
 static void tim_init_registers(int freq_kHz)
 {
@@ -242,7 +242,8 @@ static void tim_init_registers(int freq_kHz)
     HRTIM1->sCommonRegs.DLLCR |= HRTIM_DLLCR_CALEN | HRTIM_DLLCR_CALRTE_0 | HRTIM_DLLCR_CALRTE_1;
 
     // Wait for calibration to finish
-    while ((HRTIM1_COMMON->ISR & HRTIM_ISR_DLLRDY) == 0) {;}
+    while ((HRTIM1_COMMON->ISR & HRTIM_ISR_DLLRDY) == 0) {
+    }
 
     // Prescaler 32 --> SystemClock (same as normal timers like TIM1)
     HRTIM1_TIMA->TIMxCR |= (5U << HRTIM_TIMCR_CK_PSC_Pos);
@@ -254,10 +255,10 @@ static void tim_init_registers(int freq_kHz)
     HRTIM1_TIMA->TIMxCR |= HRTIM_TIMCR_CONT;
 
     // Enable preloading with timer reset update trigger
-    //HRTIM1_TIMA->TIMxCR |= HRTIM_TIMCR_PREEN | HRTIM_TIMCR_TRSTU;
+    // HRTIM1_TIMA->TIMxCR |= HRTIM_TIMCR_PREEN | HRTIM_TIMCR_TRSTU;
 
     // Enable preloading with timer E update trigger
-    //HRTIM1_TIMA->TIMxCR |= HRTIM_TIMCR_PREEN | HRTIM_TIMCR_TEU;
+    // HRTIM1_TIMA->TIMxCR |= HRTIM_TIMCR_PREEN | HRTIM_TIMCR_TEU;
 
     // Timer period register
     HRTIM1_TIMA->PERxR = SystemCoreClock / (freq_kHz * 1000) + 1;
@@ -269,11 +270,10 @@ static void tim_init_registers(int freq_kHz)
 
     // Set deadtime values and lock deadtime signs
     HRTIM1_TIMA->DTxR |=
-        HRTIM_DTR_DTFSLK | (tim_dt_clocks << 16U) |
-        HRTIM_DTR_DTRSLK | tim_dt_clocks;
+        HRTIM_DTR_DTFSLK | (tim_dt_clocks << 16U) | HRTIM_DTR_DTRSLK | tim_dt_clocks;
 
     // activate trigger for ADC
-    HRTIM1_COMMON->CR1 = HRTIM_CR1_ADC1USRC_0; // ADC trigger update: Timer A
+    HRTIM1_COMMON->CR1 = HRTIM_CR1_ADC1USRC_0;  // ADC trigger update: Timer A
     HRTIM1_COMMON->ADC1R = HRTIM_ADC1R_AD1TAC3; // ADC trigger event: Timer A compare 3
 
     // Start timer A
@@ -354,7 +354,7 @@ uint16_t half_bridge_get_ccr()
 
 void half_bridge_set_ccr(uint16_t ccr)
 {
-    tim_ccr = clamp_ccr(ccr);          // high-side
+    tim_ccr = clamp_ccr(ccr); // high-side
 }
 
 bool half_bridge_enabled()
@@ -381,7 +381,7 @@ void half_bridge_init(int freq_kHz, int deadtime_ns, float min_duty, float max_d
     tim_ccr_min = min_duty * half_bridge_get_arr();
     tim_ccr_max = max_duty * half_bridge_get_arr();
 
-    half_bridge_set_duty_cycle(max_duty);      // init with allowed value
+    half_bridge_set_duty_cycle(max_duty); // init with allowed value
 }
 
 void half_bridge_set_duty_cycle(float duty)

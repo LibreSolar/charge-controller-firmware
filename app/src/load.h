@@ -13,8 +13,8 @@
  * Load/USB output functions and data types
  */
 
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <time.h>
 
 #ifdef __cplusplus
@@ -24,18 +24,19 @@
 /**
  * Load/USB output states
  */
-enum LoadState {
-    LOAD_STATE_OFF = 0,             ///< Actively disabled
-    LOAD_STATE_ON = 1,              ///< Normal state: On
+enum LoadState
+{
+    LOAD_STATE_OFF = 0, ///< Actively disabled
+    LOAD_STATE_ON = 1,  ///< Normal state: On
 };
-
 
 /** Load error flags
  *
  * When adding new flags, please make sure to use only up to 32 errors
  * Each enum must represent a unique power of 2 number
  */
-enum LoadErrorFlag {
+enum LoadErrorFlag
+{
     /**
      * Available energy or power too low
      *
@@ -93,7 +94,8 @@ class LoadOutput : public PowerPort
 {
 public:
     /**
-     * Initialize LoadOutput struct and overcurrent / short circuit protection comparator (if existing)
+     * Initialize LoadOutput struct and overcurrent / short circuit protection comparator (if
+     * existing)
      *
      * @param dc_bus DC bus the load is connected to
      * @param switch_fn Pointer to function for enabling/disabling load switch
@@ -125,33 +127,33 @@ public:
      */
     void set_voltage_limits(float lvd, float lvr, float ov);
 
-    uint32_t state;             ///< Current state of load output switch
+    uint32_t state; ///< Current state of load output switch
 
-    uint32_t error_flags = 0;   ///< Stores error flags as bits according to LoadErrorFlag enum
+    uint32_t error_flags = 0; ///< Stores error flags as bits according to LoadErrorFlag enum
 
-    int32_t info;               ///< Contains either the state or negative value of error_flags
-                                ///< in case of error_flags > 0. This allows to have a single
-                                ///< variable for load state diagnosis.
+    int32_t info; ///< Contains either the state or negative value of error_flags
+                  ///< in case of error_flags > 0. This allows to have a single
+                  ///< variable for load state diagnosis.
 
-    bool enable = false;        ///< Target on state set via communication port (overruled if
-                                ///< battery is empty or any errors occured)
+    bool enable = false; ///< Target on state set via communication port (overruled if
+                         ///< battery is empty or any errors occured)
 
     time_t oc_timestamp;        ///< Time when last overcurrent event occured
     uint32_t oc_recovery_delay; ///< Seconds before we attempt to re-enable the load
                                 ///< after an overcurrent event
 
-    float disconnect_voltage = 0;   ///< Low voltage disconnect (LVD) setpoint
-    float reconnect_voltage = 0;    ///< Low voltage reconnect (LVD) setpoint
+    float disconnect_voltage = 0; ///< Low voltage disconnect (LVD) setpoint
+    float reconnect_voltage = 0;  ///< Low voltage reconnect (LVD) setpoint
 
-    time_t lvd_timestamp;       ///< Time when last low voltage disconnect happened
-    uint32_t lvd_recovery_delay;///< Seconds before we re-enable the load after a low voltage
-                                ///< disconnect
+    time_t lvd_timestamp;        ///< Time when last low voltage disconnect happened
+    uint32_t lvd_recovery_delay; ///< Seconds before we re-enable the load after a low voltage
+                                 ///< disconnect
 
     float junction_temperature; ///< calculated using thermal model based on current and ambient
                                 ///< temperature measurement (unit: °C)
 
-    float overvoltage = 0;      ///< Upper voltage limit
-    float ov_hysteresis;        ///< Hysteresis to switch back on after an overvoltage event
+    float overvoltage = 0; ///< Upper voltage limit
+    float ov_hysteresis;   ///< Hysteresis to switch back on after an overvoltage event
 
 private:
     /**
@@ -175,7 +177,6 @@ private:
     int ov_debounce_counter = 0;
 };
 #endif
-
 
 #ifdef __cplusplus
 extern "C" {

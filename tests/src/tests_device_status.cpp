@@ -6,9 +6,9 @@
 
 #include "tests.h"
 
-#include <time.h>
-#include <stdio.h>
 #include <math.h>
+#include <stdio.h>
+#include <time.h>
 
 #include "setup.h"
 
@@ -23,7 +23,7 @@ void reset_counters_at_start_of_day()
     bat_terminal.pos_energy_Wh = 4.0;
     load.pos_energy_Wh = 9.0;
 
-    // 5 houurs without sun
+    // 5 hours without sun
     for (int i = 0; i <= 5 * 60 * 60; i++) {
         dev_stat.update_energy();
     }

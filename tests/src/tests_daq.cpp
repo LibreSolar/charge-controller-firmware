@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "tests.h"
 #include "daq.h"
 #include "daq_stub.h"
 #include "helper.h"
 #include "setup.h"
+#include "tests.h"
 
 #include <stdint.h>
 
@@ -70,14 +70,14 @@ void check_solar_terminal_readings()
 {
     TEST_ASSERT_EQUAL_FLOAT(adcval.solar_voltage, round(hv_terminal.bus->voltage * 10) / 10);
     TEST_ASSERT_EQUAL_FLOAT(adcval.dcdc_current / adcval.solar_voltage * adcval.battery_voltage,
-        -round(hv_terminal.current * 10) / 10);
+                            -round(hv_terminal.current * 10) / 10);
 }
 
 void check_bat_terminal_readings()
 {
     TEST_ASSERT_EQUAL_FLOAT(adcval.battery_voltage, round(lv_terminal.bus->voltage * 10) / 10);
     TEST_ASSERT_EQUAL_FLOAT(adcval.dcdc_current - adcval.load_current,
-        round(lv_terminal.current * 10) / 10);
+                            round(lv_terminal.current * 10) / 10);
 }
 
 void check_load_terminal_readings()
@@ -116,7 +116,7 @@ void adc_alert_lv_undervoltage_triggering()
     daq_update();
 
     charger.discharge_control(&bat_conf);
-    TEST_ASSERT_EQUAL(false, dev_stat.has_error(ERR_BAT_UNDERVOLTAGE));  // ToDo
+    TEST_ASSERT_EQUAL(false, dev_stat.has_error(ERR_BAT_UNDERVOLTAGE)); // ToDo
 }
 
 void adc_alert_lv_overvoltage_triggering()
@@ -136,7 +136,7 @@ void adc_alert_lv_overvoltage_triggering()
     TEST_ASSERT_EQUAL(false, dev_stat.has_error(ERR_BAT_OVERVOLTAGE));
     adc_update_value(ADC_POS(v_low));
     TEST_ASSERT_EQUAL(true, dev_stat.has_error(ERR_BAT_OVERVOLTAGE));
-    //TEST_ASSERT_EQUAL(false, pwm_switch.active());
+    // TEST_ASSERT_EQUAL(false, pwm_switch.active());
     TEST_ASSERT_EQUAL(DCDC_CONTROL_OFF, dcdc.state);
 
     // reset values
@@ -203,7 +203,7 @@ int daq_tests()
     RUN_TEST(check_bat_terminal_readings);
     RUN_TEST(check_load_terminal_readings);
 
-    //RUN_TEST(check_temperature_readings);     // TODO
+    // RUN_TEST(check_temperature_readings);     // TODO
 
     RUN_TEST(adc_alert_lv_undervoltage_triggering);
     RUN_TEST(adc_alert_lv_overvoltage_triggering);

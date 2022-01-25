@@ -6,11 +6,11 @@
 
 #include "hardware.h"
 
-#include "mcu.h"
-#include "load.h"
-#include "helper.h"
 #include "half_bridge.h"
+#include "helper.h"
 #include "leds.h"
+#include "load.h"
+#include "mcu.h"
 #include "setup.h"
 
 #ifndef UNIT_TEST
@@ -19,8 +19,8 @@
 #define BOOT0_GPIO DT_CHILD(DT_PATH(outputs), boot0)
 #endif
 
-#include <power/reboot.h>
 #include <drivers/gpio.h>
+#include <power/reboot.h>
 
 LOG_MODULE_REGISTER(hardware, CONFIG_HW_LOG_LEVEL);
 
@@ -30,9 +30,9 @@ void start_stm32_bootloader()
     // pin is connected to BOOT0 via resistor and capacitor
     const struct device *dev = device_get_binding(DT_GPIO_LABEL(BOOT0_GPIO, gpios));
     gpio_pin_configure(dev, DT_GPIO_PIN(BOOT0_GPIO, gpios),
-        DT_GPIO_FLAGS(BOOT0_GPIO, gpios) | GPIO_OUTPUT_ACTIVE);
+                       DT_GPIO_FLAGS(BOOT0_GPIO, gpios) | GPIO_OUTPUT_ACTIVE);
 
-    k_sleep(K_MSEC(100));   // wait for capacitor at BOOT0 pin to charge up
+    k_sleep(K_MSEC(100)); // wait for capacitor at BOOT0 pin to charge up
     reset_device();
 #elif defined(CONFIG_SOC_SERIES_STM32G4X)
     if ((FLASH->CR & FLASH_CR_OPTLOCK) != 0U) {
@@ -75,12 +75,12 @@ void reset_device()
 
 void task_wdt_callback(int channel_id, void *user_data)
 {
-	printk("Task watchdog callback (channel: %d, thread: %s)\n",
-		channel_id, k_thread_name_get((k_tid_t)user_data));
+    printk("Task watchdog callback (channel: %d, thread: %s)\n", channel_id,
+           k_thread_name_get((k_tid_t)user_data));
 
-	printk("Resetting device...\n");
+    printk("Resetting device...\n");
 
-	sys_reboot(SYS_REBOOT_COLD);
+    sys_reboot(SYS_REBOOT_COLD);
 }
 
 #else

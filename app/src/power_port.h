@@ -12,11 +12,11 @@
  * @brief Definition of charge controller terminals and internal DC buses
  */
 
-#include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 
-class PowerPort;    // forward-declaration
+class PowerPort; // forward-declaration
 
 /**
  * DC bus class
@@ -231,8 +231,7 @@ public:
      * @param assign_ref_current defines if the bus ref_current should point to the current
      *                           of this port (must be true for at least one port)
      */
-    PowerPort(DcBus *dc_bus, bool assign_ref_current = false) :
-        bus(dc_bus)
+    PowerPort(DcBus *dc_bus, bool assign_ref_current = false) : bus(dc_bus)
     {
         if (assign_ref_current) {
             bus->ref_current = &current;

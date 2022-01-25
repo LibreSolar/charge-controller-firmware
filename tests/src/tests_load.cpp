@@ -4,13 +4,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "tests.h"
-#include "daq_stub.h"
 #include "daq.h"
+#include "daq_stub.h"
+#include "tests.h"
 
-#include <time.h>
-#include <stdio.h>
 #include <math.h>
+#include <stdio.h>
+#include <time.h>
 
 #include "setup.h"
 
@@ -103,7 +103,7 @@ void control_on_to_off_overvoltage()
     TEST_ASSERT_EQUAL(0, load_out.error_flags);
     TEST_ASSERT_EQUAL(LOAD_STATE_ON, load_out.state);
 
-    load_out.control();     // once more
+    load_out.control(); // once more
     TEST_ASSERT_EQUAL(ERR_LOAD_OVERVOLTAGE, load_out.error_flags);
     TEST_ASSERT_EQUAL(LOAD_STATE_OFF, load_out.state);
 }
@@ -124,7 +124,7 @@ void control_on_to_off_overvoltage_dual_battery()
     TEST_ASSERT_EQUAL(0, load_out.error_flags);
     TEST_ASSERT_EQUAL(LOAD_STATE_ON, load_out.state);
 
-    load_out.control();     // once more
+    load_out.control(); // once more
     TEST_ASSERT_EQUAL(ERR_LOAD_OVERVOLTAGE, load_out.error_flags);
     TEST_ASSERT_EQUAL(LOAD_STATE_OFF, load_out.state);
 }
@@ -140,7 +140,8 @@ void control_on_to_off_overcurrent()
     load_out.control();
     TEST_ASSERT_EQUAL(LOAD_STATE_ON, load_out.state);
 
-    // almost 2x current = 4x heat generation: Should definitely trigger after waiting one time constant
+    // almost 2x current = 4x heat generation: Should definitely trigger after waiting one time
+    // constant
     int trigger_steps = DT_PROP(DT_PATH(pcb), mosfets_tau_ja) * CONFIG_CONTROL_FREQUENCY;
     for (int i = 0; i <= trigger_steps; i++) {
         load_out.control();
@@ -233,7 +234,7 @@ void control_off_overvoltage_to_on_at_lower_voltage()
     TEST_ASSERT_EQUAL(ERR_LOAD_OVERVOLTAGE, load_out.error_flags);
     TEST_ASSERT_EQUAL(LOAD_STATE_OFF, load_out.state);
 
-    bus.voltage = load_out.overvoltage - 0.1;     // test hysteresis
+    bus.voltage = load_out.overvoltage - 0.1; // test hysteresis
     load_out.control();
     TEST_ASSERT_EQUAL(ERR_LOAD_OVERVOLTAGE, load_out.error_flags);
     TEST_ASSERT_EQUAL(LOAD_STATE_OFF, load_out.state);
@@ -256,7 +257,7 @@ void control_off_overvoltage_to_on_at_lower_voltage_dual_battery()
     TEST_ASSERT_EQUAL(ERR_LOAD_OVERVOLTAGE, load_out.error_flags);
     TEST_ASSERT_EQUAL(LOAD_STATE_OFF, load_out.state);
 
-    bus.voltage = (load_out.overvoltage - 0.1) * bus.series_multiplier;     // test hysteresis
+    bus.voltage = (load_out.overvoltage - 0.1) * bus.series_multiplier; // test hysteresis
     load_out.control();
     TEST_ASSERT_EQUAL(ERR_LOAD_OVERVOLTAGE, load_out.error_flags);
     TEST_ASSERT_EQUAL(LOAD_STATE_OFF, load_out.state);
@@ -278,7 +279,7 @@ void control_off_short_circuit_flag_reset()
     TEST_ASSERT_EQUAL(ERR_LOAD_SHORT_CIRCUIT, load_out.error_flags);
     TEST_ASSERT_EQUAL(LOAD_STATE_OFF, load_out.state);
 
-    load_out.enable = false;        // this is like a manual reset
+    load_out.enable = false; // this is like a manual reset
     load_out.control();
     TEST_ASSERT_EQUAL(0, load_out.error_flags);
     TEST_ASSERT_EQUAL(LOAD_STATE_OFF, load_out.state);

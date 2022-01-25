@@ -6,32 +6,32 @@
 
 #ifndef UNIT_TEST
 
-#include <zephyr.h>
-#include <stdio.h>
 #include <device.h>
 #include <drivers/gpio.h>
+#include <stdio.h>
 #include <task_wdt/task_wdt.h>
+#include <zephyr.h>
 
-#include "thingset.h"           // handles access to internal data via communication interfaces
-#include "setup.h"
 #include "helper.h"
+#include "setup.h"
+#include "thingset.h" // handles access to internal data via communication interfaces
 
-#include "half_bridge.h"        // PWM generation for DC/DC converter
-#include "hardware.h"           // hardware-related functions like load switch, LED control, watchdog, etc.
-#include "dcdc.h"               // DC/DC converter control (hardware independent)
-#include "pwm_switch.h"         // PWM charge controller
-#include "bat_charger.h"        // battery settings and charger state machine
-#include "daq.h"                // ADC using DMA and conversion to measurement values
-#include "data_storage.h"       // non-volatile data storage (e.g. EEPROM)
-#include "load.h"               // load and USB output management
-#include "leds.h"               // LED switching using charlieplexing
-#include "device_status.h"      // log data (error memory, min/max measurements, etc.)
-#include "data_objects.h"         // for access to internal data via ThingSet
+#include "bat_charger.h"   // battery settings and charger state machine
+#include "daq.h"           // ADC using DMA and conversion to measurement values
+#include "data_objects.h"  // for access to internal data via ThingSet
+#include "data_storage.h"  // non-volatile data storage (e.g. EEPROM)
+#include "dcdc.h"          // DC/DC converter control (hardware independent)
+#include "device_status.h" // log data (error memory, min/max measurements, etc.)
+#include "half_bridge.h"   // PWM generation for DC/DC converter
+#include "hardware.h"   // hardware-related functions like load switch, LED control, watchdog, etc.
+#include "leds.h"       // LED switching using charlieplexing
+#include "load.h"       // load and USB output management
+#include "pwm_switch.h" // PWM charge controller
 
 void main(void)
 {
-    printf("Hardware: Libre Solar %s (%s)\n",
-        DT_PROP(DT_PATH(pcb), type), DT_PROP(DT_PATH(pcb), version_str));
+    printf("Hardware: Libre Solar %s (%s)\n", DT_PROP(DT_PATH(pcb), type),
+           DT_PROP(DT_PATH(pcb), version_str));
     printf("Firmware: %s\n", FIRMWARE_VERSION_ID);
 
     task_wdt_init(device_get_binding(DT_LABEL(DT_NODELABEL(iwdg))));
@@ -39,19 +39,19 @@ void main(void)
     setup();
 
     battery_conf_init(&bat_conf, CONFIG_BAT_TYPE, CONFIG_BAT_NUM_CELLS, CONFIG_BAT_CAPACITY_AH);
-    battery_conf_overwrite(&bat_conf, &bat_conf_user);  // initialize conf_user with same values
+    battery_conf_overwrite(&bat_conf, &bat_conf_user); // initialize conf_user with same values
 
-    #if BOARD_HAS_DCDC
+#if BOARD_HAS_DCDC
     daq_set_hv_limit(DT_PROP(DT_PATH(pcb), hs_voltage_max));
-    #endif
+#endif
 
-    #if CONFIG_HV_TERMINAL_SOLAR || CONFIG_LV_TERMINAL_SOLAR || CONFIG_PWM_TERMINAL_SOLAR
+#if CONFIG_HV_TERMINAL_SOLAR || CONFIG_LV_TERMINAL_SOLAR || CONFIG_PWM_TERMINAL_SOLAR
     solar_terminal.init_solar();
-    #endif
+#endif
 
-    #if CONFIG_HV_TERMINAL_NANOGRID
+#if CONFIG_HV_TERMINAL_NANOGRID
     grid_terminal.init_nanogrid();
-    #endif
+#endif
 
     // read custom configuration from EEPROM
     data_objects_init();
@@ -59,18 +59,18 @@ void main(void)
     // Data Acquisition (DAQ) setup
     daq_setup();
 
-    charger.detect_num_batteries(&bat_conf);     // check if we have 24V instead of 12V system
+    charger.detect_num_batteries(&bat_conf); // check if we have 24V instead of 12V system
     charger.init_terminal(&bat_conf);
 
-    #if BOARD_HAS_LOAD_OUTPUT
+#if BOARD_HAS_LOAD_OUTPUT
     load.set_voltage_limits(bat_conf.load_disconnect_voltage, bat_conf.load_reconnect_voltage,
-        bat_conf.absolute_max_voltage);
-    #endif
+                            bat_conf.absolute_max_voltage);
+#endif
 
-    #if BOARD_HAS_USB_OUTPUT
+#if BOARD_HAS_USB_OUTPUT
     usb_pwr.set_voltage_limits(bat_conf.load_disconnect_voltage - 0.1, // keep on longer than load
-        bat_conf.load_reconnect_voltage, bat_conf.absolute_max_voltage);
-    #endif
+                               bat_conf.load_reconnect_voltage, bat_conf.absolute_max_voltage);
+#endif
 
     // wait until all threads are spawned before activating the watchdog
     k_sleep(K_MSEC(2500));
@@ -83,44 +83,44 @@ void main(void)
         charger.discharge_control(&bat_conf);
         charger.charge_control(&bat_conf);
 
-        // energy + soc calculation must be called exactly once per second
-        #if BOARD_HAS_DCDC
-        if  (dcdc.state != DCDC_CONTROL_OFF) {
+// energy + soc calculation must be called exactly once per second
+#if BOARD_HAS_DCDC
+        if (dcdc.state != DCDC_CONTROL_OFF) {
             hv_terminal.energy_balance();
         }
-        #endif
+#endif
 
-        #if BOARD_HAS_PWM_PORT
+#if BOARD_HAS_PWM_PORT
         if (pwm_switch.active() == 1) {
             pwm_switch.energy_balance();
         }
-        #endif
+#endif
 
         lv_terminal.energy_balance();
 
-        #if BOARD_HAS_LOAD_OUTPUT
+#if BOARD_HAS_LOAD_OUTPUT
         if (load.state == 1) {
             load.energy_balance();
         }
-        #endif
+#endif
 
         dev_stat.update_energy();
         dev_stat.update_min_max_values();
         charger.update_soc(&bat_conf);
 
-        #if CONFIG_HS_MOSFET_FAIL_SAFE_PROTECTION && BOARD_HAS_DCDC
+#if CONFIG_HS_MOSFET_FAIL_SAFE_PROTECTION && BOARD_HAS_DCDC
         if (dev_stat.has_error(ERR_DCDC_HS_MOSFET_SHORT)) {
             dcdc.fuse_destruction();
         }
-        #endif
+#endif
 
         leds_update_1s();
 
-        #if BOARD_HAS_LOAD_OUTPUT
+#if BOARD_HAS_LOAD_OUTPUT
         leds_update_soc(charger.soc, flags_check(&load.error_flags, ERR_LOAD_SHEDDING));
-        #else
+#else
         leds_update_soc(charger.soc, false);
-        #endif
+#endif
 
         data_storage_update();
 
@@ -148,26 +148,26 @@ void control_thread()
 
         lv_terminal.update_bus_current_margins();
 
-        #if BOARD_HAS_PWM_PORT
+#if BOARD_HAS_PWM_PORT
         pwm_switch.control();
         charging |= pwm_switch.active();
-        #endif
+#endif
 
-        #if BOARD_HAS_DCDC
+#if BOARD_HAS_DCDC
         hv_terminal.update_bus_current_margins();
-        dcdc.control();     // control of DC/DC including MPPT algorithm
+        dcdc.control(); // control of DC/DC including MPPT algorithm
         charging |= half_bridge_enabled();
-        #endif
+#endif
 
         leds_set_charging(charging);
 
-        #if BOARD_HAS_LOAD_OUTPUT
+#if BOARD_HAS_LOAD_OUTPUT
         load.control();
-        #endif
+#endif
 
-        #if BOARD_HAS_USB_OUTPUT
+#if BOARD_HAS_USB_OUTPUT
         usb_pwr.control();
-        #endif
+#endif
 
         k_sleep(K_MSEC(100));
     }

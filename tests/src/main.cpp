@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <stdio.h>
 #include "unity.h"
+#include <stdio.h>
 
-#include <zephyr.h>
 #include <device.h>
+#include <zephyr.h>
 
 #ifdef CONFIG_ARCH_POSIX
 #include "posix_board_if.h"
@@ -18,8 +18,8 @@
 
 extern "C" {
 
-void setUp (void) {}
-void tearDown (void) {}
+void setUp(void) {}
+void tearDown(void) {}
 
 } /* extern "C" */
 

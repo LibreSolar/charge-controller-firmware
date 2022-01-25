@@ -6,17 +6,17 @@
 
 #if CONFIG_THINGSET_SERIAL
 
-#include <string.h>
 #include <stdio.h>
+#include <string.h>
 
-#include <zephyr.h>
-#include <sys/printk.h>
 #include <drivers/uart.h>
+#include <sys/printk.h>
 #include <task_wdt/task_wdt.h>
+#include <zephyr.h>
 
-#include "thingset.h"
-#include "hardware.h"
 #include "data_objects.h"
+#include "hardware.h"
+#include "thingset.h"
 
 #if CONFIG_UEXT_SERIAL_THINGSET
 #define UART_DEVICE_NODE DT_ALIAS(uart_uext)
@@ -34,8 +34,8 @@ static char rx_buf[CONFIG_THINGSET_SERIAL_RX_BUF_SIZE];
 
 static volatile size_t rx_buf_pos = 0;
 
-static struct k_sem command_flag;       // used as an event to signal a received command
-static struct k_sem rx_buf_mutex;       // binary semaphore used as mutex in ISR context
+static struct k_sem command_flag; // used as an event to signal a received command
+static struct k_sem rx_buf_mutex; // binary semaphore used as mutex in ISR context
 
 extern ThingSet ts;
 
@@ -59,8 +59,7 @@ void serial_process_command()
     if (rx_buf_pos > 1) {
         printf("Received Request (%d bytes): %s\n", strlen(rx_buf), rx_buf);
 
-        int len = ts.process((uint8_t *)rx_buf, strlen(rx_buf),
-            (uint8_t *)tx_buf, sizeof(tx_buf));
+        int len = ts.process((uint8_t *)rx_buf, strlen(rx_buf), (uint8_t *)tx_buf, sizeof(tx_buf));
 
         for (int i = 0; i < len; i++) {
             uart_poll_out(uart_dev, tx_buf[i]);
@@ -76,7 +75,7 @@ void serial_process_command()
 /*
  * Read characters from stream until line end \n is detected, afterwards signal available command.
  */
-void serial_cb(const struct device *dev, void* user_data)
+void serial_cb(const struct device *dev, void *user_data)
 {
     uint8_t c;
 
@@ -92,8 +91,8 @@ void serial_cb(const struct device *dev, void* user_data)
         // we accept this at any time, even if the buffer is 'full', since
         // there is always one last character left for the \0
         if (c == '\n') {
-            if (rx_buf_pos > 0 && rx_buf[rx_buf_pos-1] == '\r') {
-                rx_buf[rx_buf_pos-1] = '\0';
+            if (rx_buf_pos > 0 && rx_buf[rx_buf_pos - 1] == '\r') {
+                rx_buf[rx_buf_pos - 1] = '\0';
             }
             else {
                 rx_buf[rx_buf_pos] = '\0';

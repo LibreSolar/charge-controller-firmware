@@ -9,7 +9,8 @@
 
 /** Data to fill adc_filtered array during unit-tests
  */
-typedef struct {
+typedef struct
+{
     float solar_voltage;
     float battery_voltage;
     float dcdc_current;
