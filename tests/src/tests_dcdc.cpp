@@ -8,9 +8,9 @@
 
 #include "half_bridge.h"
 
-#include <time.h>
-#include <stdio.h>
 #include <math.h>
+#include <stdio.h>
+#include <time.h>
 
 #include "setup.h"
 
@@ -49,7 +49,7 @@ static void start_buck()
     half_bridge_init(70, 200, 12 / dcdc.hs_voltage_max, 0.97);
     dcdc.control();
     dcdc.control();
-    dcdc.control();    // call multiple times because of startup delay
+    dcdc.control(); // call multiple times because of startup delay
     TEST_ASSERT_EQUAL(DCDC_CONTROL_MPPT, dcdc.state);
 }
 
@@ -89,7 +89,7 @@ static void start_boost()
     half_bridge_init(70, 200, 12 / dcdc.hs_voltage_max, 0.97);
     dcdc.control();
     dcdc.control();
-    dcdc.control();        // call multiple times because of startup delay
+    dcdc.control(); // call multiple times because of startup delay
     TEST_ASSERT_EQUAL(DCDC_CONTROL_MPPT, dcdc.state);
 }
 
@@ -218,7 +218,7 @@ void buck_derating_output_voltage_too_high()
     lv_terminal.bus->voltage = lv_terminal.bus->sink_voltage_intercept + 0.1;
     dcdc.control();
     float pwm_after = half_bridge_get_duty_cycle();
-    TEST_ASSERT(pwm_after < pwm_before);    // less duty cycle = higher voltage
+    TEST_ASSERT(pwm_after < pwm_before); // less duty cycle = higher voltage
     TEST_ASSERT_EQUAL(DCDC_CONTROL_CV_LS, dcdc.state);
 }
 
@@ -307,7 +307,7 @@ void buck_correct_mppt_operation()
     float pwm2 = half_bridge_get_duty_cycle();
     TEST_ASSERT(pwm2 > pwm1);
 
-    dcdc.power = 6;     // decrease power to make the direction turn around
+    dcdc.power = 6; // decrease power to make the direction turn around
     dcdc.control();
     float pwm3 = half_bridge_get_duty_cycle();
     TEST_ASSERT(pwm3 < pwm2);
@@ -332,7 +332,7 @@ void boost_derating_output_voltage_too_high()
     hv_terminal.bus->voltage = hv_terminal.bus->sink_voltage_intercept + 0.5;
     dcdc.control();
     float pwm_after = half_bridge_get_duty_cycle();
-    TEST_ASSERT(pwm_after > pwm_before);    // higher duty cycle = less power
+    TEST_ASSERT(pwm_after > pwm_before); // higher duty cycle = less power
 }
 
 void boost_derating_output_current_too_high()
@@ -407,7 +407,7 @@ void boost_correct_mppt_operation()
     float pwm2 = half_bridge_get_duty_cycle();
     TEST_ASSERT(pwm2 < pwm1);
 
-    dcdc.power = -6;     // decrease power to make the direction turn around
+    dcdc.power = -6; // decrease power to make the direction turn around
     dcdc.control();
     float pwm3 = half_bridge_get_duty_cycle();
     TEST_ASSERT(pwm3 > pwm2);

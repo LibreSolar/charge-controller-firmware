@@ -139,7 +139,7 @@ void pwm_signal_duty_cycle_step(int delta);
  * cycle limits
  *
  * @param freq_Hz Switching frequency in Hz
-*/
+ */
 void pwm_signal_init_registers(int freq_Hz);
 
 /**

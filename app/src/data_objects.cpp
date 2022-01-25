@@ -6,8 +6,8 @@
 
 #include "data_objects.h"
 
-#include <zephyr.h>
 #include <soc.h>
+#include <zephyr.h>
 
 #include <drivers/hwinfo.h>
 #include <sys/crc.h>
@@ -22,9 +22,9 @@
 #include "data_storage.h"
 #include "dcdc.h"
 #include "hardware.h"
+#include "helper.h"
 #include "setup.h"
 #include "thingset.h"
-#include "helper.h"
 
 LOG_MODULE_REGISTER(data_objects, CONFIG_DATA_OBJECTS_LOG_LEVEL);
 
@@ -72,6 +72,7 @@ uint16_t can_node_addr = CONFIG_THINGSET_CAN_DEFAULT_NODE_ID;
 /**
  * Thing Set Data Objects (see thingset.io for specification)
  */
+/* clang-format off */
 static ThingSetDataObject data_objects[] = {
 
     /*
@@ -1247,8 +1248,9 @@ static ThingSetDataObject data_objects[] = {
     TS_ITEM_FLOAT(0x7001, "CtrlTarget_A", &charger.target_current_control, 1,
         ID_CTRL, TS_ANY_RW, SUBSET_CTRL),
 };
+/* clang-format on */
 
-ThingSet ts(data_objects, sizeof(data_objects)/sizeof(ThingSetDataObject));
+ThingSet ts(data_objects, sizeof(data_objects) / sizeof(ThingSetDataObject));
 
 void data_objects_update_conf()
 {
@@ -1258,7 +1260,7 @@ void data_objects_update_conf()
         battery_conf_overwrite(&bat_conf_user, &bat_conf, &charger);
 #if BOARD_HAS_LOAD_OUTPUT
         load.set_voltage_limits(bat_conf.load_disconnect_voltage, bat_conf.load_reconnect_voltage,
-            bat_conf.absolute_max_voltage);
+                                bat_conf.absolute_max_voltage);
 #endif
         changed = true;
     }
@@ -1302,14 +1304,14 @@ void thingset_auth()
     static const char pass_exp[] = CONFIG_THINGSET_EXPERT_PASSWORD;
     static const char pass_mkr[] = CONFIG_THINGSET_MAKER_PASSWORD;
 
-    if (strlen(pass_exp) == strlen(auth_password) &&
-        strncmp(auth_password, pass_exp, strlen(pass_exp)) == 0)
+    if (strlen(pass_exp) == strlen(auth_password)
+        && strncmp(auth_password, pass_exp, strlen(pass_exp)) == 0)
     {
         LOG_INF("Authenticated as expert user.");
         ts.set_authentication(TS_EXP_MASK | TS_USR_MASK);
     }
-    else if (strlen(pass_mkr) == strlen(auth_password) &&
-        strncmp(auth_password, pass_mkr, strlen(pass_mkr)) == 0)
+    else if (strlen(pass_mkr) == strlen(auth_password)
+             && strncmp(auth_password, pass_mkr, strlen(pass_mkr)) == 0)
     {
         LOG_INF("Authenticated as maker.");
         ts.set_authentication(TS_MKR_MASK | TS_USR_MASK);
@@ -1334,7 +1336,7 @@ void uint64_to_base32(uint64_t in, char *out, size_t size, const char *alphabet)
     }
 
     for (int i = 0; i < len; i++) {
-        out[len-i-1] = alphabet[(in >> (i * 5)) % 32];
+        out[len - i - 1] = alphabet[(in >> (i * 5)) % 32];
     }
     out[len] = '\0';
 }

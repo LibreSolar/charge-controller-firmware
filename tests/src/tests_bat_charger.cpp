@@ -6,8 +6,8 @@
 
 #include "tests.h"
 
-#include <time.h>
 #include <stdio.h>
+#include <time.h>
 
 #include "setup.h"
 
@@ -100,8 +100,8 @@ void stop_topping_after_time_limit()
     charger.target_voltage_timer = bat_conf.topping_duration - 1;
     bat_terminal.current = bat_conf.topping_cutoff_current + 0.1;
     bat_terminal.current_filtered = bat_terminal.current;
-    bat_terminal.bus->voltage = bat_conf.topping_voltage -
-        bat_terminal.current * bat_terminal.bus->sink_droop_res + 0.1;
+    bat_terminal.bus->voltage =
+        bat_conf.topping_voltage - bat_terminal.current * bat_terminal.bus->sink_droop_res + 0.1;
     bat_terminal.bus->voltage_filtered = bat_terminal.bus->voltage;
 
     charger.charge_control(&bat_conf);
@@ -119,8 +119,8 @@ void stop_topping_at_cutoff_current()
     charger.target_voltage_timer = 0;
     bat_terminal.current = bat_conf.topping_cutoff_current - 0.1;
     bat_terminal.current_filtered = bat_terminal.current;
-    bat_terminal.bus->voltage = bat_conf.topping_voltage -
-        bat_terminal.current * bat_terminal.bus->sink_droop_res + 0.1;
+    bat_terminal.bus->voltage =
+        bat_conf.topping_voltage - bat_terminal.current * bat_terminal.bus->sink_droop_res + 0.1;
     bat_terminal.bus->voltage_filtered = bat_terminal.bus->voltage;
     charger.charge_control(&bat_conf);
     TEST_ASSERT_EQUAL(CHG_STATE_FLOAT, charger.state);
@@ -133,8 +133,8 @@ void float_to_idle_for_li_ion()
 
     charger.time_state_changed = time(NULL) - 1;
     bat_terminal.current = bat_conf.topping_cutoff_current - 0.1;
-    bat_terminal.bus->voltage = bat_conf.topping_voltage -
-        bat_terminal.current * bat_terminal.bus->sink_droop_res + 0.1;
+    bat_terminal.bus->voltage =
+        bat_conf.topping_voltage - bat_terminal.current * bat_terminal.bus->sink_droop_res + 0.1;
     charger.charge_control(&bat_conf);
     TEST_ASSERT_EQUAL(CHG_STATE_IDLE, charger.state);
 }
@@ -147,8 +147,7 @@ void no_equalization_if_disabled()
     // set triggers such that it would normally start
     charger.deep_dis_last_equalization =
         charger.num_deep_discharges - bat_conf.equalization_trigger_deep_cycles;
-    charger.time_last_equalization =
-        time(NULL) - bat_conf.equalization_trigger_days * 24*60*60;
+    charger.time_last_equalization = time(NULL) - bat_conf.equalization_trigger_days * 24 * 60 * 60;
 
     charger.time_state_changed = time(NULL) - 1;
     bat_terminal.bus->voltage = bat_conf.topping_voltage + 0.1;
@@ -166,7 +165,7 @@ void no_equalization_if_limits_not_reached()
     charger.deep_dis_last_equalization =
         charger.num_deep_discharges - bat_conf.equalization_trigger_deep_cycles + 1;
     charger.time_last_equalization =
-        time(NULL) - (bat_conf.equalization_trigger_days - 1) * 24*60*60;
+        time(NULL) - (bat_conf.equalization_trigger_days - 1) * 24 * 60 * 60;
 
     charger.time_state_changed = time(NULL) - 1;
     bat_terminal.bus->voltage = bat_conf.topping_voltage + 0.1;
@@ -179,17 +178,15 @@ void float_to_equalization_if_enabled_and_time_limit_reached()
 {
     enter_topping_at_voltage_setpoint();
     bat_conf.equalization_enabled = true;
-    charger.time_last_equalization =
-        time(NULL) - bat_conf.equalization_trigger_days * 24*60*60;
+    charger.time_last_equalization = time(NULL) - bat_conf.equalization_trigger_days * 24 * 60 * 60;
 
     charger.time_state_changed = time(NULL) - 1;
     bat_terminal.current = bat_conf.topping_cutoff_current - 0.1;
-    bat_terminal.bus->voltage = bat_conf.topping_voltage -
-        bat_terminal.current * bat_terminal.bus->sink_droop_res + 0.1;
+    bat_terminal.bus->voltage =
+        bat_conf.topping_voltage - bat_terminal.current * bat_terminal.bus->sink_droop_res + 0.1;
     charger.charge_control(&bat_conf);
     TEST_ASSERT_EQUAL(CHG_STATE_EQUALIZATION, charger.state);
 }
-
 
 void float_to_equalization_if_enabled_and_deep_dis_limit_reached()
 {
@@ -200,20 +197,19 @@ void float_to_equalization_if_enabled_and_deep_dis_limit_reached()
 
     charger.time_state_changed = time(NULL) - 1;
     bat_terminal.current = bat_conf.topping_cutoff_current - 0.1;
-    bat_terminal.bus->voltage = bat_conf.topping_voltage -
-        bat_terminal.current * bat_terminal.bus->sink_droop_res + 0.1;
+    bat_terminal.bus->voltage =
+        bat_conf.topping_voltage - bat_terminal.current * bat_terminal.bus->sink_droop_res + 0.1;
     charger.charge_control(&bat_conf);
     TEST_ASSERT_EQUAL(CHG_STATE_EQUALIZATION, charger.state);
 }
-
 
 void stop_equalization_after_time_limit()
 {
     float_to_equalization_if_enabled_and_time_limit_reached();
 
     charger.time_state_changed = time(NULL) - bat_conf.equalization_duration + 1;
-    bat_terminal.bus->voltage = bat_conf.equalization_voltage -
-        bat_terminal.current * bat_terminal.bus->sink_droop_res + 0.1;
+    bat_terminal.bus->voltage = bat_conf.equalization_voltage
+                                - bat_terminal.current * bat_terminal.bus->sink_droop_res + 0.1;
 
     charger.charge_control(&bat_conf);
     TEST_ASSERT_EQUAL(CHG_STATE_EQUALIZATION, charger.state);
@@ -322,7 +318,7 @@ int bat_charger_tests()
     RUN_TEST(float_to_equalization_if_enabled_and_deep_dis_limit_reached);
     RUN_TEST(stop_equalization_after_time_limit);
 
-    //RUN_TEST(restart_bulk_from_float_if_voltage_drops);
+    // RUN_TEST(restart_bulk_from_float_if_voltage_drops);
 
     // TODO: temperature compensation
     // TODO: current compensation
@@ -332,11 +328,11 @@ int bat_charger_tests()
     RUN_TEST(stop_discharge_at_undertemp);
     RUN_TEST(restart_discharge_if_allowed);
 
-    //RUN_TEST(battery_values_propagated_to_lv_bus_int);
+    // RUN_TEST(battery_values_propagated_to_lv_bus_int);
 
     // ToDo: SOC calculation
-    //RUN_TEST(no_soc_above_100);
-    //RUN_TEST(no_soc_below_0);
+    // RUN_TEST(no_soc_above_100);
+    // RUN_TEST(no_soc_below_0);
 
     return UNITY_END();
 }

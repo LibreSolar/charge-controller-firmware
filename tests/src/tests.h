@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <unity.h>
 #include <time.h>
+#include <unity.h>
 
 int bat_charger_tests();
 

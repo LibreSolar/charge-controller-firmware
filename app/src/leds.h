@@ -44,15 +44,17 @@ extern "C" {
  * Enum for numbering of LEDs in the order specified in board.dts
  */
 // cppcheck-suppress syntaxError
-enum {
-    DT_FOREACH_CHILD(DT_PATH(leds), LED_ENUM)
-    NUM_LEDS          // trick to get the number of elements
+enum
+{
+    DT_FOREACH_CHILD(DT_PATH(leds), LED_ENUM) // actual LED nodes
+    NUM_LEDS                                  // trick to get the number of nodes
 };
 
 /**
  * LED states
  */
-enum LedState {
+enum LedState
+{
     LED_STATE_OFF = 0,
     LED_STATE_ON,
     LED_STATE_BLINK,
@@ -62,7 +64,8 @@ enum LedState {
 /**
  * Pin states
  */
-enum PinState {
+enum PinState
+{
     PIN_LOW = 0,
     PIN_HIGH,
     PIN_FLOAT

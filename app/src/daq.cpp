@@ -11,8 +11,8 @@
 #include <logging/log.h>
 LOG_MODULE_REGISTER(daq, CONFIG_DAQ_LOG_LEVEL);
 
-#include <math.h>       // log for thermistor calculation
 #include <assert.h>
+#include <math.h> // log for thermistor calculation
 
 #include "mcu.h"
 #include "setup.h"
@@ -22,10 +22,10 @@ LOG_MODULE_REGISTER(daq, CONFIG_DAQ_LOG_LEVEL);
 
 // filter parameter c for additional battery voltage and current low-pass filter
 // c = dt / (tau + dt) = 0.1s / (10s + 0.1s)
-#define HV_BUS_VOLTAGE_FILTER_CONST         0.0099F
-#define LV_BUS_VOLTAGE_FILTER_CONST         0.0099F
-#define LV_TERMINAL_CURRENT_FILTER_CONST    0.0099F
-#define PWM_CURRENT_FILTER_CONST            0.0625F // 1.5 seconds
+#define HV_BUS_VOLTAGE_FILTER_CONST      0.0099F
+#define LV_BUS_VOLTAGE_FILTER_CONST      0.0099F
+#define LV_TERMINAL_CURRENT_FILTER_CONST 0.0099F
+#define PWM_CURRENT_FILTER_CONST         0.0625F // 1.5 seconds
 
 #if BOARD_HAS_DCDC
 static uint16_t dcdc_current_offset_raw;
@@ -52,9 +52,8 @@ static volatile AdcAlert adc_alerts_lower[NUM_ADC_CH] = {};
  * multiplier = 1/(2^adc_filter_const[channel])
  */
 #define ADC_FILTER_CONST(node_id) DT_PROP(node_id, filter_const),
-static const uint8_t adc_filter_const[NUM_ADC_CH] = {
-    DT_FOREACH_CHILD(DT_PATH(adc_inputs), ADC_FILTER_CONST)
-};
+static const uint8_t adc_filter_const[NUM_ADC_CH] = { DT_FOREACH_CHILD(DT_PATH(adc_inputs),
+                                                                       ADC_FILTER_CONST) };
 
 /**
  * Average value for ADC channel
@@ -75,8 +74,7 @@ static inline uint32_t adc_raw_filtered(uint32_t channel)
  *
  * @return scaled final value in volts/amps
  */
-static inline float adc_scaled(uint32_t channel, int32_t vref, const float gain,
-    int32_t offset = 0)
+static inline float adc_scaled(uint32_t channel, int32_t vref, const float gain, int32_t offset = 0)
 {
     return adc_raw_to_voltage(adc_raw_filtered(channel) - offset, vref) * gain;
 }
@@ -93,7 +91,7 @@ static inline float ntc_temp(uint32_t channel, int32_t vref, float ntc_series_re
     // resistance of NTC (Ohm)
     float rts = ntc_series_resistor * v_temp / (vref - v_temp);
 
-    return 1.0/(1.0/(273.15+25) + 1.0/NTC_BETA_VALUE*log(rts/10000.0)) - 273.15; // °C
+    return 1.0 / (1.0 / (273.15 + 25) + 1.0 / NTC_BETA_VALUE * log(rts / 10000.0)) - 273.15; // °C
 }
 
 void calibrate_current_sensors()
@@ -113,8 +111,8 @@ void adc_update_value(unsigned int pos)
 {
 #if BOARD_HAS_PWM_PORT
     // only read input voltage and current when switch is on or permanently off
-    if ((pos != ADC_POS(v_pwm) && pos != ADC_POS(i_pwm)) ||
-        pwm_switch.signal_high() || pwm_switch.active() == false)
+    if ((pos != ADC_POS(v_pwm) && pos != ADC_POS(i_pwm)) || pwm_switch.signal_high()
+        || pwm_switch.active() == false)
 #endif
     {
         /*
@@ -132,14 +130,13 @@ void adc_update_value(unsigned int pos)
          *
          * 2. c * adc_filtered[pos] == adc_filtered[pos] >> adc_filter_const[pos]
          */
-        adc_filtered[pos] = (uint32_t)adc_readings[pos] +
-            adc_filtered[pos] - (adc_filtered[pos] >> adc_filter_const[pos]);
+        adc_filtered[pos] = (uint32_t)adc_readings[pos] + adc_filtered[pos]
+                            - (adc_filtered[pos] >> adc_filter_const[pos]);
     }
 
     // check upper alerts
     adc_alerts_upper[pos].debounce_ms++;
-    if (adc_alerts_upper[pos].callback != NULL &&
-        adc_readings[pos] >= adc_alerts_upper[pos].limit)
+    if (adc_alerts_upper[pos].callback != NULL && adc_readings[pos] >= adc_alerts_upper[pos].limit)
     {
         if (adc_alerts_upper[pos].debounce_ms > 1) {
             // create function pointer and call function
@@ -154,8 +151,7 @@ void adc_update_value(unsigned int pos)
 
     // same for lower alerts
     adc_alerts_lower[pos].debounce_ms++;
-    if (adc_alerts_lower[pos].callback != NULL &&
-        adc_readings[pos] <= adc_alerts_lower[pos].limit)
+    if (adc_alerts_lower[pos].callback != NULL && adc_readings[pos] <= adc_alerts_lower[pos].limit)
     {
         if (adc_alerts_lower[pos].debounce_ms > 1) {
             adc_alerts_lower[pos].callback();
@@ -174,8 +170,8 @@ void daq_update()
     lv_bus.voltage = adc_scaled(ADC_POS(v_low), vref, ADC_GAIN(v_low));
 
     if (lv_bus.voltage_filtered != 0.0F) {
-        lv_bus.voltage_filtered = LV_BUS_VOLTAGE_FILTER_CONST * lv_bus.voltage +
-            (1.0F - LV_BUS_VOLTAGE_FILTER_CONST) * lv_bus.voltage_filtered;
+        lv_bus.voltage_filtered = LV_BUS_VOLTAGE_FILTER_CONST * lv_bus.voltage
+                                  + (1.0F - LV_BUS_VOLTAGE_FILTER_CONST) * lv_bus.voltage_filtered;
     }
     else {
         // initialize properly at startup
@@ -186,8 +182,8 @@ void daq_update()
     hv_bus.voltage = adc_scaled(ADC_POS(v_high), vref, ADC_GAIN(v_high));
 
     if (hv_bus.voltage_filtered != 0.0F) {
-        hv_bus.voltage_filtered = HV_BUS_VOLTAGE_FILTER_CONST * hv_bus.voltage +
-            (1.0F - HV_BUS_VOLTAGE_FILTER_CONST) * hv_bus.voltage_filtered;
+        hv_bus.voltage_filtered = HV_BUS_VOLTAGE_FILTER_CONST * hv_bus.voltage
+                                  + (1.0F - HV_BUS_VOLTAGE_FILTER_CONST) * hv_bus.voltage_filtered;
     }
     else {
         // initialize properly at startup
@@ -196,15 +192,15 @@ void daq_update()
 #endif
 
 #if BOARD_HAS_PWM_PORT
-    pwm_switch.ext_voltage = lv_bus.voltage -
-        adc_scaled(ADC_POS(v_pwm), vref, ADC_GAIN(v_pwm), ADC_OFFSET(v_pwm));
+    pwm_switch.ext_voltage =
+        lv_bus.voltage - adc_scaled(ADC_POS(v_pwm), vref, ADC_GAIN(v_pwm), ADC_OFFSET(v_pwm));
 #endif
 
 #if BOARD_HAS_LOAD_OUTPUT
     load.current = adc_scaled(ADC_POS(i_load), vref, ADC_GAIN(i_load), load_current_offset_raw);
     float load_current = load.current;
 #else
-    float load_current = 0;     // value used below, so we still need to define the variable
+    float load_current = 0; // value used below, so we still need to define the variable
 #endif
 
     float lv_terminal_current = -load_current;
@@ -212,10 +208,11 @@ void daq_update()
 #if BOARD_HAS_PWM_PORT
     // current multiplied with PWM duty cycle for PWM charger to get avg current for correct power
     // calculation
-    pwm_switch.current = -pwm_switch.get_duty_cycle() *
-        adc_scaled(ADC_POS(i_pwm), vref, ADC_GAIN(i_pwm), pwm_current_offset_raw);
-    pwm_switch.current_filtered = PWM_CURRENT_FILTER_CONST * pwm_switch.current +
-        (1.0F - PWM_CURRENT_FILTER_CONST) * pwm_switch.current_filtered;
+    pwm_switch.current =
+        -pwm_switch.get_duty_cycle()
+        * adc_scaled(ADC_POS(i_pwm), vref, ADC_GAIN(i_pwm), pwm_current_offset_raw);
+    pwm_switch.current_filtered = PWM_CURRENT_FILTER_CONST * pwm_switch.current
+                                  + (1.0F - PWM_CURRENT_FILTER_CONST) * pwm_switch.current_filtered;
 
     lv_terminal_current -= pwm_switch.current;
 
@@ -228,17 +225,18 @@ void daq_update()
 
     lv_terminal_current += dcdc.inductor_current;
 
-    hv_terminal.current = -dcdc.inductor_current * lv_terminal.bus->voltage /
-        hv_terminal.bus->voltage;
+    hv_terminal.current =
+        -dcdc.inductor_current * lv_terminal.bus->voltage / hv_terminal.bus->voltage;
 
-    dcdc.power  = dcdc.lvb->voltage * dcdc.inductor_current;
-    hv_terminal.power   = hv_terminal.bus->voltage * hv_terminal.current;
+    dcdc.power = dcdc.lvb->voltage * dcdc.inductor_current;
+    hv_terminal.power = hv_terminal.bus->voltage * hv_terminal.current;
 #endif
     lv_terminal.current = lv_terminal_current;
-    lv_terminal.power   = lv_terminal.bus->voltage * lv_terminal.current;
+    lv_terminal.power = lv_terminal.bus->voltage * lv_terminal.current;
 
-    lv_terminal.current_filtered = LV_TERMINAL_CURRENT_FILTER_CONST * lv_terminal.current +
-        (1.0F - LV_TERMINAL_CURRENT_FILTER_CONST) * lv_terminal.current_filtered;
+    lv_terminal.current_filtered =
+        LV_TERMINAL_CURRENT_FILTER_CONST * lv_terminal.current
+        + (1.0F - LV_TERMINAL_CURRENT_FILTER_CONST) * lv_terminal.current_filtered;
 
 #if BOARD_HAS_LOAD_OUTPUT
     load.power = load.bus->voltage * load.current;
@@ -266,8 +264,9 @@ void daq_update()
 
     // internal MCU temperature (calibrated using 12-bit right-aligned readings)
     uint16_t adcval = (adc_raw_filtered(ADC_POS(temp_mcu)) >> 4) * vref / VREFINT_VALUE;
-    dev_stat.internal_temp = (TSENSE_CAL2_VALUE - TSENSE_CAL1_VALUE) /
-        (TSENSE_CAL2 - TSENSE_CAL1) * (adcval - TSENSE_CAL1) + TSENSE_CAL1_VALUE;
+    dev_stat.internal_temp = (TSENSE_CAL2_VALUE - TSENSE_CAL1_VALUE) / (TSENSE_CAL2 - TSENSE_CAL1)
+                                 * (adcval - TSENSE_CAL1)
+                             + TSENSE_CAL1_VALUE;
 
     if (dev_stat.internal_temp > 80) {
         dev_stat.set_error(ERR_INT_OVERTEMP);
@@ -293,8 +292,8 @@ void lv_overvoltage_alert()
 
     dev_stat.set_error(ERR_BAT_OVERVOLTAGE);
 
-    LOG_ERR("Low-side overvoltage alert, ADC reading: %d limit: %d\n",
-        adc_readings[ADC_POS(v_low)], adc_alerts_upper[ADC_POS(v_low)].limit);
+    LOG_ERR("Low-side overvoltage alert, ADC reading: %d limit: %d\n", adc_readings[ADC_POS(v_low)],
+            adc_alerts_upper[ADC_POS(v_low)].limit);
 }
 
 void lv_undervoltage_alert()
@@ -305,7 +304,7 @@ void lv_undervoltage_alert()
 #endif
 
     LOG_ERR("Low-side undervoltage alert, ADC reading: %d limit: %d\n",
-        adc_readings[ADC_POS(v_low)], adc_alerts_lower[ADC_POS(v_low)].limit);
+            adc_readings[ADC_POS(v_low)], adc_alerts_lower[ADC_POS(v_low)].limit);
 }
 
 #if BOARD_HAS_DCDC
@@ -319,7 +318,7 @@ void hv_overvoltage_alert()
     dev_stat.set_error(ERR_DCDC_HS_OVERVOLTAGE);
 
     LOG_ERR("High-side overvoltage alert, ADC reading: %d limit: %d\n",
-        adc_readings[ADC_POS(v_high)], adc_alerts_upper[ADC_POS(v_high)].limit);
+            adc_readings[ADC_POS(v_high)], adc_alerts_upper[ADC_POS(v_high)].limit);
 }
 #endif
 
@@ -340,7 +339,7 @@ uint16_t adc_raw_clamp(float scale, float limit)
 
 void daq_set_lv_limits(float lv_overvoltage, float lv_undervoltage)
 {
-    float scale =  (((4096 << 4) * 1000) / ADC_GAIN(v_low)) / (float)VREF;
+    float scale = (((4096 << 4) * 1000) / ADC_GAIN(v_low)) / (float)VREF;
 
     // LV side (battery) overvoltage alert
     adc_alerts_upper[ADC_POS(v_low)].limit = adc_raw_clamp(scale, lv_overvoltage);
@@ -354,7 +353,7 @@ void daq_set_lv_limits(float lv_overvoltage, float lv_undervoltage)
 #if BOARD_HAS_DCDC
 void daq_set_hv_limit(float hv_overvoltage)
 {
-    float scale =  (((4096 << 4) * 1000) / ADC_GAIN(v_high)) / (float)VREF;
+    float scale = (((4096 << 4) * 1000) / ADC_GAIN(v_high)) / (float)VREF;
 
     // HV side (solar/grid) overvoltage alert
     adc_alerts_upper[ADC_POS(v_high)].limit = adc_raw_clamp(scale, hv_overvoltage);

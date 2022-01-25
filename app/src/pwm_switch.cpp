@@ -11,9 +11,9 @@
 #include <stdio.h>
 #include <time.h>
 
-#include "mcu.h"
 #include "daq.h"
 #include "helper.h"
+#include "mcu.h"
 #include "setup.h"
 
 LOG_MODULE_REGISTER(pwm_switch, CONFIG_PWM_LOG_LEVEL);
@@ -21,7 +21,7 @@ LOG_MODULE_REGISTER(pwm_switch, CONFIG_PWM_LOG_LEVEL);
 #if BOARD_HAS_PWM_PORT
 
 #define PWM_CURRENT_MAX (DT_PROP(DT_CHILD(DT_PATH(outputs), pwm_switch), current_max))
-#define PWM_PERIOD (DT_PHA(DT_CHILD(DT_PATH(outputs), pwm_switch), pwms, period))
+#define PWM_PERIOD      (DT_PHA(DT_CHILD(DT_PATH(outputs), pwm_switch), pwms, period))
 
 bool PwmSwitch::active()
 {
@@ -33,8 +33,7 @@ bool PwmSwitch::signal_high()
     return pwm_signal_high();
 }
 
-PwmSwitch::PwmSwitch(DcBus *dc_bus) :
-    PowerPort(dc_bus)
+PwmSwitch::PwmSwitch(DcBus *dc_bus) : PowerPort(dc_bus)
 {
     // period stored in nanoseconds
     pwm_signal_init_registers(1000 * 1000 * 1000 / PWM_PERIOD);
@@ -59,13 +58,12 @@ void PwmSwitch::control()
 {
     if (pwm_active()) {
         if (current < -0.1F) {
-            power_good_timestamp = uptime();     // reset the time
+            power_good_timestamp = uptime(); // reset the time
         }
 
-        if (neg_current_limit == 0
-            || (uptime() - power_good_timestamp > 10)      // low power since 10s
-            || current > 0.5F         // discharging battery into solar panel --> stop
-            || bus->voltage < 9.0F    // not enough voltage for MOSFET drivers anymore
+        if (neg_current_limit == 0 || (uptime() - power_good_timestamp > 10) // low power since 10s
+            || current > 0.5F      // discharging battery into solar panel --> stop
+            || bus->voltage < 9.0F // not enough voltage for MOSFET drivers anymore
             || enable == false)
         {
             pwm_signal_stop();
@@ -78,9 +76,9 @@ void PwmSwitch::control()
             dev_stat.set_error(ERR_PWM_SWITCH_OVERVOLTAGE);
             LOG_INF("PWM charger stop, overvoltage.");
         }
-        else if (bus->voltage > bus->sink_control_voltage()   // bus voltage above target
-            || current < neg_current_limit                    // port current limit exceeded
-            || current < -PWM_CURRENT_MAX)                    // PCB current limit exceeded
+        else if (bus->voltage > bus->sink_control_voltage() // bus voltage above target
+                 || current < neg_current_limit             // port current limit exceeded
+                 || current < -PWM_CURRENT_MAX)             // PCB current limit exceeded
         {
             // decrease power, as limits were reached
 
@@ -116,18 +114,17 @@ void PwmSwitch::control()
             }
         }
 
-        if (dev_stat.has_error(ERR_PWM_SWITCH_OVERVOLTAGE) &&
-            bus->voltage < bus->sink_control_voltage() - 0.5F)
+        if (dev_stat.has_error(ERR_PWM_SWITCH_OVERVOLTAGE)
+            && bus->voltage < bus->sink_control_voltage() - 0.5F)
         {
             dev_stat.clear_error(ERR_PWM_SWITCH_OVERVOLTAGE);
         }
     }
     else {
-        if (bus->sink_current_margin > 0          // charging allowed
-            && bus->voltage < bus->sink_control_voltage()
+        if (bus->sink_current_margin > 0 && // charging allowed
+            bus->voltage < bus->sink_control_voltage()
             && ext_voltage > bus->voltage + offset_voltage_start
-            && uptime() > (off_timestamp + restart_interval)
-            && enable == true)
+            && uptime() > (off_timestamp + restart_interval) && enable == true)
         {
             // turning the PWM switch on creates a short voltage rise, so inhibit alerts by 50 ms
             adc_upper_alert_inhibit(ADC_POS(v_low), 50);

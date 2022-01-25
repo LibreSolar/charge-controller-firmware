@@ -28,7 +28,7 @@ extern "C" {
 
 #include <stdint.h>
 
-#define ADC_SCALE_FLOAT 65536.0F    // 16-bit full scale
+#define ADC_SCALE_FLOAT 65536.0F // 16-bit full scale
 
 #ifdef CONFIG_SOC_SERIES_STM32G4X
 // Using internal reference buffer at VREF+ pin, set to 2048 mV
@@ -40,8 +40,9 @@ extern "C" {
 #define VREF (VREFINT_VALUE * VREFINT_CAL / (adc_raw_filtered(ADC_POS(vref_mcu)) >> 4))
 #endif
 
-#define ADC_GAIN(name) ((float)DT_PROP(DT_CHILD(DT_PATH(adc_inputs), name), multiplier) / \
-    DT_PROP(DT_CHILD(DT_PATH(adc_inputs), name), divider))
+#define ADC_GAIN(name) \
+    ((float)DT_PROP(DT_CHILD(DT_PATH(adc_inputs), name), multiplier) \
+     / DT_PROP(DT_CHILD(DT_PATH(adc_inputs), name), divider))
 
 #define ADC_OFFSET(name) (DT_PROP(DT_CHILD(DT_PATH(adc_inputs), name), offset))
 
@@ -61,18 +62,20 @@ extern "C" {
  * The channels must be specified in ascending order in the board.dts file.
  */
 // cppcheck-suppress syntaxError
-enum {
+enum
+{
     DT_FOREACH_CHILD(DT_PATH(adc_inputs), ADC_ENUM)
-    NUM_ADC_CH          // trick to get the number of elements
+    NUM_ADC_CH // trick to get the number of elements
 };
 
 /**
  * Struct to define upper and lower limit alerts for any ADC channel
  */
-typedef struct {
-    void (*callback)();         ///< Function to be called when limits are exceeded
-    uint16_t limit;             ///< ADC reading for lower limit
-    int16_t debounce_ms;        ///< Milliseconds delay for triggering alert
+typedef struct
+{
+    void (*callback)();  ///< Function to be called when limits are exceeded
+    uint16_t limit;      ///< ADC reading for lower limit
+    int16_t debounce_ms; ///< Milliseconds delay for triggering alert
 } AdcAlert;
 
 /**

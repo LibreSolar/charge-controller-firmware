@@ -16,14 +16,14 @@
  * hardware. The PWM signal for the half bridge is generated in a separate module.
  */
 
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 
 #include "power_port.h"
 
-#define DCDC_STARTUP_INHIBIT_TIME 3     // seconds
+#define DCDC_STARTUP_INHIBIT_TIME 3 // seconds
 
 /**
  * DC/DC operation mode
@@ -69,13 +69,13 @@ enum DcdcOperationMode
  */
 enum DcdcControlState
 {
-    DCDC_CONTROL_OFF,           ///< DC/DC switched off (low input power or actively disabled)
-    DCDC_CONTROL_MPPT,          ///< Maximum Power Point Tracking
-    DCDC_CONTROL_CC_LS,         ///< Constant-Current control at low-side
-    DCDC_CONTROL_CV_LS,         ///< Constant-Voltage control at low-side
-    DCDC_CONTROL_CC_HS,         ///< Constant-Current control at high-side
-    DCDC_CONTROL_CV_HS,         ///< Constant-Voltage control at high-side
-    DCDC_CONTROL_DERATING       ///< Hardware-limits (current or temperature) reached
+    DCDC_CONTROL_OFF,     ///< DC/DC switched off (low input power or actively disabled)
+    DCDC_CONTROL_MPPT,    ///< Maximum Power Point Tracking
+    DCDC_CONTROL_CC_LS,   ///< Constant-Current control at low-side
+    DCDC_CONTROL_CV_LS,   ///< Constant-Voltage control at low-side
+    DCDC_CONTROL_CC_HS,   ///< Constant-Current control at high-side
+    DCDC_CONTROL_CV_HS,   ///< Constant-Voltage control at high-side
+    DCDC_CONTROL_DERATING ///< Hardware-limits (current or temperature) reached
 };
 
 /**
@@ -96,7 +96,7 @@ public:
      * @param low Low voltage bus (e.g. battery output for MPPT buck)
      * @param mode Operation mode (buck, boost or nanogrid)
      */
-    Dcdc(DcBus *high, DcBus* low, DcdcOperationMode mode);
+    Dcdc(DcBus *high, DcBus *low, DcdcOperationMode mode);
 
     /**
      * Check for valid start conditions of the DC/DC converter
@@ -135,33 +135,33 @@ public:
      */
     void fuse_destruction();
 
-    DcdcOperationMode mode;     ///< DC/DC mode (buck, boost or nanogrid)
-    bool enable;                ///< Can be used to disable the DC/DC power stage
-    uint16_t state;             ///< Control state (off / MPPT / CC / CV)
+    DcdcOperationMode mode; ///< DC/DC mode (buck, boost or nanogrid)
+    bool enable;            ///< Can be used to disable the DC/DC power stage
+    uint16_t state;         ///< Control state (off / MPPT / CC / CV)
 
     // actual measurements
-    DcBus *hvb;                 ///< Pointer to DC bus at high voltage side
-    DcBus *lvb;                 ///< Pointer to DC bus at low voltage (inductor) side
-    float inductor_current;     ///< Inductor current
-    float power;                ///< Low-side power
-    float temp_mosfets;         ///< MOSFET temperature measurement (if existing)
+    DcBus *hvb;             ///< Pointer to DC bus at high voltage side
+    DcBus *lvb;             ///< Pointer to DC bus at low voltage (inductor) side
+    float inductor_current; ///< Inductor current
+    float power;            ///< Low-side power
+    float temp_mosfets;     ///< MOSFET temperature measurement (if existing)
 
     // current state
-    float power_prev;           ///< Stores previous conversion power (set via dcdc_control)
-    int32_t pwm_delta;          ///< Direction of PWM change for MPPT
-    int32_t off_timestamp;      ///< Last time the DC/DC was switched off
-    int32_t power_good_timestamp;   ///< Last time the DC/DC reached above minimum output power
+    float power_prev;             ///< Stores previous conversion power (set via dcdc_control)
+    int32_t pwm_delta;            ///< Direction of PWM change for MPPT
+    int32_t off_timestamp;        ///< Last time the DC/DC was switched off
+    int32_t power_good_timestamp; ///< Last time the DC/DC reached above minimum output power
 
     // maximum allowed values
-    float inductor_current_max = 0;   ///< Maximum low-side (inductor) current
-    float hs_voltage_max = 0;   ///< Maximum high-side voltage
-    float ls_voltage_max;       ///< Maximum low-side voltage
-    float ls_voltage_min;       ///< Minimum low-side voltage, e.g. for driver supply
-    float output_power_min;     ///< Minimum output power (if lower, DC/DC is switched off)
+    float inductor_current_max = 0; ///< Maximum low-side (inductor) current
+    float hs_voltage_max = 0;       ///< Maximum high-side voltage
+    float ls_voltage_max;           ///< Maximum low-side voltage
+    float ls_voltage_min;           ///< Minimum low-side voltage, e.g. for driver supply
+    float output_power_min;         ///< Minimum output power (if lower, DC/DC is switched off)
 
     // calibration parameters
-    uint32_t restart_interval;  ///< Restart interval (s): When should we retry to start
-                                ///< charging after low output power cut-off?
+    uint32_t restart_interval; ///< Restart interval (s): When should we retry to start
+                               ///< charging after low output power cut-off?
 
 private:
     /**
@@ -201,7 +201,6 @@ private:
 };
 
 #endif // __cplusplus
-
 
 #ifdef __cplusplus
 extern "C" {

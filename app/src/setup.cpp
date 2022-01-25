@@ -11,27 +11,27 @@
 
 #include <zephyr.h>
 
-#include "thingset.h"           // handles access to internal data via communication interfaces
+#include "thingset.h" // handles access to internal data via communication interfaces
 
+#include "bat_charger.h" // battery settings and charger state machine
 #include "board.h"
-#include "half_bridge.h"        // PWM generation for DC/DC converter
-#include "hardware.h"           // hardware-related functions like load switch, LED control, watchdog, etc.
-#include "dcdc.h"               // DC/DC converter control (hardware independent)
-#include "pwm_switch.h"         // PWM charge controller
-#include "bat_charger.h"        // battery settings and charger state machine
-#include "daq.h"                // ADC using DMA and conversion to measurement values
-#include "data_storage.h"             // external I2C EEPROM
-#include "load.h"               // load and USB output management
-#include "leds.h"               // LED switching using charlieplexing
-#include "device_status.h"      // log data (error memory, min/max measurements, etc.)
-#include "data_objects.h"         // for access to internal data via ThingSet
+#include "daq.h"           // ADC using DMA and conversion to measurement values
+#include "data_objects.h"  // for access to internal data via ThingSet
+#include "data_storage.h"  // external I2C EEPROM
+#include "dcdc.h"          // DC/DC converter control (hardware independent)
+#include "device_status.h" // log data (error memory, min/max measurements, etc.)
+#include "half_bridge.h"   // PWM generation for DC/DC converter
+#include "hardware.h"   // hardware-related functions like load switch, LED control, watchdog, etc.
+#include "leds.h"       // LED switching using charlieplexing
+#include "load.h"       // load and USB output management
+#include "pwm_switch.h" // PWM charge controller
 
 DcBus lv_bus;
-PowerPort lv_terminal(&lv_bus, true);   // low voltage terminal (battery for typical MPPT)
+PowerPort lv_terminal(&lv_bus, true); // low voltage terminal (battery for typical MPPT)
 
 #if BOARD_HAS_DCDC
 DcBus hv_bus;
-PowerPort hv_terminal(&hv_bus, true);   // high voltage terminal (solar for typical MPPT)
+PowerPort hv_terminal(&hv_bus, true); // high voltage terminal (solar for typical MPPT)
 #if CONFIG_HV_TERMINAL_NANOGRID
 Dcdc dcdc(&hv_bus, &lv_bus, DCDC_MODE_AUTO);
 #elif CONFIG_HV_TERMINAL_BATTERY
@@ -73,8 +73,8 @@ PowerPort &bat_terminal = hv_terminal;
 
 Charger charger(&bat_terminal);
 
-BatConf bat_conf;               // actual (used) battery configuration
-BatConf bat_conf_user;          // temporary storage where the user can write to
+BatConf bat_conf;      // actual (used) battery configuration
+BatConf bat_conf_user; // temporary storage where the user can write to
 
 DeviceStatus dev_stat;
 
@@ -84,8 +84,8 @@ uint32_t timestamp;
 
 #ifndef UNIT_TEST
 
-#include <zephyr.h>
 #include <soc.h>
+#include <zephyr.h>
 
 static inline void timestamp_inc(struct k_timer *timer_id)
 {

@@ -12,29 +12,30 @@
  * @brief Battery and charger configuration and functions
  */
 
-#include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <time.h>
 
 #include "power_port.h"
 
-#define CHARGER_TIME_NEVER      INT32_MIN
+#define CHARGER_TIME_NEVER INT32_MIN
 
 /**
  * Battery cell types
  */
-enum BatType {
+enum BatType
+{
     /*
      * IMPORTANT: make sure to adjust also boards/Kconfig if enum is changed here!
      */
-    BAT_TYPE_CUSTOM = 0,    ///< Custom battery type
-    BAT_TYPE_FLOODED,       ///< Old flooded (wet) lead-acid batteries
-    BAT_TYPE_GEL,           ///< VRLA gel batteries (maintainance-free)
-    BAT_TYPE_AGM,           ///< AGM batteries (maintainance-free)
-    BAT_TYPE_LFP,           ///< LiFePO4 Li-ion batteries (3.3V nominal)
-    BAT_TYPE_NMC,           ///< NMC/Graphite Li-ion batteries (3.7V nominal)
-    BAT_TYPE_NMC_HV         ///< NMC/Graphite High Voltage Li-ion batteries (3.7V nominal, 4.35 max)
+    BAT_TYPE_CUSTOM = 0, ///< Custom battery type
+    BAT_TYPE_FLOODED,    ///< Old flooded (wet) lead-acid batteries
+    BAT_TYPE_GEL,        ///< VRLA gel batteries (maintainance-free)
+    BAT_TYPE_AGM,        ///< AGM batteries (maintainance-free)
+    BAT_TYPE_LFP,        ///< LiFePO4 Li-ion batteries (3.3V nominal)
+    BAT_TYPE_NMC,        ///< NMC/Graphite Li-ion batteries (3.7V nominal)
+    BAT_TYPE_NMC_HV,     ///< NMC/Graphite High Voltage Li-ion batteries (3.7V nominal, 4.35 max)
 };
 
 /**
@@ -276,8 +277,8 @@ typedef struct
  * - https://en.wikipedia.org/wiki/IUoU_battery_charging
  * - https://batteryuniversity.com/learn/article/charging_the_lead_acid_battery
  */
-enum ChargerState {
-
+enum ChargerState
+{
     /**
      * Idle
      *
@@ -331,7 +332,7 @@ enum ChargerState {
      * higher priority on the CAN bus. The device goes in current control modes and tries to
      * match the current of the other controller.
      */
-    CHG_STATE_FOLLOWER
+    CHG_STATE_FOLLOWER,
 };
 
 /**
@@ -340,8 +341,7 @@ enum ChargerState {
 class Charger
 {
 public:
-    Charger(PowerPort *pwr_port):
-        port(pwr_port) {};
+    Charger(PowerPort *pwr_port) : port(pwr_port){};
 
     PowerPort *port;
 

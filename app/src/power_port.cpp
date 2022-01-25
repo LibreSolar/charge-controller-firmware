@@ -8,8 +8,8 @@
 
 void PowerPort::init_solar()
 {
-    neg_current_limit = -50;    // derating based on max. DC/DC or PWM switch current only
-    pos_current_limit = 0;      // no current towards solar panel allowed
+    neg_current_limit = -50; // derating based on max. DC/DC or PWM switch current only
+    pos_current_limit = 0;   // no current towards solar panel allowed
 }
 
 void PowerPort::init_nanogrid()
@@ -22,8 +22,8 @@ void PowerPort::init_nanogrid()
     bus->src_droop_res = 0.1;
 
     // also initialize the connected bus
-    bus->src_voltage_intercept = 30.0;          // starting buck mode above this point
-    bus->sink_voltage_intercept = 28.0;         // boost mode until this voltage is reached
+    bus->src_voltage_intercept = 30.0;  // starting buck mode above this point
+    bus->sink_voltage_intercept = 28.0; // boost mode until this voltage is reached
 }
 
 void PowerPort::energy_balance()
@@ -45,5 +45,5 @@ void PowerPort::update_bus_current_margins() const
     // discharging direction of battery
     bus->src_current_margin = neg_current_limit - current;
 
-    //printf("pos: %.3f neg: %.3f current: %.3f\n", pos_current_limit, neg_current_limit, current);
+    // printf("pos: %.3f neg: %.3f current: %.3f\n", pos_current_limit, neg_current_limit, current);
 }

@@ -9,12 +9,12 @@
 #include <stdio.h>
 
 #include "bat_charger.h"
+#include "board.h"
 #include "device_status.h"
 #include "load.h"
 #include "power_port.h"
 #include "pwm_switch.h"
 #include "thingset.h"
-#include "board.h"
 
 extern DcBus lv_bus;
 extern PowerPort lv_terminal;
@@ -46,7 +46,7 @@ extern LoadOutput load;
 extern LoadOutput usb_pwr;
 #endif
 
-extern ThingSet ts;             // defined in data_objects.cpp
+extern ThingSet ts; // defined in data_objects.cpp
 
 extern uint32_t timestamp;
 

@@ -8,10 +8,10 @@
 
 #include <zephyr.h>
 
-#include "mcu.h"
-#include "thingset.h"
 #include "data_objects.h"
 #include "helper.h"
+#include "mcu.h"
+#include "thingset.h"
 
 #include <stdio.h>
 
@@ -37,14 +37,14 @@ uint32_t _calc_crc(const uint8_t *buf, size_t len)
     // and we don't care for endianness here
     CRC->CR |= CRC_CR_RESET;
     for (size_t i = 0; i < len; i += 4) {
-        //printf("CRC buf: %.8x, CRC->DR: %.8x\n", *((uint32_t*)&buf[i]), CRC->DR);
+        // printf("CRC buf: %.8x, CRC->DR: %.8x\n", *((uint32_t*)&buf[i]), CRC->DR);
         size_t remaining_bytes = len - i;
         if (remaining_bytes >= 4) {
-            CRC->DR = *((uint32_t*)&buf[i]);
+            CRC->DR = *((uint32_t *)&buf[i]);
         }
         else {
             // ignore bytes >= len if len is not a multiple of 4
-            CRC->DR = *((uint32_t*)&buf[i]) & (0xFFFFFFFFU >> (32 - remaining_bytes * 8));
+            CRC->DR = *((uint32_t *)&buf[i]) & (0xFFFFFFFFU >> (32 - remaining_bytes * 8));
         }
     }
 
@@ -73,7 +73,7 @@ void data_storage_read()
 {
     int err;
 
-	const struct device *eeprom_dev = device_get_binding("EEPROM_0");
+    const struct device *eeprom_dev = device_get_binding("EEPROM_0");
 
     uint8_t buf_header[EEPROM_HEADER_SIZE] = {};
     err = eeprom_read(eeprom_dev, 0, buf_header, EEPROM_HEADER_SIZE);
@@ -81,29 +81,29 @@ void data_storage_read()
         LOG_ERR("EEPROM read error %d", err);
         return;
     }
-    uint16_t version = *((uint16_t*)&buf_header[0]);
-    uint16_t len     = *((uint16_t*)&buf_header[2]);
-    uint32_t crc     = *((uint32_t*)&buf_header[4]);
+    uint16_t version = *((uint16_t *)&buf_header[0]);
+    uint16_t len = *((uint16_t *)&buf_header[2]);
+    uint32_t crc = *((uint32_t *)&buf_header[4]);
 
     LOG_DBG("EEPROM header restore: ver %d, len %d, CRC %.8x", version, len, (unsigned int)crc);
-    LOG_DBG("Header: %.2x %.2x %.2x %.2x %.2x %.2x %.2x %.2x",
-        buf_header[0], buf_header[1], buf_header[2], buf_header[3],
-        buf_header[4], buf_header[5], buf_header[6], buf_header[7]);
+    LOG_DBG("Header: %.2x %.2x %.2x %.2x %.2x %.2x %.2x %.2x", buf_header[0], buf_header[1],
+            buf_header[2], buf_header[3], buf_header[4], buf_header[5], buf_header[6],
+            buf_header[7]);
 
     if (version == DATA_OBJECTS_VERSION && len <= sizeof(buf)) {
         k_mutex_lock(&data_buf_lock, K_FOREVER);
         err = eeprom_read(eeprom_dev, EEPROM_HEADER_SIZE, buf, len);
 
-        //printf("Data (len=%d): ", len);
-        //for (int i = 0; i < len; i++) printf("%.2x ", buf[i]);
+        // printf("Data (len=%d): ", len);
+        // for (int i = 0; i < len; i++) printf("%.2x ", buf[i]);
 
         if (_calc_crc(buf, len) == crc) {
             int status = ts.bin_import(buf, sizeof(buf), TS_WRITE_MASK, SUBSET_NVM);
             LOG_INF("EEPROM read and data objects updated, ThingSet result: 0x%x", status);
         }
         else {
-            LOG_ERR("EEPROM data CRC invalid, expected 0x%x (data_len = %d)",
-                (unsigned int)crc, len);
+            LOG_ERR("EEPROM data CRC invalid, expected 0x%x (data_len = %d)", (unsigned int)crc,
+                    len);
         }
         k_mutex_unlock(&data_buf_lock);
     }
@@ -116,22 +116,22 @@ void data_storage_write()
 {
     int err;
 
-	const struct device *eeprom_dev = device_get_binding("EEPROM_0");
+    const struct device *eeprom_dev = device_get_binding("EEPROM_0");
 
     k_mutex_lock(&data_buf_lock, K_FOREVER);
 
     int len = ts.bin_export(buf + EEPROM_HEADER_SIZE, sizeof(buf) - EEPROM_HEADER_SIZE, SUBSET_NVM);
     uint32_t crc = _calc_crc(buf + EEPROM_HEADER_SIZE, len);
 
-    *((uint16_t*)&buf[0]) = (uint16_t)DATA_OBJECTS_VERSION;
-    *((uint16_t*)&buf[2]) = (uint16_t)(len);
-    *((uint32_t*)&buf[4]) = crc;
+    *((uint16_t *)&buf[0]) = (uint16_t)DATA_OBJECTS_VERSION;
+    *((uint16_t *)&buf[2]) = (uint16_t)(len);
+    *((uint32_t *)&buf[4]) = crc;
 
-    //printf("Data (len=%d): ", len);
-    //for (int i = 0; i < len; i++) printf("%.2x ", buf[i + EEPROM_HEADER_SIZE]);
+    // printf("Data (len=%d): ", len);
+    // for (int i = 0; i < len; i++) printf("%.2x ", buf[i + EEPROM_HEADER_SIZE]);
 
-    LOG_DBG("Header: %.2x %.2x %.2x %.2x %.2x %.2x %.2x %.2x",
-        buf[0], buf[1], buf[2], buf[3], buf[4], buf[5], buf[6], buf[7]);
+    LOG_DBG("Header: %.2x %.2x %.2x %.2x %.2x %.2x %.2x %.2x", buf[0], buf[1], buf[2], buf[3],
+            buf[4], buf[5], buf[6], buf[7]);
 
     if (len == 0) {
         LOG_ERR("EEPROM data could not be stored. ThingSet error (len = %d)", len);
@@ -151,8 +151,8 @@ void data_storage_write()
 #elif defined(CONFIG_NVS)
 
 #include <drivers/flash.h>
-#include <storage/flash_map.h>
 #include <fs/nvs.h>
+#include <storage/flash_map.h>
 
 /*
  * NVS header bytes:
@@ -163,9 +163,9 @@ void data_storage_write()
 #define NVS_HEADER_SIZE 2
 
 #define FLASH_PARTITION_NODE DT_NODE_BY_FIXED_PARTITION_LABEL(storage)
-#define FLASH_DEVICE_NODE DT_MTD_FROM_FIXED_PARTITION(FLASH_PARTITION_NODE)
+#define FLASH_DEVICE_NODE    DT_MTD_FROM_FIXED_PARTITION(FLASH_PARTITION_NODE)
 
-#define THINGSET_DATA_ID    1
+#define THINGSET_DATA_ID 1
 
 static const struct device *flash_dev = DEVICE_DT_GET(FLASH_DEVICE_NODE);
 
@@ -206,13 +206,13 @@ void data_storage_read()
         return;
     }
 
-    uint16_t version = *((uint16_t*)&buf[0]);
+    uint16_t version = *((uint16_t *)&buf[0]);
 
     if (version == DATA_OBJECTS_VERSION) {
         k_mutex_lock(&data_buf_lock, K_FOREVER);
 
         int status = ts.bin_import(buf + NVS_HEADER_SIZE, num_bytes - NVS_HEADER_SIZE,
-            TS_WRITE_MASK, SUBSET_NVM);
+                                   TS_WRITE_MASK, SUBSET_NVM);
         LOG_INF("NVS read and data objects updated, ThingSet result: 0x%x", status);
 
         k_mutex_unlock(&data_buf_lock);
@@ -230,7 +230,7 @@ void data_storage_write()
 
     k_mutex_lock(&data_buf_lock, K_FOREVER);
 
-    *((uint16_t*)&buf[0]) = (uint16_t)DATA_OBJECTS_VERSION;
+    *((uint16_t *)&buf[0]) = (uint16_t)DATA_OBJECTS_VERSION;
 
     int len = ts.bin_export(buf + NVS_HEADER_SIZE, sizeof(buf) - NVS_HEADER_SIZE, SUBSET_NVM);
 
@@ -252,8 +252,8 @@ void data_storage_write()
 
 #else
 
-void data_storage_write() {;}
-void data_storage_read() {;}
+void data_storage_write() {}
+void data_storage_read() {}
 
 #endif
 

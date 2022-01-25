@@ -7,7 +7,7 @@
 #ifndef DATA_STORAGE_H_
 #define DATA_STORAGE_H_
 
-#define DATA_UPDATE_INTERVAL  (6*60*60)       // update every 6 hours
+#define DATA_UPDATE_INTERVAL (6 * 60 * 60) // update every 6 hours
 
 /**
  * @file

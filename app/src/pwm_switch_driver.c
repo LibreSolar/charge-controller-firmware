@@ -20,12 +20,12 @@
 
 #ifndef UNIT_TEST
 
-#include <stm32_ll_tim.h>
-#include <stm32_ll_rcc.h>
 #include <stm32_ll_bus.h>
+#include <stm32_ll_rcc.h>
+#include <stm32_ll_tim.h>
 
-#include <soc.h>
 #include <pinmux/pinmux_stm32.h>
+#include <soc.h>
 
 #define DT_DRV_COMPAT st_stm32_pwm
 
@@ -33,19 +33,19 @@
 static TIM_TypeDef *tim = TIM3;
 
 #if DT_PWMS_CHANNEL(DT_CHILD(DT_PATH(outputs), pwm_switch)) == 1
-#define LL_TIM_CHANNEL LL_TIM_CHANNEL_CH1
+#define LL_TIM_CHANNEL       LL_TIM_CHANNEL_CH1
 #define LL_TIM_OC_SetCompare LL_TIM_OC_SetCompareCH1
 #define LL_TIM_OC_GetCompare LL_TIM_OC_GetCompareCH1
 #elif DT_PWMS_CHANNEL(DT_CHILD(DT_PATH(outputs), pwm_switch)) == 2
-#define LL_TIM_CHANNEL LL_TIM_CHANNEL_CH2
+#define LL_TIM_CHANNEL       LL_TIM_CHANNEL_CH2
 #define LL_TIM_OC_SetCompare LL_TIM_OC_SetCompareCH2
 #define LL_TIM_OC_GetCompare LL_TIM_OC_GetCompareCH2
 #elif DT_PWMS_CHANNEL(DT_CHILD(DT_PATH(outputs), pwm_switch)) == 3
-#define LL_TIM_CHANNEL LL_TIM_CHANNEL_CH3
+#define LL_TIM_CHANNEL       LL_TIM_CHANNEL_CH3
 #define LL_TIM_OC_SetCompare LL_TIM_OC_SetCompareCH3
 #define LL_TIM_OC_GetCompare LL_TIM_OC_GetCompareCH3
 #elif DT_PWMS_CHANNEL(DT_CHILD(DT_PATH(outputs), pwm_switch)) == 4
-#define LL_TIM_CHANNEL LL_TIM_CHANNEL_CH4
+#define LL_TIM_CHANNEL       LL_TIM_CHANNEL_CH4
 #define LL_TIM_OC_SetCompare LL_TIM_OC_SetCompareCH4
 #define LL_TIM_OC_GetCompare LL_TIM_OC_GetCompareCH4
 #else
@@ -79,7 +79,7 @@ void pwm_signal_init_registers(int freq_Hz)
 {
     stm32_dt_pinctrl_configure(pwm_pinctrl, ARRAY_SIZE(pwm_pinctrl), (uint32_t)tim);
 
-	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM3);
+    LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM3);
 
     // Set timer clock to 10 kHz
     LL_TIM_SetPrescaler(TIM3, SystemCoreClock / 10000 - 1);
@@ -151,14 +151,30 @@ bool pwm_active()
 #else
 
 // dummy functions for unit tests
-float pwm_signal_get_duty_cycle() { return 0; }
-void pwm_signal_set_duty_cycle(float duty) {;}
-void pwm_signal_duty_cycle_step(int delta) {;}
-void pwm_signal_init_registers(int freq_Hz) {;}
-void pwm_signal_start(float pwm_duty) {;}
-void pwm_signal_stop() {;}
-bool pwm_signal_high() { return false; }
-bool pwm_active() { return false; }
+float pwm_signal_get_duty_cycle()
+{
+    return 0;
+}
+
+void pwm_signal_set_duty_cycle(float duty) {}
+
+void pwm_signal_duty_cycle_step(int delta) {}
+
+void pwm_signal_init_registers(int freq_Hz) {}
+
+void pwm_signal_start(float pwm_duty) {}
+
+void pwm_signal_stop() {}
+
+bool pwm_signal_high()
+{
+    return false;
+}
+
+bool pwm_active()
+{
+    return false;
+}
 
 #endif
 

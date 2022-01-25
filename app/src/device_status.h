@@ -14,9 +14,9 @@
  */
 
 #include "bat_charger.h"
-#include "power_port.h"
-#include "load.h"
 #include "dcdc.h"
+#include "load.h"
+#include "power_port.h"
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -25,8 +25,8 @@
  * When adding new flags, please make sure to use only up to 32 errors
  * Each enum must represent a unique power of 2 number
  */
-enum ErrorFlag {
-
+enum ErrorFlag
+{
     /** Battery voltage too low
      *
      * Set and cleared in Charger::discharge_control() if the battery voltage dropped to lower than
@@ -113,7 +113,6 @@ enum ErrorFlag {
 class DeviceStatus
 {
 public:
-
     /** Updates the total energy counters for solar, battery and load bus
      */
     void update_energy();
@@ -127,10 +126,10 @@ public:
     uint32_t bat_dis_total_Wh;
     uint32_t solar_in_total_Wh;
     uint32_t load_out_total_Wh;
-    #if CONFIG_HV_TERMINAL_NANOGRID
+#if CONFIG_HV_TERMINAL_NANOGRID
     uint32_t grid_import_total_Wh;
     uint32_t grid_export_total_Wh;
-    #endif
+#endif
 
     // maximum/minimum values
     uint16_t solar_power_max_day;
@@ -141,34 +140,43 @@ public:
     float solar_voltage_max;
     float dcdc_current_max;
     float load_current_max;
-    int16_t bat_temp_max;         // °C
-    int16_t int_temp_max;         // °C
+    int16_t bat_temp_max; // °C
+    int16_t int_temp_max; // °C
     int16_t mosfet_temp_max;
 
     uint32_t day_counter;
 
     // instantaneous device-level data
-    uint32_t error_flags;       ///< Currently detected errors
-    float internal_temp;        ///< Internal temperature (measured in MCU)
+    uint32_t error_flags; ///< Currently detected errors
+    float internal_temp;  ///< Internal temperature (measured in MCU)
 
     /**
      * @brief sets one or more error flags in device state
      * @param e a single ErrorFlag or "bitwise ORed" ERR_XXX | ERR_YYY
      */
-    void set_error(uint32_t e) { error_flags |= e; }
+    inline void set_error(uint32_t e)
+    {
+        error_flags |= e;
+    }
 
     /**
      * @brief clears one or more error flags in device state
      * @param e a single ErrorFlag or "bitwise ORed" ERR_XXX | ERR_YYY
      */
-    void clear_error(uint32_t e) { error_flags &= ~e; }
+    void clear_error(uint32_t e)
+    {
+        error_flags &= ~e;
+    }
 
     /**
      * @brief queries one or more error flags in device state
      * @param e a single ErrorFlag or "bitwise ORed" ERR_XXX | ERR_YYY
      * @return true if any of the error flags given in e are set in device state
      */
-    bool has_error(uint32_t e) { return (error_flags & e) != 0; }
+    bool has_error(uint32_t e)
+    {
+        return (error_flags & e) != 0;
+    }
 };
 
 #endif /* DEVICE_STATUS_H */
