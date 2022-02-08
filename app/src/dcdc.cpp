@@ -228,6 +228,8 @@ __weak void Dcdc::control()
 
         if (startup_mode != DCDC_MODE_OFF) {
 
+            output_hvs_enable();
+
             // startup allowed, but we need to wait until voltages settle
             if (startup_inhibit()) {
                 return;
@@ -325,6 +327,7 @@ void Dcdc::stop()
     half_bridge_stop();
     state = DCDC_CONTROL_OFF;
     off_timestamp = uptime();
+    output_hvs_disable();
 }
 
 void Dcdc::fuse_destruction()

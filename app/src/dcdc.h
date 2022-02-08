@@ -181,7 +181,7 @@ private:
     void output_hvs_enable();
 
     /**
-     * Disable the reverse polarity MOSFET on the high-sied (if option available)
+     * Disable the reverse polarity MOSFET on the high-side (if option available)
      */
     void output_hvs_disable();
 
