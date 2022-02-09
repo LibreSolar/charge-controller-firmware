@@ -23,13 +23,25 @@
 
 LOG_MODULE_REGISTER(dcdc, CONFIG_DCDC_LOG_LEVEL);
 
-extern DeviceStatus dev_stat;
-
 #if BOARD_HAS_DCDC
+
+#define BUCK_DUTY_POWER_DECREASE (-1)
+#define BUCK_DUTY_POWER_INCREASE (1)
+
+#define BOOST_DUTY_POWER_DECREASE (1)
+#define BOOST_DUTY_POWER_INCREASE (-1)
+
+#ifdef CONFIG_SOC_SERIES_STM32G4X
+#define DUTY_STEP_SIZE (3) // increased step size for fast microcontroller
+#else
+#define DUTY_STEP_SIZE (1) // single minimum step for other microcontrollers
+#endif
 
 #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), hv_out))
 #define HV_OUT_NODE DT_CHILD(DT_PATH(outputs), hv_out)
 #endif
+
+extern DeviceStatus dev_stat;
 
 Dcdc::Dcdc(DcBus *high, DcBus *low, DcdcOperationMode op_mode)
 {
@@ -45,109 +57,100 @@ Dcdc::Dcdc(DcBus *high, DcBus *low, DcdcOperationMode op_mode)
     output_power_min = 1; // switch off if power < 1 W
     restart_interval = 60;
     off_timestamp = -10000; // start immediately
-    pwm_delta = 1;          // start-condition of duty cycle pwr_inc_pwm_direction
 
     // lower duty limit might have to be adjusted dynamically depending on LS voltage
     half_bridge_init(DT_PROP(DT_INST(0, half_bridge), frequency) / 1000,
                      DT_PROP(DT_INST(0, half_bridge), deadtime), 12 / hs_voltage_max, 0.97);
 }
 
-int Dcdc::perturb_observe_controller()
+void Dcdc::perturb_observe_buck()
 {
-    int pwr_inc_pwm_direction; // direction of PWM duty cycle change for increasing power
-    DcBus *in;
-    DcBus *out;
-    float out_power;
-
-    if (mode == DCDC_MODE_BUCK || (mode == DCDC_MODE_AUTO && inductor_current > 0.1)) {
-        // buck mode
-        pwr_inc_pwm_direction = 1;
-        in = hvb;
-        out = lvb;
-        out_power = power;
-    }
-    else {
-        // boost mode
-        pwr_inc_pwm_direction = -1;
-        in = lvb;
-        out = hvb;
-        out_power = -power;
+    if (power >= output_power_min) {
+        power_good_timestamp = uptime();
     }
 
-    if (out_power >= output_power_min) {
-        power_good_timestamp = uptime(); // reset the time
-    }
-
-    int pwr_inc_goal = 0; // stores if we want to increase (+1) or decrease (-1) power
-
-    if ((uptime() - power_good_timestamp > 10 || out_power < -10.0) && mode != DCDC_MODE_AUTO) {
+    if ((uptime() - power_good_timestamp > 10 || power < -10.0) && mode != DCDC_MODE_AUTO) {
         // switch off after 10s low power or negative power (if not in nanogrid mode)
-        pwr_inc_goal = 0;
+        pwm_direction = 0;
     }
-    else if (out->voltage > out->sink_control_voltage()) {
-        // output voltage target reached
-        state = (out == lvb) ? DCDC_CONTROL_CV_LS : DCDC_CONTROL_CV_HS;
-        pwr_inc_goal = -1; // decrease output power
+    else if (lvb->voltage > lvb->sink_control_voltage()) {
+        state = DCDC_CONTROL_CV_LS;
+        pwm_direction = BUCK_DUTY_POWER_DECREASE;
     }
-    else if (out->sink_current_margin < 0) {
-        // output charge current limit reached
-        state = (out == lvb) ? DCDC_CONTROL_CC_LS : DCDC_CONTROL_CC_HS;
-        pwr_inc_goal = -1; // decrease output power
-    }
-    else if (in->src_current_margin > 0) {
-        // input current (negative signs) limit exceeded
-        state = (in == hvb) ? DCDC_CONTROL_CC_HS : DCDC_CONTROL_CC_LS;
-        pwr_inc_goal = -1; // decrease output power
-    }
-    else if (fabs(inductor_current) > inductor_current_max) {
-        // current above hardware maximum
+    else if (lvb->sink_current_margin < 0 || inductor_current > inductor_current_max) {
         state = DCDC_CONTROL_CC_LS;
-        pwr_inc_goal = -1; // decrease output power
+        pwm_direction = BUCK_DUTY_POWER_DECREASE;
     }
-    else if (in->voltage < in->src_control_voltage() && out_power > output_power_min) {
+    else if (hvb->src_current_margin > 0) {
+        state = DCDC_CONTROL_CC_HS;
+        pwm_direction = BUCK_DUTY_POWER_DECREASE;
+    }
+    else if (hvb->voltage < hvb->src_control_voltage() && power > output_power_min) {
         // input voltage below limit
-        state = (in == hvb) ? DCDC_CONTROL_CV_HS : DCDC_CONTROL_CV_LS;
-        pwr_inc_goal = -1;
+        state = DCDC_CONTROL_CV_HS;
+        pwm_direction = BUCK_DUTY_POWER_DECREASE;
     }
-    else if (temp_mosfets > 80) {
-        // temperature limits exceeded
+    else if (temp_mosfets > DCDC_MOSFETS_MAX_TEMP) {
         state = DCDC_CONTROL_DERATING;
-        pwr_inc_goal = -1;
+        pwm_direction = BUCK_DUTY_POWER_DECREASE;
     }
-    else if (out_power < output_power_min && out->voltage < out->src_control_voltage()) {
+    else if (power < output_power_min && lvb->voltage < lvb->src_control_voltage()) {
         // no load condition (e.g. start-up of nanogrid) --> raise voltage
-        pwr_inc_goal = 1; // increase output power
+        pwm_direction = BUCK_DUTY_POWER_INCREASE;
     }
     else {
-        // start MPPT
         state = DCDC_CONTROL_MPPT;
-        if (power_prev > out_power) {
-            pwm_delta = -pwm_delta;
+        if (power_prev > power) {
+            pwm_direction = -pwm_direction;
         }
-        pwr_inc_goal = pwm_delta;
     }
 
-#if CONFIG_DCDC_LOG_LEVEL == LOG_LEVEL_DBG
-    // workaround as LOG_DBG does not support float printing
-    printf("P: %.2fW (prev %.2fW), ind. current: %.2f, "
-           "in: %.2fV, %.2fA margin, out: %.2fV (target %.2fV), %.2fA margin, "
-           "PWM: %.1f, chg_state: %d, pwr_inc: %d, buck/boost: %d\n",
-           out_power, power_prev, inductor_current, in->voltage, in->src_current_margin,
-           out->voltage, out->sink_voltage_intercept, out->sink_current_margin,
-           half_bridge_get_duty_cycle() * 100.0, state, pwr_inc_goal, pwr_inc_pwm_direction);
-#endif
+    power_prev = power;
+}
 
-    power_prev = out_power;
+void Dcdc::perturb_observe_boost()
+{
+    if (-power >= output_power_min) {
+        power_good_timestamp = uptime();
+    }
 
-#ifdef CONFIG_SOC_SERIES_STM32G4X
-    // reduced step size for fast microcontroller
-    half_bridge_set_ccr(half_bridge_get_ccr() + pwr_inc_goal * pwr_inc_pwm_direction * 3);
-#else
-    // change duty cycle by single minimum step
-    half_bridge_set_ccr(half_bridge_get_ccr() + pwr_inc_goal * pwr_inc_pwm_direction);
-#endif
+    if ((uptime() - power_good_timestamp > 10 || -power < -10.0) && mode != DCDC_MODE_AUTO) {
+        // switch off after 10s low power or negative power (if not in nanogrid mode)
+        pwm_direction = 0;
+    }
+    else if (hvb->voltage > hvb->sink_control_voltage()) {
+        state = DCDC_CONTROL_CV_HS;
+        pwm_direction = BOOST_DUTY_POWER_DECREASE;
+    }
+    else if (hvb->sink_current_margin < 0) {
+        state = DCDC_CONTROL_CC_HS;
+        pwm_direction = BOOST_DUTY_POWER_DECREASE;
+    }
+    else if (lvb->src_current_margin > 0 || -inductor_current > inductor_current_max) {
+        state = DCDC_CONTROL_CC_LS;
+        pwm_direction = BOOST_DUTY_POWER_DECREASE;
+    }
+    else if (lvb->voltage < lvb->src_control_voltage() && -power > output_power_min) {
+        // input voltage below limit
+        state = DCDC_CONTROL_CV_LS;
+        pwm_direction = BOOST_DUTY_POWER_DECREASE;
+    }
+    else if (temp_mosfets > DCDC_MOSFETS_MAX_TEMP) {
+        state = DCDC_CONTROL_DERATING;
+        pwm_direction = BOOST_DUTY_POWER_DECREASE;
+    }
+    else if (-power < output_power_min && hvb->voltage < hvb->src_control_voltage()) {
+        // no load condition (e.g. start-up of nanogrid) --> raise voltage
+        pwm_direction = BOOST_DUTY_POWER_INCREASE;
+    }
+    else {
+        state = DCDC_CONTROL_MPPT;
+        if (-power_prev > -power) {
+            pwm_direction = -pwm_direction;
+        }
+    }
 
-    return (pwr_inc_goal == 0);
+    power_prev = power;
 }
 
 __weak DcdcOperationMode Dcdc::check_start_conditions()
@@ -240,12 +243,14 @@ __weak void Dcdc::control()
             const char *mode_name = NULL;
             if (startup_mode == DCDC_MODE_BUCK) {
                 mode_name = "buck";
+                pwm_direction = BUCK_DUTY_POWER_INCREASE;
                 // Don't start directly at Vmpp (approx. 0.8 * Voc) to prevent high inrush
                 // currents and stress on MOSFETs
                 half_bridge_set_duty_cycle(lvb->voltage / (hvb->voltage - 1));
             }
             else {
                 mode_name = "boost";
+                pwm_direction = BOOST_DUTY_POWER_INCREASE;
                 // Will automatically start with max. duty (0.97) if connected to a
                 // nanogrid not yet started up (zero voltage)
                 half_bridge_set_duty_cycle(lvb->voltage / (hvb->voltage + 1));
@@ -270,8 +275,25 @@ __weak void Dcdc::control()
             stop_reason = "disabled";
         }
         else {
-            int err = perturb_observe_controller();
-            if (err != 0) {
+            if (mode == DCDC_MODE_BUCK || (mode == DCDC_MODE_AUTO && inductor_current > 0.1)) {
+                perturb_observe_buck();
+            }
+            else {
+                perturb_observe_boost();
+            }
+
+            if (pwm_direction != 0) {
+                half_bridge_set_ccr(half_bridge_get_ccr() + pwm_direction * DUTY_STEP_SIZE);
+
+                // requires floating point support with CONFIG_CBPRINTF_FP_SUPPORT=y
+                LOG_DBG("P %.2fW, inductor %.2fA, HS: %.2fV, %.2fA margin, "
+                        "LS: %.2fV (target %.2fV), %.2fA margin, "
+                        "PWM: %.1f, dcdc_state: %d, pwm_direction: %d",
+                        power, inductor_current, hvb->voltage, hvb->src_current_margin,
+                        lvb->voltage, lvb->sink_voltage_intercept, lvb->sink_current_margin,
+                        half_bridge_get_duty_cycle() * 100.0, state, pwm_direction);
+            }
+            else {
                 stop_reason = "low power";
             }
         }

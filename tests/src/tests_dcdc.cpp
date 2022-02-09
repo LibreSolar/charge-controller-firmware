@@ -38,7 +38,7 @@ static void init_structs_buck(int num_batteries = 1)
     dcdc.inductor_current = 0;
     dcdc.power = 0;
     dcdc.power_prev = 0;
-    dcdc.pwm_delta = 1;
+    dcdc.pwm_direction = 1;
     dcdc.enable = true;
 }
 
@@ -79,7 +79,7 @@ static void init_structs_boost(int num_batteries = 1)
     dcdc.temp_mosfets = 25;
     dcdc.off_timestamp = 0;
     dcdc.power_prev = 0;
-    dcdc.pwm_delta = 1;
+    dcdc.pwm_direction = 1;
     dcdc.enable = true;
 }
 

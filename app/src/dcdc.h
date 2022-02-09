@@ -25,6 +25,8 @@
 
 #define DCDC_STARTUP_INHIBIT_TIME 3 // seconds
 
+#define DCDC_MOSFETS_MAX_TEMP (80) // °C
+
 /**
  * DC/DC operation mode
  *
@@ -148,7 +150,7 @@ public:
 
     // current state
     float power_prev;             ///< Stores previous conversion power (set via dcdc_control)
-    int32_t pwm_delta;            ///< Direction of PWM change for MPPT
+    int32_t pwm_direction;        ///< Direction of PWM change for MPPT
     int32_t off_timestamp;        ///< Last time the DC/DC was switched off
     int32_t power_good_timestamp; ///< Last time the DC/DC reached above minimum output power
 
@@ -165,14 +167,18 @@ public:
 
 private:
     /**
-     * MPPT perturb & observe control
+     * MPPT perturb & observe control (buck mode)
      *
-     * Calculates the duty cycle change depending on operating mode and actual measurements and
-     * changes the half bridge PWM signal accordingly
-     *
-     * @returns 0 if everything is fine, error number otherwise
+     * @returns calculated pwm duty cycle delta or 0 if the DC/DC should be stopped
      */
-    int perturb_observe_controller();
+    void perturb_observe_buck();
+
+    /**
+     * MPPT perturb & observe control (boost mode)
+     *
+     * @returns calculated pwm duty cycle delta or 0 if the DC/DC should be stopped
+     */
+    void perturb_observe_boost();
 
     /**
      * If manual control of the reverse polarity MOSFET on the high-side is available, this
