@@ -152,9 +152,9 @@ int Dcdc::perturb_observe_controller()
 
 __weak DcdcOperationMode Dcdc::check_start_conditions()
 {
-    if (enable == false || hvb->voltage > hs_voltage_max
-        || // also critical for buck mode because of ringing
-        lvb->voltage > ls_voltage_max || lvb->voltage < ls_voltage_min
+    if (enable == false
+        || hvb->voltage > hs_voltage_max // also critical for buck mode because of ringing
+        || lvb->voltage > ls_voltage_max || lvb->voltage < ls_voltage_min
         || dev_stat.has_error(ERR_BAT_UNDERVOLTAGE | ERR_BAT_OVERVOLTAGE)
         || (int)uptime() < (off_timestamp + (int)restart_interval))
     {
@@ -226,8 +226,10 @@ __weak void Dcdc::control()
 
         int startup_mode = check_start_conditions();
 
-        if (startup_mode != DCDC_MODE_OFF) {
-
+        if ((startup_mode == DCDC_MODE_BUCK && mode == DCDC_MODE_BUCK)
+            || (startup_mode == DCDC_MODE_BOOST && mode == DCDC_MODE_BOOST)
+            || (startup_mode != DCDC_MODE_OFF && mode == DCDC_MODE_AUTO))
+        {
             output_hvs_enable();
 
             // startup allowed, but we need to wait until voltages settle
