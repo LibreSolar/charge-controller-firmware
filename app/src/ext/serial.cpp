@@ -39,7 +39,7 @@ static struct k_sem rx_buf_mutex; // binary semaphore used as mutex in ISR conte
 
 extern ThingSet ts;
 
-const char serial_subset_path[] = "serial";
+const char serial_subset_path[] = "mSerial";
 static ThingSetDataObject *serial_subset;
 
 void serial_pub_msg()
@@ -65,6 +65,11 @@ void serial_process_command()
             uart_poll_out(uart_dev, tx_buf[i]);
         }
         uart_poll_out(uart_dev, '\n');
+
+        if (ts.check_updated(SUBSET_NVM, true)) {
+            // ToDo: This could take a few milliseconds, better offload from ISR context
+            data_objects_update_conf();
+        }
     }
 
     // release buffer and start waiting for new commands
