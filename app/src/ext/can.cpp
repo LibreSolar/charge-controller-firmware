@@ -117,10 +117,6 @@ void can_isotp_thread()
             LOG_INF("Got %d bytes via ISO-TP. Processing ThingSet message.", req_len);
             resp_len = ts.process(rx_buffer, req_len, tx_buffer, sizeof(tx_buffer));
             LOG_DBG("TX buf: %x %x %x %x", tx_buffer[0], tx_buffer[1], tx_buffer[2], tx_buffer[3]);
-
-            if (ts.check_updated(SUBSET_NVM, true)) {
-                data_objects_update_conf();
-            }
         }
         else {
             tx_buffer[0] = TS_STATUS_INTERNAL_SERVER_ERR;

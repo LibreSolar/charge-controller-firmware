@@ -23,7 +23,7 @@ manifest:
       path: modules/oled-display
     - name: thingset-device-library
       remote: thingset
-      revision: 727cb4da825e3e97e9066a5c62ba838514f853ca
+      revision: 5c2b562d77cd44969c822bbd8c37cd7394d5ca58
       path: modules/thingset
     - name: unity
       remote: throwtheswitch

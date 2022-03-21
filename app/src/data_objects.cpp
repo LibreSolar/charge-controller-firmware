@@ -1187,6 +1187,8 @@ void data_objects_init()
     else {
         battery_conf_overwrite(&bat_conf, &bat_conf_user);
     }
+
+    ts.set_update_callback(SUBSET_NVM, data_objects_update_conf);
 }
 
 void thingset_auth()

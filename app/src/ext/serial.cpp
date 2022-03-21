@@ -65,11 +65,6 @@ void serial_process_command()
             uart_poll_out(uart_dev, tx_buf[i]);
         }
         uart_poll_out(uart_dev, '\n');
-
-        if (ts.check_updated(SUBSET_NVM, true)) {
-            // ToDo: This could take a few milliseconds, better offload from ISR context
-            data_objects_update_conf();
-        }
     }
 
     // release buffer and start waiting for new commands
