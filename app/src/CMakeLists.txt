@@ -20,6 +20,7 @@ target_sources(app PRIVATE
         pwm_switch_driver.c
         pwm_switch.cpp
         setup.cpp
+        kalman_soc.cpp
 )
 
 add_subdirectory(ext)

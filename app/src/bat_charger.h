@@ -12,6 +12,7 @@
  * @brief Battery and charger configuration and functions
  */
 
+#include "kalman_soc.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -19,7 +20,195 @@
 
 #include "power_port.h"
 
+
 #define CHARGER_TIME_NEVER INT32_MIN
+
+//#define DEBUG 0
+#define Nsta_SoC           3 ///<  number of states
+#define Nobs_SoC           1 ///<  number of observables
+
+/**
+ * Extended Kalman Filter (EKF) configuration data
+ *
+ * Data will be initialized in Charger::init_terminal
+ */
+typedef struct
+{
+    /**
+     * number of state values
+     *
+     */
+    int n;
+
+    /**
+     * number of observables
+     *
+     */
+    int m;
+
+    /**
+     * state vector
+     *
+     * [ir0 hk0 SOC0]
+     */
+    float x[Nsta_SoC];
+
+    /**
+     * prediction error covariance
+     *
+     */
+    float P[Nsta_SoC][Nsta_SoC];
+
+    /**
+     * process noise covariance
+     *
+     * uncertainty of current sensor, state equation defined as fx
+     */
+    float Q[Nsta_SoC][Nsta_SoC];
+
+    /**
+     *  measurement error covariance
+     *
+     * uncertainty of voltage sensor, output equation defined as hx
+     */
+    float R[Nobs_SoC][Nobs_SoC];
+
+    /**
+     * Kalman gain; a.k.a. K
+     *
+     */
+    float G[Nsta_SoC][Nobs_SoC];
+
+    /**
+     * Jacobian of process model
+     *
+     */
+    float F[Nsta_SoC][Nsta_SoC];
+
+    /**
+     * Jacobian of measurement model
+     *
+     */
+    float H[Nobs_SoC][Nsta_SoC];
+
+    /**
+     *  transpose of measurement Jacobian
+     *
+     */
+    float Ht[Nsta_SoC][Nobs_SoC];
+
+    /**
+     * transpose of process Jacobian
+     *
+     */
+    float Ft[Nsta_SoC][Nsta_SoC];
+
+    /**
+     *  P, post-prediction, pre-update
+     *
+     */
+    float Pp[Nsta_SoC][Nsta_SoC];
+
+    /**
+     * output of user defined f() state-transition function
+     *
+     */
+    float fx[Nsta_SoC];
+
+    /**
+     * output of user defined h() measurement function
+     *
+     */
+    float hx[Nobs_SoC];
+
+    /**
+     * temporary storage
+     *
+     */
+    float tmp0[Nsta_SoC][Nsta_SoC];
+    float tmp1[Nsta_SoC][Nobs_SoC];
+    float tmp2[Nobs_SoC][Nsta_SoC];
+    float tmp3[Nobs_SoC][Nobs_SoC];
+    float tmp4[Nobs_SoC][Nobs_SoC];
+    float tmp5[Nobs_SoC];
+
+} EKF_SOC;
+
+/**
+ * Clamp function to ensure SoC within min max boders.
+ *
+ * @param value SoC value for which to ensure to be within borders min, max
+ * @param min The minimum value 0% the SoC is allowed to have
+ * @param max The maximum value 100% the SoC is allowed to have
+ * @return float Either the handed value or 0%, 100$ when excisting borders.
+ */
+float clamp(float value, float min, float max);
+
+/**
+ * Calculates initial SoC based on handed voltage
+ *
+ * @param batteryVoltagemV
+ * @return float Inital SoC
+ */
+
+float calculateInitialSoC(float batteryVoltagemV);
+
+/**
+ * Initializes Extended Kalman Filter matrices based on handed parameters
+ * 
+ * *
+ * WARNING TODO: It is unclear if the equations used are correct, thus the init of F might be wrong
+ *
+ * @param ekf_SoC struct in which initialized matrices are stored
+ * @param v0 initial voltage on which the inital SoC is based
+ * @param P0 Diagonal values for P matrix
+ * @param Q0 Diagonal values for Q matrix
+ * @param R0 Diagonal values for R matrix
+ * @param initialSoC inital SoC if known.
+ */
+void init_soc(EKF_SOC *ekf_SoC, float v0, float P0, float Q0, float R0, float initialSoC);
+
+/**
+ * Unites f and h function and forms the complete battery model
+ *
+ * @param ekf_SoC struct with EKF Parameters
+ * @param isBatteryInFloat for Lead Acid Batterys Float Charging Status
+ * @param batteryEff Efficieny currently not used
+ * @param batteryCurrentmA
+ * @param samplePeriodMilliSec Period between battery current and voltage measurements
+ * @param batteryCapacityAh
+ * @return float Efficiency currently not used
+ */
+float model_soc(EKF_SOC *ekf_SoC, bool isBatteryInFloat, float batteryEff, float batteryCurrentmA,
+                float samplePeriodMilliSec, float batteryCapacityAh);
+
+/**
+ * project the state of charge ahead one step using a Coulomb counting model
+ * (Integration of the current over time)
+ * x{k+1}(indexSOC) = x{k} - \frac{1}{{Q_{C}}}\int_{0}^{\Delta t} {i(t)\ dt}
+ *
+ * @param ekf_SoC  struct with EKF Parameters
+ * @param isBatteryInFloat Is the lead acid batterie in float charge?
+ * @param batteryEff Efficiency currently not used
+ * @param batteryCurrentmA
+ * @param samplePeriodMilliSec Period between battery measurements
+ * @param batteryCapacity
+ * @return float
+ */
+float f(EKF_SOC *ekf_SoC, bool isBatteryInFloat, float batteryEff, float batteryCurrentmA,
+        float samplePeriodMilliSec, float batteryCapacity);
+
+/**
+ * predict the measurable value (voltage) ahead one step using the newly estimated state of charge
+ * {h}(k) = {OCV}(x{k}) - {R}_{0} i(t) - {R}_{1} {i}_{R_1}(t) in mV
+ *
+ * WARNING TODO: It is unclear if the equations used are correct and if so if their implementation
+ * is correct thus x vector and H Matrix might be wrong.
+ *
+ * @param ekf_SoC  struct with EKF Parameters
+ * @param batteryCurrentmA
+ */
+void h(EKF_SOC *ekf_SoC, float batteryCurrentmA);
 
 /**
  * Battery cell types
@@ -457,14 +646,21 @@ public:
      *
      * Must be called exactly once per second, otherwise SOC calculation gets wrong.
      */
-    void update_soc(BatConf *bat_conf);
+    void update_soc(BatConf *bat_conf, EKF_SOC *ekf_SoC);
+    
+    /**
+     * SOC estimation
+     *
+     * WARNING: TODO obsolte function, replaced by void charge_control(BatConf *bat_conf);
+     */
+    void update_soc_voltage_based(BatConf *bat_conf);
 
     /**
      * Initialize terminal and dc bus for battery connection
      *
      * @param bat Configuration to be used for terminal setpoints
      */
-    void init_terminal(BatConf *bat) const;
+    void init_terminal(BatConf *bat, EKF_SOC *ekf_SoC) const;
 
 private:
     void enter_state(int next_state);

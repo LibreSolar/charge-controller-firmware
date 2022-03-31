@@ -19,6 +19,8 @@ int dcdc_tests();
 
 int device_status_tests();
 
+int kalman_soc_tests();
+
 int load_tests();
 
 #ifdef CONFIG_CUSTOM_TESTS

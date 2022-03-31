@@ -75,6 +75,7 @@ Charger charger(&bat_terminal);
 
 BatConf bat_conf;      // actual (used) battery configuration
 BatConf bat_conf_user; // temporary storage where the user can write to
+EKF_SOC ekf_SoC;       // Extended Kalman filter configuration
 
 DeviceStatus dev_stat;
 
