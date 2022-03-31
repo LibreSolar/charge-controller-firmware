@@ -1,3 +1,12 @@
+
+/*
+ * TinyEKF: Extended Kalman Filter for embedded processors
+ *
+ * Copyright (C) 2015 Simon D. Levy
+ *
+ * MIT License
+ */
+
 #include "kalman_soc.h"
 #include <math.h>
 #include <stdio.h>
