@@ -1,9 +1,9 @@
-
-/*
- * TinyEKF: Extended Kalman Filter for embedded processors
+/**
+ * @file kalman_soc.h
+ * @author  Simon D. Levy
+ * @brief Library used to implement an SOC Algorithme based on Extended Kalman Filter.
  *
- * Copyright (C) 2015 Simon D. Levy
- *
+ * @copyright   Copyright (C) 2015 Simon D. Levy
  * MIT License
  */
 
