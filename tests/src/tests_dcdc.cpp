@@ -26,7 +26,7 @@ static void init_structs_buck(int num_batteries = 1)
 
     battery_conf_init(&bat_conf, BAT_TYPE_GEL, 6, 100);
     charger.port = &lv_terminal;
-    charger.init_terminal(&bat_conf);
+    charger.init_terminal(&bat_conf, &ekf_soc);
     lv_terminal.bus->voltage = 14 * num_batteries;
     lv_terminal.bus->series_multiplier = num_batteries;
     lv_terminal.current = 0;
@@ -68,7 +68,7 @@ static void init_structs_boost(int num_batteries = 1)
     int num_cells = (num_batteries == 1) ? 10 : 5;
     battery_conf_init(&bat_conf, BAT_TYPE_NMC, num_cells, 9);
     charger.port = &hv_terminal;
-    charger.init_terminal(&bat_conf);
+    charger.init_terminal(&bat_conf, &ekf_soc);
     hv_terminal.bus->voltage = 3.7 * num_cells * num_batteries;
     hv_terminal.bus->series_multiplier = num_batteries;
     hv_terminal.current = 0;

@@ -37,6 +37,7 @@ extern DeviceStatus dev_stat;
 extern Charger charger;
 extern BatConf bat_conf;
 extern BatConf bat_conf_user;
+extern EkfSoc ekf_soc;
 
 #if BOARD_HAS_LOAD_OUTPUT
 extern LoadOutput load;
