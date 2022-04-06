@@ -33,6 +33,7 @@ target_sources(app PRIVATE
         src/tests_half_bridge.cpp
         src/tests_load.cpp
         src/tests_power_port.cpp
+        src/tests_kalman_soc.cpp
 )
 
 # determine git tag and commit hash for automatic firmware versioning
