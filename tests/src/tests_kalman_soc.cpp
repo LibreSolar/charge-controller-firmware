@@ -22,10 +22,10 @@
 // https://github.com/simondlevy/TinyEKF/tree/master/extras/c
 
 /* states */
-#define Nsta_gps 8
+#define NUMBER_OF_STATES_GPS 8
 
 /* observables */
-#define Nobs_gps 4
+#define NUMBER_OF_OBSERVABLES_GPS 4
 
 typedef struct
 {
@@ -33,38 +33,40 @@ typedef struct
     int n; /* number of state values */
     int m; /* number of observables */
 
-    float x[Nsta_gps]; /* state vector */
+    float x[NUMBER_OF_STATES_GPS]; /* state vector */
 
-    float P[Nsta_gps][Nsta_gps]; /* prediction error covariance */
-    float Q[Nsta_gps][Nsta_gps]; /* process noise covariance */
-    float R[Nobs_gps][Nobs_gps]; /* measurement error covariance */
+    float P[NUMBER_OF_STATES_GPS][NUMBER_OF_STATES_GPS]; /* prediction error covariance */
+    float Q[NUMBER_OF_STATES_GPS][NUMBER_OF_STATES_GPS]; /* process noise covariance */
+    float R[NUMBER_OF_OBSERVABLES_GPS]
+           [NUMBER_OF_OBSERVABLES_GPS]; /* measurement error covariance */
 
-    float G[Nsta_gps][Nobs_gps]; /* Kalman gain; a.k.a. K */
+    float G[NUMBER_OF_STATES_GPS][NUMBER_OF_OBSERVABLES_GPS]; /* Kalman gain; a.k.a. K */
 
-    float F[Nsta_gps][Nsta_gps]; /* Jacobian of process model */
-    float H[Nobs_gps][Nsta_gps]; /* Jacobian of measurement model */
+    float F[NUMBER_OF_STATES_GPS][NUMBER_OF_STATES_GPS];      /* Jacobian of process model */
+    float H[NUMBER_OF_OBSERVABLES_GPS][NUMBER_OF_STATES_GPS]; /* Jacobian of measurement model */
 
-    float Ht[Nsta_gps][Nobs_gps]; /* transpose of measurement Jacobian */
-    float Ft[Nsta_gps][Nsta_gps]; /* transpose of process Jacobian */
-    float Pp[Nsta_gps][Nsta_gps]; /* P, post-prediction, pre-update */
+    float Ht[NUMBER_OF_STATES_GPS]
+            [NUMBER_OF_OBSERVABLES_GPS];                  /* transpose of measurement Jacobian */
+    float Ft[NUMBER_OF_STATES_GPS][NUMBER_OF_STATES_GPS]; /* transpose of process Jacobian */
+    float Pp[NUMBER_OF_STATES_GPS][NUMBER_OF_STATES_GPS]; /* P, post-prediction, pre-update */
 
-    float fx[Nsta_gps]; /* output of user defined f() state-transition function */
-    float hx[Nobs_gps]; /* output of user defined h() measurement function */
+    float fx[NUMBER_OF_STATES_GPS];      /* output of user defined f() state-transition function */
+    float hx[NUMBER_OF_OBSERVABLES_GPS]; /* output of user defined h() measurement function */
 
     /* temporary storage */
-    float tmp0[Nsta_gps][Nsta_gps];
-    float tmp1[Nsta_gps][Nobs_gps];
-    float tmp2[Nobs_gps][Nsta_gps];
-    float tmp3[Nobs_gps][Nobs_gps];
-    float tmp4[Nobs_gps][Nobs_gps];
-    float tmp5[Nobs_gps];
+    float tmp0[NUMBER_OF_STATES_GPS][NUMBER_OF_STATES_GPS];
+    float tmp1[NUMBER_OF_STATES_GPS][NUMBER_OF_OBSERVABLES_GPS];
+    float tmp2[NUMBER_OF_OBSERVABLES_GPS][NUMBER_OF_STATES_GPS];
+    float tmp3[NUMBER_OF_OBSERVABLES_GPS][NUMBER_OF_OBSERVABLES_GPS];
+    float tmp4[NUMBER_OF_OBSERVABLES_GPS][NUMBER_OF_OBSERVABLES_GPS];
+    float tmp5[NUMBER_OF_OBSERVABLES_GPS];
 
 } ekf_gps_t;
 
 // positioning interval
 static const float T = 1;
 
-static void blkfill(ekf_gps_t *ekf_gps, const float *a, int off)
+static void blk_fill(ekf_gps_t *ekf_gps, const float *a, int off)
 {
     off *= 2;
 
@@ -84,10 +86,10 @@ static void init_gps(ekf_gps_t *ekf_gps)
     const float Qxyz[4] = { sigma * sigma * T * T * T / 3, sigma * sigma * T * T / 2,
                             sigma * sigma * T * T / 2, sigma * sigma * T };
 
-    blkfill(ekf_gps, Qxyz, 0);
-    blkfill(ekf_gps, Qxyz, 1);
-    blkfill(ekf_gps, Qxyz, 2);
-    blkfill(ekf_gps, Qb, 3);
+    blk_fill(ekf_gps, Qxyz, 0);
+    blk_fill(ekf_gps, Qxyz, 1);
+    blk_fill(ekf_gps, Qxyz, 2);
+    blk_fill(ekf_gps, Qb, 3);
 
     // initial covariances of state noise, measurement noise
     float P0 = 10;
@@ -95,11 +97,11 @@ static void init_gps(ekf_gps_t *ekf_gps)
 
     int i;
 
-    for (i = 0; i < Nsta_gps; ++i) {
+    for (i = 0; i < NUMBER_OF_STATES_GPS; ++i) {
         ekf_gps->P[i][i] = P0;
     }
 
-    for (i = 0; i < Nobs_gps; ++i) {
+    for (i = 0; i < NUMBER_OF_OBSERVABLES_GPS; ++i) {
         ekf_gps->R[i][i] = R0;
     }
 
@@ -156,11 +158,11 @@ static void model_gps(ekf_gps_t *ekf_gps, float SV[4][3])
     }
 }
 
-#define datasetcolumns 25
+#define DATASETCOLUMNS 25
 
 typedef struct
 {
-    float P11[datasetcolumns] = { -11602023.9489137, -11602700.409615,  -11603377.0261803,
+    float P11[DATASETCOLUMNS] = { -11602023.9489137, -11602700.409615,  -11603377.0261803,
                                   -11604053.7986268, -11604730.7269448, -11605407.8111641,
                                   -11606085.0512816, -11606762.44731,   -11607439.9992582,
                                   -11608117.7071296, -11608795.5709421, -11609473.590699,
@@ -169,21 +171,21 @@ typedef struct
                                   -11614224.0961969, -11614903.3638345, -11615582.7874894,
                                   -11616262.3671785, -11616942.1029125, -11617621.9946924,
                                   -11618302.042535 };
-    float P12[datasetcolumns] = {
+    float P12[DATASETCOLUMNS] = {
         14063117.4931116, 14060708.163762,  14058298.6961425, 14055889.0902859, 14053479.3463229,
         14051069.4642412, 14048659.444148,  14046249.2860925, 14043838.9901378, 14041428.5563671,
         14039017.9848112, 14036607.2755532, 14034196.4286552, 14031785.4441682, 14029374.3221777,
         14026963.0627483, 14024551.6659205, 14022140.1317561, 14019728.4603524, 14017316.6517278,
         14014904.7059932, 14012492.6231827, 14010080.4033526, 14007668.0465943, 14005255.5529418
     };
-    float P13[datasetcolumns] = {
+    float P13[DATASETCOLUMNS] = {
         18811434.3112746, 18812823.4023028, 18814212.0761809, 18815600.3328957, 18816988.1723781,
         18818375.5946411, 18819762.5996289, 18821149.1873193, 18822535.3576819, 18823921.1106749,
         18825306.4462865, 18826691.3644751, 18828075.8652108, 18829459.9484704, 18830843.6142108,
         18832226.8624009, 18833609.6930235, 18834992.1060491, 18836374.1014277, 18837755.6791551,
         18839136.8391736, 18840517.5814695, 18841897.9060167, 18843277.8127688, 18844657.3017124
     };
-    float P21[datasetcolumns] = { -20853271.5736342, -20855049.9291186, -20856828.1167654,
+    float P21[DATASETCOLUMNS] = { -20853271.5736342, -20855049.9291186, -20856828.1167654,
                                   -20858606.1364935, -20860383.9882668, -20862161.6719905,
                                   -20863939.1876304, -20865716.5351111, -20867493.7143885,
                                   -20869270.7253602, -20871047.5680138, -20872824.2422708,
@@ -192,21 +194,21 @@ typedef struct
                                   -20885256.2418182, -20887031.5667084, -20888806.7226403,
                                   -20890581.7095696, -20892356.5274465, -20894131.1761796,
                                   -20895905.6557381 };
-    float P22[datasetcolumns] = {
+    float P22[DATASETCOLUMNS] = {
         1806977.21185816, 1805887.13065807, 1804797.28049813, 1803707.66138322, 1802618.27329107,
         1801529.116235,   1800440.19019116, 1799351.49516123, 1798263.03112756, 1797174.79810804,
         1796086.79606563, 1794999.0250037,  1793911.48491644, 1792824.17579945, 1791737.097629,
         1790650.25042617, 1789563.63415556, 1788477.24881424, 1787391.09441818, 1786305.17093311,
         1785219.47836965, 1784134.01671018, 1783048.78594032, 1781963.78607134, 1780879.01707716
     };
-    float P23[datasetcolumns] = {
+    float P23[DATASETCOLUMNS] = {
         16542682.1237923, 16540582.4659657, 16538482.4609004, 16536382.1086646, 16534281.4092741,
         16532180.3628133, 16530078.9692955, 16527977.2287825, 16525875.1412993, 16523772.7069394,
         16521669.9256904, 16519566.797618,  16517463.3227698, 16515359.5011966, 16513255.3329117,
         16511150.818015,  16509045.9564974, 16506940.7484123, 16504835.1938502, 16502729.2928038,
         16500623.0453534, 16498516.4515241, 16496409.5113475, 16494302.2249049, 16492194.5922053
     };
-    float P31[datasetcolumns] = { -14355926.017234,  -14356344.1729806, -14356762.4791434,
+    float P31[DATASETCOLUMNS] = { -14355926.017234,  -14356344.1729806, -14356762.4791434,
                                   -14357180.9357223, -14357599.5427193, -14358018.3001422,
                                   -14358437.2079998, -14358856.2662888, -14359275.4750231,
                                   -14359694.8342019, -14360114.3438323, -14360534.0039196,
@@ -215,78 +217,78 @@ typedef struct
                                   -14363475.8376898, -14363896.7015941, -14364317.715999,
                                   -14364738.880906,  -14365160.1963243, -14365581.6622592,
                                   -14366003.2787072 };
-    float P32[datasetcolumns] = {
+    float P32[DATASETCOLUMNS] = {
         8650961.88410982, 8648384.47686198, 8645806.99474651, 8643229.4378562,  8640651.80627305,
         8638074.10004161, 8635496.31920119, 8632918.4638651,  8630340.53404078, 8627762.52982713,
         8625184.45127231, 8622606.29843616, 8620028.07139851, 8617449.77022857, 8614871.39495658,
         8612292.94564608, 8609714.42239723, 8607135.82525976, 8604557.15426399, 8601978.40952272,
         8599399.59106402, 8596820.69897167, 8594241.73327994, 8591662.69405015, 8589083.58139421
     };
-    float P33[datasetcolumns] = {
+    float P33[DATASETCOLUMNS] = {
         20736354.9805864, 20737164.3397034, 20737973.2627679, 20738781.7497543, 20739589.8006407,
         20740397.4154165, 20741204.5940731, 20742011.3365787, 20742817.6429346, 20743623.5131133,
         20744428.9471034, 20745233.94489,   20746038.5064515, 20746842.6317701, 20747646.3208399,
         20748449.5736446, 20749252.3901568, 20750054.7703644, 20750856.7142618, 20751658.2218172,
         20752459.2930258, 20753259.9278649, 20754060.1263275, 20754859.8883983, 20755659.214046
     };
-    float P41[datasetcolumns] = {
+    float P41[DATASETCOLUMNS] = {
         7475239.67530529, 7472917.32156931, 7470595.0720982,  7468272.92694682, 7465950.88614163,
         7463628.94979391, 7461307.1179005,  7458985.39057082, 7456663.76782936, 7454342.24973383,
         7452020.83634093, 7449699.52774197, 7447378.32393047, 7445057.2250017,  7442736.23102901,
         7440415.34201686, 7438094.55805635, 7435773.87918626, 7433453.30548462, 7431132.83699074,
         7428812.47375867, 7426492.21586256, 7424172.06332343, 7421852.01624228, 7419532.07462828
     };
-    float P42[datasetcolumns] = {
+    float P42[DATASETCOLUMNS] = {
         12966181.2771377, 12967714.4596339, 12969247.7736988, 12970781.2192928, 12972314.7963952,
         12973848.5049293, 12975382.344894,  12976916.3162136, 12978450.4188688, 12979984.6528181,
         12981519.0180208, 12983053.5144131, 12984588.1419961, 12986122.9007034, 12987657.7904831,
         12989192.8113291, 12990727.9631777, 12992263.2459998, 12993798.6597405, 12995334.2043704,
         12996869.8798502, 12998405.6861275, 12999941.6231851, 13001477.6909524, 13003013.8894202
     };
-    float P43[datasetcolumns] = {
+    float P43[DATASETCOLUMNS] = {
         21931576.7921751, 21931442.6029888, 21931307.9468087, 21931172.8236371, 21931037.233474,
         21930901.1763249, 21930764.6521883, 21930627.6610695, 21930490.2029686, 21930352.2778878,
         21930213.8858294, 21930075.0267975, 21929935.7007905, 21929795.9078129, 21929655.647868,
         21929514.9209546, 21929373.7270772, 21929232.0662369, 21929089.9384372, 21928947.3436792,
         21928804.2819651, 21928660.7532982, 21928516.7576786, 21928372.2951113, 21928227.3655957
     };
-    float R1[datasetcolumns] = {
+    float R1[DATASETCOLUMNS] = {
         23568206.4173783, 23568427.7909862, 23568650.0894557, 23568869.5260895, 23569094.4420916,
         23569315.4143446, 23569537.8873163, 23569760.0636344, 23569981.9083983, 23570205.8646385,
         23570427.8664544, 23570650.321976,  23570873.1090517, 23571094.6397118, 23571317.6536404,
         23571542.272989,  23571765.635922,  23571987.5330366, 23572212.1698355, 23572433.9098983,
         23572658.6513985, 23572882.7297905, 23573105.2551131, 23573329.6650593, 23573552.3125334
     };
-    float R2[datasetcolumns] = {
+    float R2[DATASETCOLUMNS] = {
         26183921.457745,  26184404.1127416, 26184884.7086125, 26185366.6481502, 26185845.7782029,
         26186327.8049918, 26186808.2263608, 26187289.5027905, 26187768.842246,  26188253.1899141,
         26188734.3965431, 26189215.4635703, 26189696.8272514, 26190179.3251966, 26190658.5076005,
         26191142.2270611, 26191622.8229328, 26192101.5167307, 26192584.8348365, 26193065.3609074,
         26193548.1555067, 26194030.4265996, 26194510.3070126, 26194992.9794606, 26195473.36593
     };
-    float R3[datasetcolumns] = {
+    float R3[DATASETCOLUMNS] = {
         24652215.2627705, 24652621.9011857, 24653025.2764103, 24653428.8435874, 24653834.853795,
         24654241.1781066, 24654645.1117385, 24655052.4830633, 24655456.8704009, 24655862.4792539,
         24656267.6169511, 24656671.8995876, 24657077.3339386, 24657484.6529132, 24657890.0872643,
         24658293.6893426, 24658699.8217026, 24659106.9487251, 24659511.3186132, 24659918.7073891,
         24660325.0840524, 24660732.8916336, 24661138.8145914, 24661542.6609733, 24661950.1370006
     };
-    float R4[datasetcolumns] = {
+    float R4[DATASETCOLUMNS] = {
         25606982.9330466, 25606499.4748001, 25606016.697112,  25605534.4603806, 25605048.9604585,
         25604567.3344846, 25604081.9392636, 25603599.6850818, 25603116.4885881, 25602632.6115359,
         25602148.1411763, 25601667.632016,  25601183.0395047, 25600699.4416557, 25600219.0895472,
         25599735.3346461, 25599252.7314594, 25598769.0638094, 25598287.1935317, 25597804.9916998,
         25597322.2140106, 25596841.2162436, 25596357.5136928, 25595876.9347309, 25595393.4415826
     };
-} dataset_gps_t;
+} DatasetGps;
 
 void test_backtest_gps()
 {
-    dataset_gps_t dataset;
+    DatasetGps dataset;
 
     // Do generic EKF initialization
     ekf_gps_t ekf_gps;
-    ekf_init(&ekf_gps, Nsta_gps, Nobs_gps);
+    ekf_init(&ekf_gps, NUMBER_OF_STATES_GPS, NUMBER_OF_OBSERVABLES_GPS);
 
     // Do local initialization
     init_gps(&ekf_gps);
@@ -376,7 +378,7 @@ void test_ekf_step_func()
     ekf_gps_t ekf_gps;
     float SV_Rho[4];
 
-    ekf_init(&ekf_gps, Nsta_gps, Nobs_gps);
+    ekf_init(&ekf_gps, NUMBER_OF_STATES_GPS, NUMBER_OF_OBSERVABLES_GPS);
     ekf_gps.P[0][0] = 5;
     ekf_step(&ekf_gps, SV_Rho);
     TEST_ASSERT_EQUAL(true, ekf_gps.P[0][0] == 5.0 && ekf_gps.Q[0][0] == 0.0
@@ -402,10 +404,10 @@ void test_clamp_func()
 
 void test_calculate_initial_soc_func()
 {
-    float initialSoC, batteryVoltagemV;
-    batteryVoltagemV = 12000;
-    initialSoC = calculate_initial_soc(batteryVoltagemV);
-    TEST_ASSERT_FLOAT_WITHIN(0, 30000, initialSoC);
+    float initial_soc, battery_voltage_mV;
+    battery_voltage_mV = 12000;
+    initial_soc = calculate_initial_soc(battery_voltage_mV);
+    TEST_ASSERT_FLOAT_WITHIN(0, 30000, initial_soc);
 }
 
 void test_init_soc_func_should_init_with_calculated_soc()
@@ -415,10 +417,10 @@ void test_init_soc_func_should_init_with_calculated_soc()
     float Q0 = 0.001; // Initial state uncertainty covariance matrix
     float R0 = 0.1;   // initial covariance of measurement noise
 
-    // uint32_t batteryEff = 10;
+    // uint32_t battery_eff = 10;
     float v0 = 13000;
-    float initialSoC = 0xFFFFFFFFFFFFFFFF; // forces new SoC to be calculated
-    init_soc(&ekf_soc, v0, P0, Q0, R0, initialSoC);
+    float initial_soc = 0xFFFFFFFFFFFFFFFF; // forces new SoC to be calculated
+    init_soc(&ekf_soc, v0, P0, Q0, R0, initial_soc);
     TEST_ASSERT_FLOAT_WITHIN(0, 100000, ekf_soc.x[0]);
 }
 
@@ -428,38 +430,38 @@ void test_init_soc_func_should_init_with_initial_soc()
     float P0 = 0.1;   // initial covariance of state noise  (aka process noise)
     float Q0 = 0.001; // Initial state uncertainty covariance matrix
     float R0 = 0.1;   // initial covariance of measurement noise
-    // uint32_t batteryEff = 10;
+    // uint32_t battery_eff = 10;
     float v0 = 13000;
-    float initialSoC = 10.0; // forces new SoC to be calculated
+    float initial_soc = 10.0; // forces new SoC to be calculated
 
-    // uint32_t initialSoC = 10;
-    init_soc(&ekf_soc, v0, P0, Q0, R0, initialSoC);
+    // uint32_t initial_soc = 10;
+    init_soc(&ekf_soc, v0, P0, Q0, R0, initial_soc);
     TEST_ASSERT_FLOAT_WITHIN(0, 10, ekf_soc.x[0]);
 }
 
 void test_f_func()
 {
     // ekf_soc_t  ekf_soc
-    bool isBatteryInFloat = false;
-    float batteryEff = 100000;
-    float batteryCurrentmA = 1000;
-    float samplePeriodMilliSec = 100;
-    float batteryCapacity = 50;
-    f(&ekf_soc, isBatteryInFloat, batteryEff, batteryCurrentmA, samplePeriodMilliSec,
-      batteryCapacity);
+    bool is_battery_in_float = false;
+    float battery_eff = 100000;
+    float battery_current_mA = 1000;
+    float sample_period_milli_sec = 100;
+    float battery_capacity_Ah = 50;
+    f(&ekf_soc, is_battery_in_float, battery_eff, battery_current_mA, sample_period_milli_sec,
+      battery_capacity_Ah);
 }
 
 void test_h_func()
 {
     // ekf_soc_t  ekf_soc
-    float batteryCurrentmA = 1000;
-    h(&ekf_soc, batteryCurrentmA);
+    float battery_current_mA = 1000;
+    h(&ekf_soc, battery_current_mA);
 }
 
 void test_should_increase_soc_no_float_leadacid_12V()
 {
     int cholsl_error = 0;
-    const uint32_t SOC_SCALED_HUNDRED_PERCENT = 100000;
+    const uint32_t soc_scaled_hundred_percent = 100000;
 
     // Do generic EKF initialization
     // ekf_soc_t ekf_soc
@@ -469,38 +471,38 @@ void test_should_increase_soc_no_float_leadacid_12V()
     float P0 = 0.1;   // initial covariance of state noise  (aka process noise)
     float Q0 = 0.001; // Initial state uncertainty covariance matrix
     float R0 = 0.1;   // initial covariance of measurement noise
-    float batteryVoltagemV[1] = {
+    float battery_voltage_mV[1] = {
         12500
-    }; // intial Voltage measurement to calculate SoC if initialSoc is out of range
-    const float batteryCapacityAh = 50;
-    float initialSoC = 50000;
+    }; // intial Voltage measurement to calculate SoC if initial_soc is out of range
+    const float battery_capacity_Ah = 50;
+    float initial_soc = 50000;
 
-    float batteryEff = 100000;
-    batteryVoltagemV[0] = 12500;
-    float batteryCurrentmA = 1000;
-    float samplePeriodMilliSec = 1000;
-    bool isBatteryInFloat = false;
+    float battery_eff = 100000;
+    battery_voltage_mV[0] = 12500;
+    float battery_current_mA = 1000;
+    float sample_period_milli_sec = 1000;
+    bool is_battery_in_float = false;
 
-    float expectedResult = 50053.7539;
+    float expected_result = 50053.7539;
 #ifdef DEBUG
     printf("The SoC before init_soc %f \n", ekf_soc.x[0]);
 #endif
 
-    init_soc(&ekf_soc, batteryVoltagemV[0], P0, Q0, R0, initialSoC);
+    init_soc(&ekf_soc, battery_voltage_mV[0], P0, Q0, R0, initial_soc);
 
 #ifdef DEBUG
     printf("The SoC by init_soc %f \n", ekf_soc.x[0]);
 #endif
 
-    batteryEff = model_soc(&ekf_soc, isBatteryInFloat, batteryEff, batteryCurrentmA,
-                           samplePeriodMilliSec, batteryCapacityAh);
+    battery_eff = model_soc(&ekf_soc, is_battery_in_float, battery_eff, battery_current_mA,
+                            sample_period_milli_sec, battery_capacity_Ah);
 
 #ifdef DEBUG
-    printf("battvol inside test %f \n", batteryVoltagemV[0]);
+    printf("battvol inside test %f \n", battery_voltage_mV[0]);
     printf("The SoC before ekf_step %f \n", ekf_soc.x[0]);
 #endif
 
-    cholsl_error = ekf_step(&ekf_soc, batteryVoltagemV);
+    cholsl_error = ekf_step(&ekf_soc, battery_voltage_mV);
 
 #ifdef DEBUG
     if (cholsl_error != 0) {
@@ -509,14 +511,14 @@ void test_should_increase_soc_no_float_leadacid_12V()
     printf("The SoC before clamp %f \n", ekf_soc.x[0]);
 #endif
 
-    ekf_soc.x[0] = clamp((float)ekf_soc.x[0], 0, SOC_SCALED_HUNDRED_PERCENT);
+    ekf_soc.x[0] = clamp((float)ekf_soc.x[0], 0, soc_scaled_hundred_percent);
 
-    TEST_ASSERT_FLOAT_WITHIN(1, expectedResult, ekf_soc.x[0]);
+    TEST_ASSERT_FLOAT_WITHIN(1, expected_result, ekf_soc.x[0]);
 }
 
 void test_update_soc_should_increase_soc_no_float_leadacid_12V()
 {
-    float expectedResult = 50053.7539;
+    float expected_result = 50053.7539;
     charger.soc = 50;
     charger.port->bus->voltage = 12.500;
     charger.init_terminal(&bat_conf, &ekf_soc);
@@ -530,16 +532,16 @@ void test_update_soc_should_increase_soc_no_float_leadacid_12V()
     printf("Soc after EKF and clamp %f\n", ekf_soc.x[0]);
 #endif
 
-    TEST_ASSERT_FLOAT_WITHIN(1, expectedResult, ekf_soc.x[0]);
+    TEST_ASSERT_FLOAT_WITHIN(1, expected_result, ekf_soc.x[0]);
 }
 
 //// SoC Backtest
 
-#define datasetcolumns_SoC 996
+#define DATASETCOLUMNS_SOC 996
 
 typedef struct
 {
-    float batteryVoltagemV[datasetcolumns_SoC] = {
+    float battery_voltage_mV[DATASETCOLUMNS_SOC] = {
         12230, 12240, 12240, 12230, 12230, 12240, 12230, 12230, 12520, 12540, 12560, 12570, 12580,
         12590, 12590, 12610, 12600, 12610, 12610, 12620, 12620, 12630, 12640, 12630, 12640, 12640,
         12640, 12640, 12650, 12660, 12660, 12660, 12660, 12670, 12670, 12670, 12670, 12670, 12670,
@@ -618,7 +620,7 @@ typedef struct
         12780, 12780, 12790, 12780, 12780, 12780, 12780, 12780, 12780, 12780, 12780, 12790, 12790,
         12780, 12780, 12780, 12780, 12790, 12780, 12780, 12790
     };
-    float batteryCurrentmA[datasetcolumns_SoC] = {
+    float battery_current_mA[DATASETCOLUMNS_SOC] = {
         -3000, -3000, -3000, -3000, -3000, -3000, -3000, -2990, 10, 10, 10, 10, 10, 10, 10, 0,  0,
         10,    10,    0,     10,    10,    10,    10,    0,     0,  10, 10, 10, 10, 10, 10, 10, 10,
         10,    0,     10,    10,    10,    10,    0,     10,    0,  0,  10, 10, 0,  0,  10, 10, 0,
@@ -679,7 +681,7 @@ typedef struct
         10,    10,    10,    10,    10,    10,    10,    10,    10, 0,  10, 10, 10, 10, 10, 10, 0,
         10,    10,    0,     10,    10,    10,    0,     10,    10, 10
     };
-    bool isBatteryInFloat[datasetcolumns_SoC] = {
+    bool is_battery_in_float[DATASETCOLUMNS_SOC] = {
         false, false, false, false, false, false, false, false, false, false, false, false, false,
         false, false, false, false, false, false, false, false, false, false, false, false, false,
         false, false, false, false, false, false, false, false, false, false, false, false, false,
@@ -758,7 +760,7 @@ typedef struct
         false, false, false, false, false, false, false, false, false, false, false, false, false,
         false, false, false, false, false, false, false, false
     };
-    float samplePeriodMilliSec[datasetcolumns_SoC] = {
+    float sample_period_milli_sec[DATASETCOLUMNS_SOC] = {
         1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000,
         1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000,
         1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000,
@@ -843,39 +845,39 @@ void test_backtest_SoC()
     float P0 = 0.1;   // initial covariance of state noise  (aka process noise)
     float Q0 = 0.001; // Initial state uncertainty covariance matrix
     float R0 = 0.1;   // initial covariance of measurement noise
-    float initialSoC = 0xFFFFFFFFFFF;
-    init_soc(&ekf_soc, dataset.batteryVoltagemV[0], P0, Q0, R0, initialSoC);
-    float batteryCapacityAh = 12;
-    float batteryEff = 85000;
-    float expectedResult = 71491.4609;
-    const uint32_t SOC_SCALED_HUNDRED_PERCENT = 100000; // 100% charge = 100000
+    float initial_soc = 0xFFFFFFFFFFF;
+    init_soc(&ekf_soc, dataset.battery_voltage_mV[0], P0, Q0, R0, initial_soc);
+    float battery_capacity_Ah = 12;
+    float battery_eff = 85000;
+    float expected_result = 71491.4609;
+    const uint32_t soc_scaled_hundred_percent = 100000; // 100% charge = 100000
 
     int j;
 
     // Loop till no more data
-    for (j = 1; j < datasetcolumns_SoC; ++j) {
+    for (j = 1; j < DATASETCOLUMNS_SOC; ++j) {
 
         // $\hat{x}_k = f(\hat{x}_{k-1})$
-        batteryEff =
-            f(&ekf_soc, dataset.isBatteryInFloat[j], batteryEff, dataset.batteryCurrentmA[j],
-              dataset.samplePeriodMilliSec[j], batteryCapacityAh);
+        battery_eff =
+            f(&ekf_soc, dataset.is_battery_in_float[j], battery_eff, dataset.battery_current_mA[j],
+              dataset.sample_period_milli_sec[j], battery_capacity_Ah);
         // update measurable (voltage) based on predicted state (SOC)
-        h(&ekf_soc, dataset.batteryCurrentmA[j]);
+        h(&ekf_soc, dataset.battery_current_mA[j]);
 #ifdef DEBUG
-        printf("battvol inside test %f \n", dataset.batteryVoltagemV[j]);
+        printf("battvol inside test %f \n", dataset.battery_voltage_mV[j]);
 #endif
-        cholsl_error = ekf_step(&ekf_soc, &dataset.batteryVoltagemV[j]);
+        cholsl_error = ekf_step(&ekf_soc, &dataset.battery_voltage_mV[j]);
 #ifdef DEBUG
         if (cholsl_error != 0)
             printf("EKFSTEP Failed");
 #endif
-        ekf_soc.x[0] = clamp((float)ekf_soc.x[0], 0, SOC_SCALED_HUNDRED_PERCENT);
+        ekf_soc.x[0] = clamp((float)ekf_soc.x[0], 0, soc_scaled_hundred_percent);
 #ifdef DEBUG
         printf("\n\n\nThe SoC after clamp %f \n\n\n", ekf_soc.x[0]);
 #endif
     }
 
-    TEST_ASSERT_FLOAT_WITHIN(1, expectedResult, ekf_soc.x[0]);
+    TEST_ASSERT_FLOAT_WITHIN(1, expected_result, ekf_soc.x[0]);
 }
 
 int kalman_soc_tests()
