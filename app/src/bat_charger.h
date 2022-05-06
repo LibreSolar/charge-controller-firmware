@@ -149,7 +149,6 @@ float clamp(float value, float min, float max);
  * @param battery_voltage_mV
  * @return float Inital SoC
  */
-
 float calculate_initial_soc(float battery_voltage_mV);
 
 /**
