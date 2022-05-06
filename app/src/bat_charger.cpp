@@ -806,7 +806,6 @@ float f(EkfSoc *ekf_soc, bool is_battery_in_float, float battery_eff, float batt
 
 void h(EkfSoc *ekf_soc, float battery_current_mA)
 {
-
     // _hx is the voltage that most closely matches current SoC (a number)
     // _H is an array of form [ocv gradient, measured current, 1] (the last parameter is the offset)
     // x_[0] = SOC, _x[1] = R0 _x[2]=U1 units are unknown.
@@ -891,7 +890,6 @@ void h(EkfSoc *ekf_soc, float battery_current_mA)
 
 void Charger::update_soc(BatConf *bat_conf, EkfSoc *ekf_soc)
 {
-
     int cholsl_error = 0;
     float battery_eff = 100000; // fixed to 100% implemented to use later on.
     float sample_period_milli_sec = 1000;
