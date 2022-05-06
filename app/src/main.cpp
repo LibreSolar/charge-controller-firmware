@@ -107,7 +107,7 @@ void main(void)
 
         dev_stat.update_energy();
         dev_stat.update_min_max_values();
-        charger.update_soc(&bat_conf,&ekf_soc);
+        charger.update_soc(&bat_conf, &ekf_soc);
 
 #if CONFIG_HS_MOSFET_FAIL_SAFE_PROTECTION && BOARD_HAS_DCDC
         if (dev_stat.has_error(ERR_DCDC_HS_MOSFET_SHORT)) {
