@@ -753,6 +753,7 @@ void Charger::init_terminal(BatConf *bat, EkfSoc *ekf_soc) const
     ekf_init(ekf_soc, NUMBER_OF_STATES_SOC, NUMBER_OF_OBSERVABLES_SOC);
     init_soc(ekf_soc, battery_voltage_mV[0], P0, Q0, R0, initial_soc);
 }
+
 float clamp(float value, float min, float max)
 {
     if (value > max) {
