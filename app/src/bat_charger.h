@@ -649,7 +649,7 @@ public:
     /**
      * SOC estimation
      *
-     * WARNING: TODO obsolte function, replaced by void charge_control(BatConf *bat_conf);
+     * WARNING: TODO obsolte function, replaced by void update_soc(BatConf *bat_conf, EkfSoc *ekf_soc)
      */
     void update_soc_voltage_based(BatConf *bat_conf);
 
