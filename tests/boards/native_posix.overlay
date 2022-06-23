@@ -137,7 +137,7 @@
         timers1: timers1 {
                 status = "okay";
 
-                halfbridge {
+                halfbridge: halfbridge {
                         compatible = "half-bridge";
                         frequency = <70000>;
                         deadtime = <300>;

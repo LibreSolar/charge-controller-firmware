@@ -132,19 +132,6 @@
 		spi-uext = &spi1;
 		i2c-uext = &i2c1;
 	};
-
-	soc {
-		// not (yet) provided by Zephyr dts, but necessary for dcdc node
-		timers3: timers@40000400 {
-			compatible = "st,stm32-timers";
-			reg = <0x40000400 0x400>;
-			clocks = <&rcc STM32_CLOCK_BUS_APB1 0x00000002>;
-			interrupts = <16 0>;
-			interrupt-names = "global";
-			status = "disabled";
-			label = "TIMERS_3";
-		};
-	};
 };
 
 &clk_hsi {
@@ -168,6 +155,7 @@
 
 &usart1 {
 	pinctrl-0 = <&usart1_tx_pa9 &usart1_rx_pa10>;
+	pinctrl-names = "default";
 	current-speed = <115200>;
 	status = "okay";
 };
@@ -178,6 +166,7 @@
 
 &usart2 {
 	pinctrl-0 = <&usart2_tx_pa2 &usart2_rx_pa3>;
+	pinctrl-names = "default";
 	current-speed = <115200>;
 	status = "okay";
 };
@@ -188,12 +177,14 @@
 
 &i2c1 {
 	pinctrl-0 = <&i2c1_scl_pb6 &i2c1_sda_pb7>;
+	pinctrl-names = "default";
 	clock-frequency = <I2C_BITRATE_FAST>;
 	status = "okay";
 };
 
 &spi1 {
 	pinctrl-0 = <&spi1_sck_pb3 &spi1_miso_pb4 &spi1_mosi_pb5>;
+	pinctrl-names = "default";
 	cs-gpios = <&gpioa 15 GPIO_ACTIVE_LOW>;
 	status = "okay";
 };
@@ -205,9 +196,10 @@
 &timers3 {
 	status = "okay";
 
-	halfbridge {
+	halfbridge: halfbridge {
 		compatible = "half-bridge";
 		pinctrl-0 = <&tim3_ch3_pb0 &tim3_ch4_pb1>;
+		pinctrl-names = "default";
 		frequency = <50000>;
 		deadtime = <230>;
 	};

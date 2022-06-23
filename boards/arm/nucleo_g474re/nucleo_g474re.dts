@@ -185,6 +185,7 @@
 
 &usart1 {
 	pinctrl-0 = <&usart1_tx_pc4 &usart1_rx_pc5>;
+	pinctrl-names = "default";
 	current-speed = <115200>;
 	status = "okay";
 };
@@ -195,6 +196,7 @@
 
 &lpuart1 {
 	pinctrl-0 = <&lpuart1_tx_pa2 &lpuart1_rx_pa3>;
+	pinctrl-names = "default";
 	current-speed = <115200>;
 	status = "okay";
 };
@@ -205,21 +207,24 @@
 
 &i2c1 {
 	pinctrl-0 = <&i2c1_scl_pb8 &i2c1_sda_pb9>;
+	pinctrl-names = "default";
 	status = "okay";
 };
 
 &spi1 {
 	pinctrl-0 = <&spi1_nss_pa4 &spi1_sck_pb3
 		     &spi1_miso_pa6 &spi1_mosi_pa7>;
+	pinctrl-names = "default";
 	status = "okay";
 };
 
 &hrtim1 {
 	status = "okay";
 
-	halfbridge {
+	halfbridge: halfbridge {
 		compatible = "half-bridge";
 		pinctrl-0 = <&hrtim1_cha1_pa8 &hrtim1_cha2_pa9>;
+		pinctrl-names = "default";
 		frequency = <70000>;
 		deadtime = <300>;
 	};
@@ -230,9 +235,10 @@
 &timers1 {
 	status = "okay";
 
-	halfbridge {
+	halfbridge: halfbridge {
 		compatible = "half-bridge";
 		pinctrl-0 = <&tim1_ch1_pa8 &tim1_ch1n_pb13>;
+		pinctrl-names = "default";
 		frequency = <70000>;
 		deadtime = <300>;
 	};
@@ -271,11 +277,13 @@
 
 &adc1 {
 	pinctrl-0 = <&adc1_in1_pa0>;
+	pinctrl-names = "default";
 	status = "okay";
 };
 
 &can1 {
 	pinctrl-0 = <&fdcan1_rx_pa11 &fdcan1_tx_pa12>;
+	pinctrl-names = "default";
 	bus-speed = <500000>;
 	bus-speed-data = <500000>;
 	sjw = <1>;

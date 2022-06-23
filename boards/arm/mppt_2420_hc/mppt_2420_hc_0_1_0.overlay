@@ -55,7 +55,7 @@
 };
 
 &timers1 {
-	halfbridge {
+	halfbridge: halfbridge {
 		pinctrl-0 = <&tim1_ch1_pa8 &tim1_ch1n_pb13>;
 	};
 };
@@ -64,5 +64,6 @@
 	status = "disabled";
 
 	/delete-node/ pinctrl-0;
+	/delete-node/ pinctrl-names;
 	/delete-node/ cs-gpios;
 };

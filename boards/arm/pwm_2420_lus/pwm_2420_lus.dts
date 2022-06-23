@@ -146,25 +146,6 @@
 		spi-uext = &spi1;
 		i2c-uext = &i2c1;
 	};
-
-	// this should normally go to Zephyr repo
-	soc {
-		timers3: timers@40000400 {
-			compatible = "st,stm32-timers";
-			reg = <0x40000400 0x400>;
-			clocks = <&rcc STM32_CLOCK_BUS_APB1 0x00000002>;
-			status = "okay";
-			label = "TIMERS_3";
-
-			pwm3: pwm {
-				compatible = "st,stm32-pwm";
-				status = "okay";
-				st,prescaler = <10000>;
-				label = "PWM_3";
-				#pwm-cells = <3>;
-			};
-		};
-	};
 };
 
 &clk_hsi {
@@ -188,6 +169,7 @@
 
 &usart1 {
 	pinctrl-0 = <&usart1_tx_pa9 &usart1_rx_pa10>;
+	pinctrl-names = "default";
 	current-speed = <115200>;
 	status = "okay";
 };
@@ -199,6 +181,7 @@
 
 &usart2 {
 	pinctrl-0 = <&usart2_tx_pa2 &usart2_rx_pa3>;
+	pinctrl-names = "default";
 	current-speed = <115200>;
 	status = "okay";
 };
@@ -209,12 +192,14 @@
 
 &i2c1 {
 	pinctrl-0 = <&i2c1_scl_pb6 &i2c1_sda_pb7>;
+	pinctrl-names = "default";
 	status = "okay";
 	clock-frequency = <I2C_BITRATE_FAST>;
 };
 
 &spi1 {
 	pinctrl-0 = <&spi1_sck_pb3 &spi1_miso_pa11 &spi1_mosi_pa12>;
+	pinctrl-names = "default";
 	cs-gpios = <&gpioa 15 GPIO_ACTIVE_LOW>;
 	status = "okay";
 };
@@ -225,9 +210,11 @@
 
 &timers3 {
 	status = "okay";
+	st,prescaler = <10000>;
 	pwm3: pwm {
 		status = "okay";
 		pinctrl-0 = <&tim3_ch4_pb1>;
+		pinctrl-names = "default";
 	};
 };
 

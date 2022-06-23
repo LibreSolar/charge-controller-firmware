@@ -142,7 +142,7 @@ K_THREAD_DEFINE(can_isotp, RX_THREAD_STACK_SIZE, can_isotp_thread, NULL, NULL, N
 #define TS_CAN_SOURCE_GET(id)  (((uint32_t)id & TS_CAN_SOURCE_MASK) >> TS_CAN_SOURCE_POS)
 #define TS_CAN_DATA_ID_GET(id) (((uint32_t)id & TS_CAN_DATA_ID_MASK) >> TS_CAN_DATA_ID_POS)
 
-CAN_DEFINE_MSGQ(sub_msgq, 10);
+CAN_MSGQ_DEFINE(sub_msgq, 10);
 
 const struct zcan_filter ctrl_filter = {
     .id = TS_CAN_BASE_CONTROL,
@@ -168,7 +168,7 @@ void can_pub_send(uint32_t can_id, uint8_t can_data[8], uint8_t data_len)
     if (data_len >= 0) {
         frame.dlc = data_len;
 
-        if (can_send(can_dev, &frame, K_MSEC(10), can_pub_isr, NULL) != CAN_TX_OK) {
+        if (can_send(can_dev, &frame, K_MSEC(10), can_pub_isr, NULL) != 0) {
             LOG_DBG("Error sending CAN frame");
         }
     }
@@ -190,7 +190,7 @@ void can_pubsub_thread()
         return;
     }
 
-    int filter_id = can_attach_msgq(can_dev, &sub_msgq, &ctrl_filter);
+    int filter_id = can_add_rx_filter_msgq(can_dev, &sub_msgq, &ctrl_filter);
     if (filter_id < 0) {
         LOG_ERR("Unable to attach ISR [%d]", filter_id);
         return;

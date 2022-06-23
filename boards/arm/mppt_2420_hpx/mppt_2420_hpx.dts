@@ -168,6 +168,7 @@
 
 &usart1 {
 	pinctrl-0 = <&usart1_tx_pa9 &usart1_rx_pa10>;
+	pinctrl-names = "default";
 	current-speed = <115200>;
 	status = "okay";
 };
@@ -178,6 +179,7 @@
 
 &usart3 {
 	pinctrl-0 = <&usart3_tx_pc10 &usart3_rx_pc11>;
+	pinctrl-names = "default";
 	current-speed = <115200>;
 	status = "okay";
 };
@@ -188,11 +190,13 @@
 
 &i2c1 {
 	pinctrl-0 = <&i2c1_scl_pa15 &i2c1_sda_pb7>;
+	pinctrl-names = "default";
 	status = "okay";
 };
 
 &spi1 {
 	pinctrl-0 = <&spi1_sck_pb3 &spi1_miso_pb4 &spi1_mosi_pb5>;
+	pinctrl-names = "default";
 	cs-gpios = <&gpiod 2 GPIO_ACTIVE_LOW>;
 	status = "okay";
 };
@@ -226,9 +230,10 @@
 &timers1 {
 	status = "okay";
 
-	halfbridge {
+	halfbridge: halfbridge {
 		compatible = "half-bridge";
 		pinctrl-0 = <&tim1_ch1_pa8 &tim1_ch1n_pb13>;
+		pinctrl-names = "default";
 		frequency = <70000>;
 		deadtime = <300>;
 	};
@@ -240,21 +245,24 @@
 	pwm3: pwm {
 		status = "okay";
 		pinctrl-0 = <&tim3_ch2_pc7>;
+		pinctrl-names = "default";
 	};
 };
 
 /* TIM8 (CH1) used for charge pump */
 &timers8 {
 	status = "okay";
+	st,prescaler = <149>;	/* reduce counter clock frequency to 1 MHz */
 	pwm8: pwm {
 		status = "okay";
-		st,prescaler = <149>;	/* reduce counter clock frequency to 1 MHz */
 		pinctrl-0 = <&tim8_ch1_pc6>;
+		pinctrl-names = "default";
 	};
 };
 
 &i2c3 {
 	pinctrl-0 = <&i2c3_scl_pc8 &i2c3_sda_pc9>;
+	pinctrl-names = "default";
 	status = "okay";
 	clock-frequency = <I2C_BITRATE_STANDARD>;
 	eeprom@50 {

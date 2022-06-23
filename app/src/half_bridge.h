@@ -7,6 +7,11 @@
 #ifndef HALF_BRIDGE_H_
 #define HALF_BRIDGE_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include <stdbool.h>
 #include <stdint.h>
 
 /**
@@ -84,5 +89,9 @@ void half_bridge_stop();
  * @returns True if PWM output enabled
  */
 bool half_bridge_enabled();
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* HALF_BRIDGE_H_ */

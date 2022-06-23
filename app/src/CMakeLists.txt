@@ -10,7 +10,7 @@ target_sources(app PRIVATE
         daq_driver.c
         device_status.cpp
         dcdc.cpp
-        half_bridge.cpp
+        half_bridge.c
         hardware.cpp
         leds.cpp
         load.cpp

@@ -20,7 +20,7 @@
 #endif
 
 #include <drivers/gpio.h>
-#include <power/reboot.h>
+#include <sys/reboot.h>
 
 LOG_MODULE_REGISTER(hardware, CONFIG_HW_LOG_LEVEL);
 

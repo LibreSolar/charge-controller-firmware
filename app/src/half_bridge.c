@@ -4,24 +4,24 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#define DT_DRV_COMPAT half_bridge
+
 #include "half_bridge.h"
 
 #include <zephyr.h>
 
 #include <stdio.h>
 
+#include "board.h"
 #include "mcu.h"
-#include "setup.h"
 
 #ifdef CONFIG_SOC_FAMILY_STM32
-#include <pinmux/pinmux_stm32.h>
+#include <drivers/pinctrl.h>
 #include <soc.h>
 #include <stm32_ll_bus.h>
 #endif
 
 #if BOARD_HAS_DCDC
-
-#define DT_DRV_COMPAT half_bridge
 
 // Get address of used timer from board dts
 #define TIMER_ADDR DT_REG_ADDR(DT_PARENT(DT_DRV_INST(0)))
@@ -46,13 +46,17 @@ static uint16_t clamp_ccr(uint16_t ccr_target)
 
 #ifdef CONFIG_SOC_FAMILY_STM32
 
-static const struct soc_gpio_pinctrl tim_pinctrl[] = ST_STM32_DT_INST_PINCTRL(0, 0);
+#define PINCTRL_NODE DT_NODELABEL(halfbridge)
+
+PINCTRL_DT_DEFINE(PINCTRL_NODE);
+
+static const struct pinctrl_dev_config *pincfg = PINCTRL_DT_DEV_CONFIG_GET(PINCTRL_NODE);
 
 #if TIMER_ADDR == TIM3_BASE
 
 static void tim_init_registers(int freq_kHz)
 {
-    stm32_dt_pinctrl_configure(tim_pinctrl, ARRAY_SIZE(tim_pinctrl), TIMER_ADDR);
+    pinctrl_apply_state(pincfg, PINCTRL_STATE_DEFAULT);
 
     LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM3);
 
@@ -128,7 +132,7 @@ bool half_bridge_enabled()
 
 static void tim_init_registers(int freq_kHz)
 {
-    stm32_dt_pinctrl_configure(tim_pinctrl, ARRAY_SIZE(tim_pinctrl), TIMER_ADDR);
+    pinctrl_apply_state(pincfg, PINCTRL_STATE_DEFAULT);
 
 #ifdef LL_APB2_GRP1_PERIPH_TIM1
     LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_TIM1);
@@ -234,7 +238,7 @@ bool half_bridge_enabled()
 
 static void tim_init_registers(int freq_kHz)
 {
-    stm32_dt_pinctrl_configure(tim_pinctrl, ARRAY_SIZE(tim_pinctrl), TIMER_ADDR);
+    pinctrl_apply_state(pincfg, PINCTRL_STATE_DEFAULT);
 
     LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_HRTIM1);
 
