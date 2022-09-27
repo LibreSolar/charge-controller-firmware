@@ -190,7 +190,7 @@ void load_cp_enable()
     const struct device *pwm_dev = DEVICE_DT_GET(CP_PWM_CONTROLLER);
     if (device_is_ready(pwm_dev)) {
         // set to 50% duty cycle
-        pwm_pin_set_nsec(pwm_dev, CP_PWM_CHANNEL, CP_PWM_PERIOD, CP_PWM_PERIOD / 2, 0);
+        pwm_set(pwm_dev, CP_PWM_CHANNEL, CP_PWM_PERIOD, CP_PWM_PERIOD / 2, 0);
     }
 }
 
@@ -231,13 +231,17 @@ bool pgood_check()
 
 #else // CONFIG_SOC_FAMILY_STM32
 
-void load_out_init() {}
+void load_out_init()
+{}
 
-void usb_out_init() {}
+void usb_out_init()
+{}
 
-void load_out_set(bool value) {}
+void load_out_set(bool value)
+{}
 
-void usb_out_set(bool value) {}
+void usb_out_set(bool value)
+{}
 
 bool pgood_check()
 {

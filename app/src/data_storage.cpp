@@ -162,41 +162,49 @@ void data_storage_write()
  */
 #define NVS_HEADER_SIZE 2
 
-#define FLASH_PARTITION_NODE DT_NODE_BY_FIXED_PARTITION_LABEL(storage)
-#define FLASH_DEVICE_NODE    DT_MTD_FROM_FIXED_PARTITION(FLASH_PARTITION_NODE)
+#define STORAGE_NODE_LABEL storage
 
 #define THINGSET_DATA_ID 1
-
-static const struct device *flash_dev = DEVICE_DT_GET(FLASH_DEVICE_NODE);
 
 static struct nvs_fs fs;
 static bool nvs_initialized = false;
 
-static void data_storage_init()
+static int data_storage_init()
 {
     int err;
     struct flash_pages_info page_info;
 
-    fs.offset = FLASH_AREA_OFFSET(storage);
-    err = flash_get_page_info_by_offs(flash_dev, fs.offset, &page_info);
+    fs.flash_device = FLASH_AREA_DEVICE(STORAGE_NODE_LABEL);
+    if (!device_is_ready(fs.flash_device)) {
+        LOG_ERR("Flash device not ready");
+        return -ENODEV;
+    }
+    fs.offset = FLASH_AREA_OFFSET(STORAGE_NODE_LABEL);
+    err = flash_get_page_info_by_offs(fs.flash_device, fs.offset, &page_info);
     if (err) {
         LOG_ERR("Unable to get flash page info");
+        return err;
     }
     fs.sector_size = page_info.size;
-    fs.sector_count = FLASH_AREA_SIZE(storage) / page_info.size;
+    fs.sector_count = FLASH_AREA_SIZE(STORAGE_NODE_LABEL) / page_info.size;
 
-    err = nvs_init(&fs, DT_LABEL(FLASH_DEVICE_NODE));
+    err = nvs_mount(&fs);
     if (err) {
-        LOG_ERR("NVS init failed");
+        LOG_ERR("NVS mount failed: %d", err);
+        return err;
     }
 
     nvs_initialized = true;
+    return 0;
 }
 
 void data_storage_read()
 {
     if (!nvs_initialized) {
-        data_storage_init();
+        int err = data_storage_init();
+        if (err) {
+            return;
+        }
     }
 
     int num_bytes = nvs_read(&fs, THINGSET_DATA_ID, &buf, sizeof(buf));
@@ -225,7 +233,10 @@ void data_storage_read()
 void data_storage_write()
 {
     if (!nvs_initialized) {
-        data_storage_init();
+        int err = data_storage_init();
+        if (err) {
+            return;
+        }
     }
 
     k_mutex_lock(&data_buf_lock, K_FOREVER);
@@ -252,8 +263,10 @@ void data_storage_write()
 
 #else
 
-void data_storage_write() {}
-void data_storage_read() {}
+void data_storage_write()
+{}
+void data_storage_read()
+{}
 
 #endif
 

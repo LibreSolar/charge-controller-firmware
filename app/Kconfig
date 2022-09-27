@@ -74,7 +74,7 @@ endchoice
 
 choice
     prompt "PWM terminal"
-    depends on $(dt_node_has_bool_prop,/outputs/pwm_switch,kconfig-flag)
+    depends on $(dt_node_bool_prop,/outputs/pwm_switch,kconfig-flag)
     help
       Select the device connected to the PWM switch (currently
       only solar panel possible)
@@ -295,7 +295,7 @@ endmenu # Battery default settings
 
 
 menu "Load output settings"
-    depends on $(dt_node_has_bool_prop,/outputs/load,kconfig-flag)
+    depends on $(dt_node_bool_prop,/outputs/load,kconfig-flag)
 
 config LOAD_OC_RECOVERY_DELAY
     int "Overcurrent recovery delay (s)"
