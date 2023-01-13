@@ -81,9 +81,9 @@ void can_isotp_thread()
     while (1) {
         /* re-assign address in every loop as it may have been changed via ThingSet */
         rx_addr.ext_id =
-            TS_CAN_BASE_REQRESP | TS_CAN_PRIO_REQRESP | TS_CAN_TARGET_SET(can_node_addr);
+            TS_CAN_TYPE_REQRESP | TS_CAN_PRIO_REQRESP | TS_CAN_TARGET_SET(can_node_addr);
         tx_addr.ext_id =
-            TS_CAN_BASE_REQRESP | TS_CAN_PRIO_REQRESP | TS_CAN_SOURCE_SET(can_node_addr);
+            TS_CAN_TYPE_REQRESP | TS_CAN_PRIO_REQRESP | TS_CAN_SOURCE_SET(can_node_addr);
 
         ret = isotp_bind(&recv_ctx, can_dev, &rx_addr, &tx_addr, &fc_opts, K_FOREVER);
         if (ret != ISOTP_N_OK) {
@@ -145,7 +145,7 @@ K_THREAD_DEFINE(can_isotp, RX_THREAD_STACK_SIZE, can_isotp_thread, NULL, NULL, N
 CAN_MSGQ_DEFINE(sub_msgq, 10);
 
 const struct can_filter ctrl_filter = {
-    .id = TS_CAN_BASE_CONTROL,
+    .id = TS_CAN_TYPE_PUBSUB,
     .rtr = CAN_DATAFRAME,
     .id_type = CAN_EXTENDED_IDENTIFIER,
     .id_mask = TS_CAN_TYPE_MASK,

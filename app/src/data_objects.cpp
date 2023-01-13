@@ -197,7 +197,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Gerät zurücksetzen"
         }
     }*/
-    TS_FUNCTION(0xE0, "xReset", &reset_device, ID_DEVICE, TS_ANY_RW),
+    TS_FN_VOID(0xE0, "xReset", &reset_device, ID_DEVICE, TS_ANY_RW),
 
     /* 0xE2 reserved (previously used for bootloader-stm) */
 
@@ -207,7 +207,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Daten ins EEPROM schreiben"
         }
     }*/
-    TS_FUNCTION(0xE1, "xStoreData", &data_storage_write, ID_DEVICE, TS_ANY_RW),
+    TS_FN_VOID(0xE1, "xStoreData", &data_storage_write, ID_DEVICE, TS_ANY_RW),
 
     /*{
         "title": {
@@ -215,7 +215,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Thingset Anmeldung"
         }
     }*/
-    TS_FUNCTION(0xEE, "xAuth", &thingset_auth, ID_DEVICE, TS_ANY_RW),
+    TS_FN_VOID(0xEE, "xAuth", &thingset_auth, ID_DEVICE, TS_ANY_RW),
     TS_ITEM_STRING(0xEF, "Password", auth_password, sizeof(auth_password), 0xEE, TS_ANY_RW, 0),
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -1071,7 +1071,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Bootloader starten"
         }
     }*/
-    TS_FUNCTION(0xF0, "xBootloaderSTM", &start_stm32_bootloader, ID_DFU, TS_ANY_RW),
+    TS_FN_VOID(0xF0, "xBootloaderSTM", &start_stm32_bootloader, ID_DFU, TS_ANY_RW),
 
     /*{
         "title": {
