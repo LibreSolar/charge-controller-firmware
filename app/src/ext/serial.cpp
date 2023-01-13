@@ -33,6 +33,7 @@ static char tx_buf[CONFIG_THINGSET_SERIAL_TX_BUF_SIZE];
 static char rx_buf[CONFIG_THINGSET_SERIAL_RX_BUF_SIZE];
 
 static volatile size_t rx_buf_pos = 0;
+static bool discard_buffer;
 
 static struct k_sem command_flag; // used as an event to signal a received command
 static struct k_sem rx_buf_mutex; // binary semaphore used as mutex in ISR context
@@ -83,9 +84,15 @@ void serial_cb(const struct device *dev, void *user_data)
         return;
     }
 
-    while (uart_irq_rx_ready(uart_dev) && k_sem_take(&rx_buf_mutex, K_NO_WAIT) == 0) {
+    while (uart_irq_rx_ready(uart_dev)) {
 
         uart_fifo_read(uart_dev, &c, 1);
+
+        if (k_sem_take(&rx_buf_mutex, K_NO_WAIT) != 0) {
+            // buffer not available: drop character
+            discard_buffer = true;
+            continue;
+        }
 
         // \r\n and \n are markers for line end, i.e. command end
         // we accept this at any time, even if the buffer is 'full', since
@@ -97,8 +104,15 @@ void serial_cb(const struct device *dev, void *user_data)
             else {
                 rx_buf[rx_buf_pos] = '\0';
             }
-            // start processing command and keep the rx_buf_mutex locked
-            k_sem_give(&command_flag);
+            if (discard_buffer) {
+                rx_buf_pos = 0;
+                discard_buffer = false;
+                k_sem_give(&rx_buf_mutex);
+            }
+            else {
+                // start processing command and keep the rx_buf_mutex locked
+                k_sem_give(&command_flag);
+            }
             return;
         }
         // backspace allowed if there is something in the buffer already
