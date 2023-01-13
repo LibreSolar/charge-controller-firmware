@@ -9,10 +9,10 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <drivers/uart.h>
-#include <sys/printk.h>
-#include <task_wdt/task_wdt.h>
-#include <zephyr.h>
+#include <zephyr/drivers/uart.h>
+#include <zephyr/kernel.h>
+#include <zephyr/sys/printk.h>
+#include <zephyr/task_wdt/task_wdt.h>
 
 #include "data_objects.h"
 #include "hardware.h"

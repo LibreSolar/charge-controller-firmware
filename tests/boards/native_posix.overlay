@@ -149,7 +149,6 @@
 
 		pwm3: pwm3 {
                         compatible = "zephyr,dummy-pwm";
-			label = "PWM_3";
 			#pwm-cells = <3>;
 		};
 	};

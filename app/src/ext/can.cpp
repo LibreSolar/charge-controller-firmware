@@ -6,17 +6,17 @@
 
 #if CONFIG_THINGSET_CAN
 
-#include <device.h>
-#include <drivers/can.h>
-#include <drivers/gpio.h>
-#include <task_wdt/task_wdt.h>
-#include <zephyr.h>
+#include <zephyr/device.h>
+#include <zephyr/drivers/can.h>
+#include <zephyr/drivers/gpio.h>
+#include <zephyr/kernel.h>
+#include <zephyr/task_wdt/task_wdt.h>
 
 #ifdef CONFIG_ISOTP
-#include <canbus/isotp.h>
+#include <zephyr/canbus/isotp.h>
 #endif
 
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(ext_can, CONFIG_CAN_LOG_LEVEL);
 
 #include "bat_charger.h"
@@ -144,7 +144,7 @@ K_THREAD_DEFINE(can_isotp, RX_THREAD_STACK_SIZE, can_isotp_thread, NULL, NULL, N
 
 CAN_MSGQ_DEFINE(sub_msgq, 10);
 
-const struct zcan_filter ctrl_filter = {
+const struct can_filter ctrl_filter = {
     .id = TS_CAN_BASE_CONTROL,
     .rtr = CAN_DATAFRAME,
     .id_type = CAN_EXTENDED_IDENTIFIER,
@@ -159,7 +159,7 @@ void can_pub_isr(const struct device *dev, int error, void *user_data)
 
 void can_pub_send(uint32_t can_id, uint8_t can_data[8], uint8_t data_len)
 {
-    struct zcan_frame frame = { 0 };
+    struct can_frame frame = { 0 };
     frame.id_type = CAN_EXTENDED_IDENTIFIER;
     frame.rtr = CAN_DATAFRAME;
     frame.id = can_id;
@@ -180,11 +180,7 @@ void can_pubsub_thread()
 
     unsigned int can_id;
     uint8_t can_data[8];
-    struct zcan_frame rx_frame;
-
-    const struct device *can_en_dev = device_get_binding(DT_GPIO_LABEL(CAN_EN_GPIO, gpios));
-    gpio_pin_configure(can_en_dev, DT_GPIO_PIN(CAN_EN_GPIO, gpios),
-                       DT_GPIO_FLAGS(CAN_EN_GPIO, gpios) | GPIO_OUTPUT_ACTIVE);
+    struct can_frame rx_frame;
 
     if (!device_is_ready(can_dev)) {
         return;

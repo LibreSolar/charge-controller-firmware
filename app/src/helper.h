@@ -35,11 +35,11 @@
 
 #else
 
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 
 #endif /* VSCODE_INTELLISENSE_HACK */
 
-#include <zephyr.h>
+#include <zephyr/kernel.h>
 
 #ifdef __cplusplus
 extern "C" {

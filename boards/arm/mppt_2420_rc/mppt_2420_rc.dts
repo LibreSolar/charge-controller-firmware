@@ -206,11 +206,11 @@
 	pinctrl-0 = <&i2c1_scl_pa15 &i2c1_sda_pb7>;
 	pinctrl-names = "default";
 	clock-frequency = <I2C_BITRATE_STANDARD>;
-	eeprom@50 {
+
+	eeprom: eeprom@50 {
 		// Microchip 24AA32A
 		compatible = "atmel,at24";
 		reg = <0x50>;
-		label = "EEPROM_0";
 		size = <32768>;
 		pagesize = <32>;
 		address-width = <16>;

@@ -6,11 +6,11 @@
 
 #ifndef UNIT_TEST
 
-#include <device.h>
-#include <drivers/gpio.h>
 #include <stdio.h>
-#include <task_wdt/task_wdt.h>
-#include <zephyr.h>
+#include <zephyr/device.h>
+#include <zephyr/drivers/gpio.h>
+#include <zephyr/kernel.h>
+#include <zephyr/task_wdt/task_wdt.h>
 
 #include "helper.h"
 #include "setup.h"
@@ -28,13 +28,13 @@
 #include "load.h"       // load and USB output management
 #include "pwm_switch.h" // PWM charge controller
 
-void main(void)
+int main(void)
 {
     printf("Hardware: Libre Solar %s (%s)\n", DT_PROP(DT_PATH(pcb), type),
            DT_PROP(DT_PATH(pcb), version_str));
     printf("Firmware: %s\n", FIRMWARE_VERSION_ID);
 
-    task_wdt_init(device_get_binding(DT_LABEL(DT_NODELABEL(iwdg))));
+    task_wdt_init(DEVICE_DT_GET_OR_NULL(DT_NODELABEL(iwdg)));
 
     setup();
 

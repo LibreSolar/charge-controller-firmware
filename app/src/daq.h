@@ -24,7 +24,7 @@
 extern "C" {
 #endif
 
-#include <zephyr.h>
+#include <zephyr/kernel.h>
 
 #include <stdint.h>
 

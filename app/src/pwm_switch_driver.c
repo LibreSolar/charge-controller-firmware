@@ -6,7 +6,7 @@
 
 #include "pwm_switch.h"
 
-#include <zephyr.h>
+#include <zephyr/kernel.h>
 
 #include <stdio.h>
 #include <time.h>
@@ -24,8 +24,8 @@
 #include <stm32_ll_rcc.h>
 #include <stm32_ll_tim.h>
 
-#include <drivers/pinctrl.h>
 #include <soc.h>
+#include <zephyr/drivers/pinctrl.h>
 
 // all PWM charge controllers use TIM3 at the moment
 static TIM_TypeDef *tim = TIM3;

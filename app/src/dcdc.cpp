@@ -6,10 +6,10 @@
 
 #include "dcdc.h"
 
-#include <zephyr.h>
+#include <zephyr/kernel.h>
 
-#include <device.h>
-#include <drivers/gpio.h>
+#include <zephyr/device.h>
+#include <zephyr/drivers/gpio.h>
 
 #include <math.h> // for fabs function
 #include <stdio.h>

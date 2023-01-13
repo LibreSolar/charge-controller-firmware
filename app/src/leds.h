@@ -21,7 +21,7 @@
 extern "C" {
 #endif
 
-#include <zephyr.h>
+#include <zephyr/kernel.h>
 
 /*
  * Find out if LED was specified in board devicetree file

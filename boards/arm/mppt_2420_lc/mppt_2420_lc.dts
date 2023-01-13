@@ -197,11 +197,11 @@
 	pinctrl-0 = <&i2c2_scl_pb10 &i2c2_sda_pb11>;
 	pinctrl-names = "default";
 	clock-frequency = <I2C_BITRATE_STANDARD>;
-	eeprom@50 {
+
+	eeprom: eeprom@50 {
 		// Microchip 24AA32A
 		compatible = "atmel,at24";
 		reg = <0x50>;
-		label = "EEPROM_0";
 		size = <32768>;
 		pagesize = <32>;		// 24AA01: 8 bytes
 		address-width = <16>;		// 24AA01: 8 bit

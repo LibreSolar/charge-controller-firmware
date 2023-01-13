@@ -9,7 +9,7 @@
  * @brief Setup of ports and other essential charge controller objects
  */
 
-#include <zephyr.h>
+#include <zephyr/kernel.h>
 
 #include "thingset.h" // handles access to internal data via communication interfaces
 
@@ -85,7 +85,7 @@ uint32_t timestamp;
 #ifndef UNIT_TEST
 
 #include <soc.h>
-#include <zephyr.h>
+#include <zephyr/kernel.h>
 
 static inline void timestamp_inc(struct k_timer *timer_id)
 {

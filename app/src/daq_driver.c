@@ -11,8 +11,8 @@
 #include <inttypes.h>
 #include <stdint.h>
 
-#include <drivers/gpio.h>
-#include <zephyr.h>
+#include <zephyr/drivers/gpio.h>
+#include <zephyr/kernel.h>
 
 #include <stm32_ll_adc.h>
 #include <stm32_ll_bus.h>
@@ -215,14 +215,15 @@ static void adc_init(ADC_TypeDef *adc)
     LL_ADC_Enable(adc);
 }
 
-#define V_HIGH_ENABLE_GPIO DT_CHILD(DT_PATH(adc_inputs), v_high)
+#define V_HIGH_ENABLE_NODE DT_CHILD(DT_PATH(adc_inputs), v_high)
 
 static void adc_setup()
 {
-#if DT_NODE_EXISTS(DT_PROP(V_HIGH_ENABLE_GPIO, enable_gpios))
-    const struct device *dev = device_get_binding(DT_GPIO_LABEL(V_HIGH_ENABLE_GPIO, enable_gpios));
-    gpio_pin_configure(dev, DT_GPIO_PIN(V_HIGH_ENABLE_GPIO, enable_gpios),
-                       DT_GPIO_FLAGS(V_HIGH_ENABLE_GPIO, enable_gpios) | GPIO_OUTPUT_ACTIVE);
+#if DT_NODE_EXISTS(DT_PROP(V_HIGH_ENABLE_NODE, enable_gpios))
+    const struct gpio_dt_spec v_high_enable = GPIO_DT_SPEC_GET(V_HIGH_ENABLE_NODE, enable_gpios);
+    if (device_is_ready(v_high_enable.port)) {
+        gpio_pin_configure_dt(&v_high_enable, GPIO_OUTPUT_ACTIVE);
+    }
 #endif
 
     adc_init(ADC1);

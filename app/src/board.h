@@ -13,7 +13,7 @@
  * @brief Defines for conditional compiling based on existing board features
  */
 
-#include <zephyr.h>
+#include <zephyr/kernel.h>
 
 #define BOARD_HAS_DCDC        DT_HAS_COMPAT_STATUS_OKAY(half_bridge)
 #define BOARD_HAS_PWM_PORT    DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), pwm_switch))

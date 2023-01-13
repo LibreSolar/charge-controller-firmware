@@ -7,7 +7,7 @@
 #include "load.h"
 
 #include "board.h"
-#include <zephyr.h>
+#include <zephyr/kernel.h>
 
 #if BOARD_HAS_LOAD_OUTPUT || UNIT_TEST
 

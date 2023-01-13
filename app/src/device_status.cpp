@@ -6,7 +6,7 @@
 
 #include "device_status.h"
 
-#include <zephyr.h>
+#include <zephyr/kernel.h>
 
 #include <math.h> // for fabs function
 #include <stdio.h>

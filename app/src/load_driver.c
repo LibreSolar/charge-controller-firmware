@@ -8,10 +8,10 @@
 
 #ifdef CONFIG_SOC_FAMILY_STM32
 
-#include <device.h>
-#include <drivers/gpio.h>
-#include <drivers/pwm.h>
-#include <zephyr.h>
+#include <zephyr/device.h>
+#include <zephyr/drivers/gpio.h>
+#include <zephyr/drivers/pwm.h>
+#include <zephyr/kernel.h>
 
 #include "board.h"
 #include "hardware.h"
@@ -21,14 +21,16 @@
 #include <stm32_ll_bus.h>
 #include <stm32_ll_system.h>
 
+#include <stdio.h>
+
 #if BOARD_HAS_LOAD_OUTPUT
-#define LOAD_GPIO DT_CHILD(DT_PATH(outputs), load)
-static const struct device *dev_load;
+#define LOAD_NODE DT_CHILD(DT_PATH(outputs), load)
+static const struct gpio_dt_spec load_switch = GPIO_DT_SPEC_GET(LOAD_NODE, gpios);
 #endif
 
 #if BOARD_HAS_USB_OUTPUT
-#define USB_GPIO DT_CHILD(DT_PATH(outputs), usb_pwr)
-static const struct device *dev_usb;
+#define USB_NODE DT_CHILD(DT_PATH(outputs), usb_pwr)
+static const struct gpio_dt_spec usb_switch = GPIO_DT_SPEC_GET(USB_NODE, gpios);
 #endif
 
 // short circuit detection comparator only present in PWM 2420 LUS board so far
@@ -145,17 +147,20 @@ void load_out_set(bool status)
 #endif
 
 #if BOARD_HAS_LOAD_OUTPUT
-    gpio_pin_configure(dev_load, DT_GPIO_PIN(LOAD_GPIO, gpios),
-                       DT_GPIO_FLAGS(LOAD_GPIO, gpios) | GPIO_OUTPUT_INACTIVE);
+    if (!device_is_ready(load_switch.port)) {
+        printf("Load switch GPIO not ready\n");
+        return;
+    }
+    gpio_pin_configure_dt(&load_switch, GPIO_OUTPUT_INACTIVE);
     if (status == true) {
 #ifdef CONFIG_BOARD_PWM_2420_LUS
         lptim_init();
 #else
-        gpio_pin_set(dev_load, DT_GPIO_PIN(LOAD_GPIO, gpios), 1);
+        gpio_pin_set_dt(&load_switch, 1);
 #endif
     }
     else {
-        gpio_pin_set(dev_load, DT_GPIO_PIN(LOAD_GPIO, gpios), 0);
+        gpio_pin_set_dt(&load_switch, 0);
     }
 #endif
 }
@@ -163,17 +168,20 @@ void load_out_set(bool status)
 void usb_out_set(bool status)
 {
 #if BOARD_HAS_USB_OUTPUT
-    gpio_pin_configure(dev_usb, DT_GPIO_PIN(USB_GPIO, gpios),
-                       DT_GPIO_FLAGS(USB_GPIO, gpios) | GPIO_OUTPUT_INACTIVE);
+    if (!device_is_ready(usb_switch.port)) {
+        printf("USB switch GPIO not ready\n");
+        return;
+    }
+    gpio_pin_configure_dt(&usb_switch, GPIO_OUTPUT_INACTIVE);
     if (status == true) {
-        gpio_pin_set(dev_usb, DT_GPIO_PIN(USB_GPIO, gpios), 1);
+        gpio_pin_set_dt(&usb_switch, 1);
 #if DT_PROP(DT_CHILD(DT_PATH(outputs), usb_pwr), latching_pgood)
         k_sleep(K_MSEC(50));
-        gpio_pin_configure(dev_usb, DT_GPIO_PIN(USB_GPIO, gpios), GPIO_INPUT);
+        gpio_pin_configure_dt(&usb_switch, GPIO_INPUT);
 #endif
     }
     else {
-        gpio_pin_set(dev_usb, DT_GPIO_PIN(USB_GPIO, gpios), 0);
+        gpio_pin_set_dt(&usb_switch, 0);
     }
 #endif
 }
@@ -198,10 +206,6 @@ void load_cp_enable()
 
 void load_out_init()
 {
-#if BOARD_HAS_LOAD_OUTPUT
-    dev_load = device_get_binding(DT_GPIO_LABEL(LOAD_GPIO, gpios));
-#endif
-
     // analog comparator to detect short circuits and trigger immediate load switch-off
 #ifdef CONFIG_BOARD_PWM_2420_LUS
     short_circuit_comp_init();
@@ -215,15 +219,13 @@ void load_out_init()
 
 void usb_out_init()
 {
-#if BOARD_HAS_USB_OUTPUT
-    dev_usb = device_get_binding(DT_GPIO_LABEL(USB_GPIO, gpios));
-#endif
+    // nothing to do
 }
 
 bool pgood_check()
 {
 #if BOARD_HAS_USB_OUTPUT
-    return gpio_pin_get(dev_usb, DT_GPIO_PIN(USB_GPIO, gpios));
+    return gpio_pin_get_dt(&usb_switch);
 #else
     return false;
 #endif

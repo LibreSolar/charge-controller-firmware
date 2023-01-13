@@ -10,8 +10,8 @@ manifest:
       url-base: https://github.com/ThrowTheSwitch
   projects:
     - name: zephyr
-      remote: zephyrproject
-      revision: v3.1-branch
+      remote: libresolar
+      revision: v3.2-branch
       import:
         name-allowlist:
           - cmsis
@@ -19,11 +19,11 @@ manifest:
           - hal_stm32
     - name: oled-display-library
       remote: libresolar
-      revision: cc3033c0daace8cb50ab0e6406a9498cc81cdb39
+      revision: 523b26c103de56714fcda655702d600870a671bc
       path: modules/oled-display
     - name: thingset-device-library
       remote: thingset
-      revision: 5c2b562d77cd44969c822bbd8c37cd7394d5ca58
+      revision: 1c4ca10b12620b1a70bbbcea6b2d4724289b9678
       path: modules/thingset
     - name: unity
       remote: throwtheswitch

@@ -6,9 +6,11 @@
 
 #include "leds.h"
 
-#include <drivers/gpio.h>
-#include <task_wdt/task_wdt.h>
-#include <zephyr.h>
+#include <zephyr/drivers/gpio.h>
+#include <zephyr/kernel.h>
+#include <zephyr/task_wdt/task_wdt.h>
+
+#include <stdio.h>
 
 #include "hardware.h"
 
@@ -65,57 +67,19 @@ static const int led_pin_states[NUM_LEDS][NUM_LED_PINS] = { DT_FOREACH_CHILD(DT_
 /*
  * GPIO pin numbers (for up to 5 LED pins)
  */
-static const gpio_pin_t led_pins[] = {
-    DT_PHA_BY_IDX(DT_PATH(leds), gpios, 0, pin),
+static const gpio_dt_spec led_gpios[] = {
+    GPIO_DT_SPEC_GET_BY_IDX(DT_PATH(leds), gpios, 0),
 #if NUM_LED_PINS >= 2
-    DT_PHA_BY_IDX(DT_PATH(leds), gpios, 1, pin),
+    GPIO_DT_SPEC_GET_BY_IDX(DT_PATH(leds), gpios, 1),
 #endif
 #if NUM_LED_PINS >= 3
-    DT_PHA_BY_IDX(DT_PATH(leds), gpios, 2, pin),
+    GPIO_DT_SPEC_GET_BY_IDX(DT_PATH(leds), gpios, 2),
 #endif
 #if NUM_LED_PINS >= 4
-    DT_PHA_BY_IDX(DT_PATH(leds), gpios, 3, pin),
+    GPIO_DT_SPEC_GET_BY_IDX(DT_PATH(leds), gpios, 3),
 #endif
 #if NUM_LED_PINS >= 5
-    DT_PHA_BY_IDX(DT_PATH(leds), gpios, 4, pin),
-#endif
-};
-
-/*
- * GPIO port labels (for up to 5 LED pins)
- */
-static const char *const led_ports[] = {
-    DT_PROP_BY_PHANDLE_IDX(DT_PATH(leds), gpios, 0, label),
-#if NUM_LED_PINS >= 2
-    DT_PROP_BY_PHANDLE_IDX(DT_PATH(leds), gpios, 1, label),
-#endif
-#if NUM_LED_PINS >= 3
-    DT_PROP_BY_PHANDLE_IDX(DT_PATH(leds), gpios, 2, label),
-#endif
-#if NUM_LED_PINS >= 4
-    DT_PROP_BY_PHANDLE_IDX(DT_PATH(leds), gpios, 3, label),
-#endif
-#if NUM_LED_PINS >= 5
-    DT_PROP_BY_PHANDLE_IDX(DT_PATH(leds), gpios, 4, label),
-#endif
-};
-
-/*
- * GPIO pin flags (for up to 5 LED pins)
- */
-static const gpio_flags_t led_flags[] = {
-    DT_PHA_BY_IDX(DT_PATH(leds), gpios, 0, flags),
-#if NUM_LED_PINS >= 2
-    DT_PHA_BY_IDX(DT_PATH(leds), gpios, 1, flags),
-#endif
-#if NUM_LED_PINS >= 3
-    DT_PHA_BY_IDX(DT_PATH(leds), gpios, 2, flags),
-#endif
-#if NUM_LED_PINS >= 4
-    DT_PHA_BY_IDX(DT_PATH(leds), gpios, 3, flags),
-#endif
-#if NUM_LED_PINS >= 5
-    DT_PHA_BY_IDX(DT_PATH(leds), gpios, 4, flags),
+    GPIO_DT_SPEC_GET_BY_IDX(DT_PATH(leds), gpios, 4),
 #endif
 };
 
@@ -132,12 +96,14 @@ void leds_update_thread()
     unsigned int led_count = 0;
     int flicker_count = 0;
     bool flicker_state = true;
-    const struct device *led_devs[NUM_LED_PINS];
 
     int wdt_channel = task_wdt_add(1000, task_wdt_callback, (void *)k_current_get());
 
     for (int pin = 0; pin < NUM_LED_PINS; pin++) {
-        led_devs[pin] = device_get_binding(led_ports[pin]);
+        if (!device_is_ready(led_gpios[pin].port)) {
+            printf("LED %d not ready\n", pin);
+            return;
+        }
     }
 
     leds_init(true);
@@ -164,17 +130,13 @@ void leds_update_thread()
             for (unsigned int pin_number = 0; pin_number < NUM_LED_PINS; pin_number++) {
                 switch (led_pin_states[led_count][pin_number]) {
                     case PIN_HIGH:
-                        gpio_pin_configure(led_devs[pin_number], led_pins[pin_number],
-                                           led_flags[pin_number] | GPIO_OUTPUT);
-                        gpio_pin_set(led_devs[pin_number], led_pins[pin_number], 1);
+                        gpio_pin_configure_dt(&led_gpios[pin_number], GPIO_OUTPUT_ACTIVE);
                         break;
                     case PIN_LOW:
-                        gpio_pin_configure(led_devs[pin_number], led_pins[pin_number],
-                                           led_flags[pin_number] | GPIO_OUTPUT);
-                        gpio_pin_set(led_devs[pin_number], led_pins[pin_number], 0);
+                        gpio_pin_configure_dt(&led_gpios[pin_number], GPIO_OUTPUT_INACTIVE);
                         break;
                     case PIN_FLOAT:
-                        gpio_pin_configure(led_devs[pin_number], led_pins[pin_number], GPIO_INPUT);
+                        gpio_pin_configure_dt(&led_gpios[pin_number], GPIO_INPUT);
                         break;
                 }
             }
@@ -182,7 +144,7 @@ void leds_update_thread()
         else {
             // all pins floating
             for (unsigned int pin_number = 0; pin_number < NUM_LED_PINS; pin_number++) {
-                gpio_pin_configure(led_devs[pin_number], led_pins[pin_number], GPIO_INPUT);
+                gpio_pin_configure_dt(&led_gpios[pin_number], GPIO_INPUT);
             }
         }
 

@@ -7,10 +7,10 @@
 #include "data_objects.h"
 
 #include <soc.h>
-#include <zephyr.h>
+#include <zephyr/kernel.h>
 
-#include <drivers/hwinfo.h>
-#include <sys/crc.h>
+#include <zephyr/drivers/hwinfo.h>
+#include <zephyr/sys/crc.h>
 
 #ifdef CONFIG_SOC_FAMILY_STM32
 #include <stm32_ll_utils.h>

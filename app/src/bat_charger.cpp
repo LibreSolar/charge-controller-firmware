@@ -6,9 +6,9 @@
 
 #include "bat_charger.h"
 
-#include <zephyr.h>
+#include <zephyr/kernel.h>
 
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(bat_charger, CONFIG_BAT_LOG_LEVEL);
 
 #include <functional>

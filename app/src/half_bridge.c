@@ -8,7 +8,7 @@
 
 #include "half_bridge.h"
 
-#include <zephyr.h>
+#include <zephyr/kernel.h>
 
 #include <stdio.h>
 
@@ -16,9 +16,9 @@
 #include "mcu.h"
 
 #ifdef CONFIG_SOC_FAMILY_STM32
-#include <drivers/pinctrl.h>
 #include <soc.h>
 #include <stm32_ll_bus.h>
+#include <zephyr/drivers/pinctrl.h>
 #endif
 
 #if BOARD_HAS_DCDC

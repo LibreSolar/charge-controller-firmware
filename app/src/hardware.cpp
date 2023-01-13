@@ -16,11 +16,11 @@
 #ifndef UNIT_TEST
 
 #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), boot0))
-#define BOOT0_GPIO DT_CHILD(DT_PATH(outputs), boot0)
+#define BOOT0_NODE DT_CHILD(DT_PATH(outputs), boot0)
 #endif
 
-#include <drivers/gpio.h>
-#include <sys/reboot.h>
+#include <zephyr/drivers/gpio.h>
+#include <zephyr/sys/reboot.h>
 
 LOG_MODULE_REGISTER(hardware, CONFIG_HW_LOG_LEVEL);
 
@@ -28,12 +28,12 @@ void start_stm32_bootloader()
 {
 #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), boot0))
     // pin is connected to BOOT0 via resistor and capacitor
-    const struct device *dev = device_get_binding(DT_GPIO_LABEL(BOOT0_GPIO, gpios));
-    gpio_pin_configure(dev, DT_GPIO_PIN(BOOT0_GPIO, gpios),
-                       DT_GPIO_FLAGS(BOOT0_GPIO, gpios) | GPIO_OUTPUT_ACTIVE);
-
-    k_sleep(K_MSEC(100)); // wait for capacitor at BOOT0 pin to charge up
-    reset_device();
+    const struct gpio_dt_spec boot0 = GPIO_DT_SPEC_GET(BOOT0_NODE, gpios);
+    if (device_is_ready(boot0.port)) {
+        gpio_pin_configure_dt(&boot0, GPIO_OUTPUT_ACTIVE);
+        k_sleep(K_MSEC(100)); // wait for capacitor at BOOT0 pin to charge up
+        reset_device();
+    }
 #elif defined(CONFIG_SOC_SERIES_STM32G4X)
     if ((FLASH->CR & FLASH_CR_OPTLOCK) != 0U) {
         /* Authorizes the Option Byte register programming */
