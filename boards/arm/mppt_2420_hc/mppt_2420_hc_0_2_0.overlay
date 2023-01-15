@@ -18,7 +18,6 @@
 &spi2 {
 	w25q80dv: w25q80dv@0 {
 		compatible = "jedec,spi-nor";
-		label = "W25Q80DV";
 		reg = <0>;
 		spi-max-frequency = <4000000>;
 		size = <0x800000>; /* bits */
@@ -41,14 +40,12 @@
 
 		/* bootloader slot: 32 KiB */
 		boot_partition: partition@0 {
-			label = "mcuboot";
 			reg = <0x00000000 0x8000>;
 			read-only;
 		};
 
 		/* application image slot: 96 KiB */
 		slot0_partition: partition@8000 {
-			label = "image-0";
 			reg = <0x00008000 0x18000>;
 		};
 	};
@@ -62,19 +59,16 @@
 
 		/* backup slot: 96 KiB */
 		slot1_partition: partition@0 {
-			label = "image-1";
 			reg = <0x00000000 0x18000>;
 		};
 
 		/* swap slot: 96 KiB */
 		scratch_partition: partition@18000 {
-			label = "image-scratch";
 			reg = <0x00018000 0x00018000>;
 		};
 
 		/* remaining 832 KiB of SPI flash used as storage */
 		storage_partition: partition@30000 {
-			label = "storage";
 			reg = <0x00030000 0x000D0000>;
 		};
 	};

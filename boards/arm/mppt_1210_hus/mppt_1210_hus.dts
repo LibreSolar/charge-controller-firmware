@@ -60,19 +60,16 @@
 		compatible = "outputs";
 
 		load {
-			label = "Load output";
 			gpios = <&gpioc 13 GPIO_ACTIVE_HIGH>;
 			current-max = <10>;
 			kconfig-flag;	/* make node visible in Kconfig */
 		};
 
 		usb-pwr {
-			label = "USB charging port enable";
 			gpios = <&gpiob 10 GPIO_ACTIVE_HIGH>;
 		};
 
 		boot0 {
-			label = "BOOT0 pin trigger";
 			gpios = <&gpiob 12 GPIO_ACTIVE_HIGH>;
 		};
 	};

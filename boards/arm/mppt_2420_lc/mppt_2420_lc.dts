@@ -49,29 +49,24 @@
 		compatible = "outputs";
 
 		load {
-			label = "Load output";
 			gpios = <&gpiob 2 GPIO_ACTIVE_LOW>;
 			current-max = <20>;
 			kconfig-flag;	/* make node visible in Kconfig */
 		};
 
 		uext_en {
-			label = "UEXT enable";
 			gpios = <&gpioc 14 GPIO_ACTIVE_LOW>;
 		};
 
 		can_en {
-			label = "CAN disable / standby";
 			gpios = <&gpioa 15 GPIO_ACTIVE_LOW>;
 		};
 
 		aux_en {
-			label = "5V output enable";
 			gpios = <&gpiob 12 GPIO_ACTIVE_HIGH>;
 		};
 
 		vbus_en {
-			label = "CAN bus power supply enable";
 			gpios = <&gpioc 15 GPIO_ACTIVE_LOW>;
 		};
 	};

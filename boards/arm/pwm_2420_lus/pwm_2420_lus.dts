@@ -64,7 +64,6 @@
 		compatible = "outputs";
 
 		pwm_switch {
-			label = "PWM power switch (solar panel)";
 			pwms = <&pwm3 4 (20*1000*1000) PWM_POLARITY_NORMAL>; /* 20 ms period = 50 Hz */
 			// Current reduced to 15A. Increase to 20A PCB max values
 			// only if attached to a big heat sink.
@@ -73,19 +72,16 @@
 		};
 
 		load {
-			label = "Load output";
 			gpios = <&gpiob 2 GPIO_ACTIVE_LOW>;
 			current-max = <15>;
 			kconfig-flag;	/* make node visible in Kconfig */
 		};
 
 		usb-pwr {
-			label = "USB charging port disable";
 			gpios = <&gpiob 5 GPIO_ACTIVE_LOW>;
 		};
 
 		boot0 {
-			label = "BOOT0 pin trigger";
 			gpios = <&gpiob 12 GPIO_ACTIVE_HIGH>;
 		};
 	};

@@ -44,12 +44,10 @@
 
 		load {
 			gpios = <&gpioc 13 GPIO_ACTIVE_HIGH>;
-			label = "Load enable";
 		};
 
 		usb-pwr {
 			gpios = <&gpiob 12 GPIO_ACTIVE_HIGH>;
-			label = "USB charging port enable";
 		};
 
 		/delete-node/ v-solar;

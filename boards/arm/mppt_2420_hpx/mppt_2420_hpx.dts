@@ -44,26 +44,22 @@
 		compatible = "outputs";
 
 		pwm_switch {
-			label = "PWM power switch (solar panel)";
 			pwms = <&pwm3 2 (20*1000*1000) PWM_POLARITY_NORMAL>; /* 20 ms period = 50 Hz */
 			current-max = <20>;
 			kconfig-flag;	/* make node visible in Kconfig */
 		};
 
 		load {
-			label = "Load output";
 			gpios = <&gpiob 15 GPIO_ACTIVE_LOW>;
 			current-max = <20>;
 			kconfig-flag;	/* make node visible in Kconfig */
 		};
 
 		charge_pump {
-			label = "Charge pump for HS MOSFET drivers";
 			pwms = <&pwm8 1 200000 PWM_POLARITY_NORMAL>; /* 200 us period = 5 kHz */
 		};
 
 		hv-out {
-			label = "HV output sense and enable switch";
 			gpios = <&gpiob 12 GPIO_ACTIVE_LOW>;
 		};
 	};
@@ -217,7 +213,6 @@
 
 		/* Set 4Kb of storage at the end of the 128Kb of flash */
 		storage_partition: partition@1f000 {
-			label = "storage";
 			reg = <0x0001f000 0x00001000>;
 		};
 	};

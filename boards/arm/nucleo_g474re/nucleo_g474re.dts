@@ -52,7 +52,6 @@
 		compatible = "outputs";
 
 		can_en {
-			label = "CAN disable / standby";
 			gpios = <&gpiob 11 GPIO_ACTIVE_LOW>;
 		};
 	};
@@ -95,7 +94,6 @@
 	gpio_keys {
 		compatible = "gpio-keys";
 		user_button: button {
-			label = "User";
 			gpios = <&gpioc 13 GPIO_ACTIVE_LOW>;
 		};
 	};
@@ -118,7 +116,6 @@
 			interrupt-names = "master", "tima", "timb", "timc",
 					  "timd", "time", "flt", "timf";
 			status = "okay";
-			label = "HRTIM_1";
 		};
 
 		/* below nodes are required until following PR is merged:
@@ -261,7 +258,6 @@
 
 		/* Set 2Kb of storage at the end of the 128Kb of flash */
 		storage_partition: partition@1f800 {
-			label = "storage";
 			reg = <0x0001f800 0x00000800>;
 		};
 	};

@@ -20,10 +20,6 @@ child-binding:
     current-max:
       type: int
       description: Maximum current of driven power switch (A)
-    label:
-      type: string
-      required: true
-      description: Human readable string describing the device (used by Zephyr for API name)
     kconfig-flag:
       type: boolean
       description: This value can be checked by Kconfig parser using dt_node_has_bool_prop function

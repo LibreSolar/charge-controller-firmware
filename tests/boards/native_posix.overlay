@@ -47,28 +47,24 @@
 		compatible = "outputs";
 
 		pwm_switch {
-			label = "PWM power switch (solar panel)";
 			pwms = <&pwm3 2 (20*1000*1000) 0>; /* 20 ms period = 50 Hz */
 			current-max = <20>;
 			kconfig-flag;	/* make node visible in Kconfig */
 		};
 
 		load {
-			label = "Load output";
 			gpios = <&gpio0 2 GPIO_ACTIVE_LOW>;
 			current-max = <20>;
 			kconfig-flag;	/* make node visible in Kconfig */
 		};
 
 		can_en {
-			label = "CAN disable / standby";
 			gpios = <&gpio0 11 GPIO_ACTIVE_LOW>;
 		};
 	};
 
         adc1: adc1 {
 		compatible = "zephyr,dummy-adc";
-		label = "ADC_1";
 		#io-channel-cells = <1>;
         };
 
