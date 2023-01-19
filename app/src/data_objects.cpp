@@ -159,7 +159,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Interne Temperatur"
         }
     }*/
-    TS_ITEM_FLOAT(0x36, "rInt_degC", &dev_stat.internal_temp, 1,
+    TS_ITEM_FLOAT(0x36, "rIntTemp_degC", &dev_stat.internal_temp, 1,
         ID_DEVICE, TS_ANY_R, 0),
 
     /*{
@@ -168,7 +168,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Interne Maximaltemperatur (gesamt)"
         }
     }*/
-    TS_ITEM_INT16(0x79, "pIntMax_degC", &dev_stat.int_temp_max,
+    TS_ITEM_INT16(0x79, "pIntTempMax_degC", &dev_stat.int_temp_max,
         ID_DEVICE, TS_ANY_R | TS_MKR_W, SUBSET_NVM),
 
     /*{
@@ -228,7 +228,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Batterie-Spannung"
         }
     }*/
-    TS_ITEM_FLOAT(0x31, "rMeas_V", &bat_bus.voltage, 2,
+    TS_ITEM_FLOAT(0x31, "rVoltage_V", &bat_bus.voltage, 2,
         ID_BATTERY, TS_ANY_R, SUBSET_SER | SUBSET_CAN),
 
     /*{
@@ -237,7 +237,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Batterie-Strom"
         }
     }*/
-    TS_ITEM_FLOAT(0x32, "rMeas_A", &bat_terminal.current, 2,
+    TS_ITEM_FLOAT(0x32, "rCurrent_A", &bat_terminal.current, 2,
         ID_BATTERY, TS_ANY_R, SUBSET_SER | SUBSET_CAN),
 
     /*{
@@ -246,7 +246,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Batterie-Leistung"
         }
     }*/
-    TS_ITEM_FLOAT(0x33, "rCalc_W", &bat_terminal.power, 2,
+    TS_ITEM_FLOAT(0x33, "rPower_W", &bat_terminal.power, 2,
         ID_BATTERY, TS_ANY_R, 0),
 
 #if BOARD_HAS_TEMP_BAT
@@ -256,7 +256,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Batterie-Temperatur"
         }
     }*/
-    TS_ITEM_FLOAT(0x34, "rMeas_degC", &charger.bat_temperature, 1,
+    TS_ITEM_FLOAT(0x34, "rTemperature_degC", &charger.bat_temperature, 1,
         ID_BATTERY, TS_ANY_R, 0),
 
     /*{
@@ -265,7 +265,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Externer Temperatursensor"
         }
     }*/
-    TS_ITEM_BOOL(0x35, "rTempExt", &charger.ext_temp_sensor,
+    TS_ITEM_BOOL(0x35, "rExtTempSensor", &charger.ext_temp_sensor,
         ID_BATTERY, TS_ANY_R, 0),
 #endif
 
@@ -293,7 +293,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Geschätzte nutzbare Batterie-Kapazität"
         }
     }*/
-    TS_ITEM_FLOAT(0x64, "pEstUsable_Ah", &charger.usable_capacity, 1,
+    TS_ITEM_FLOAT(0x64, "pCapacityEstimation_Ah", &charger.usable_capacity, 1,
         ID_BATTERY, TS_ANY_R | TS_MKR_W, SUBSET_SER | SUBSET_NVM),
 
     /*{
@@ -311,7 +311,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Maximalspannung Batterie (gesamt)"
         }
     }*/
-    TS_ITEM_FLOAT(0x74, "pMaxTotal_V", &dev_stat.battery_voltage_max, 2,
+    TS_ITEM_FLOAT(0x74, "pMaxTotalVoltage_V", &dev_stat.battery_voltage_max, 2,
         ID_BATTERY, TS_ANY_R | TS_MKR_W, SUBSET_NVM),
 
     /*{
@@ -320,7 +320,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Maximaltemperatur Batterie (gesamt)"
         }
     }*/
-    TS_ITEM_INT16(0x78, "pMaxTotal_degC", &dev_stat.bat_temp_max,
+    TS_ITEM_INT16(0x78, "pMaxTotalTemp_degC", &dev_stat.bat_temp_max,
         ID_BATTERY, TS_ANY_R | TS_MKR_W, SUBSET_NVM),
 
     /*{
@@ -329,7 +329,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Geladene Energie (heute)"
         }
     }*/
-    TS_ITEM_FLOAT(0x69, "pChgDay_Wh", &bat_terminal.pos_energy_Wh, 2,
+    TS_ITEM_FLOAT(0x69, "pChgEnergyToday_Wh", &bat_terminal.pos_energy_Wh, 2,
         ID_BATTERY, TS_ANY_R | TS_MKR_W, SUBSET_SER | SUBSET_CAN),
 
     /*{
@@ -338,7 +338,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Energiedurchsatz Ladung (gesamt)"
         }
     }*/
-    TS_ITEM_UINT32(0x60, "pChgTotal_Wh", &dev_stat.bat_chg_total_Wh,
+    TS_ITEM_UINT32(0x60, "pChgEnergyTotal_Wh", &dev_stat.bat_chg_total_Wh,
         ID_BATTERY, TS_ANY_R | TS_MKR_W, SUBSET_NVM),
 
     /*{
@@ -356,7 +356,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Entladene Energie (heute)"
         }
     }*/
-    TS_ITEM_FLOAT(0x6A, "pDisDay_Wh", &bat_terminal.neg_energy_Wh, 2,
+    TS_ITEM_FLOAT(0x6A, "pDisEnergyToday_Wh", &bat_terminal.neg_energy_Wh, 2,
         ID_BATTERY, TS_ANY_R | TS_MKR_W, SUBSET_SER | SUBSET_CAN),
 
     /*{
@@ -365,7 +365,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Energiedurchsatz Entladung (gesamt)"
         }
     }*/
-    TS_ITEM_UINT32(0x61, "pDisTotal_Wh", &dev_stat.bat_dis_total_Wh,
+    TS_ITEM_UINT32(0x61, "pDisEnergyTotal_Wh", &dev_stat.bat_dis_total_Wh,
         ID_BATTERY, TS_ANY_R | TS_MKR_W, SUBSET_NVM),
 
     /*{
@@ -383,7 +383,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Entladene Batterie-Kapazität"
         }
     }*/
-    TS_ITEM_FLOAT(0x6B, "pDis_Ah", &charger.discharged_Ah, 0,   // coulomb counter
+    TS_ITEM_FLOAT(0x6B, "pDisCapacity_Ah", &charger.discharged_Ah, 0,   // coulomb counter
         ID_BATTERY, TS_ANY_R | TS_MKR_W, SUBSET_SER | SUBSET_CAN),
 
     /*{
@@ -394,7 +394,7 @@ static ThingSetDataObject data_objects[] = {
         "min": 1,
         "max": 1000
     }*/
-    TS_ITEM_FLOAT(0xA0, "sNom_Ah", &bat_conf_user.nominal_capacity, 1,
+    TS_ITEM_FLOAT(0xA0, "sNominalCapacity_Ah", &bat_conf_user.nominal_capacity, 1,
         ID_BATTERY, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
@@ -403,7 +403,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Innenwiderstand Batterie"
         }
     }*/
-    TS_ITEM_FLOAT(0xB1, "sInt_Ohm", &bat_conf_user.internal_resistance, 3,
+    TS_ITEM_FLOAT(0xB1, "sIntResistance_Ohm", &bat_conf_user.internal_resistance, 3,
         ID_BATTERY, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
@@ -412,7 +412,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Kabelwiderstand Batterie"
         }
     }*/
-    TS_ITEM_FLOAT(0xB2, "sWire_Ohm", &bat_conf_user.wire_resistance, 3,
+    TS_ITEM_FLOAT(0xB2, "sWireResistance_Ohm", &bat_conf_user.wire_resistance, 3,
         ID_BATTERY, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -434,7 +434,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Spannungs-Sollwert"
         }
     }*/
-    TS_ITEM_FLOAT(0x51, "rControlTarget_V", &bat_bus.sink_voltage_intercept, 2,
+    TS_ITEM_FLOAT(0x51, "rControlTargetVoltage_V", &bat_bus.sink_voltage_intercept, 2,
         ID_CHARGER, TS_ANY_R, 0),
 
     /*{
@@ -443,7 +443,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Strom-Sollwert"
         }
     }*/
-    TS_ITEM_FLOAT(0x52, "rControlTarget_A", &bat_terminal.pos_current_limit, 2,
+    TS_ITEM_FLOAT(0x52, "rControlTargetCurrent_A", &bat_terminal.pos_current_limit, 2,
         ID_CHARGER, TS_ANY_R, 0),
 
 #if BOARD_HAS_DCDC
@@ -462,7 +462,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "DC/DC einschalten"
         }
     }*/
-    TS_ITEM_BOOL(0x82, "wDCDCEn", &dcdc.enable,
+    TS_ITEM_BOOL(0x82, "wDCDCEnable", &dcdc.enable,
         ID_CHARGER, TS_ANY_R | TS_ANY_W, 0),
 
     /*{
@@ -471,7 +471,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Maximalstrom DC/DC (gesamt)"
         }
     }*/
-    TS_ITEM_FLOAT(0x76, "pDCDCMaxTotal_A", &dev_stat.dcdc_current_max, 2,
+    TS_ITEM_FLOAT(0x76, "pDCDCMaxTotalCurrent_A", &dev_stat.dcdc_current_max, 2,
         ID_CHARGER, TS_ANY_R | TS_MKR_W, SUBSET_NVM),
 #endif
 
@@ -482,7 +482,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "PWM Solar-Eingang einschalten"
         }
     }*/
-    TS_ITEM_BOOL(0x83, "wPWMEn", &pwm_switch.enable,
+    TS_ITEM_BOOL(0x83, "wPWMEnable", &pwm_switch.enable,
         ID_CHARGER, TS_ANY_R | TS_ANY_W, 0),
 #endif
 
@@ -493,7 +493,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "MOSFET-Temperatur"
         }
     }*/
-    TS_ITEM_FLOAT(0x37, "rMosfet_degC", &dcdc.temp_mosfets, 1,
+    TS_ITEM_FLOAT(0x37, "rMosfetTemp_degC", &dcdc.temp_mosfets, 1,
         ID_CHARGER, TS_ANY_R, 0),
 
     /*{
@@ -502,7 +502,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "MOSFET Maximaltemperatur (gesamt)"
         }
     }*/
-    TS_ITEM_INT16(0x7A, "pMosfetMax_degC", &dev_stat.mosfet_temp_max,
+    TS_ITEM_INT16(0x7A, "pMosfetTempMax_degC", &dev_stat.mosfet_temp_max,
         ID_CHARGER, TS_ANY_R | TS_MKR_W, SUBSET_NVM),
 #endif
 
@@ -514,7 +514,7 @@ static ThingSetDataObject data_objects[] = {
         "min": 10.0,
         "max": 30.0
     }*/
-    TS_ITEM_FLOAT(0xA1, "sChgMax_A", &bat_conf_user.charge_current_max, 1,
+    TS_ITEM_FLOAT(0xA1, "sChgCurrentLimit_A", &bat_conf_user.charge_current_max, 1,
         ID_CHARGER, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
@@ -525,7 +525,7 @@ static ThingSetDataObject data_objects[] = {
         "min": 10.0,
         "max": 30.0
     }*/
-    TS_ITEM_FLOAT(0xA2, "sChg_V", &bat_conf_user.topping_voltage, 2,
+    TS_ITEM_FLOAT(0xA2, "sChgVoltage_V", &bat_conf_user.topping_voltage, 2,
         ID_CHARGER, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
@@ -536,7 +536,7 @@ static ThingSetDataObject data_objects[] = {
         "min": 0.0,
         "max": 20.0
     }*/
-    TS_ITEM_FLOAT(0xA3, "sChgCutoff_A", &bat_conf_user.topping_cutoff_current, 1,
+    TS_ITEM_FLOAT(0xA3, "sChgCutoffCurrent_A", &bat_conf_user.topping_cutoff_current, 1,
         ID_CHARGER, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
@@ -545,7 +545,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Zeitbregrenzung Vollladung"
         }
     }*/
-    TS_ITEM_UINT32(0xA4, "sChgCutoff_s", &bat_conf_user.topping_duration,
+    TS_ITEM_UINT32(0xA4, "sChgCutoffTime_s", &bat_conf_user.topping_duration,
         ID_CHARGER, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
@@ -554,7 +554,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Erhaltungsladung einschalten"
         }
     }*/
-    TS_ITEM_BOOL(0xA5, "sFloatChgEn", &bat_conf_user.float_enabled,
+    TS_ITEM_BOOL(0xA5, "sFloatChgEnable", &bat_conf_user.float_enabled,
         ID_CHARGER, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
@@ -563,7 +563,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Spannung Erhaltungsladung"
         }
     }*/
-    TS_ITEM_FLOAT(0xA6, "sFloatChg_V", &bat_conf_user.float_voltage, 2,
+    TS_ITEM_FLOAT(0xA6, "sFloatChgVoltage_V", &bat_conf_user.float_voltage, 2,
         ID_CHARGER, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
@@ -572,7 +572,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Wiedereinschaltdauer Erhaltungsladung"
         }
     }*/
-    TS_ITEM_UINT32(0xA7, "sFloatRechg_s", &bat_conf_user.float_recharge_time,
+    TS_ITEM_UINT32(0xA7, "sFloatRechgTime_s", &bat_conf_user.float_recharge_time,
         ID_CHARGER, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
@@ -581,7 +581,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Ausgleichsladung einschalten"
         }
     }*/
-    TS_ITEM_BOOL(0xA8, "sEqlChgEn", &bat_conf_user.equalization_enabled,
+    TS_ITEM_BOOL(0xA8, "sEqlChgEnable", &bat_conf_user.equalization_enabled,
         ID_CHARGER, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
@@ -590,7 +590,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Spannung Ausgleichsladung"
         }
     }*/
-    TS_ITEM_FLOAT(0xA9, "sEqlChg_V", &bat_conf_user.equalization_voltage, 2,
+    TS_ITEM_FLOAT(0xA9, "sEqlChgVoltage_V", &bat_conf_user.equalization_voltage, 2,
         ID_CHARGER, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
@@ -599,7 +599,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Maximalstrom Ausgleichsladung"
         }
     }*/
-    TS_ITEM_FLOAT(0xAA, "sEqlChg_A", &bat_conf_user.equalization_current_limit, 2,
+    TS_ITEM_FLOAT(0xAA, "sEqlChgCurrent_A", &bat_conf_user.equalization_current_limit, 2,
         ID_CHARGER, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
@@ -617,7 +617,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Max. Intervall zwischen Ausgleichsladungen"
         }
     }*/
-    TS_ITEM_UINT32(0xAC, "sEqlInterval_d", &bat_conf_user.equalization_trigger_days,
+    TS_ITEM_UINT32(0xAC, "sEqlMaxInterval_d", &bat_conf_user.equalization_trigger_days,
         ID_CHARGER, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
@@ -637,7 +637,7 @@ static ThingSetDataObject data_objects[] = {
         "min": 10.0,
         "max": 30.0
     }*/
-    TS_ITEM_FLOAT(0xAE, "sRechg_V", &bat_conf_user.recharge_voltage, 2,
+    TS_ITEM_FLOAT(0xAE, "sRechgVoltage_V", &bat_conf_user.recharge_voltage, 2,
         ID_CHARGER, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
@@ -648,7 +648,7 @@ static ThingSetDataObject data_objects[] = {
         "min": 8.0,
         "max": 30.0
     }*/
-    TS_ITEM_FLOAT(0xAF, "sAbsMin_V", &bat_conf_user.absolute_min_voltage, 2,
+    TS_ITEM_FLOAT(0xAF, "sAbsMinVoltage_V", &bat_conf_user.absolute_min_voltage, 2,
         ID_CHARGER, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
@@ -657,7 +657,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Temperaturausgleich"
         }
     }*/
-    TS_ITEM_FLOAT(0xB0, "sTempComp_mV_K", &bat_conf_user.temperature_compensation, 3,
+    TS_ITEM_FLOAT(0xB0, "sTempCompensation_mV_K", &bat_conf_user.temperature_compensation, 3,
         ID_CHARGER, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
@@ -666,7 +666,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Maximale Ladetemperatur"
         }
     }*/
-    TS_ITEM_FLOAT(0xB3, "sChgMax_degC", &bat_conf_user.charge_temp_max, 1,
+    TS_ITEM_FLOAT(0xB3, "sChgMaxTemp_degC", &bat_conf_user.charge_temp_max, 1,
         ID_CHARGER, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
@@ -675,7 +675,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Minimale Ladetemperatur"
         }
     }*/
-    TS_ITEM_FLOAT(0xB4, "sChgMin_degC", &bat_conf_user.charge_temp_min, 1,
+    TS_ITEM_FLOAT(0xB4, "sChgMinTemp_degC", &bat_conf_user.charge_temp_min, 1,
         ID_CHARGER, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
 #if BOARD_HAS_DCDC
@@ -685,7 +685,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "DC/DC Mindest-Leistung vor Abschaltung"
         }
     }*/
-    TS_ITEM_FLOAT(0xD0, "sDcdcMin_W", &dcdc.output_power_min, 1,
+    TS_ITEM_FLOAT(0xD0, "sDCDCMinPower_W", &dcdc.output_power_min, 1,
         ID_CHARGER, TS_MKR_RW, SUBSET_NVM),
 
     /*{
@@ -694,7 +694,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "DC/DC Restart Intervall"
         }
     }*/
-    TS_ITEM_UINT32(0xD2, "sDcdcRestart_s", &dcdc.restart_interval,
+    TS_ITEM_UINT32(0xD2, "sDCDCRestartInterval_s", &dcdc.restart_interval,
         ID_CHARGER, TS_MKR_RW, SUBSET_NVM),
 #endif
 
@@ -711,10 +711,10 @@ static ThingSetDataObject data_objects[] = {
             "de": "Solar-Spannung"
         }
     }*/
-    TS_ITEM_FLOAT(0x38, "rMeas_V", &pwm_switch.ext_voltage, 2,
+    TS_ITEM_FLOAT(0x38, "rVoltage_V", &pwm_switch.ext_voltage, 2,
         ID_SOLAR, TS_ANY_R, SUBSET_SER | SUBSET_CAN),
 #else
-    TS_ITEM_FLOAT(0x38, "rMeas_V", &solar_bus.voltage, 2,
+    TS_ITEM_FLOAT(0x38, "rVoltage_V", &solar_bus.voltage, 2,
         ID_SOLAR, TS_ANY_R, SUBSET_SER | SUBSET_CAN),
 #endif
 
@@ -724,7 +724,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Solar-Strom"
         }
     }*/
-    TS_ITEM_FLOAT(0x39, "rMeas_A", &solar_terminal.current, 2,
+    TS_ITEM_FLOAT(0x39, "rCurrent_A", &solar_terminal.current, 2,
         ID_SOLAR, TS_ANY_R, SUBSET_SER | SUBSET_CAN),
 
     /*{
@@ -733,7 +733,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Solar-Leistung"
         }
     }*/
-    TS_ITEM_FLOAT(0x3A, "rCalc_W", &solar_terminal.power, 2,
+    TS_ITEM_FLOAT(0x3A, "rPower_W", &solar_terminal.power, 2,
         ID_SOLAR, TS_ANY_R, 0),
 
     /*{
@@ -742,7 +742,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Solar-Ertrag (heute)"
         }
     }*/
-    TS_ITEM_FLOAT(0x6C, "pInDay_Wh", &solar_terminal.neg_energy_Wh, 2,
+    TS_ITEM_FLOAT(0x6C, "pInputToday_Wh", &solar_terminal.neg_energy_Wh, 2,
         ID_SOLAR, TS_ANY_R | TS_MKR_W, SUBSET_SER | SUBSET_CAN),
 
     /*{
@@ -751,7 +751,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Solar-Energie (gesamt)"
         }
     }*/
-    TS_ITEM_UINT32(0x65, "pInTotal_Wh", &dev_stat.solar_in_total_Wh,
+    TS_ITEM_UINT32(0x65, "pInputTotal_Wh", &dev_stat.solar_in_total_Wh,
         ID_SOLAR, TS_ANY_R | TS_MKR_W, SUBSET_NVM),
 
     /*{
@@ -760,7 +760,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Maximale Solarleistung (heute)"
         }
     }*/
-    TS_ITEM_UINT16(0x6E, "pMaxDay_W", &dev_stat.solar_power_max_day,
+    TS_ITEM_UINT16(0x6E, "pPowerMaxToday_W", &dev_stat.solar_power_max_day,
         ID_SOLAR, TS_ANY_R | TS_MKR_W, 0),
 
     /*{
@@ -769,7 +769,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Maximalleistung Solar (gesamt)"
         }
     }*/
-    TS_ITEM_UINT16(0x72, "pMaxTotal_W", &dev_stat.solar_power_max_total,
+    TS_ITEM_UINT16(0x72, "pPowerMaxTotal_W", &dev_stat.solar_power_max_total,
         ID_SOLAR, TS_ANY_R | TS_MKR_W, SUBSET_NVM),
 
     /*{
@@ -778,7 +778,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Maximalspannung Solar (gesamt)"
         }
     }*/
-    TS_ITEM_FLOAT(0x75, "pMaxTotal_V", &dev_stat.solar_voltage_max, 2,
+    TS_ITEM_FLOAT(0x75, "pVoltageMaxTotal_V", &dev_stat.solar_voltage_max, 2,
         ID_SOLAR, TS_ANY_R | TS_MKR_W, SUBSET_NVM),
 
 #if BOARD_HAS_DCDC
@@ -788,7 +788,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Maximal erlaubte Solar-Spannung"
         }
     }*/
-    TS_ITEM_FLOAT(0xD1, "sSolarAbsMax_V", &dcdc.hs_voltage_max, 1,
+    TS_ITEM_FLOAT(0xD1, "pSolarVoltageLimit_V", &dcdc.hs_voltage_max, 1,
         ID_SOLAR, TS_MKR_RW, SUBSET_NVM),
 #endif /* BOARD_HAS_DCDC */
 
@@ -806,7 +806,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Lastausgangs-Strom"
         }
     }*/
-    TS_ITEM_FLOAT(0x3B, "rMeas_A", &load.current, 2,
+    TS_ITEM_FLOAT(0x3B, "rCurrent_A", &load.current, 2,
         ID_LOAD, TS_ANY_R, SUBSET_SER | SUBSET_CAN),
 
     /*{
@@ -815,7 +815,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Lastausgangs-Leistung"
         }
     }*/
-    TS_ITEM_FLOAT(0x3C, "rCalc_W", &load.power, 2,
+    TS_ITEM_FLOAT(0x3C, "rPower_W", &load.power, 2,
         ID_LOAD, TS_ANY_R, 0),
 
     /*{
@@ -833,7 +833,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Energie Last-Ausgang (heute)"
         }
     }*/
-    TS_ITEM_FLOAT(0x6D, "pOutDay_Wh", &load.pos_energy_Wh, 2,
+    TS_ITEM_FLOAT(0x6D, "pOutputToday_Wh", &load.pos_energy_Wh, 2,
         ID_LOAD, TS_ANY_R | TS_MKR_W, SUBSET_SER | SUBSET_CAN),
 
     /*{
@@ -842,7 +842,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Energiedurchsatz Lastausgang (gesamt)"
         }
     }*/
-    TS_ITEM_UINT32(0x66, "pOutTotal_Wh", &dev_stat.load_out_total_Wh,
+    TS_ITEM_UINT32(0x66, "pOutputTotal_Wh", &dev_stat.load_out_total_Wh,
         ID_LOAD, TS_ANY_R | TS_MKR_W, SUBSET_NVM),
 
     /*{
@@ -851,7 +851,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Maximale Lastleistung (heute)"
         }
     }*/
-    TS_ITEM_UINT16(0x6F, "pMaxDay_W", &dev_stat.load_power_max_day,
+    TS_ITEM_UINT16(0x6F, "pPowerMaxToday_W", &dev_stat.load_power_max_day,
         ID_LOAD, TS_ANY_R | TS_MKR_W, 0),
 
     /*{
@@ -860,7 +860,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Maximalleistung Last-Ausgang (gesamt)"
         }
     }*/
-    TS_ITEM_UINT16(0x73, "pMaxTotal_W", &dev_stat.load_power_max_total,
+    TS_ITEM_UINT16(0x73, "pPowerMaxTotal_W", &dev_stat.load_power_max_total,
         ID_LOAD, TS_ANY_R | TS_MKR_W, SUBSET_NVM),
 
     /*{
@@ -869,7 +869,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Maximalstrom Lastausgang (gesamt)"
         }
     }*/
-    TS_ITEM_FLOAT(0x77, "pMaxTotal_A", &dev_stat.load_current_max, 2,
+    TS_ITEM_FLOAT(0x77, "pCurrentMaxTotal_A", &dev_stat.load_current_max, 2,
         ID_LOAD, TS_ANY_R | TS_MKR_W, SUBSET_NVM),
 
     /*{
@@ -896,7 +896,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Abschaltspannung Lastausgang"
         }
     }*/
-    TS_ITEM_FLOAT(0xB8, "sDisconnect_V", &bat_conf_user.load_disconnect_voltage, 2,
+    TS_ITEM_FLOAT(0xB8, "sDisconnectVoltage_V", &bat_conf_user.load_disconnect_voltage, 2,
         ID_LOAD, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
@@ -905,7 +905,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Wiedereinschalt-Spannung Lastausgang"
         }
     }*/
-    TS_ITEM_FLOAT(0xB9, "sReconnect_V", &bat_conf_user.load_reconnect_voltage, 2,
+    TS_ITEM_FLOAT(0xB9, "sReconnectVoltage_V", &bat_conf_user.load_reconnect_voltage, 2,
         ID_LOAD, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
@@ -914,7 +914,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Wiedereinschalt-Verzögerung nach Überstrom"
         }
     }*/
-    TS_ITEM_UINT32(0xBA, "sOvercurrentRecovery_s", &load.oc_recovery_delay,
+    TS_ITEM_UINT32(0xBA, "sOvercurrentRecoveryDelay_s", &load.oc_recovery_delay,
         ID_LOAD, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
@@ -923,7 +923,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Wiedereinschalt-Verzögerung nach Unterspannung"
         }
     }*/
-    TS_ITEM_UINT32(0xBB, "sUndervoltageRecovery_s", &load.lvd_recovery_delay,
+    TS_ITEM_UINT32(0xBB, "sUndervoltageRecoveryDelay_s", &load.lvd_recovery_delay,
         ID_LOAD, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
@@ -932,7 +932,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Maximale Entladetemperatur"
         }
     }*/
-    TS_ITEM_FLOAT(0xB5, "sDisMax_degC", &bat_conf_user.discharge_temp_max, 1,
+    TS_ITEM_FLOAT(0xB5, "sDisMaxTemperature_degC", &bat_conf_user.discharge_temp_max, 1,
         ID_LOAD, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
     /*{
@@ -941,7 +941,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Minimale Entladetemperatur"
         }
     }*/
-    TS_ITEM_FLOAT(0xB6, "sDisMin_degC", &bat_conf_user.discharge_temp_min, 1,
+    TS_ITEM_FLOAT(0xB6, "sDisMinTemperature_degC", &bat_conf_user.discharge_temp_min, 1,
         ID_LOAD, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
 #endif /* BOARD_HAS_LOAD_OUTPUT */
@@ -985,7 +985,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Wiedereinschalt-Verzögerung USB nach Unterspannung"
         }
     }*/
-    TS_ITEM_UINT32(0xBD, "sUndervoltageRecovery_s", &usb_pwr.lvd_recovery_delay,
+    TS_ITEM_UINT32(0xBD, "sUndervoltageRecoveryDelay_s", &usb_pwr.lvd_recovery_delay,
         ID_USB, TS_ANY_R | TS_ANY_W, SUBSET_NVM),
 
 #endif /* BOARD_HAS_USB_OUTPUT */
@@ -1002,7 +1002,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Spannung DC-Netz"
         }
     }*/
-    TS_ITEM_FLOAT(0x3D, "rMeas_V", &hv_bus.voltage, 2,
+    TS_ITEM_FLOAT(0x3D, "rVoltage_V", &hv_bus.voltage, 2,
         ID_NANOGRID, TS_ANY_R, SUBSET_SER | SUBSET_CAN),
 
     /*{
@@ -1011,7 +1011,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Strom DC-Netz"
         }
     }*/
-    TS_ITEM_FLOAT(0x3E, "rMeas_A", &hv_terminal.current, 2,
+    TS_ITEM_FLOAT(0x3E, "rCurrent_A", &hv_terminal.current, 2,
         ID_NANOGRID, TS_ANY_R, SUBSET_SER | SUBSET_CAN),
 
     /*{
@@ -1020,7 +1020,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Leistung DC-Grid"
         }
     }*/
-    TS_ITEM_FLOAT(0x3F, "rCalc_W", &hv_terminal.power, 2,
+    TS_ITEM_FLOAT(0x3F, "rPower_W", &hv_terminal.power, 2,
         ID_NANOGRID, TS_ANY_R, SUBSET_SER | SUBSET_CAN),
 
     /*{
@@ -1029,7 +1029,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Energie-Import DC-Netz (gesamt)"
         }
     }*/
-    TS_ITEM_UINT32(0x67, "pImportTotal_Wh", &dev_stat.grid_import_total_Wh,
+    TS_ITEM_UINT32(0x67, "pImportTotalEnergy_Wh", &dev_stat.grid_import_total_Wh,
         ID_NANOGRID, TS_ANY_R | TS_MKR_W, SUBSET_NVM),
 
     /*{
@@ -1038,7 +1038,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Energie-Export DC-Netz (gesamt)"
         }
     }*/
-    TS_ITEM_UINT32(0x68, "pExportTotal_Wh", &dev_stat.grid_export_total_Wh,
+    TS_ITEM_UINT32(0x68, "pExportTotalEnergy_Wh", &dev_stat.grid_export_total_Wh,
         ID_NANOGRID, TS_ANY_R | TS_MKR_W, SUBSET_NVM),
 
     /*{
@@ -1047,7 +1047,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "DC-Grid Export-Spannung"
         }
     }*/
-    TS_ITEM_FLOAT(0x84, "wGridSink_V", &hv_bus.sink_voltage_intercept, 2,
+    TS_ITEM_FLOAT(0x84, "wGridSinkVoltage_V", &hv_bus.sink_voltage_intercept, 2,
         ID_NANOGRID, TS_ANY_R | TS_ANY_W, 0),
 
     /*{
@@ -1056,7 +1056,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "DC-Grid Import-Spannung"
         }
     }*/
-    TS_ITEM_FLOAT(0x85, "wGridSrc_V", &hv_bus.src_voltage_intercept, 2,
+    TS_ITEM_FLOAT(0x85, "wGridSrcVoltage_V", &hv_bus.src_voltage_intercept, 2,
         ID_NANOGRID, TS_ANY_R | TS_ANY_W, 0),
 
 #endif /* CONFIG_HV_TERMINAL_NANOGRID */
@@ -1096,7 +1096,7 @@ static ThingSetDataObject data_objects[] = {
     TS_SUBSET(0x0B, "mCAN", SUBSET_CAN, ID_ROOT, TS_ANY_RW),
 #endif
 
-    TS_GROUP(ID_PUB, "_pub", TS_NO_CALLBACK, ID_ROOT),
+    TS_GROUP(ID_PUB, "_Pub", TS_NO_CALLBACK, ID_ROOT),
 
     TS_GROUP(0x101, "mSerial", NULL, ID_PUB),
 
@@ -1106,7 +1106,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "Serielle Publikation (de)aktivieren"
         }
     }*/
-    TS_ITEM_BOOL(0x102, "Enable", &pub_serial_enable, 0x101, TS_ANY_RW, 0),
+    TS_ITEM_BOOL(0x102, "wEnable", &pub_serial_enable, 0x101, TS_ANY_RW, 0),
 
 #if CONFIG_THINGSET_CAN
     TS_GROUP(0x103, "mCAN", TS_NO_CALLBACK, ID_PUB),
@@ -1117,7 +1117,7 @@ static ThingSetDataObject data_objects[] = {
             "de": "CAN Publikation (de)aktivieren"
         }
     }*/
-    TS_ITEM_BOOL(0x104, "Enable", &pub_can_enable, 0x103, TS_ANY_RW, 0),
+    TS_ITEM_BOOL(0x104, "wEnable", &pub_can_enable, 0x103, TS_ANY_RW, 0),
 #endif
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
