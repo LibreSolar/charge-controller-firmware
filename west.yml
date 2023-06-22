@@ -10,8 +10,8 @@ manifest:
       url-base: https://github.com/ThrowTheSwitch
   projects:
     - name: zephyr
-      remote: libresolar
-      revision: v3.2-branch
+      remote: zephyrproject
+      revision: v3.4-branch
       import:
         name-allowlist:
           - cmsis
