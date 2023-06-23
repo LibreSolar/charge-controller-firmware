@@ -5,13 +5,13 @@ zephyr_include_directories(.)
 target_sources(app PRIVATE
         bat_charger.cpp
         data_objects.cpp
-        data_storage.cpp
         daq.cpp
         daq_driver.c
         device_status.cpp
         dcdc.cpp
         half_bridge.c
         hardware.cpp
+        oled.cpp
         leds.cpp
         load.cpp
         load_driver.c
@@ -21,8 +21,6 @@ target_sources(app PRIVATE
         pwm_switch.cpp
         setup.cpp
 )
-
-add_subdirectory(ext)
 
 if(${CONFIG_CUSTOM_DATA_OBJECTS_FILE})
         target_sources(app PRIVATE data_objects_custom.cpp)

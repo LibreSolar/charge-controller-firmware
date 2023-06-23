@@ -19,7 +19,6 @@
 #include "bat_charger.h"   // battery settings and charger state machine
 #include "daq.h"           // ADC using DMA and conversion to measurement values
 #include "data_objects.h"  // for access to internal data via ThingSet
-#include "data_storage.h"  // non-volatile data storage (e.g. EEPROM)
 #include "dcdc.h"          // DC/DC converter control (hardware independent)
 #include "device_status.h" // log data (error memory, min/max measurements, etc.)
 #include "half_bridge.h"   // PWM generation for DC/DC converter
@@ -54,7 +53,7 @@ int main(void)
 #endif
 
     // read custom configuration from EEPROM
-    data_objects_init();
+    // data_objects_init();
 
     // Data Acquisition (DAQ) setup
     daq_setup();
@@ -122,7 +121,7 @@ int main(void)
         leds_update_soc(charger.soc, false);
 #endif
 
-        data_storage_update();
+        // data_storage_update();
 
         t_start += 1000;
         k_sleep(K_TIMEOUT_ABS_MS(t_start));

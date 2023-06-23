@@ -46,8 +46,6 @@ extern LoadOutput load;
 extern LoadOutput usb_pwr;
 #endif
 
-extern ThingSet ts; // defined in data_objects.cpp
-
 extern uint32_t timestamp;
 
 /**

@@ -17,7 +17,6 @@
 #include "board.h"
 #include "daq.h"           // ADC using DMA and conversion to measurement values
 #include "data_objects.h"  // for access to internal data via ThingSet
-#include "data_storage.h"  // external I2C EEPROM
 #include "dcdc.h"          // DC/DC converter control (hardware independent)
 #include "device_status.h" // log data (error memory, min/max measurements, etc.)
 #include "half_bridge.h"   // PWM generation for DC/DC converter

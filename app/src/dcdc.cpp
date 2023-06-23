@@ -15,11 +15,14 @@
 #include <stdio.h>
 #include <stdlib.h> // for min/max function
 
-#include "data_storage.h"
 #include "device_status.h"
 #include "half_bridge.h"
 #include "helper.h"
 #include "setup.h"
+
+#include <thingset.h>
+#include <thingset/sdk.h>
+#include <thingset/storage.h>
 
 LOG_MODULE_REGISTER(dcdc, CONFIG_DCDC_LOG_LEVEL);
 
@@ -360,7 +363,7 @@ void Dcdc::fuse_destruction()
 
     if (counter > 20) { // wait 20s to be able to send out data
         LOG_ERR("Charge controller fuse destruction called!\n");
-        data_storage_write();
+        // thingset_storage_save();
         half_bridge_stop();
         half_bridge_init(50, 0, 0, 0.98); // reset safety limits to allow 0% duty cycle
         half_bridge_set_duty_cycle(0);
