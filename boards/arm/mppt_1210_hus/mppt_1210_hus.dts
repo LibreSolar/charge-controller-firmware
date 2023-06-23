@@ -23,6 +23,7 @@
 	};
 
 	chosen {
+		thingset,serial = &usart2;
 		zephyr,console = &usart1;
 		zephyr,shell-uart = &usart1;
 		zephyr,sram = &sram0;

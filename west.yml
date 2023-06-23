@@ -21,10 +21,11 @@ manifest:
       remote: libresolar
       revision: 523b26c103de56714fcda655702d600870a671bc
       path: modules/oled-display
-    - name: thingset-device-library
+    - name: thingset-zephyr-sdk
       remote: thingset
-      revision: 9630a357de071ac63bfbbaf9d91c6c937663601f
-      path: modules/thingset
+      revision: 7ab33659df4986bf7dcf54cc25df960449ab5038
+      path: thingset-zephyr-sdk
+      import: true
     - name: unity
       remote: throwtheswitch
       revision: 74cde089e65c3435ce9aa87d5c69f4f16b7f6ade

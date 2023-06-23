@@ -25,6 +25,7 @@
 	};
 
 	chosen {
+		thingset,serial = &usart3;
 		zephyr,console = &usart1;
 		zephyr,shell-uart = &usart1;
 		zephyr,sram = &sram0;
@@ -133,7 +134,6 @@
 	};
 
 	aliases {
-		uart-dbg = &usart1;
 		uart-uext = &usart3;
 		spi-uext = &spi1;
 		i2c-uext = &i2c1;
