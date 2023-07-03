@@ -154,7 +154,8 @@ void control_thread()
 
 #if BOARD_HAS_DCDC
         hv_terminal.update_bus_current_margins();
-        dcdc.control(); // control of DC/DC including MPPT algorithm
+        // dcdc.control(); // control of DC/DC including MPPT algorithm
+        dcdc.test();
         charging |= half_bridge_enabled();
 #endif
 

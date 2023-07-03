@@ -663,7 +663,7 @@ THINGSET_ADD_ITEM_UINT32(ID_CHARGER, 0x6D2, "sDCDCRestartInterval_s", &dcdc.rest
 
 #if CONFIG_HV_TERMINAL_SOLAR || CONFIG_LV_TERMINAL_SOLAR || CONFIG_PWM_TERMINAL_SOLAR
 
-THINGSET_ADD_GROUP(TS_ID_ROOT, ID_SOLAR, "Solar", THINGSET_NO_CALLBACK);
+THINGSET_ADD_GROUP(TS_ID_ROOT, ID_SOLAR, "Wind", THINGSET_NO_CALLBACK);
 
 #if CONFIG_PWM_TERMINAL_SOLAR
 /*{
@@ -696,6 +696,15 @@ THINGSET_ADD_ITEM_FLOAT(ID_SOLAR, 0x739, "rCurrent_A", &solar_terminal.current, 
 }*/
 THINGSET_ADD_ITEM_FLOAT(ID_SOLAR, 0x73A, "rPower_W", &solar_terminal.power, 2,
     THINGSET_ANY_R, TS_SUBSET_LIVE);
+
+/*{
+    "title": {
+        "en": "DC/DC PWM duty cycle",
+        "de": "DC/DC PWM Abtastrate"
+    }
+}*/
+THINGSET_ADD_ITEM_FLOAT(ID_SOLAR, 0x73B, "wVoltageTarget_V", &dcdc.hs_voltage_target, 1,
+    THINGSET_ANY_RW, 0);
 
 /*{
     "title": {

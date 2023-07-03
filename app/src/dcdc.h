@@ -154,6 +154,8 @@ public:
     int32_t off_timestamp;        ///< Last time the DC/DC was switched off
     int32_t power_good_timestamp; ///< Last time the DC/DC reached above minimum output power
 
+    float hs_voltage_target; ///< Target voltage for high-voltage side (for testing)
+
     // maximum allowed values
     float inductor_current_max = 0; ///< Maximum low-side (inductor) current
     float hs_voltage_max = 0;       ///< Maximum high-side voltage

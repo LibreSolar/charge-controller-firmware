@@ -60,6 +60,7 @@ Dcdc::Dcdc(DcBus *high, DcBus *low, DcdcOperationMode op_mode)
     output_power_min = 1; // switch off if power < 1 W
     restart_interval = 60;
     off_timestamp = -10000; // start immediately
+    hs_voltage_target = 30.0F;
 
     // lower duty limit might have to be adjusted dynamically depending on LS voltage
     half_bridge_init(DT_PROP(DT_INST(0, half_bridge), frequency) / 1000,
@@ -319,11 +320,11 @@ void Dcdc::test()
             stop_reason = "disabled";
         }
         else {
-            if (half_bridge_get_duty_cycle() > 0.50) {
-                half_bridge_set_ccr(half_bridge_get_ccr() - 1);
+            if (hvb->voltage <= hs_voltage_target) {
+                half_bridge_set_ccr(half_bridge_get_ccr() - DUTY_STEP_SIZE);
             }
             else {
-                half_bridge_set_ccr(half_bridge_get_ccr() + 1);
+                half_bridge_set_ccr(half_bridge_get_ccr() + DUTY_STEP_SIZE);
             }
         }
         if (stop_reason != NULL) {
