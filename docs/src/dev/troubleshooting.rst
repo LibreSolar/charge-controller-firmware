@@ -15,5 +15,7 @@ Try one of these workarounds:
 
 2. Use other tools or debug probes such as `STM32CubeProgrammer`_ or `Segger J-Link`_.
 
+3. Change OpenOCD setting from ``reset_config srst_only`` to ``reset_config srst_open_drain`` or ``reset_config none`` in ``boards/arm/<yourboard>/support/openocd.cfg``.
+
 .. _STM32CubeProgrammer: https://www.st.com/en/development-tools/stm32cubeprog.html
 .. _Segger J-Link: https://www.segger.com/products/debug-probes/j-link/
