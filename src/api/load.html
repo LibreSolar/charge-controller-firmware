@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Load Output &mdash; Charge Controller  documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="DC Bus and Power Port" href="power_port.html" />
+    <link rel="prev" title="Half Bridge Driver" href="half_bridge.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #005e83" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Charge Controller
+              <img src="../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                v21.0
+
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../overview/features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/supported_hardware.html">Supported Hardware</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/charger_concepts.html">Charger Concepts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../overview/charger_concepts.html#bus-and-port-structure">Bus and port structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/charger_concepts.html#charger-state-machine">Charger state machine</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../overview/charger_concepts.html#standby">0. Standby</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../overview/charger_concepts.html#bulk-stage">1. Bulk stage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../overview/charger_concepts.html#topping-stage">2. Topping stage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../overview/charger_concepts.html#equalization-stage">3. Equalization stage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../overview/charger_concepts.html#float-stage">4. Float stage</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/workspace_setup.html">Workspace Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/building_flashing.html">Building and Flashing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/customization.html">Customization</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../dev/customization.html#hardware-specific-changes">Hardware-specific changes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dev/customization.html#application-firmware-configuration">Application firmware configuration</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../dev/customization.html#change-the-battery-type">Change the battery type</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../dev/customization.html#configure-serial-for-thingset-protocol">Configure serial for ThingSet protocol</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../dev/customization.html#custom-functions-separate-c-c-files">Custom functions (separate C/C++ files)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/unit_tests.html">Unit Tests</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../dev/unit_tests.html#conformance-testing">Conformance testing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/troubleshooting.html">Troubleshoting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../dev/troubleshooting.html#errors-with-stm32l072-mcu-using-openocd">Errors with STM32L072 MCU using OpenOCD</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="bat_charger.html">Battery Charger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="daq.html">Data Acquisition</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_objects.html">Data Objects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dcdc.html">DC/DC converter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="device_status.html">Device Status</a></li>
+<li class="toctree-l1"><a class="reference internal" href="half_bridge.html">Half Bridge Driver</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Load Output</a></li>
+<li class="toctree-l1"><a class="reference internal" href="power_port.html">DC Bus and Power Port</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pwm_switch.html">PWM Switch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="misc.html">Misc</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="misc.html#data-storage">Data Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html#hardware">Hardware</a></li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html#helper">Helper</a></li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html#leds">LEDs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html#setup">Setup</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #005e83" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Charge Controller</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Load Output</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/LibreSolar/charge-controller-firmware/blob/main/docs/src/api/load.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="load-output">
+<h1>Load Output<a class="headerlink" href="#load-output" title="Permalink to this heading"></a></h1>
+<p>Load/USB output functions and data types. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-enums">Enums</p>
+<dl class="cpp enum">
+<dt class="sig sig-object cpp" id="_CPPv49LoadState">
+<span id="_CPPv39LoadState"></span><span id="_CPPv29LoadState"></span><span class="target" id="load_8h_1af813e47d1d8e4222261bbeadfe758af0"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">LoadState</span></span></span><a class="headerlink" href="#_CPPv49LoadState" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Load/USB output states </p>
+<p><em>Values:</em></p>
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N9LoadState14LOAD_STATE_OFFE">
+<span id="_CPPv3N9LoadState14LOAD_STATE_OFFE"></span><span id="_CPPv2N9LoadState14LOAD_STATE_OFFE"></span><span class="target" id="load_8h_1af813e47d1d8e4222261bbeadfe758af0a78b2f6f8ba330daae1fc9fa2fac06baa"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">LOAD_STATE_OFF</span></span></span><a class="headerlink" href="#_CPPv4N9LoadState14LOAD_STATE_OFFE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Actively disabled. </p>
+</dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N9LoadState13LOAD_STATE_ONE">
+<span id="_CPPv3N9LoadState13LOAD_STATE_ONE"></span><span id="_CPPv2N9LoadState13LOAD_STATE_ONE"></span><span class="target" id="load_8h_1af813e47d1d8e4222261bbeadfe758af0a97965c3a97761f70ebe9dbee7701f409"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">LOAD_STATE_ON</span></span></span><a class="headerlink" href="#_CPPv4N9LoadState13LOAD_STATE_ONE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Normal state: On. </p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="cpp enum">
+<dt class="sig sig-object cpp" id="_CPPv413LoadErrorFlag">
+<span id="_CPPv313LoadErrorFlag"></span><span id="_CPPv213LoadErrorFlag"></span><span class="target" id="load_8h_1ad399dfa3af06677bd62b9ede58e23732"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">LoadErrorFlag</span></span></span><a class="headerlink" href="#_CPPv413LoadErrorFlag" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Load error flags</p>
+<p>When adding new flags, please make sure to use only up to 32 errors Each enum must represent a unique power of 2 number </p>
+<p><em>Values:</em></p>
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N13LoadErrorFlag17ERR_LOAD_SHEDDINGE">
+<span id="_CPPv3N13LoadErrorFlag17ERR_LOAD_SHEDDINGE"></span><span id="_CPPv2N13LoadErrorFlag17ERR_LOAD_SHEDDINGE"></span><span class="target" id="load_8h_1ad399dfa3af06677bd62b9ede58e23732abf6e21d2c867403c75506bf0e091ea64"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ERR_LOAD_SHEDDING</span></span></span><a class="headerlink" href="#_CPPv4N13LoadErrorFlag17ERR_LOAD_SHEDDINGE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Available energy or power too low</p>
+<p>Switching off the load can be triggered either by a low battery voltage or by low state of charge (SOC) in case of more advanced battery management.</p>
+<p>Set in <a class="reference internal" href="#classLoadOutput_1a7e197bd6b1c0b5929d0ef0fd9cb690bc"><span class="std std-ref">LoadOutput::control()</span></a> and cleared after reconnect delay passed and voltage is above reconnect threshold again. </p>
+</dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N13LoadErrorFlag20ERR_LOAD_OVERVOLTAGEE">
+<span id="_CPPv3N13LoadErrorFlag20ERR_LOAD_OVERVOLTAGEE"></span><span id="_CPPv2N13LoadErrorFlag20ERR_LOAD_OVERVOLTAGEE"></span><span class="target" id="load_8h_1ad399dfa3af06677bd62b9ede58e23732ac4b5bb4b788a907a2f43a5514812db35"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ERR_LOAD_OVERVOLTAGE</span></span></span><a class="headerlink" href="#_CPPv4N13LoadErrorFlag20ERR_LOAD_OVERVOLTAGEE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Too high voltage for load</p>
+<p>Set and cleared in <a class="reference internal" href="#classLoadOutput_1a7e197bd6b1c0b5929d0ef0fd9cb690bc"><span class="std std-ref">LoadOutput::control()</span></a></p>
+</dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N13LoadErrorFlag20ERR_LOAD_OVERCURRENTE">
+<span id="_CPPv3N13LoadErrorFlag20ERR_LOAD_OVERCURRENTE"></span><span id="_CPPv2N13LoadErrorFlag20ERR_LOAD_OVERCURRENTE"></span><span class="target" id="load_8h_1ad399dfa3af06677bd62b9ede58e23732a8b2aed8585306394fe8a50362e33d7dd"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ERR_LOAD_OVERCURRENT</span></span></span><a class="headerlink" href="#_CPPv4N13LoadErrorFlag20ERR_LOAD_OVERCURRENTE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Long-term overcurrent at load port</p>
+<p>Set in <a class="reference internal" href="#classLoadOutput_1a7e197bd6b1c0b5929d0ef0fd9cb690bc"><span class="std std-ref">LoadOutput::control()</span></a> and cleared after configurable delay. </p>
+</dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N13LoadErrorFlag22ERR_LOAD_SHORT_CIRCUITE">
+<span id="_CPPv3N13LoadErrorFlag22ERR_LOAD_SHORT_CIRCUITE"></span><span id="_CPPv2N13LoadErrorFlag22ERR_LOAD_SHORT_CIRCUITE"></span><span class="target" id="load_8h_1ad399dfa3af06677bd62b9ede58e23732aa996d22e3167124781191a43b3dc35e5"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ERR_LOAD_SHORT_CIRCUIT</span></span></span><a class="headerlink" href="#_CPPv4N13LoadErrorFlag22ERR_LOAD_SHORT_CIRCUITE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Short circuit detected at load port</p>
+<p>Set by <a class="reference internal" href="#classLoadOutput_1a7e197bd6b1c0b5929d0ef0fd9cb690bc"><span class="std std-ref">LoadOutput::control()</span></a> after overcurrent comparator triggered, cleared only if load output is manually disabled and enabled again. </p>
+</dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N13LoadErrorFlag20ERR_LOAD_VOLTAGE_DIPE">
+<span id="_CPPv3N13LoadErrorFlag20ERR_LOAD_VOLTAGE_DIPE"></span><span id="_CPPv2N13LoadErrorFlag20ERR_LOAD_VOLTAGE_DIPE"></span><span class="target" id="load_8h_1ad399dfa3af06677bd62b9ede58e23732ac2a0608e32fb6ac72b591abecaab21d0"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ERR_LOAD_VOLTAGE_DIP</span></span></span><a class="headerlink" href="#_CPPv4N13LoadErrorFlag20ERR_LOAD_VOLTAGE_DIPE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Overcurrent identified via voltage dip (may be caused by too small battery)</p>
+<p>Set and cleared in <a class="reference internal" href="#classLoadOutput_1a7e197bd6b1c0b5929d0ef0fd9cb690bc"><span class="std std-ref">LoadOutput::control()</span></a>. Treated same as load overcurrent. </p>
+</dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N13LoadErrorFlag24ERR_LOAD_BUS_SRC_CURRENTE">
+<span id="_CPPv3N13LoadErrorFlag24ERR_LOAD_BUS_SRC_CURRENTE"></span><span id="_CPPv2N13LoadErrorFlag24ERR_LOAD_BUS_SRC_CURRENTE"></span><span class="target" id="load_8h_1ad399dfa3af06677bd62b9ede58e23732a9299617860e9b228374bfdd684895b10"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ERR_LOAD_BUS_SRC_CURRENT</span></span></span><a class="headerlink" href="#_CPPv4N13LoadErrorFlag24ERR_LOAD_BUS_SRC_CURRENTE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>The bus the load is connected to disabled sourcing current from it</p>
+<p>Reasons can be that battery temperature limits were exceeded. Voltage limits should be covered by the load directly. </p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-functions">Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv413load_out_initv">
+<span id="_CPPv313load_out_initv"></span><span id="_CPPv213load_out_initv"></span><span id="load_out_init"></span><span class="target" id="load_8h_1a9c08684cc4eeb7b4419392ebf9a92c65"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">load_out_init</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv413load_out_initv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv412usb_out_initv">
+<span id="_CPPv312usb_out_initv"></span><span id="_CPPv212usb_out_initv"></span><span id="usb_out_init"></span><span class="target" id="load_8h_1a2ef6931b890f2326d335a45e3dc75b03"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">usb_out_init</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv412usb_out_initv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv412load_out_setb">
+<span id="_CPPv312load_out_setb"></span><span id="_CPPv212load_out_setb"></span><span id="load_out_set__b"></span><span class="target" id="load_8h_1ad35f0579b2a02adcc89aa8720f61bda0"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">load_out_set</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">bool</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv412load_out_setb" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv411usb_out_setb">
+<span id="_CPPv311usb_out_setb"></span><span id="_CPPv211usb_out_setb"></span><span id="usb_out_set__b"></span><span class="target" id="load_8h_1a5d22fb670790c9f4fe7039d04d77b543"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">usb_out_set</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">bool</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv411usb_out_setb" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv423load_short_circuit_stopv">
+<span id="_CPPv323load_short_circuit_stopv"></span><span id="_CPPv223load_short_circuit_stopv"></span><span id="load_short_circuit_stop"></span><span class="target" id="load_8h_1a1bfb9d64282f61bc7a47a970381e95ad"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">load_short_circuit_stop</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv423load_short_circuit_stopv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv411pgood_checkv">
+<span id="_CPPv311pgood_checkv"></span><span id="_CPPv211pgood_checkv"></span><span id="pgood_check"></span><span class="target" id="load_8h_1af8f9ad187edcf24768f7fbd4a6b6ea7f"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">pgood_check</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv411pgood_checkv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv410LoadOutput">
+<span id="_CPPv310LoadOutput"></span><span id="_CPPv210LoadOutput"></span><span id="LoadOutput"></span><span class="target" id="classLoadOutput"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">LoadOutput</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><a class="reference internal" href="power_port.html#_CPPv49PowerPort" title="PowerPort"><span class="n"><span class="pre">PowerPort</span></span></a><a class="headerlink" href="#_CPPv410LoadOutput" title="Permalink to this definition"></a><br /></dt>
+<dd><div class="docutils container">
+<em>#include &lt;load.h&gt;</em></div>
+<p>Load output type</p>
+<p>Stores status of load output incl. 5V USB output (if existing on PCB) </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N10LoadOutput10LoadOutputEP5DcBusPFvbEPFvvEPFbvE">
+<span id="_CPPv3N10LoadOutput10LoadOutputEP5DcBusPFvbEPFvvEPFbvE"></span><span id="_CPPv2N10LoadOutput10LoadOutputEP5DcBusPFvbEPFvvEPFbvE"></span><span class="target" id="classLoadOutput_1a7b46882a9cefc764d80bc0c41578c5a5"></span><span class="sig-name descname"><span class="n"><span class="pre">LoadOutput</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="power_port.html#_CPPv45DcBus" title="DcBus"><span class="n"><span class="pre">DcBus</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">dc_bus</span></span>, <span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">(</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">switch_fn</span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">(</span></span><span class="kt"><span class="pre">bool</span></span><span class="p"><span class="pre">)</span></span>, <span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">(</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">init_fn</span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">(</span></span><span class="p"><span class="pre">)</span></span>, <span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="p"><span class="pre">(</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pgood_fn</span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">(</span></span><span class="p"><span class="pre">)</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N10LoadOutput10LoadOutputEP5DcBusPFvbEPFvvEPFbvE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Initialize <a class="reference internal" href="#classLoadOutput"><span class="std std-ref">LoadOutput</span></a> struct and overcurrent / short circuit protection comparator (if existing)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dc_bus</strong> – DC bus the load is connected to </p></li>
+<li><p><strong>switch_fn</strong> – Pointer to function for enabling/disabling load switch </p></li>
+<li><p><strong>init_fn</strong> – Pointer to function for load driver initialization </p></li>
+<li><p><strong>pgood_fn</strong> – Pointer to pgood check </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N10LoadOutput7controlEv">
+<span id="_CPPv3N10LoadOutput7controlEv"></span><span id="_CPPv2N10LoadOutput7controlEv"></span><span id="LoadOutput::control"></span><span class="target" id="classLoadOutput_1a7e197bd6b1c0b5929d0ef0fd9cb690bc"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">control</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N10LoadOutput7controlEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Main load control function, should be called by control timer</p>
+<p>This function includes the load state machine </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N10LoadOutput4stopE8uint32_t">
+<span id="_CPPv3N10LoadOutput4stopE8uint32_t"></span><span id="_CPPv2N10LoadOutput4stopE8uint32_t"></span><span id="LoadOutput::stop__uint32_t"></span><span class="target" id="classLoadOutput_1af13162abb5c9b6afab9a1bef5b65d478"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">stop</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">error_flag</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N10LoadOutput4stopE8uint32_t" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Fast emergency stop function</p>
+<p>May be called from an ISR which detected overvoltage / overcurrent conditions</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>error_flag</strong> – Optional error flag that should be set </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N10LoadOutput18set_voltage_limitsEfff">
+<span id="_CPPv3N10LoadOutput18set_voltage_limitsEfff"></span><span id="_CPPv2N10LoadOutput18set_voltage_limitsEfff"></span><span id="LoadOutput::set_voltage_limits__float.float.float"></span><span class="target" id="classLoadOutput_1a54120506f13e3100ba7d64b24f351608"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">set_voltage_limits</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">lvd</span></span>, <span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">lvr</span></span>, <span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">ov</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N10LoadOutput18set_voltage_limitsEfff" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Update of load voltage limits (typically based on battery configuration)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lvd</strong> – Low voltage disconnect setpoint </p></li>
+<li><p><strong>lvr</strong> – Low voltage reconnect setpoint </p></li>
+<li><p><strong>ov</strong> – Overvoltage setpoint </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N10LoadOutput5stateE">
+<span id="_CPPv3N10LoadOutput5stateE"></span><span id="_CPPv2N10LoadOutput5stateE"></span><span id="LoadOutput::state__uint32_t"></span><span class="target" id="classLoadOutput_1a8a12b32431669516311d806e207111bb"></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">state</span></span></span><a class="headerlink" href="#_CPPv4N10LoadOutput5stateE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Current state of load output switch. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N10LoadOutput11error_flagsE">
+<span id="_CPPv3N10LoadOutput11error_flagsE"></span><span id="_CPPv2N10LoadOutput11error_flagsE"></span><span id="LoadOutput::error_flags__uint32_t"></span><span class="target" id="classLoadOutput_1aae8ab4cb9288050a5d3ca95fc54ba80c"></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">error_flags</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N10LoadOutput11error_flagsE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Stores error flags as bits according to LoadErrorFlag enum. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N10LoadOutput4infoE">
+<span id="_CPPv3N10LoadOutput4infoE"></span><span id="_CPPv2N10LoadOutput4infoE"></span><span id="LoadOutput::info__int32_t"></span><span class="target" id="classLoadOutput_1aceb0eda91fc13bcfdc79474b9903e63c"></span><span class="n"><span class="pre">int32_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">info</span></span></span><a class="headerlink" href="#_CPPv4N10LoadOutput4infoE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Contains either the state or negative value of error_flags in case of error_flags &gt; 0. This allows to have a single variable for load state diagnosis. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N10LoadOutput6enableE">
+<span id="_CPPv3N10LoadOutput6enableE"></span><span id="_CPPv2N10LoadOutput6enableE"></span><span id="LoadOutput::enable__b"></span><span class="target" id="classLoadOutput_1a940de4a16d83db843b7129a0d1ef9ae6"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">enable</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">false</span></span><a class="headerlink" href="#_CPPv4N10LoadOutput6enableE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Target on state set via communication port (overruled if battery is empty or any errors occured) </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N10LoadOutput12oc_timestampE">
+<span id="_CPPv3N10LoadOutput12oc_timestampE"></span><span id="_CPPv2N10LoadOutput12oc_timestampE"></span><span id="LoadOutput::oc_timestamp__time_t"></span><span class="target" id="classLoadOutput_1a50a02e1e4208cf7ac92fec2e3dced0f6"></span><span class="n"><span class="pre">time_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">oc_timestamp</span></span></span><a class="headerlink" href="#_CPPv4N10LoadOutput12oc_timestampE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Time when last overcurrent event occured. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N10LoadOutput17oc_recovery_delayE">
+<span id="_CPPv3N10LoadOutput17oc_recovery_delayE"></span><span id="_CPPv2N10LoadOutput17oc_recovery_delayE"></span><span id="LoadOutput::oc_recovery_delay__uint32_t"></span><span class="target" id="classLoadOutput_1afc86f4944523d7c04c3cc8737efd59cf"></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">oc_recovery_delay</span></span></span><a class="headerlink" href="#_CPPv4N10LoadOutput17oc_recovery_delayE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Seconds before we attempt to re-enable the load after an overcurrent event </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N10LoadOutput18disconnect_voltageE">
+<span id="_CPPv3N10LoadOutput18disconnect_voltageE"></span><span id="_CPPv2N10LoadOutput18disconnect_voltageE"></span><span id="LoadOutput::disconnect_voltage__float"></span><span class="target" id="classLoadOutput_1a15faebdd6cacfe9e150b63a078147494"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">disconnect_voltage</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N10LoadOutput18disconnect_voltageE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Low voltage disconnect (LVD) setpoint. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N10LoadOutput17reconnect_voltageE">
+<span id="_CPPv3N10LoadOutput17reconnect_voltageE"></span><span id="_CPPv2N10LoadOutput17reconnect_voltageE"></span><span id="LoadOutput::reconnect_voltage__float"></span><span class="target" id="classLoadOutput_1ae6675a1102058bf91bdf8b7dbcc6b2ef"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">reconnect_voltage</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N10LoadOutput17reconnect_voltageE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Low voltage reconnect (LVD) setpoint. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N10LoadOutput13lvd_timestampE">
+<span id="_CPPv3N10LoadOutput13lvd_timestampE"></span><span id="_CPPv2N10LoadOutput13lvd_timestampE"></span><span id="LoadOutput::lvd_timestamp__time_t"></span><span class="target" id="classLoadOutput_1ae8f4d5e74295bae9aee15b8ff879390f"></span><span class="n"><span class="pre">time_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">lvd_timestamp</span></span></span><a class="headerlink" href="#_CPPv4N10LoadOutput13lvd_timestampE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Time when last low voltage disconnect happened. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N10LoadOutput18lvd_recovery_delayE">
+<span id="_CPPv3N10LoadOutput18lvd_recovery_delayE"></span><span id="_CPPv2N10LoadOutput18lvd_recovery_delayE"></span><span id="LoadOutput::lvd_recovery_delay__uint32_t"></span><span class="target" id="classLoadOutput_1ac6d78aa94453baefe9ea5acfc52d3260"></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">lvd_recovery_delay</span></span></span><a class="headerlink" href="#_CPPv4N10LoadOutput18lvd_recovery_delayE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Seconds before we re-enable the load after a low voltage disconnect </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N10LoadOutput20junction_temperatureE">
+<span id="_CPPv3N10LoadOutput20junction_temperatureE"></span><span id="_CPPv2N10LoadOutput20junction_temperatureE"></span><span id="LoadOutput::junction_temperature__float"></span><span class="target" id="classLoadOutput_1a4367529a8e509c097f22803d3b3131d7"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">junction_temperature</span></span></span><a class="headerlink" href="#_CPPv4N10LoadOutput20junction_temperatureE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>calculated using thermal model based on current and ambient temperature measurement (unit: °C) </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N10LoadOutput11overvoltageE">
+<span id="_CPPv3N10LoadOutput11overvoltageE"></span><span id="_CPPv2N10LoadOutput11overvoltageE"></span><span id="LoadOutput::overvoltage__float"></span><span class="target" id="classLoadOutput_1a549f03760bb53934cb3bd2096aa9d6ea"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">overvoltage</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N10LoadOutput11overvoltageE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Upper voltage limit. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N10LoadOutput13ov_hysteresisE">
+<span id="_CPPv3N10LoadOutput13ov_hysteresisE"></span><span id="_CPPv2N10LoadOutput13ov_hysteresisE"></span><span id="LoadOutput::ov_hysteresis__float"></span><span class="target" id="classLoadOutput_1a797c7c084c37465aa27725ecbc3d5ee6"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ov_hysteresis</span></span></span><a class="headerlink" href="#_CPPv4N10LoadOutput13ov_hysteresisE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Hysteresis to switch back on after an overvoltage event. </p>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-private-members">Private Members</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N10LoadOutput10switch_setE">
+<span id="_CPPv3N10LoadOutput10switch_setE"></span><span id="_CPPv2N10LoadOutput10switch_setE"></span><span class="target" id="classLoadOutput_1a81991b91ddc5120963e501f4b3c8b240"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">(</span></span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">switch_set</span></span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">(</span></span><span class="kt"><span class="pre">bool</span></span><span class="p"><span class="pre">)</span></span><a class="headerlink" href="#_CPPv4N10LoadOutput10switch_setE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Pointer to the load switch function </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N10LoadOutput11pgood_checkE">
+<span id="_CPPv3N10LoadOutput11pgood_checkE"></span><span id="_CPPv2N10LoadOutput11pgood_checkE"></span><span class="target" id="classLoadOutput_1a8fbf3c74acd83e37ee3f403a007d4786"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="p"><span class="pre">(</span></span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">pgood_check</span></span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">(</span></span><span class="kt"><span class="pre">void</span></span><span class="p"><span class="pre">)</span></span><a class="headerlink" href="#_CPPv4N10LoadOutput11pgood_checkE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Pointer to the function to check the power output status </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N10LoadOutput19uv_debounce_counterE">
+<span id="_CPPv3N10LoadOutput19uv_debounce_counterE"></span><span id="_CPPv2N10LoadOutput19uv_debounce_counterE"></span><span id="LoadOutput::uv_debounce_counter__i"></span><span class="target" id="classLoadOutput_1a33887ded4e17ce713447b938002cee7a"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">uv_debounce_counter</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N10LoadOutput19uv_debounce_counterE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Used to prevent switching of because of very short voltage dip </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N10LoadOutput19ov_debounce_counterE">
+<span id="_CPPv3N10LoadOutput19ov_debounce_counterE"></span><span id="_CPPv2N10LoadOutput19ov_debounce_counterE"></span><span id="LoadOutput::ov_debounce_counter__i"></span><span class="target" id="classLoadOutput_1a12a61909b3c98fae958388d4866e6861"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ov_debounce_counter</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N10LoadOutput19ov_debounce_counterE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Used to prevent switching off because of short voltage spike </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="half_bridge.html" class="btn btn-neutral float-left" title="Half Bridge Driver" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="power_port.html" class="btn btn-neutral float-right" title="DC Bus and Power Port" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023 The Libre Solar Project.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Index &mdash; Charge Controller  documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="#" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #005e83" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Charge Controller
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                v21.0
+
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="src/overview/features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src/overview/supported_hardware.html">Supported Hardware</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src/overview/charger_concepts.html">Charger Concepts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="src/overview/charger_concepts.html#bus-and-port-structure">Bus and port structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src/overview/charger_concepts.html#charger-state-machine">Charger state machine</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="src/overview/charger_concepts.html#standby">0. Standby</a></li>
+<li class="toctree-l3"><a class="reference internal" href="src/overview/charger_concepts.html#bulk-stage">1. Bulk stage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="src/overview/charger_concepts.html#topping-stage">2. Topping stage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="src/overview/charger_concepts.html#equalization-stage">3. Equalization stage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="src/overview/charger_concepts.html#float-stage">4. Float stage</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="src/dev/workspace_setup.html">Workspace Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src/dev/building_flashing.html">Building and Flashing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src/dev/customization.html">Customization</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="src/dev/customization.html#hardware-specific-changes">Hardware-specific changes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src/dev/customization.html#application-firmware-configuration">Application firmware configuration</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="src/dev/customization.html#change-the-battery-type">Change the battery type</a></li>
+<li class="toctree-l3"><a class="reference internal" href="src/dev/customization.html#configure-serial-for-thingset-protocol">Configure serial for ThingSet protocol</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="src/dev/customization.html#custom-functions-separate-c-c-files">Custom functions (separate C/C++ files)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="src/dev/unit_tests.html">Unit Tests</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="src/dev/unit_tests.html#conformance-testing">Conformance testing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="src/dev/troubleshooting.html">Troubleshoting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="src/dev/troubleshooting.html#errors-with-stm32l072-mcu-using-openocd">Errors with STM32L072 MCU using OpenOCD</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="src/api/bat_charger.html">Battery Charger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src/api/daq.html">Data Acquisition</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src/api/data_objects.html">Data Objects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src/api/dcdc.html">DC/DC converter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src/api/device_status.html">Device Status</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src/api/half_bridge.html">Half Bridge Driver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src/api/load.html">Load Output</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src/api/power_port.html">DC Bus and Power Port</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src/api/pwm_switch.html">PWM Switch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src/api/misc.html">Misc</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="src/api/misc.html#data-storage">Data Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src/api/misc.html#hardware">Hardware</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src/api/misc.html#helper">Helper</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src/api/misc.html#leds">LEDs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src/api/misc.html#setup">Setup</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #005e83" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Charge Controller</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Index</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/LibreSolar/charge-controller-firmware/blob/main/docs/genindex" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+
+<h1 id="index">Index</h1>
+
+<div class="genindex-jumpbox">
+ <a href="#Symbols"><strong>Symbols</strong></a>
+ | <a href="#A"><strong>A</strong></a>
+ | <a href="#B"><strong>B</strong></a>
+ | <a href="#C"><strong>C</strong></a>
+ | <a href="#D"><strong>D</strong></a>
+ | <a href="#E"><strong>E</strong></a>
+ | <a href="#F"><strong>F</strong></a>
+ | <a href="#G"><strong>G</strong></a>
+ | <a href="#H"><strong>H</strong></a>
+ | <a href="#L"><strong>L</strong></a>
+ | <a href="#P"><strong>P</strong></a>
+ | <a href="#R"><strong>R</strong></a>
+ | <a href="#S"><strong>S</strong></a>
+ | <a href="#T"><strong>T</strong></a>
+ | <a href="#U"><strong>U</strong></a>
+ 
+</div>
+<h2 id="Symbols">Symbols</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="src/api/daq.html#_CPPv4Ut1_0">[anonymous] (C++ enum)</a>, <a href="src/api/misc.html#_CPPv4Ut1_1">[1]</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="src/api/daq.html#_CPPv4NUt1_016DT_FOREACH_CHILDE">[anonymous]::DT_FOREACH_CHILD (C++ enumerator)</a>, <a href="src/api/misc.html#_CPPv4NUt1_116DT_FOREACH_CHILDE">[1]</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="A">A</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="src/api/daq.html#_CPPv418adc_raw_to_voltage7int32_t7int32_t">adc_raw_to_voltage (C++ function)</a>
+</li>
+      <li><a href="src/api/daq.html#_CPPv416adc_update_valuej">adc_update_value (C++ function)</a>
+</li>
+      <li><a href="src/api/daq.html#_CPPv423adc_upper_alert_inhibitii">adc_upper_alert_inhibit (C++ function)</a>
+</li>
+      <li><a href="src/api/daq.html#_CPPv418adc_voltage_to_rawf7int32_t">adc_voltage_to_raw (C++ function)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="src/api/daq.html#_CPPv48AdcAlert">AdcAlert (C++ struct)</a>
+</li>
+      <li><a href="src/api/daq.html#_CPPv4N8AdcAlert8callbackE">AdcAlert::callback (C++ member)</a>
+</li>
+      <li><a href="src/api/daq.html#_CPPv4N8AdcAlert11debounce_msE">AdcAlert::debounce_ms (C++ member)</a>
+</li>
+      <li><a href="src/api/daq.html#_CPPv4N8AdcAlert5limitE">AdcAlert::limit (C++ member)</a>
+</li>
+      <li><a href="src/api/data_objects.html#_CPPv418alphabet_crockford">alphabet_crockford (C++ member)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="B">B</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="src/api/misc.html#_CPPv48bat_conf">bat_conf (C++ member)</a>
+</li>
+      <li><a href="src/api/misc.html#_CPPv413bat_conf_user">bat_conf_user (C++ member)</a>
+</li>
+      <li><a href="src/api/misc.html#_CPPv412bat_terminal">bat_terminal (C++ member)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv47BatConf">BatConf (C++ struct)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7BatConf20absolute_max_voltageE">BatConf::absolute_max_voltage (C++ member)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7BatConf20absolute_min_voltageE">BatConf::absolute_min_voltage (C++ member)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7BatConf18charge_current_maxE">BatConf::charge_current_max (C++ member)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7BatConf15charge_temp_maxE">BatConf::charge_temp_max (C++ member)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7BatConf15charge_temp_minE">BatConf::charge_temp_min (C++ member)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7BatConf21discharge_current_maxE">BatConf::discharge_current_max (C++ member)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7BatConf18discharge_temp_maxE">BatConf::discharge_temp_max (C++ member)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7BatConf18discharge_temp_minE">BatConf::discharge_temp_min (C++ member)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7BatConf26equalization_current_limitE">BatConf::equalization_current_limit (C++ member)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7BatConf21equalization_durationE">BatConf::equalization_duration (C++ member)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7BatConf20equalization_enabledE">BatConf::equalization_enabled (C++ member)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7BatConf25equalization_trigger_daysE">BatConf::equalization_trigger_days (C++ member)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7BatConf32equalization_trigger_deep_cyclesE">BatConf::equalization_trigger_deep_cycles (C++ member)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7BatConf20equalization_voltageE">BatConf::equalization_voltage (C++ member)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7BatConf13float_enabledE">BatConf::float_enabled (C++ member)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7BatConf19float_recharge_timeE">BatConf::float_recharge_time (C++ member)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7BatConf13float_voltageE">BatConf::float_voltage (C++ member)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7BatConf19internal_resistanceE">BatConf::internal_resistance (C++ member)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7BatConf23load_disconnect_voltageE">BatConf::load_disconnect_voltage (C++ member)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7BatConf22load_reconnect_voltageE">BatConf::load_reconnect_voltage (C++ member)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7BatConf16nominal_capacityE">BatConf::nominal_capacity (C++ member)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7BatConf9ocv_emptyE">BatConf::ocv_empty (C++ member)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7BatConf8ocv_fullE">BatConf::ocv_full (C++ member)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7BatConf16recharge_voltageE">BatConf::recharge_voltage (C++ member)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7BatConf24temperature_compensationE">BatConf::temperature_compensation (C++ member)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7BatConf19time_limit_rechargeE">BatConf::time_limit_recharge (C++ member)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7BatConf22topping_cutoff_currentE">BatConf::topping_cutoff_current (C++ member)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7BatConf16topping_durationE">BatConf::topping_duration (C++ member)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7BatConf15topping_voltageE">BatConf::topping_voltage (C++ member)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7BatConf15wire_resistanceE">BatConf::wire_resistance (C++ member)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv420battery_conf_changedP7BatConfP7BatConf">battery_conf_changed (C++ function)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv418battery_conf_checkP7BatConf">battery_conf_check (C++ function)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv417battery_conf_initP7BatConfiif">battery_conf_init (C++ function)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv422battery_conf_overwriteP7BatConfP7BatConfP7Charger">battery_conf_overwrite (C++ function)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv47BatType">BatType (C++ enum)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7BatType12BAT_TYPE_AGME">BatType::BAT_TYPE_AGM (C++ enumerator)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7BatType15BAT_TYPE_CUSTOME">BatType::BAT_TYPE_CUSTOM (C++ enumerator)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7BatType16BAT_TYPE_FLOODEDE">BatType::BAT_TYPE_FLOODED (C++ enumerator)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7BatType12BAT_TYPE_GELE">BatType::BAT_TYPE_GEL (C++ enumerator)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7BatType12BAT_TYPE_LFPE">BatType::BAT_TYPE_LFP (C++ enumerator)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7BatType12BAT_TYPE_NMCE">BatType::BAT_TYPE_NMC (C++ enumerator)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7BatType15BAT_TYPE_NMC_HVE">BatType::BAT_TYPE_NMC_HV (C++ enumerator)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="C">C</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="src/api/daq.html#_CPPv425calibrate_current_sensorsv">calibrate_current_sensors (C++ function)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv47Charger">Charger (C++ class)</a>
+</li>
+      <li><a href="src/api/misc.html#_CPPv47charger">charger (C++ member)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7Charger15bat_temperatureE">Charger::bat_temperature (C++ member)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7Charger14charge_controlEP7BatConf">Charger::charge_control (C++ function)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7Charger7ChargerEP9PowerPort">Charger::Charger (C++ function)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7Charger26deep_dis_last_equalizationE">Charger::deep_dis_last_equalization (C++ member)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4NK7Charger20detect_num_batteriesEP7BatConf">Charger::detect_num_batteries (C++ function)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7Charger17discharge_controlEP7BatConf">Charger::discharge_control (C++ function)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7Charger13discharged_AhE">Charger::discharged_Ah (C++ member)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7Charger5emptyE">Charger::empty (C++ member)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7Charger11enter_stateEi">Charger::enter_state (C++ function)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7Charger15ext_temp_sensorE">Charger::ext_temp_sensor (C++ member)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7Charger4fullE">Charger::full (C++ member)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4NK7Charger13init_terminalEP7BatConf">Charger::init_terminal (C++ function)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7Charger19num_deep_dischargesE">Charger::num_deep_discharges (C++ member)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7Charger16num_full_chargesE">Charger::num_full_charges (C++ member)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7Charger4portE">Charger::port (C++ member)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7Charger3socE">Charger::soc (C++ member)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7Charger3sohE">Charger::soh (C++ member)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7Charger5stateE">Charger::state (C++ member)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7Charger22target_current_controlE">Charger::target_current_control (C++ member)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7Charger20target_voltage_timerE">Charger::target_voltage_timer (C++ member)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7Charger18time_last_ctrl_msgE">Charger::time_last_ctrl_msg (C++ member)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7Charger22time_last_equalizationE">Charger::time_last_equalization (C++ member)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7Charger18time_state_changedE">Charger::time_state_changed (C++ member)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7Charger27time_target_voltage_reachedE">Charger::time_target_voltage_reached (C++ member)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7Charger10update_socEP7BatConf">Charger::update_soc (C++ function)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N7Charger15usable_capacityE">Charger::usable_capacity (C++ member)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv412ChargerState">ChargerState (C++ enum)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N12ChargerState14CHG_STATE_BULKE">ChargerState::CHG_STATE_BULK (C++ enumerator)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N12ChargerState22CHG_STATE_EQUALIZATIONE">ChargerState::CHG_STATE_EQUALIZATION (C++ enumerator)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N12ChargerState15CHG_STATE_FLOATE">ChargerState::CHG_STATE_FLOAT (C++ enumerator)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N12ChargerState18CHG_STATE_FOLLOWERE">ChargerState::CHG_STATE_FOLLOWER (C++ enumerator)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N12ChargerState14CHG_STATE_IDLEE">ChargerState::CHG_STATE_IDLE (C++ enumerator)</a>
+</li>
+      <li><a href="src/api/bat_charger.html#_CPPv4N12ChargerState17CHG_STATE_TOPPINGE">ChargerState::CHG_STATE_TOPPING (C++ enumerator)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="D">D</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="src/api/daq.html#_CPPv416daq_set_hv_limitf">daq_set_hv_limit (C++ function)</a>
+</li>
+      <li><a href="src/api/daq.html#_CPPv417daq_set_lv_limitsff">daq_set_lv_limits (C++ function)</a>
+</li>
+      <li><a href="src/api/daq.html#_CPPv49daq_setupv">daq_setup (C++ function)</a>
+</li>
+      <li><a href="src/api/daq.html#_CPPv410daq_updatev">daq_update (C++ function)</a>
+</li>
+      <li><a href="src/api/data_objects.html#_CPPv417data_objects_initv">data_objects_init (C++ function)</a>
+</li>
+      <li><a href="src/api/data_objects.html#_CPPv424data_objects_update_confv">data_objects_update_conf (C++ function)</a>
+</li>
+      <li><a href="src/api/misc.html#_CPPv417data_storage_readv">data_storage_read (C++ function)</a>
+</li>
+      <li><a href="src/api/misc.html#_CPPv419data_storage_updatev">data_storage_update (C++ function)</a>
+</li>
+      <li><a href="src/api/misc.html#_CPPv418data_storage_writev">data_storage_write (C++ function)</a>
+</li>
+      <li><a href="src/api/power_port.html#_CPPv45DcBus">DcBus (C++ class)</a>
+</li>
+      <li><a href="src/api/power_port.html#_CPPv4N5DcBus11ref_currentE">DcBus::ref_current (C++ member)</a>
+</li>
+      <li><a href="src/api/power_port.html#_CPPv4N5DcBus17series_multiplierE">DcBus::series_multiplier (C++ member)</a>
+</li>
+      <li><a href="src/api/power_port.html#_CPPv4N5DcBus14series_voltageEf">DcBus::series_voltage (C++ function)</a>
+</li>
+      <li><a href="src/api/power_port.html#_CPPv4N5DcBus20sink_control_voltageEf">DcBus::sink_control_voltage (C++ function)</a>
+</li>
+      <li><a href="src/api/power_port.html#_CPPv4N5DcBus19sink_current_marginE">DcBus::sink_current_margin (C++ member)</a>
+</li>
+      <li><a href="src/api/power_port.html#_CPPv4N5DcBus14sink_droop_resE">DcBus::sink_droop_res (C++ member)</a>
+</li>
+      <li><a href="src/api/power_port.html#_CPPv4N5DcBus22sink_voltage_interceptE">DcBus::sink_voltage_intercept (C++ member)</a>
+</li>
+      <li><a href="src/api/power_port.html#_CPPv4N5DcBus19src_control_voltageEf">DcBus::src_control_voltage (C++ function)</a>
+</li>
+      <li><a href="src/api/power_port.html#_CPPv4N5DcBus18src_current_marginE">DcBus::src_current_margin (C++ member)</a>
+</li>
+      <li><a href="src/api/power_port.html#_CPPv4N5DcBus13src_droop_resE">DcBus::src_droop_res (C++ member)</a>
+</li>
+      <li><a href="src/api/power_port.html#_CPPv4N5DcBus21src_voltage_interceptE">DcBus::src_voltage_intercept (C++ member)</a>
+</li>
+      <li><a href="src/api/power_port.html#_CPPv4N5DcBus7voltageE">DcBus::voltage (C++ member)</a>
+</li>
+      <li><a href="src/api/power_port.html#_CPPv4N5DcBus16voltage_filteredE">DcBus::voltage_filtered (C++ member)</a>
+</li>
+      <li><a href="src/api/dcdc.html#_CPPv44Dcdc">Dcdc (C++ class)</a>
+</li>
+      <li><a href="src/api/misc.html#_CPPv44dcdc">dcdc (C++ member)</a>
+</li>
+      <li><a href="src/api/dcdc.html#_CPPv4N4Dcdc21check_hs_mosfet_shortEv">Dcdc::check_hs_mosfet_short (C++ function)</a>
+</li>
+      <li><a href="src/api/dcdc.html#_CPPv4N4Dcdc22check_start_conditionsEv">Dcdc::check_start_conditions (C++ function)</a>
+</li>
+      <li><a href="src/api/dcdc.html#_CPPv4N4Dcdc7controlEv">Dcdc::control (C++ function)</a>
+</li>
+      <li><a href="src/api/dcdc.html#_CPPv4N4Dcdc4DcdcEP5DcBusP5DcBus17DcdcOperationMode">Dcdc::Dcdc (C++ function)</a>
+</li>
+      <li><a href="src/api/dcdc.html#_CPPv4N4Dcdc6enableE">Dcdc::enable (C++ member)</a>
+</li>
+      <li><a href="src/api/dcdc.html#_CPPv4N4Dcdc16fuse_destructionEv">Dcdc::fuse_destruction (C++ function)</a>
+</li>
+      <li><a href="src/api/dcdc.html#_CPPv4N4Dcdc14hs_voltage_maxE">Dcdc::hs_voltage_max (C++ member)</a>
+</li>
+      <li><a href="src/api/dcdc.html#_CPPv4N4Dcdc3hvbE">Dcdc::hvb (C++ member)</a>
+</li>
+      <li><a href="src/api/dcdc.html#_CPPv4N4Dcdc16inductor_currentE">Dcdc::inductor_current (C++ member)</a>
+</li>
+      <li><a href="src/api/dcdc.html#_CPPv4N4Dcdc20inductor_current_maxE">Dcdc::inductor_current_max (C++ member)</a>
+</li>
+      <li><a href="src/api/dcdc.html#_CPPv4N4Dcdc14ls_voltage_maxE">Dcdc::ls_voltage_max (C++ member)</a>
+</li>
+      <li><a href="src/api/dcdc.html#_CPPv4N4Dcdc14ls_voltage_minE">Dcdc::ls_voltage_min (C++ member)</a>
+</li>
+      <li><a href="src/api/dcdc.html#_CPPv4N4Dcdc3lvbE">Dcdc::lvb (C++ member)</a>
+</li>
+      <li><a href="src/api/dcdc.html#_CPPv4N4Dcdc4modeE">Dcdc::mode (C++ member)</a>
+</li>
+      <li><a href="src/api/dcdc.html#_CPPv4N4Dcdc13off_timestampE">Dcdc::off_timestamp (C++ member)</a>
+</li>
+      <li><a href="src/api/dcdc.html#_CPPv4N4Dcdc18output_hvs_disableEv">Dcdc::output_hvs_disable (C++ function)</a>
+</li>
+      <li><a href="src/api/dcdc.html#_CPPv4N4Dcdc17output_hvs_enableEv">Dcdc::output_hvs_enable (C++ function)</a>
+</li>
+      <li><a href="src/api/dcdc.html#_CPPv4N4Dcdc16output_power_minE">Dcdc::output_power_min (C++ member)</a>
+</li>
+      <li><a href="src/api/dcdc.html#_CPPv4N4Dcdc21perturb_observe_boostEv">Dcdc::perturb_observe_boost (C++ function)</a>
+</li>
+      <li><a href="src/api/dcdc.html#_CPPv4N4Dcdc20perturb_observe_buckEv">Dcdc::perturb_observe_buck (C++ function)</a>
+</li>
+      <li><a href="src/api/dcdc.html#_CPPv4N4Dcdc5powerE">Dcdc::power (C++ member)</a>
+</li>
+      <li><a href="src/api/dcdc.html#_CPPv4N4Dcdc20power_good_timestampE">Dcdc::power_good_timestamp (C++ member)</a>
+</li>
+      <li><a href="src/api/dcdc.html#_CPPv4N4Dcdc10power_prevE">Dcdc::power_prev (C++ member)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="src/api/dcdc.html#_CPPv4N4Dcdc13pwm_directionE">Dcdc::pwm_direction (C++ member)</a>
+</li>
+      <li><a href="src/api/dcdc.html#_CPPv4N4Dcdc16restart_intervalE">Dcdc::restart_interval (C++ member)</a>
+</li>
+      <li><a href="src/api/dcdc.html#_CPPv4N4Dcdc15startup_inhibitEb">Dcdc::startup_inhibit (C++ function)</a>
+</li>
+      <li><a href="src/api/dcdc.html#_CPPv4N4Dcdc5stateE">Dcdc::state (C++ member)</a>
+</li>
+      <li><a href="src/api/dcdc.html#_CPPv4N4Dcdc4stopEv">Dcdc::stop (C++ function)</a>
+</li>
+      <li><a href="src/api/dcdc.html#_CPPv4N4Dcdc12temp_mosfetsE">Dcdc::temp_mosfets (C++ member)</a>
+</li>
+      <li><a href="src/api/dcdc.html#_CPPv4N4Dcdc4testEv">Dcdc::test (C++ function)</a>
+</li>
+      <li><a href="src/api/dcdc.html#_CPPv425dcdc_low_level_controllerv">dcdc_low_level_controller (C++ function)</a>
+</li>
+      <li><a href="src/api/dcdc.html#_CPPv416DcdcControlState">DcdcControlState (C++ enum)</a>
+</li>
+      <li><a href="src/api/dcdc.html#_CPPv4N16DcdcControlState18DCDC_CONTROL_CC_HSE">DcdcControlState::DCDC_CONTROL_CC_HS (C++ enumerator)</a>
+</li>
+      <li><a href="src/api/dcdc.html#_CPPv4N16DcdcControlState18DCDC_CONTROL_CC_LSE">DcdcControlState::DCDC_CONTROL_CC_LS (C++ enumerator)</a>
+</li>
+      <li><a href="src/api/dcdc.html#_CPPv4N16DcdcControlState18DCDC_CONTROL_CV_HSE">DcdcControlState::DCDC_CONTROL_CV_HS (C++ enumerator)</a>
+</li>
+      <li><a href="src/api/dcdc.html#_CPPv4N16DcdcControlState18DCDC_CONTROL_CV_LSE">DcdcControlState::DCDC_CONTROL_CV_LS (C++ enumerator)</a>
+</li>
+      <li><a href="src/api/dcdc.html#_CPPv4N16DcdcControlState21DCDC_CONTROL_DERATINGE">DcdcControlState::DCDC_CONTROL_DERATING (C++ enumerator)</a>
+</li>
+      <li><a href="src/api/dcdc.html#_CPPv4N16DcdcControlState17DCDC_CONTROL_MPPTE">DcdcControlState::DCDC_CONTROL_MPPT (C++ enumerator)</a>
+</li>
+      <li><a href="src/api/dcdc.html#_CPPv4N16DcdcControlState16DCDC_CONTROL_OFFE">DcdcControlState::DCDC_CONTROL_OFF (C++ enumerator)</a>
+</li>
+      <li><a href="src/api/dcdc.html#_CPPv417DcdcOperationMode">DcdcOperationMode (C++ enum)</a>
+</li>
+      <li><a href="src/api/dcdc.html#_CPPv4N17DcdcOperationMode14DCDC_MODE_AUTOE">DcdcOperationMode::DCDC_MODE_AUTO (C++ enumerator)</a>
+</li>
+      <li><a href="src/api/dcdc.html#_CPPv4N17DcdcOperationMode15DCDC_MODE_BOOSTE">DcdcOperationMode::DCDC_MODE_BOOST (C++ enumerator)</a>
+</li>
+      <li><a href="src/api/dcdc.html#_CPPv4N17DcdcOperationMode14DCDC_MODE_BUCKE">DcdcOperationMode::DCDC_MODE_BUCK (C++ enumerator)</a>
+</li>
+      <li><a href="src/api/dcdc.html#_CPPv4N17DcdcOperationMode13DCDC_MODE_OFFE">DcdcOperationMode::DCDC_MODE_OFF (C++ enumerator)</a>
+</li>
+      <li><a href="src/api/misc.html#_CPPv48dev_stat">dev_stat (C++ member)</a>
+</li>
+      <li><a href="src/api/device_status.html#_CPPv412DeviceStatus">DeviceStatus (C++ class)</a>
+</li>
+      <li><a href="src/api/device_status.html#_CPPv4N12DeviceStatus16bat_chg_total_WhE">DeviceStatus::bat_chg_total_Wh (C++ member)</a>
+</li>
+      <li><a href="src/api/device_status.html#_CPPv4N12DeviceStatus16bat_dis_total_WhE">DeviceStatus::bat_dis_total_Wh (C++ member)</a>
+</li>
+      <li><a href="src/api/device_status.html#_CPPv4N12DeviceStatus12bat_temp_maxE">DeviceStatus::bat_temp_max (C++ member)</a>
+</li>
+      <li><a href="src/api/device_status.html#_CPPv4N12DeviceStatus19battery_voltage_maxE">DeviceStatus::battery_voltage_max (C++ member)</a>
+</li>
+      <li><a href="src/api/device_status.html#_CPPv4N12DeviceStatus11clear_errorE8uint32_t">DeviceStatus::clear_error (C++ function)</a>
+</li>
+      <li><a href="src/api/device_status.html#_CPPv4N12DeviceStatus11day_counterE">DeviceStatus::day_counter (C++ member)</a>
+</li>
+      <li><a href="src/api/device_status.html#_CPPv4N12DeviceStatus16dcdc_current_maxE">DeviceStatus::dcdc_current_max (C++ member)</a>
+</li>
+      <li><a href="src/api/device_status.html#_CPPv4N12DeviceStatus11error_flagsE">DeviceStatus::error_flags (C++ member)</a>
+</li>
+      <li><a href="src/api/device_status.html#_CPPv4N12DeviceStatus20grid_export_total_WhE">DeviceStatus::grid_export_total_Wh (C++ member)</a>
+</li>
+      <li><a href="src/api/device_status.html#_CPPv4N12DeviceStatus20grid_import_total_WhE">DeviceStatus::grid_import_total_Wh (C++ member)</a>
+</li>
+      <li><a href="src/api/device_status.html#_CPPv4N12DeviceStatus9has_errorE8uint32_t">DeviceStatus::has_error (C++ function)</a>
+</li>
+      <li><a href="src/api/device_status.html#_CPPv4N12DeviceStatus12int_temp_maxE">DeviceStatus::int_temp_max (C++ member)</a>
+</li>
+      <li><a href="src/api/device_status.html#_CPPv4N12DeviceStatus13internal_tempE">DeviceStatus::internal_temp (C++ member)</a>
+</li>
+      <li><a href="src/api/device_status.html#_CPPv4N12DeviceStatus16load_current_maxE">DeviceStatus::load_current_max (C++ member)</a>
+</li>
+      <li><a href="src/api/device_status.html#_CPPv4N12DeviceStatus17load_out_total_WhE">DeviceStatus::load_out_total_Wh (C++ member)</a>
+</li>
+      <li><a href="src/api/device_status.html#_CPPv4N12DeviceStatus18load_power_max_dayE">DeviceStatus::load_power_max_day (C++ member)</a>
+</li>
+      <li><a href="src/api/device_status.html#_CPPv4N12DeviceStatus20load_power_max_totalE">DeviceStatus::load_power_max_total (C++ member)</a>
+</li>
+      <li><a href="src/api/device_status.html#_CPPv4N12DeviceStatus15mosfet_temp_maxE">DeviceStatus::mosfet_temp_max (C++ member)</a>
+</li>
+      <li><a href="src/api/device_status.html#_CPPv4N12DeviceStatus9set_errorE8uint32_t">DeviceStatus::set_error (C++ function)</a>
+</li>
+      <li><a href="src/api/device_status.html#_CPPv4N12DeviceStatus17solar_in_total_WhE">DeviceStatus::solar_in_total_Wh (C++ member)</a>
+</li>
+      <li><a href="src/api/device_status.html#_CPPv4N12DeviceStatus19solar_power_max_dayE">DeviceStatus::solar_power_max_day (C++ member)</a>
+</li>
+      <li><a href="src/api/device_status.html#_CPPv4N12DeviceStatus21solar_power_max_totalE">DeviceStatus::solar_power_max_total (C++ member)</a>
+</li>
+      <li><a href="src/api/device_status.html#_CPPv4N12DeviceStatus17solar_voltage_maxE">DeviceStatus::solar_voltage_max (C++ member)</a>
+</li>
+      <li><a href="src/api/device_status.html#_CPPv4N12DeviceStatus13update_energyEv">DeviceStatus::update_energy (C++ function)</a>
+</li>
+      <li><a href="src/api/device_status.html#_CPPv4N12DeviceStatus21update_min_max_valuesEv">DeviceStatus::update_min_max_values (C++ function)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="E">E</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="src/api/device_status.html#_CPPv49ErrorFlag">ErrorFlag (C++ enum)</a>
+</li>
+      <li><a href="src/api/device_status.html#_CPPv4N9ErrorFlag13ERR_ANY_ERRORE">ErrorFlag::ERR_ANY_ERROR (C++ enumerator)</a>
+</li>
+      <li><a href="src/api/device_status.html#_CPPv4N9ErrorFlag23ERR_BAT_CHG_OVERCURRENTE">ErrorFlag::ERR_BAT_CHG_OVERCURRENT (C++ enumerator)</a>
+</li>
+      <li><a href="src/api/device_status.html#_CPPv4N9ErrorFlag20ERR_BAT_CHG_OVERTEMPE">ErrorFlag::ERR_BAT_CHG_OVERTEMP (C++ enumerator)</a>
+</li>
+      <li><a href="src/api/device_status.html#_CPPv4N9ErrorFlag21ERR_BAT_CHG_UNDERTEMPE">ErrorFlag::ERR_BAT_CHG_UNDERTEMP (C++ enumerator)</a>
+</li>
+      <li><a href="src/api/device_status.html#_CPPv4N9ErrorFlag23ERR_BAT_DIS_OVERCURRENTE">ErrorFlag::ERR_BAT_DIS_OVERCURRENT (C++ enumerator)</a>
+</li>
+      <li><a href="src/api/device_status.html#_CPPv4N9ErrorFlag20ERR_BAT_DIS_OVERTEMPE">ErrorFlag::ERR_BAT_DIS_OVERTEMP (C++ enumerator)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="src/api/device_status.html#_CPPv4N9ErrorFlag21ERR_BAT_DIS_UNDERTEMPE">ErrorFlag::ERR_BAT_DIS_UNDERTEMP (C++ enumerator)</a>
+</li>
+      <li><a href="src/api/device_status.html#_CPPv4N9ErrorFlag19ERR_BAT_OVERVOLTAGEE">ErrorFlag::ERR_BAT_OVERVOLTAGE (C++ enumerator)</a>
+</li>
+      <li><a href="src/api/device_status.html#_CPPv4N9ErrorFlag20ERR_BAT_UNDERVOLTAGEE">ErrorFlag::ERR_BAT_UNDERVOLTAGE (C++ enumerator)</a>
+</li>
+      <li><a href="src/api/device_status.html#_CPPv4N9ErrorFlag24ERR_DCDC_HS_MOSFET_SHORTE">ErrorFlag::ERR_DCDC_HS_MOSFET_SHORT (C++ enumerator)</a>
+</li>
+      <li><a href="src/api/device_status.html#_CPPv4N9ErrorFlag23ERR_DCDC_HS_OVERVOLTAGEE">ErrorFlag::ERR_DCDC_HS_OVERVOLTAGE (C++ enumerator)</a>
+</li>
+      <li><a href="src/api/device_status.html#_CPPv4N9ErrorFlag16ERR_INT_OVERTEMPE">ErrorFlag::ERR_INT_OVERTEMP (C++ enumerator)</a>
+</li>
+      <li><a href="src/api/device_status.html#_CPPv4N9ErrorFlag26ERR_PWM_SWITCH_OVERVOLTAGEE">ErrorFlag::ERR_PWM_SWITCH_OVERVOLTAGE (C++ enumerator)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="F">F</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="src/api/misc.html#_CPPv411flags_checkP8uint32_t8uint32_t">flags_check (C++ function)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="src/api/misc.html#_CPPv411flags_clearP8uint32_t8uint32_t">flags_clear (C++ function)</a>
+</li>
+      <li><a href="src/api/misc.html#_CPPv49flags_setP8uint32_t8uint32_t">flags_set (C++ function)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="G">G</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="src/api/misc.html#_CPPv413grid_terminal">grid_terminal (C++ member)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="H">H</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="src/api/half_bridge.html#_CPPv419half_bridge_enabledv">half_bridge_enabled (C++ function)</a>
+</li>
+      <li><a href="src/api/half_bridge.html#_CPPv419half_bridge_get_arrv">half_bridge_get_arr (C++ function)</a>
+</li>
+      <li><a href="src/api/half_bridge.html#_CPPv419half_bridge_get_ccrv">half_bridge_get_ccr (C++ function)</a>
+</li>
+      <li><a href="src/api/half_bridge.html#_CPPv426half_bridge_get_duty_cyclev">half_bridge_get_duty_cycle (C++ function)</a>
+</li>
+      <li><a href="src/api/half_bridge.html#_CPPv416half_bridge_initiiff">half_bridge_init (C++ function)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="src/api/half_bridge.html#_CPPv419half_bridge_set_ccr8uint16_t">half_bridge_set_ccr (C++ function)</a>
+</li>
+      <li><a href="src/api/half_bridge.html#_CPPv426half_bridge_set_duty_cyclef">half_bridge_set_duty_cycle (C++ function)</a>
+</li>
+      <li><a href="src/api/half_bridge.html#_CPPv417half_bridge_startv">half_bridge_start (C++ function)</a>
+</li>
+      <li><a href="src/api/half_bridge.html#_CPPv416half_bridge_stopv">half_bridge_stop (C++ function)</a>
+</li>
+      <li><a href="src/api/misc.html#_CPPv46hv_bus">hv_bus (C++ member)</a>
+</li>
+      <li><a href="src/api/misc.html#_CPPv411hv_terminal">hv_terminal (C++ member)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="L">L</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="src/api/misc.html#_CPPv410leds_blinkji">leds_blink (C++ function)</a>
+</li>
+      <li><a href="src/api/misc.html#_CPPv412leds_flickerji">leds_flicker (C++ function)</a>
+</li>
+      <li><a href="src/api/misc.html#_CPPv49leds_initb">leds_init (C++ function)</a>
+</li>
+      <li><a href="src/api/misc.html#_CPPv48leds_offj">leds_off (C++ function)</a>
+</li>
+      <li><a href="src/api/misc.html#_CPPv47leds_onji">leds_on (C++ function)</a>
+</li>
+      <li><a href="src/api/misc.html#_CPPv48leds_setjbi">leds_set (C++ function)</a>
+</li>
+      <li><a href="src/api/misc.html#_CPPv417leds_set_chargingb">leds_set_charging (C++ function)</a>
+</li>
+      <li><a href="src/api/misc.html#_CPPv417leds_toggle_errorv">leds_toggle_error (C++ function)</a>
+</li>
+      <li><a href="src/api/misc.html#_CPPv414leds_update_1sv">leds_update_1s (C++ function)</a>
+</li>
+      <li><a href="src/api/misc.html#_CPPv415leds_update_socib">leds_update_soc (C++ function)</a>
+</li>
+      <li><a href="src/api/misc.html#_CPPv418leds_update_threadv">leds_update_thread (C++ function)</a>
+</li>
+      <li><a href="src/api/misc.html#_CPPv48LedState">LedState (C++ enum)</a>
+</li>
+      <li><a href="src/api/misc.html#_CPPv4N8LedState15LED_STATE_BLINKE">LedState::LED_STATE_BLINK (C++ enumerator)</a>
+</li>
+      <li><a href="src/api/misc.html#_CPPv4N8LedState17LED_STATE_FLICKERE">LedState::LED_STATE_FLICKER (C++ enumerator)</a>
+</li>
+      <li><a href="src/api/misc.html#_CPPv4N8LedState13LED_STATE_OFFE">LedState::LED_STATE_OFF (C++ enumerator)</a>
+</li>
+      <li><a href="src/api/misc.html#_CPPv4N8LedState12LED_STATE_ONE">LedState::LED_STATE_ON (C++ enumerator)</a>
+</li>
+      <li><a href="src/api/misc.html#_CPPv44load">load (C++ member)</a>
+</li>
+      <li><a href="src/api/load.html#_CPPv413load_out_initv">load_out_init (C++ function)</a>
+</li>
+      <li><a href="src/api/load.html#_CPPv412load_out_setb">load_out_set (C++ function)</a>
+</li>
+      <li><a href="src/api/load.html#_CPPv423load_short_circuit_stopv">load_short_circuit_stop (C++ function)</a>
+</li>
+      <li><a href="src/api/load.html#_CPPv413LoadErrorFlag">LoadErrorFlag (C++ enum)</a>
+</li>
+      <li><a href="src/api/load.html#_CPPv4N13LoadErrorFlag24ERR_LOAD_BUS_SRC_CURRENTE">LoadErrorFlag::ERR_LOAD_BUS_SRC_CURRENT (C++ enumerator)</a>
+</li>
+      <li><a href="src/api/load.html#_CPPv4N13LoadErrorFlag20ERR_LOAD_OVERCURRENTE">LoadErrorFlag::ERR_LOAD_OVERCURRENT (C++ enumerator)</a>
+</li>
+      <li><a href="src/api/load.html#_CPPv4N13LoadErrorFlag20ERR_LOAD_OVERVOLTAGEE">LoadErrorFlag::ERR_LOAD_OVERVOLTAGE (C++ enumerator)</a>
+</li>
+      <li><a href="src/api/load.html#_CPPv4N13LoadErrorFlag17ERR_LOAD_SHEDDINGE">LoadErrorFlag::ERR_LOAD_SHEDDING (C++ enumerator)</a>
+</li>
+      <li><a href="src/api/load.html#_CPPv4N13LoadErrorFlag22ERR_LOAD_SHORT_CIRCUITE">LoadErrorFlag::ERR_LOAD_SHORT_CIRCUIT (C++ enumerator)</a>
+</li>
+      <li><a href="src/api/load.html#_CPPv4N13LoadErrorFlag20ERR_LOAD_VOLTAGE_DIPE">LoadErrorFlag::ERR_LOAD_VOLTAGE_DIP (C++ enumerator)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="src/api/load.html#_CPPv410LoadOutput">LoadOutput (C++ class)</a>
+</li>
+      <li><a href="src/api/load.html#_CPPv4N10LoadOutput7controlEv">LoadOutput::control (C++ function)</a>
+</li>
+      <li><a href="src/api/load.html#_CPPv4N10LoadOutput18disconnect_voltageE">LoadOutput::disconnect_voltage (C++ member)</a>
+</li>
+      <li><a href="src/api/load.html#_CPPv4N10LoadOutput6enableE">LoadOutput::enable (C++ member)</a>
+</li>
+      <li><a href="src/api/load.html#_CPPv4N10LoadOutput11error_flagsE">LoadOutput::error_flags (C++ member)</a>
+</li>
+      <li><a href="src/api/load.html#_CPPv4N10LoadOutput4infoE">LoadOutput::info (C++ member)</a>
+</li>
+      <li><a href="src/api/load.html#_CPPv4N10LoadOutput20junction_temperatureE">LoadOutput::junction_temperature (C++ member)</a>
+</li>
+      <li><a href="src/api/load.html#_CPPv4N10LoadOutput10LoadOutputEP5DcBusPFvbEPFvvEPFbvE">LoadOutput::LoadOutput (C++ function)</a>
+</li>
+      <li><a href="src/api/load.html#_CPPv4N10LoadOutput18lvd_recovery_delayE">LoadOutput::lvd_recovery_delay (C++ member)</a>
+</li>
+      <li><a href="src/api/load.html#_CPPv4N10LoadOutput13lvd_timestampE">LoadOutput::lvd_timestamp (C++ member)</a>
+</li>
+      <li><a href="src/api/load.html#_CPPv4N10LoadOutput17oc_recovery_delayE">LoadOutput::oc_recovery_delay (C++ member)</a>
+</li>
+      <li><a href="src/api/load.html#_CPPv4N10LoadOutput12oc_timestampE">LoadOutput::oc_timestamp (C++ member)</a>
+</li>
+      <li><a href="src/api/load.html#_CPPv4N10LoadOutput19ov_debounce_counterE">LoadOutput::ov_debounce_counter (C++ member)</a>
+</li>
+      <li><a href="src/api/load.html#_CPPv4N10LoadOutput13ov_hysteresisE">LoadOutput::ov_hysteresis (C++ member)</a>
+</li>
+      <li><a href="src/api/load.html#_CPPv4N10LoadOutput11overvoltageE">LoadOutput::overvoltage (C++ member)</a>
+</li>
+      <li><a href="src/api/load.html#_CPPv4N10LoadOutput11pgood_checkE">LoadOutput::pgood_check (C++ member)</a>
+</li>
+      <li><a href="src/api/load.html#_CPPv4N10LoadOutput17reconnect_voltageE">LoadOutput::reconnect_voltage (C++ member)</a>
+</li>
+      <li><a href="src/api/load.html#_CPPv4N10LoadOutput18set_voltage_limitsEfff">LoadOutput::set_voltage_limits (C++ function)</a>
+</li>
+      <li><a href="src/api/load.html#_CPPv4N10LoadOutput5stateE">LoadOutput::state (C++ member)</a>
+</li>
+      <li><a href="src/api/load.html#_CPPv4N10LoadOutput4stopE8uint32_t">LoadOutput::stop (C++ function)</a>
+</li>
+      <li><a href="src/api/load.html#_CPPv4N10LoadOutput10switch_setE">LoadOutput::switch_set (C++ member)</a>
+</li>
+      <li><a href="src/api/load.html#_CPPv4N10LoadOutput19uv_debounce_counterE">LoadOutput::uv_debounce_counter (C++ member)</a>
+</li>
+      <li><a href="src/api/load.html#_CPPv49LoadState">LoadState (C++ enum)</a>
+</li>
+      <li><a href="src/api/load.html#_CPPv4N9LoadState14LOAD_STATE_OFFE">LoadState::LOAD_STATE_OFF (C++ enumerator)</a>
+</li>
+      <li><a href="src/api/load.html#_CPPv4N9LoadState13LOAD_STATE_ONE">LoadState::LOAD_STATE_ON (C++ enumerator)</a>
+</li>
+      <li><a href="src/api/misc.html#_CPPv46lv_bus">lv_bus (C++ member)</a>
+</li>
+      <li><a href="src/api/misc.html#_CPPv411lv_terminal">lv_terminal (C++ member)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="P">P</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="src/api/load.html#_CPPv411pgood_checkv">pgood_check (C++ function)</a>
+</li>
+      <li><a href="src/api/misc.html#_CPPv48PinState">PinState (C++ enum)</a>
+</li>
+      <li><a href="src/api/misc.html#_CPPv4N8PinState9PIN_FLOATE">PinState::PIN_FLOAT (C++ enumerator)</a>
+</li>
+      <li><a href="src/api/misc.html#_CPPv4N8PinState8PIN_HIGHE">PinState::PIN_HIGH (C++ enumerator)</a>
+</li>
+      <li><a href="src/api/misc.html#_CPPv4N8PinState7PIN_LOWE">PinState::PIN_LOW (C++ enumerator)</a>
+</li>
+      <li><a href="src/api/power_port.html#_CPPv49PowerPort">PowerPort (C++ class)</a>
+</li>
+      <li><a href="src/api/power_port.html#_CPPv4N9PowerPort3busE">PowerPort::bus (C++ member)</a>
+</li>
+      <li><a href="src/api/power_port.html#_CPPv4N9PowerPort7currentE">PowerPort::current (C++ member)</a>
+</li>
+      <li><a href="src/api/power_port.html#_CPPv4N9PowerPort16current_filteredE">PowerPort::current_filtered (C++ member)</a>
+</li>
+      <li><a href="src/api/power_port.html#_CPPv4N9PowerPort14energy_balanceEv">PowerPort::energy_balance (C++ function)</a>
+</li>
+      <li><a href="src/api/power_port.html#_CPPv4N9PowerPort13init_nanogridEv">PowerPort::init_nanogrid (C++ function)</a>
+</li>
+      <li><a href="src/api/power_port.html#_CPPv4N9PowerPort10init_solarEv">PowerPort::init_solar (C++ function)</a>
+</li>
+      <li><a href="src/api/power_port.html#_CPPv4N9PowerPort17neg_current_limitE">PowerPort::neg_current_limit (C++ member)</a>
+</li>
+      <li><a href="src/api/power_port.html#_CPPv4N9PowerPort13neg_energy_WhE">PowerPort::neg_energy_Wh (C++ member)</a>
+</li>
+      <li><a href="src/api/power_port.html#_CPPv4N9PowerPort17pos_current_limitE">PowerPort::pos_current_limit (C++ member)</a>
+</li>
+      <li><a href="src/api/power_port.html#_CPPv4N9PowerPort13pos_energy_WhE">PowerPort::pos_energy_Wh (C++ member)</a>
+</li>
+      <li><a href="src/api/power_port.html#_CPPv4N9PowerPort5powerE">PowerPort::power (C++ member)</a>
+</li>
+      <li><a href="src/api/power_port.html#_CPPv4N9PowerPort9PowerPortEP5DcBusb">PowerPort::PowerPort (C++ function)</a>
+</li>
+      <li><a href="src/api/power_port.html#_CPPv4NK9PowerPort26update_bus_current_marginsEv">PowerPort::update_bus_current_margins (C++ function)</a>
+</li>
+      <li><a href="src/api/data_objects.html#_CPPv414pub_can_enable">pub_can_enable (C++ member)</a>
+</li>
+      <li><a href="src/api/data_objects.html#_CPPv417pub_serial_enable">pub_serial_enable (C++ member)</a>
+</li>
+      <li><a href="src/api/pwm_switch.html#_CPPv410pwm_activev">pwm_active (C++ function)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="src/api/pwm_switch.html#_CPPv426pwm_signal_duty_cycle_stepi">pwm_signal_duty_cycle_step (C++ function)</a>
+</li>
+      <li><a href="src/api/pwm_switch.html#_CPPv425pwm_signal_get_duty_cyclev">pwm_signal_get_duty_cycle (C++ function)</a>
+</li>
+      <li><a href="src/api/pwm_switch.html#_CPPv415pwm_signal_highv">pwm_signal_high (C++ function)</a>
+</li>
+      <li><a href="src/api/pwm_switch.html#_CPPv425pwm_signal_init_registersi">pwm_signal_init_registers (C++ function)</a>
+</li>
+      <li><a href="src/api/pwm_switch.html#_CPPv425pwm_signal_set_duty_cyclef">pwm_signal_set_duty_cycle (C++ function)</a>
+</li>
+      <li><a href="src/api/pwm_switch.html#_CPPv416pwm_signal_startf">pwm_signal_start (C++ function)</a>
+</li>
+      <li><a href="src/api/pwm_switch.html#_CPPv415pwm_signal_stopv">pwm_signal_stop (C++ function)</a>
+</li>
+      <li><a href="src/api/misc.html#_CPPv410pwm_switch">pwm_switch (C++ member)</a>
+</li>
+      <li><a href="src/api/pwm_switch.html#_CPPv49PwmSwitch">PwmSwitch (C++ class)</a>
+</li>
+      <li><a href="src/api/pwm_switch.html#_CPPv4N9PwmSwitch6activeEv">PwmSwitch::active (C++ function)</a>
+</li>
+      <li><a href="src/api/pwm_switch.html#_CPPv4N9PwmSwitch7controlEv">PwmSwitch::control (C++ function)</a>
+</li>
+      <li><a href="src/api/pwm_switch.html#_CPPv4N9PwmSwitch6enableE">PwmSwitch::enable (C++ member)</a>
+</li>
+      <li><a href="src/api/pwm_switch.html#_CPPv4N9PwmSwitch11ext_voltageE">PwmSwitch::ext_voltage (C++ member)</a>
+</li>
+      <li><a href="src/api/pwm_switch.html#_CPPv4N9PwmSwitch14get_duty_cycleEv">PwmSwitch::get_duty_cycle (C++ function)</a>
+</li>
+      <li><a href="src/api/pwm_switch.html#_CPPv4N9PwmSwitch13off_timestampE">PwmSwitch::off_timestamp (C++ member)</a>
+</li>
+      <li><a href="src/api/pwm_switch.html#_CPPv4N9PwmSwitch20offset_voltage_startE">PwmSwitch::offset_voltage_start (C++ member)</a>
+</li>
+      <li><a href="src/api/pwm_switch.html#_CPPv4N9PwmSwitch20power_good_timestampE">PwmSwitch::power_good_timestamp (C++ member)</a>
+</li>
+      <li><a href="src/api/pwm_switch.html#_CPPv4N9PwmSwitch9PwmSwitchEP5DcBus">PwmSwitch::PwmSwitch (C++ function)</a>
+</li>
+      <li><a href="src/api/pwm_switch.html#_CPPv4N9PwmSwitch16restart_intervalE">PwmSwitch::restart_interval (C++ member)</a>
+</li>
+      <li><a href="src/api/pwm_switch.html#_CPPv4N9PwmSwitch11signal_highEv">PwmSwitch::signal_high (C++ function)</a>
+</li>
+      <li><a href="src/api/pwm_switch.html#_CPPv4N9PwmSwitch4stopEv">PwmSwitch::stop (C++ function)</a>
+</li>
+      <li><a href="src/api/pwm_switch.html#_CPPv4N9PwmSwitch4testEv">PwmSwitch::test (C++ function)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="R">R</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="src/api/misc.html#_CPPv412reset_devicev">reset_device (C++ function)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="S">S</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="src/api/misc.html#_CPPv45setupv">setup (C++ function)</a>
+</li>
+      <li><a href="src/api/misc.html#_CPPv414solar_terminal">solar_terminal (C++ member)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="src/api/misc.html#_CPPv422start_stm32_bootloaderv">start_stm32_bootloader (C++ function)</a>
+</li>
+      <li><a href="src/api/misc.html#_CPPv414system_controlv">system_control (C++ function)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="T">T</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="src/api/misc.html#_CPPv417task_wdt_callbackiPv">task_wdt_callback (C++ function)</a>
+</li>
+      <li><a href="src/api/data_objects.html#_CPPv413thingset_authv">thingset_auth (C++ function)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="src/api/misc.html#_CPPv49timestamp">timestamp (C++ member)</a>
+</li>
+      <li><a href="src/api/misc.html#_CPPv42ts">ts (C++ member)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="U">U</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="src/api/data_objects.html#_CPPv416uint64_to_base328uint64_tPc6size_tPKc">uint64_to_base32 (C++ function)</a>
+</li>
+      <li><a href="src/api/data_objects.html#_CPPv414update_controlv">update_control (C++ function)</a>
+</li>
+      <li><a href="src/api/misc.html#_CPPv46uptimev">uptime (C++ function)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="src/api/load.html#_CPPv412usb_out_initv">usb_out_init (C++ function)</a>
+</li>
+      <li><a href="src/api/load.html#_CPPv411usb_out_setb">usb_out_set (C++ function)</a>
+</li>
+      <li><a href="src/api/misc.html#_CPPv47usb_pwr">usb_pwr (C++ member)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023 The Libre Solar Project.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

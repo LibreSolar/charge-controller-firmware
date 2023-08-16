@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Data Acquisition &mdash; Charge Controller  documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Data Objects" href="data_objects.html" />
+    <link rel="prev" title="Battery Charger" href="bat_charger.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #005e83" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Charge Controller
+              <img src="../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                v21.0
+
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../overview/features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/supported_hardware.html">Supported Hardware</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/charger_concepts.html">Charger Concepts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../overview/charger_concepts.html#bus-and-port-structure">Bus and port structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/charger_concepts.html#charger-state-machine">Charger state machine</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../overview/charger_concepts.html#standby">0. Standby</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../overview/charger_concepts.html#bulk-stage">1. Bulk stage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../overview/charger_concepts.html#topping-stage">2. Topping stage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../overview/charger_concepts.html#equalization-stage">3. Equalization stage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../overview/charger_concepts.html#float-stage">4. Float stage</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/workspace_setup.html">Workspace Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/building_flashing.html">Building and Flashing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/customization.html">Customization</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../dev/customization.html#hardware-specific-changes">Hardware-specific changes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dev/customization.html#application-firmware-configuration">Application firmware configuration</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../dev/customization.html#change-the-battery-type">Change the battery type</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../dev/customization.html#configure-serial-for-thingset-protocol">Configure serial for ThingSet protocol</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../dev/customization.html#custom-functions-separate-c-c-files">Custom functions (separate C/C++ files)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/unit_tests.html">Unit Tests</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../dev/unit_tests.html#conformance-testing">Conformance testing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/troubleshooting.html">Troubleshoting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../dev/troubleshooting.html#errors-with-stm32l072-mcu-using-openocd">Errors with STM32L072 MCU using OpenOCD</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="bat_charger.html">Battery Charger</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Data Acquisition</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_objects.html">Data Objects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dcdc.html">DC/DC converter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="device_status.html">Device Status</a></li>
+<li class="toctree-l1"><a class="reference internal" href="half_bridge.html">Half Bridge Driver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="load.html">Load Output</a></li>
+<li class="toctree-l1"><a class="reference internal" href="power_port.html">DC Bus and Power Port</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pwm_switch.html">PWM Switch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="misc.html">Misc</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="misc.html#data-storage">Data Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html#hardware">Hardware</a></li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html#helper">Helper</a></li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html#leds">LEDs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html#setup">Setup</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #005e83" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Charge Controller</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Data Acquisition</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/LibreSolar/charge-controller-firmware/blob/main/docs/src/api/daq.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="data-acquisition">
+<h1>Data Acquisition<a class="headerlink" href="#data-acquisition" title="Permalink to this heading"></a></h1>
+<p>Data Acquisition (DAQ) </p>
+<p>Measurements are taken using ADC with DMA. The DAC is used to generate reference voltages for bi-directional current measurement. Data is stored in structs, which are afterwards used by the control algorithms</p>
+<p>All calculations assume a 16-bit ADC, even though the STM32 ADCs natively support 12-bit. Using 16-bit for calculation allows to increase resolution by oversampling. Left-aligned 12-bit ADC readings can be treated as 16-bit ADC readings. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-enums">Enums</p>
+<dl class="cpp enum">
+<dt class="sig sig-object cpp" id="_CPPv4Ut1_0">
+<span id="_CPPv3Ut1_0"></span><span class="target" id="daq_8h_1a06fc87d81c62e9abb8790b6e5713c55b"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">[anonymous]</span></span></span><a class="headerlink" href="#_CPPv4Ut1_0" title="Permalink to this definition"></a><br /></dt>
+<dd><p><em>Values:</em></p>
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4NUt1_016DT_FOREACH_CHILDE">
+<span id="_CPPv3NUt1_016DT_FOREACH_CHILDE"></span><span class="target" id="daq_8h_1a06fc87d81c62e9abb8790b6e5713c55ba41c4f5baa60445f1c5faefaa586602be"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">DT_FOREACH_CHILD</span></span></span><a class="headerlink" href="#_CPPv4NUt1_016DT_FOREACH_CHILDE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-functions">Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv418adc_raw_to_voltage7int32_t7int32_t">
+<span id="_CPPv318adc_raw_to_voltage7int32_t7int32_t"></span><span id="_CPPv218adc_raw_to_voltage7int32_t7int32_t"></span><span id="adc_raw_to_voltage__int32_t.int32_t"></span><span class="target" id="daq_8h_1ab559d19bd7b0ba4ce16056d726fcb1db"></span><span class="k"><span class="pre">static</span></span><span class="w"> </span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">adc_raw_to_voltage</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">int32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">raw</span></span>, <span class="n"><span class="pre">int32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">vref_mV</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv418adc_raw_to_voltage7int32_t7int32_t" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Convert 16-bit raw ADC reading to voltage</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>raw</strong> – 16-bit ADC reading </p></li>
+<li><p><strong>vref_mV</strong> – Reference voltage in millivolts</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Voltage in volts </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv418adc_voltage_to_rawf7int32_t">
+<span id="_CPPv318adc_voltage_to_rawf7int32_t"></span><span id="_CPPv218adc_voltage_to_rawf7int32_t"></span><span id="adc_voltage_to_raw__float.int32_t"></span><span class="target" id="daq_8h_1a88f0d3e29e0a603db382aa783e97c09e"></span><span class="k"><span class="pre">static</span></span><span class="w"> </span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">int32_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">adc_voltage_to_raw</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">voltage</span></span>, <span class="n"><span class="pre">int32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">vref_mV</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv418adc_voltage_to_rawf7int32_t" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Convert voltage to 16-bit raw ADC reading</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>voltage</strong> – Voltage in volts </p></li>
+<li><p><strong>vref_mV</strong> – Reference voltage in millivolts</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>16-bit ADC reading </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv425calibrate_current_sensorsv">
+<span id="_CPPv325calibrate_current_sensorsv"></span><span id="_CPPv225calibrate_current_sensorsv"></span><span id="calibrate_current_sensors__void"></span><span class="target" id="daq_8h_1ab12c07c2235f83670c1417d62a0c5cae"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">calibrate_current_sensors</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">void</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv425calibrate_current_sensorsv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Set offset vs. actual measured value, i.e. sets zero current point.</p>
+<p>All input/output switches and consumers should be switched off before calling this function </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv410daq_updatev">
+<span id="_CPPv310daq_updatev"></span><span id="_CPPv210daq_updatev"></span><span id="daq_update__void"></span><span class="target" id="daq_8h_1acafc998ba4a4e78aae9ed20c181611af"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">daq_update</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">void</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv410daq_updatev" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Updates structures with data read from ADC </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv49daq_setupv">
+<span id="_CPPv39daq_setupv"></span><span id="_CPPv29daq_setupv"></span><span id="daq_setup__void"></span><span class="target" id="daq_8h_1aaf17ccbe56e5e2aeb78e1ade38b11532"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">daq_setup</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">void</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv49daq_setupv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Initializes ADC, DAC and DMA </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv416adc_update_valuej">
+<span id="_CPPv316adc_update_valuej"></span><span id="_CPPv216adc_update_valuej"></span><span id="adc_update_value__unsigned-i"></span><span class="target" id="daq_8h_1a76516e54dfd985d58bb811910311e541"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">adc_update_value</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">unsigned</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">pos</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv416adc_update_valuej" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Read, filter and check raw ADC readings stored by DMA controller </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv417daq_set_lv_limitsff">
+<span id="_CPPv317daq_set_lv_limitsff"></span><span id="_CPPv217daq_set_lv_limitsff"></span><span id="daq_set_lv_limits__float.float"></span><span class="target" id="daq_8h_1ae2675a325715628aa5a84a0753370c39"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">daq_set_lv_limits</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">lv_overvoltage</span></span>, <span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">lv_undervoltage</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv417daq_set_lv_limitsff" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Set lv side (battery) voltage limits where an alert should be triggered</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lv_overvoltage</strong> – Upper voltage limit </p></li>
+<li><p><strong>lv_undervoltage</strong> – Lower voltage limit </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv416daq_set_hv_limitf">
+<span id="_CPPv316daq_set_hv_limitf"></span><span id="_CPPv216daq_set_hv_limitf"></span><span id="daq_set_hv_limit__float"></span><span class="target" id="daq_8h_1a4b7eb69d649a88149e17cd3efc2d0538"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">daq_set_hv_limit</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">hv_overvoltage</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv416daq_set_hv_limitf" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Set hv side (grid/solar) voltage limit where an alert should be triggered</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>hv_overvoltage</strong> – Upper voltage limit </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv423adc_upper_alert_inhibitii">
+<span id="_CPPv323adc_upper_alert_inhibitii"></span><span id="_CPPv223adc_upper_alert_inhibitii"></span><span id="adc_upper_alert_inhibit__i.i"></span><span class="target" id="daq_8h_1a1dd9966d4c87b9c56c06d3577db5d3d6"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">adc_upper_alert_inhibit</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">adc_pos</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">timeout_ms</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv423adc_upper_alert_inhibitii" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Add an inhibit delay to the alerts to disable it temporarily</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>adc_pos</strong> – The position of the ADC measurement channel </p></li>
+<li><p><strong>timeout_ms</strong> – Timeout in milliseconds </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv48AdcAlert">
+<span id="_CPPv38AdcAlert"></span><span id="_CPPv28AdcAlert"></span><span id="AdcAlert"></span><span class="target" id="structAdcAlert"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">AdcAlert</span></span></span><a class="headerlink" href="#_CPPv48AdcAlert" title="Permalink to this definition"></a><br /></dt>
+<dd><div class="docutils container">
+<em>#include &lt;daq.h&gt;</em></div>
+<p>Struct to define upper and lower limit alerts for any ADC channel </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N8AdcAlert8callbackE">
+<span id="_CPPv3N8AdcAlert8callbackE"></span><span id="_CPPv2N8AdcAlert8callbackE"></span><span class="target" id="structAdcAlert_1a8376922abcb03f9e62e643caa8db62f1"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">(</span></span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">callback</span></span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">(</span></span><span class="p"><span class="pre">)</span></span><a class="headerlink" href="#_CPPv4N8AdcAlert8callbackE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Function to be called when limits are exceeded. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N8AdcAlert5limitE">
+<span id="_CPPv3N8AdcAlert5limitE"></span><span id="_CPPv2N8AdcAlert5limitE"></span><span id="AdcAlert::limit__uint16_t"></span><span class="target" id="structAdcAlert_1a4d9761ee672900cd2b9974ec369ad816"></span><span class="n"><span class="pre">uint16_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">limit</span></span></span><a class="headerlink" href="#_CPPv4N8AdcAlert5limitE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>ADC reading for lower limit. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N8AdcAlert11debounce_msE">
+<span id="_CPPv3N8AdcAlert11debounce_msE"></span><span id="_CPPv2N8AdcAlert11debounce_msE"></span><span id="AdcAlert::debounce_ms__int16_t"></span><span class="target" id="structAdcAlert_1a92a340810831c7465176586cf0883273"></span><span class="n"><span class="pre">int16_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">debounce_ms</span></span></span><a class="headerlink" href="#_CPPv4N8AdcAlert11debounce_msE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Milliseconds delay for triggering alert. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="bat_charger.html" class="btn btn-neutral float-left" title="Battery Charger" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="data_objects.html" class="btn btn-neutral float-right" title="Data Objects" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023 The Libre Solar Project.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

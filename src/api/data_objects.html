@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Data Objects &mdash; Charge Controller  documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="DC/DC converter" href="dcdc.html" />
+    <link rel="prev" title="Data Acquisition" href="daq.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #005e83" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Charge Controller
+              <img src="../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                v21.0
+
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../overview/features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/supported_hardware.html">Supported Hardware</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/charger_concepts.html">Charger Concepts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../overview/charger_concepts.html#bus-and-port-structure">Bus and port structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/charger_concepts.html#charger-state-machine">Charger state machine</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../overview/charger_concepts.html#standby">0. Standby</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../overview/charger_concepts.html#bulk-stage">1. Bulk stage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../overview/charger_concepts.html#topping-stage">2. Topping stage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../overview/charger_concepts.html#equalization-stage">3. Equalization stage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../overview/charger_concepts.html#float-stage">4. Float stage</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/workspace_setup.html">Workspace Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/building_flashing.html">Building and Flashing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/customization.html">Customization</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../dev/customization.html#hardware-specific-changes">Hardware-specific changes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dev/customization.html#application-firmware-configuration">Application firmware configuration</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../dev/customization.html#change-the-battery-type">Change the battery type</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../dev/customization.html#configure-serial-for-thingset-protocol">Configure serial for ThingSet protocol</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../dev/customization.html#custom-functions-separate-c-c-files">Custom functions (separate C/C++ files)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/unit_tests.html">Unit Tests</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../dev/unit_tests.html#conformance-testing">Conformance testing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/troubleshooting.html">Troubleshoting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../dev/troubleshooting.html#errors-with-stm32l072-mcu-using-openocd">Errors with STM32L072 MCU using OpenOCD</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="bat_charger.html">Battery Charger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="daq.html">Data Acquisition</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Data Objects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dcdc.html">DC/DC converter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="device_status.html">Device Status</a></li>
+<li class="toctree-l1"><a class="reference internal" href="half_bridge.html">Half Bridge Driver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="load.html">Load Output</a></li>
+<li class="toctree-l1"><a class="reference internal" href="power_port.html">DC Bus and Power Port</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pwm_switch.html">PWM Switch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="misc.html">Misc</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="misc.html#data-storage">Data Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html#hardware">Hardware</a></li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html#helper">Helper</a></li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html#leds">LEDs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html#setup">Setup</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #005e83" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Charge Controller</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Data Objects</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/LibreSolar/charge-controller-firmware/blob/main/docs/src/api/data_objects.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="data-objects">
+<h1>Data Objects<a class="headerlink" href="#data-objects" title="Permalink to this heading"></a></h1>
+<p>The charge controller uses the [ThingSet protocol](<a class="reference external" href="https://thingset.github.io/">https://thingset.github.io/</a>) for communication
+with external devices. Internal data that should be exposed via the protocol is defined in the
+Data Objects module.</p>
+<p>Handling of ThingSet data objects. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-functions">Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv424data_objects_update_confv">
+<span id="_CPPv324data_objects_update_confv"></span><span id="_CPPv224data_objects_update_confv"></span><span id="data_objects_update_conf"></span><span class="target" id="data__objects_8h_1ac693cf35cda92180b765f1e58f4cadd2"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">data_objects_update_conf</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv424data_objects_update_confv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Callback function to be called when conf values were changed </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv417data_objects_initv">
+<span id="_CPPv317data_objects_initv"></span><span id="_CPPv217data_objects_initv"></span><span id="data_objects_init"></span><span class="target" id="data__objects_8h_1a4aba82d66647c819b3727d689dff8b43"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">data_objects_init</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv417data_objects_initv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Initializes and reads data objects from EEPROM </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv413thingset_authv">
+<span id="_CPPv313thingset_authv"></span><span id="_CPPv213thingset_authv"></span><span id="thingset_auth"></span><span class="target" id="data__objects_8h_1a07d2d15aee95af10442cc27019eb25fe"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">thingset_auth</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv413thingset_authv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Callback to provide authentication mechanism via ThingSet </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv416uint64_to_base328uint64_tPc6size_tPKc">
+<span id="_CPPv316uint64_to_base328uint64_tPc6size_tPKc"></span><span id="_CPPv216uint64_to_base328uint64_tPc6size_tPKc"></span><span id="uint64_to_base32__uint64_t.cP.s.cCP"></span><span class="target" id="data__objects_8h_1a2570a293311fe0c5798486c755277830"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">uint64_to_base32</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">uint64_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">in</span></span>, <span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">out</span></span>, <span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">size</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">alphabet</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv416uint64_to_base328uint64_tPc6size_tPKc" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Convert numeric device ID to base32 string </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv414update_controlv">
+<span id="_CPPv314update_controlv"></span><span id="_CPPv214update_controlv"></span><span id="update_control"></span><span class="target" id="data__objects_8h_1ab2c78903a76d2ed8969271803c78368a"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">update_control</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv414update_controlv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Update control values received via CAN </p>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-variables">Variables</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv417pub_serial_enable">
+<span id="_CPPv317pub_serial_enable"></span><span id="_CPPv217pub_serial_enable"></span><span id="pub_serial_enable__b"></span><span class="target" id="data__objects_8h_1a335a7fc1892a97b672ddfe19032b5191"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">pub_serial_enable</span></span></span><a class="headerlink" href="#_CPPv417pub_serial_enable" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv414pub_can_enable">
+<span id="_CPPv314pub_can_enable"></span><span id="_CPPv214pub_can_enable"></span><span id="pub_can_enable__b"></span><span class="target" id="data__objects_8h_1a826f2a96239d92f6497933dd662e020f"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">pub_can_enable</span></span></span><a class="headerlink" href="#_CPPv414pub_can_enable" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv418alphabet_crockford">
+<span id="_CPPv318alphabet_crockford"></span><span id="_CPPv218alphabet_crockford"></span><span id="alphabet_crockford__cCA"></span><span class="target" id="data__objects_8h_1aad7dbcff4de86dbf7949fd16f918b5b3"></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">alphabet_crockford</span></span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="s"><span class="pre">&quot;0123456789abcdefghjkmnpqrstvwxyz&quot;</span></span><a class="headerlink" href="#_CPPv418alphabet_crockford" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Alphabet used for base32 encoding</p>
+<p><a class="reference external" href="https://en.wikipedia.org/wiki/Base32#Crockford's_Base32">https://en.wikipedia.org/wiki/Base32#Crockford’s_Base32</a></p>
+</dd></dl>
+
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="daq.html" class="btn btn-neutral float-left" title="Data Acquisition" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="dcdc.html" class="btn btn-neutral float-right" title="DC/DC converter" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023 The Libre Solar Project.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

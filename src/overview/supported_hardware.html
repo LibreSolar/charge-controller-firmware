@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Supported Hardware &mdash; Charge Controller  documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Charger Concepts" href="charger_concepts.html" />
+    <link rel="prev" title="Features" href="features.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #005e83" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Charge Controller
+              <img src="../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                v21.0
+
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="features.html">Features</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Supported Hardware</a></li>
+<li class="toctree-l1"><a class="reference internal" href="charger_concepts.html">Charger Concepts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="charger_concepts.html#bus-and-port-structure">Bus and port structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="charger_concepts.html#charger-state-machine">Charger state machine</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="charger_concepts.html#standby">0. Standby</a></li>
+<li class="toctree-l3"><a class="reference internal" href="charger_concepts.html#bulk-stage">1. Bulk stage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="charger_concepts.html#topping-stage">2. Topping stage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="charger_concepts.html#equalization-stage">3. Equalization stage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="charger_concepts.html#float-stage">4. Float stage</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/workspace_setup.html">Workspace Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/building_flashing.html">Building and Flashing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/customization.html">Customization</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../dev/customization.html#hardware-specific-changes">Hardware-specific changes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dev/customization.html#application-firmware-configuration">Application firmware configuration</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../dev/customization.html#change-the-battery-type">Change the battery type</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../dev/customization.html#configure-serial-for-thingset-protocol">Configure serial for ThingSet protocol</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../dev/customization.html#custom-functions-separate-c-c-files">Custom functions (separate C/C++ files)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/unit_tests.html">Unit Tests</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../dev/unit_tests.html#conformance-testing">Conformance testing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/troubleshooting.html">Troubleshoting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../dev/troubleshooting.html#errors-with-stm32l072-mcu-using-openocd">Errors with STM32L072 MCU using OpenOCD</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api/bat_charger.html">Battery Charger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/daq.html">Data Acquisition</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/data_objects.html">Data Objects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/dcdc.html">DC/DC converter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/device_status.html">Device Status</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/half_bridge.html">Half Bridge Driver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/load.html">Load Output</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/power_port.html">DC Bus and Power Port</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/pwm_switch.html">PWM Switch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/misc.html">Misc</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/misc.html#data-storage">Data Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/misc.html#hardware">Hardware</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/misc.html#helper">Helper</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/misc.html#leds">LEDs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/misc.html#setup">Setup</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #005e83" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Charge Controller</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Supported Hardware</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/LibreSolar/charge-controller-firmware/blob/main/docs/src/overview/supported_hardware.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="supported-hardware">
+<h1>Supported Hardware<a class="headerlink" href="#supported-hardware" title="Permalink to this heading"></a></h1>
+<p>The software is configurable to support different charge controller PCBs with STM32F072, low-power
+STM32L072 or most recent STM32G431 MCUs:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head" rowspan="2"><p>Board</p></th>
+<th class="head" rowspan="2"><p>MCU</p></th>
+<th class="head" colspan="2"><p>Revisions</p></th>
+</tr>
+<tr class="row-even"><th class="head"><p>Default</p></th>
+<th class="head"><p>Older</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-odd"><td><p>Libre Solar <a class="reference external" href="https://github.com/LibreSolar/mppt-2420-hc">MPPT 2420 HC</a></p></td>
+<td><p>STM32G431</p></td>
+<td><p>0.2</p></td>
+<td><p>0.1</p></td>
+</tr>
+<tr class="row-even"><td><p>Libre Solar <a class="reference external" href="https://github.com/LibreSolar/mppt-2420-lc">MPPT 2420 LC</a></p></td>
+<td><p>STM32F072</p></td>
+<td><p>0.10</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>Libre Solar <a class="reference external" href="https://github.com/LibreSolar/mppt-1210-hus">MPPT 1210 HUS</a></p></td>
+<td><p>STM32L072</p></td>
+<td><p>0.7</p></td>
+<td><p>0.4</p></td>
+</tr>
+<tr class="row-even"><td><p>Libre Solar <a class="reference external" href="https://github.com/LibreSolar/pwm-2420-lus">PWM 2420 LUS</a></p></td>
+<td><p>STM32L072</p></td>
+<td><p>0.3</p></td>
+<td><p>0.2</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="features.html" class="btn btn-neutral float-left" title="Features" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="charger_concepts.html" class="btn btn-neutral float-right" title="Charger Concepts" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023 The Libre Solar Project.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

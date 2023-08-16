@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Battery Charger &mdash; Charge Controller  documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Data Acquisition" href="daq.html" />
+    <link rel="prev" title="Troubleshoting" href="../dev/troubleshooting.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #005e83" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Charge Controller
+              <img src="../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                v21.0
+
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../overview/features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/supported_hardware.html">Supported Hardware</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/charger_concepts.html">Charger Concepts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../overview/charger_concepts.html#bus-and-port-structure">Bus and port structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/charger_concepts.html#charger-state-machine">Charger state machine</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../overview/charger_concepts.html#standby">0. Standby</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../overview/charger_concepts.html#bulk-stage">1. Bulk stage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../overview/charger_concepts.html#topping-stage">2. Topping stage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../overview/charger_concepts.html#equalization-stage">3. Equalization stage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../overview/charger_concepts.html#float-stage">4. Float stage</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/workspace_setup.html">Workspace Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/building_flashing.html">Building and Flashing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/customization.html">Customization</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../dev/customization.html#hardware-specific-changes">Hardware-specific changes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dev/customization.html#application-firmware-configuration">Application firmware configuration</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../dev/customization.html#change-the-battery-type">Change the battery type</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../dev/customization.html#configure-serial-for-thingset-protocol">Configure serial for ThingSet protocol</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../dev/customization.html#custom-functions-separate-c-c-files">Custom functions (separate C/C++ files)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/unit_tests.html">Unit Tests</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../dev/unit_tests.html#conformance-testing">Conformance testing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/troubleshooting.html">Troubleshoting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../dev/troubleshooting.html#errors-with-stm32l072-mcu-using-openocd">Errors with STM32L072 MCU using OpenOCD</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Battery Charger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="daq.html">Data Acquisition</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_objects.html">Data Objects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dcdc.html">DC/DC converter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="device_status.html">Device Status</a></li>
+<li class="toctree-l1"><a class="reference internal" href="half_bridge.html">Half Bridge Driver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="load.html">Load Output</a></li>
+<li class="toctree-l1"><a class="reference internal" href="power_port.html">DC Bus and Power Port</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pwm_switch.html">PWM Switch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="misc.html">Misc</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="misc.html#data-storage">Data Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html#hardware">Hardware</a></li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html#helper">Helper</a></li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html#leds">LEDs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html#setup">Setup</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #005e83" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Charge Controller</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Battery Charger</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/LibreSolar/charge-controller-firmware/blob/main/docs/src/api/bat_charger.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="battery-charger">
+<h1>Battery Charger<a class="headerlink" href="#battery-charger" title="Permalink to this heading"></a></h1>
+<p>Battery and charger configuration and functions. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-enums">Enums</p>
+<dl class="cpp enum">
+<dt class="sig sig-object cpp" id="_CPPv47BatType">
+<span id="_CPPv37BatType"></span><span id="_CPPv27BatType"></span><span class="target" id="bat__charger_8h_1aa11cdbd2b05183d3bc59f70fbce02ab1"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">BatType</span></span></span><a class="headerlink" href="#_CPPv47BatType" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Battery cell types </p>
+<p><em>Values:</em></p>
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N7BatType15BAT_TYPE_CUSTOME">
+<span id="_CPPv3N7BatType15BAT_TYPE_CUSTOME"></span><span id="_CPPv2N7BatType15BAT_TYPE_CUSTOME"></span><span class="target" id="bat__charger_8h_1aa11cdbd2b05183d3bc59f70fbce02ab1aa037fc1e16a5c7834578e49740bb73e3"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">BAT_TYPE_CUSTOM</span></span></span><a class="headerlink" href="#_CPPv4N7BatType15BAT_TYPE_CUSTOME" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Custom battery type. </p>
+</dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N7BatType16BAT_TYPE_FLOODEDE">
+<span id="_CPPv3N7BatType16BAT_TYPE_FLOODEDE"></span><span id="_CPPv2N7BatType16BAT_TYPE_FLOODEDE"></span><span class="target" id="bat__charger_8h_1aa11cdbd2b05183d3bc59f70fbce02ab1aa5dcc2b6fc7a492f831d3f69e2d07547"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">BAT_TYPE_FLOODED</span></span></span><a class="headerlink" href="#_CPPv4N7BatType16BAT_TYPE_FLOODEDE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Old flooded (wet) lead-acid batteries. </p>
+</dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N7BatType12BAT_TYPE_GELE">
+<span id="_CPPv3N7BatType12BAT_TYPE_GELE"></span><span id="_CPPv2N7BatType12BAT_TYPE_GELE"></span><span class="target" id="bat__charger_8h_1aa11cdbd2b05183d3bc59f70fbce02ab1ac5bdfe5e7c221845aaebeef0f9ca8587"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">BAT_TYPE_GEL</span></span></span><a class="headerlink" href="#_CPPv4N7BatType12BAT_TYPE_GELE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>VRLA gel batteries (maintainance-free) </p>
+</dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N7BatType12BAT_TYPE_AGME">
+<span id="_CPPv3N7BatType12BAT_TYPE_AGME"></span><span id="_CPPv2N7BatType12BAT_TYPE_AGME"></span><span class="target" id="bat__charger_8h_1aa11cdbd2b05183d3bc59f70fbce02ab1a232968d1d678438ca2d0b124ef53b9d1"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">BAT_TYPE_AGM</span></span></span><a class="headerlink" href="#_CPPv4N7BatType12BAT_TYPE_AGME" title="Permalink to this definition"></a><br /></dt>
+<dd><p>AGM batteries (maintainance-free) </p>
+</dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N7BatType12BAT_TYPE_LFPE">
+<span id="_CPPv3N7BatType12BAT_TYPE_LFPE"></span><span id="_CPPv2N7BatType12BAT_TYPE_LFPE"></span><span class="target" id="bat__charger_8h_1aa11cdbd2b05183d3bc59f70fbce02ab1a59ef023dfa7a40c9573ed509dee98764"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">BAT_TYPE_LFP</span></span></span><a class="headerlink" href="#_CPPv4N7BatType12BAT_TYPE_LFPE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>LiFePO4 Li-ion batteries (3.3V nominal) </p>
+</dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N7BatType12BAT_TYPE_NMCE">
+<span id="_CPPv3N7BatType12BAT_TYPE_NMCE"></span><span id="_CPPv2N7BatType12BAT_TYPE_NMCE"></span><span class="target" id="bat__charger_8h_1aa11cdbd2b05183d3bc59f70fbce02ab1a48c5dd07956d5872ab0f64ca3f5e21be"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">BAT_TYPE_NMC</span></span></span><a class="headerlink" href="#_CPPv4N7BatType12BAT_TYPE_NMCE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>NMC/Graphite Li-ion batteries (3.7V nominal) </p>
+</dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N7BatType15BAT_TYPE_NMC_HVE">
+<span id="_CPPv3N7BatType15BAT_TYPE_NMC_HVE"></span><span id="_CPPv2N7BatType15BAT_TYPE_NMC_HVE"></span><span class="target" id="bat__charger_8h_1aa11cdbd2b05183d3bc59f70fbce02ab1af31cd12c54b120aeef9e7084ca17938b"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">BAT_TYPE_NMC_HV</span></span></span><a class="headerlink" href="#_CPPv4N7BatType15BAT_TYPE_NMC_HVE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>NMC/Graphite High Voltage Li-ion batteries (3.7V nominal, 4.35 max) </p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="cpp enum">
+<dt class="sig sig-object cpp" id="_CPPv412ChargerState">
+<span id="_CPPv312ChargerState"></span><span id="_CPPv212ChargerState"></span><span class="target" id="bat__charger_8h_1af912b18af8de205312a5d27282e95cde"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ChargerState</span></span></span><a class="headerlink" href="#_CPPv412ChargerState" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Possible charger states</p>
+<p>Further information:<ul class="simple">
+<li><p><a class="reference external" href="https://en.wikipedia.org/wiki/IUoU_battery_charging">https://en.wikipedia.org/wiki/IUoU_battery_charging</a></p></li>
+<li><p><a class="reference external" href="https://batteryuniversity.com/learn/article/charging_the_lead_acid_battery">https://batteryuniversity.com/learn/article/charging_the_lead_acid_battery</a></p></li>
+</ul>
+</p>
+<p><em>Values:</em></p>
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N12ChargerState14CHG_STATE_IDLEE">
+<span id="_CPPv3N12ChargerState14CHG_STATE_IDLEE"></span><span id="_CPPv2N12ChargerState14CHG_STATE_IDLEE"></span><span class="target" id="bat__charger_8h_1af912b18af8de205312a5d27282e95cdea8c366c835b7b61c99f62e35daaf22ccb"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">CHG_STATE_IDLE</span></span></span><a class="headerlink" href="#_CPPv4N12ChargerState14CHG_STATE_IDLEE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Idle</p>
+<p>Initial state of the charge controller. If the solar voltage is high enough and the battery is not full, bulk charging mode is started. </p>
+</dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N12ChargerState14CHG_STATE_BULKE">
+<span id="_CPPv3N12ChargerState14CHG_STATE_BULKE"></span><span id="_CPPv2N12ChargerState14CHG_STATE_BULKE"></span><span class="target" id="bat__charger_8h_1af912b18af8de205312a5d27282e95cdeaf2b452aac8ca8fead354ef63b4c41e64"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">CHG_STATE_BULK</span></span></span><a class="headerlink" href="#_CPPv4N12ChargerState14CHG_STATE_BULKE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Bulk / CC / MPPT charging</p>
+<p>The battery is charged with maximum possible current (MPPT algorithm is active) until the CV voltage limit is reached. </p>
+</dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N12ChargerState17CHG_STATE_TOPPINGE">
+<span id="_CPPv3N12ChargerState17CHG_STATE_TOPPINGE"></span><span id="_CPPv2N12ChargerState17CHG_STATE_TOPPINGE"></span><span class="target" id="bat__charger_8h_1af912b18af8de205312a5d27282e95cdea946d47ceea42e16daac32c702a57e6d4"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">CHG_STATE_TOPPING</span></span></span><a class="headerlink" href="#_CPPv4N12ChargerState17CHG_STATE_TOPPINGE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Topping / CV / absorption charging</p>
+<p>Lead-acid batteries are charged for some time using a slightly higher charge voltage. After a current cutoff limit or a time limit is reached, the charger goes into float or equalization mode for lead-acid batteries or back into Standby for Li-ion batteries. </p>
+</dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N12ChargerState15CHG_STATE_FLOATE">
+<span id="_CPPv3N12ChargerState15CHG_STATE_FLOATE"></span><span id="_CPPv2N12ChargerState15CHG_STATE_FLOATE"></span><span class="target" id="bat__charger_8h_1af912b18af8de205312a5d27282e95cdeac94cb2d5a183d82b5bd162f822f6d459"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">CHG_STATE_FLOAT</span></span></span><a class="headerlink" href="#_CPPv4N12ChargerState15CHG_STATE_FLOATE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Float / trickle charging</p>
+<p>This mode is kept forever for a lead-acid battery and keeps the battery at full state of charge. If too much power is drawn from the battery, the charger switches back into CC / bulk charging mode. </p>
+</dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N12ChargerState22CHG_STATE_EQUALIZATIONE">
+<span id="_CPPv3N12ChargerState22CHG_STATE_EQUALIZATIONE"></span><span id="_CPPv2N12ChargerState22CHG_STATE_EQUALIZATIONE"></span><span class="target" id="bat__charger_8h_1af912b18af8de205312a5d27282e95cdea728dcb69a9abdbd212584fe48ddefbb7"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">CHG_STATE_EQUALIZATION</span></span></span><a class="headerlink" href="#_CPPv4N12ChargerState22CHG_STATE_EQUALIZATIONE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Equalization charging</p>
+<p>This mode is only used for lead-acid batteries after several deep-discharge cycles or a very long period of time with no equalization. Voltage is increased to 15V or above, so care must be taken for the other system components attached to the battery. (currently, no equalization charging is enabled in the software) </p>
+</dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N12ChargerState18CHG_STATE_FOLLOWERE">
+<span id="_CPPv3N12ChargerState18CHG_STATE_FOLLOWERE"></span><span id="_CPPv2N12ChargerState18CHG_STATE_FOLLOWERE"></span><span class="target" id="bat__charger_8h_1af912b18af8de205312a5d27282e95cdea2da337c60fa3723394a0095631ef2a77"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">CHG_STATE_FOLLOWER</span></span></span><a class="headerlink" href="#_CPPv4N12ChargerState18CHG_STATE_FOLLOWERE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Parallel operation of multiple converters</p>
+<p>This mode is enabled if the device receives commands from an external controller with higher priority on the CAN bus. The device goes in current control modes and tries to match the current of the other controller. </p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-functions">Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv417battery_conf_initP7BatConfiif">
+<span id="_CPPv317battery_conf_initP7BatConfiif"></span><span id="_CPPv217battery_conf_initP7BatConfiif"></span><span id="battery_conf_init__BatConfP.i.i.float"></span><span class="target" id="bat__charger_8h_1a44bdb94a395090ca514b770155933259"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">battery_conf_init</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv47BatConf" title="BatConf"><span class="n"><span class="pre">BatConf</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">bat</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">type</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">num_cells</span></span>, <span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">nominal_capacity</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv417battery_conf_initP7BatConfiif" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Basic initialization of battery configuration</p>
+<p>Configures battery based on settings defined in config.h and initializes bat_user with same values</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>bat</strong> – Battery configuration that should be initialized </p></li>
+<li><p><strong>type</strong> – Battery type, one of enum BatType (declared as int instead of enum BatType because configuration via Kconfig symbol cannot handle enums) </p></li>
+<li><p><strong>num_cells</strong> – Number of cells (e.g. 6 for 12V lead-acid battery) </p></li>
+<li><p><strong>nominal_capacity</strong> – Nominal capacity (Ah) </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv418battery_conf_checkP7BatConf">
+<span id="_CPPv318battery_conf_checkP7BatConf"></span><span id="_CPPv218battery_conf_checkP7BatConf"></span><span id="battery_conf_check__BatConfP"></span><span class="target" id="bat__charger_8h_1af846fb31026546eecf860d415b9e2381"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">battery_conf_check</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv47BatConf" title="BatConf"><span class="n"><span class="pre">BatConf</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">bat</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv418battery_conf_checkP7BatConf" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Checks battery user settings for plausibility </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv422battery_conf_overwriteP7BatConfP7BatConfP7Charger">
+<span id="_CPPv322battery_conf_overwriteP7BatConfP7BatConfP7Charger"></span><span id="_CPPv222battery_conf_overwriteP7BatConfP7BatConfP7Charger"></span><span id="battery_conf_overwrite__BatConfP.BatConfP.ChargerP"></span><span class="target" id="bat__charger_8h_1a8741ee6b335f369491a00576be951f82"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">battery_conf_overwrite</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv47BatConf" title="BatConf"><span class="n"><span class="pre">BatConf</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">source</span></span>, <a class="reference internal" href="#_CPPv47BatConf" title="BatConf"><span class="n"><span class="pre">BatConf</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">destination</span></span>, <a class="reference internal" href="#_CPPv47Charger" title="Charger"><span class="n"><span class="pre">Charger</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">charger</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">NULL</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv422battery_conf_overwriteP7BatConfP7BatConfP7Charger" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Overwrites battery settings (config should be checked first)</p>
+<p>Settings specified in bat_user will be copied to actual battery_t, if suggested updates are valid (includes plausibility check!) </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv420battery_conf_changedP7BatConfP7BatConf">
+<span id="_CPPv320battery_conf_changedP7BatConfP7BatConf"></span><span id="_CPPv220battery_conf_changedP7BatConfP7BatConf"></span><span id="battery_conf_changed__BatConfP.BatConfP"></span><span class="target" id="bat__charger_8h_1a0fcd3e360cf3b348c08ce5b95f270bb7"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">battery_conf_changed</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv47BatConf" title="BatConf"><span class="n"><span class="pre">BatConf</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">a</span></span>, <a class="reference internal" href="#_CPPv47BatConf" title="BatConf"><span class="n"><span class="pre">BatConf</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">b</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv420battery_conf_changedP7BatConfP7BatConf" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Checks if incoming configuration is different to current configuration</p>
+<p>Returns true if changed </p>
+</dd></dl>
+
+</div>
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv47BatConf">
+<span id="_CPPv37BatConf"></span><span id="_CPPv27BatConf"></span><span id="BatConf"></span><span class="target" id="structBatConf"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">BatConf</span></span></span><a class="headerlink" href="#_CPPv47BatConf" title="Permalink to this definition"></a><br /></dt>
+<dd><div class="docutils container">
+<em>#include &lt;bat_charger.h&gt;</em></div>
+<p>Battery configuration data</p>
+<p>Data will be initialized in battery_init depending on configured cell type in config.h. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7BatConf16nominal_capacityE">
+<span id="_CPPv3N7BatConf16nominal_capacityE"></span><span id="_CPPv2N7BatConf16nominal_capacityE"></span><span id="BatConf::nominal_capacity__float"></span><span class="target" id="structBatConf_1a14edd9bd86854dec988a7a71ae6fb3b3"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">nominal_capacity</span></span></span><a class="headerlink" href="#_CPPv4N7BatConf16nominal_capacityE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Nominal battery capacity or sum of parallel cells capacity (Ah)</p>
+<p>The nominal capacity is used for SOC calculation and definition of current limits. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7BatConf16recharge_voltageE">
+<span id="_CPPv3N7BatConf16recharge_voltageE"></span><span id="_CPPv2N7BatConf16recharge_voltageE"></span><span id="BatConf::recharge_voltage__float"></span><span class="target" id="structBatConf_1a6899f9b1e64899ef0c74a0e5edbb1a6f"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">recharge_voltage</span></span></span><a class="headerlink" href="#_CPPv4N7BatConf16recharge_voltageE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Recharge voltage (V)</p>
+<p>Start charging again if voltage of fully charged battery drops below this threshold.</p>
+<p>Remark: Setting the value too close to the max voltage will cause more charging stress on lithium based batteries. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7BatConf19time_limit_rechargeE">
+<span id="_CPPv3N7BatConf19time_limit_rechargeE"></span><span id="_CPPv2N7BatConf19time_limit_rechargeE"></span><span id="BatConf::time_limit_recharge__uint32_t"></span><span class="target" id="structBatConf_1a9e7cbff97bea999f401b07933fb3fc01"></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">time_limit_recharge</span></span></span><a class="headerlink" href="#_CPPv4N7BatConf19time_limit_rechargeE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Recharge time limit (sec)</p>
+<p>Start charging of previously fully charged battery earliest after this period of time. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7BatConf20absolute_max_voltageE">
+<span id="_CPPv3N7BatConf20absolute_max_voltageE"></span><span id="_CPPv2N7BatConf20absolute_max_voltageE"></span><span id="BatConf::absolute_max_voltage__float"></span><span class="target" id="structBatConf_1a95f724775113ea25a6d538165308dfb6"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">absolute_max_voltage</span></span></span><a class="headerlink" href="#_CPPv4N7BatConf20absolute_max_voltageE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Absolute maximum voltage (V)</p>
+<p>Above this voltage the battery or loads might get damaged. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7BatConf20absolute_min_voltageE">
+<span id="_CPPv3N7BatConf20absolute_min_voltageE"></span><span id="_CPPv2N7BatConf20absolute_min_voltageE"></span><span id="BatConf::absolute_min_voltage__float"></span><span class="target" id="structBatConf_1acf76b88327a2e67c893530940773adbe"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">absolute_min_voltage</span></span></span><a class="headerlink" href="#_CPPv4N7BatConf20absolute_min_voltageE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Absolute minimum voltage (V)</p>
+<p>Below this voltage the battery is considered damaged. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7BatConf18charge_current_maxE">
+<span id="_CPPv3N7BatConf18charge_current_maxE"></span><span id="_CPPv2N7BatConf18charge_current_maxE"></span><span id="BatConf::charge_current_max__float"></span><span class="target" id="structBatConf_1a71c17228057b589c5003f250fa6684b8"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">charge_current_max</span></span></span><a class="headerlink" href="#_CPPv4N7BatConf18charge_current_maxE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Maximum charge current in <em>CC/bulk</em> phase (A)</p>
+<p>Limits the current if the PCB allows more than the battery. (positive value) </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7BatConf21discharge_current_maxE">
+<span id="_CPPv3N7BatConf21discharge_current_maxE"></span><span id="_CPPv2N7BatConf21discharge_current_maxE"></span><span id="BatConf::discharge_current_max__float"></span><span class="target" id="structBatConf_1a2bfe02866a53fea5cd1f84ffd43fb192"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">discharge_current_max</span></span></span><a class="headerlink" href="#_CPPv4N7BatConf21discharge_current_maxE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Maximum discharge current via load port (A)</p>
+<p>Limits the current if the PCB allows more than the battery. (positive value) </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7BatConf15topping_voltageE">
+<span id="_CPPv3N7BatConf15topping_voltageE"></span><span id="_CPPv2N7BatConf15topping_voltageE"></span><span id="BatConf::topping_voltage__float"></span><span class="target" id="structBatConf_1a793d96d6986e1ec83e013f3a160ddb16"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">topping_voltage</span></span></span><a class="headerlink" href="#_CPPv4N7BatConf15topping_voltageE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Maximum voltage in CV/absorption phase (V)</p>
+<p><a class="reference internal" href="#classCharger"><span class="std std-ref">Charger</span></a> target voltage, switching from CC to CV at this voltage threshold. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7BatConf22topping_cutoff_currentE">
+<span id="_CPPv3N7BatConf22topping_cutoff_currentE"></span><span id="_CPPv2N7BatConf22topping_cutoff_currentE"></span><span id="BatConf::topping_cutoff_current__float"></span><span class="target" id="structBatConf_1a33d89588f312d211582c0fd1938cec03"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">topping_cutoff_current</span></span></span><a class="headerlink" href="#_CPPv4N7BatConf22topping_cutoff_currentE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>CV phase cut-off current limit (A)</p>
+<p>Constant voltage charging phase stopped if current is below this value. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7BatConf16topping_durationE">
+<span id="_CPPv3N7BatConf16topping_durationE"></span><span id="_CPPv2N7BatConf16topping_durationE"></span><span id="BatConf::topping_duration__uint32_t"></span><span class="target" id="structBatConf_1a6b45272b5a0650d81317e63d89d9ee7b"></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">topping_duration</span></span></span><a class="headerlink" href="#_CPPv4N7BatConf16topping_durationE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>CV phase cut-off time limit (s)</p>
+<p>After this time, CV charging is stopped independent of current. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7BatConf13float_enabledE">
+<span id="_CPPv3N7BatConf13float_enabledE"></span><span id="_CPPv2N7BatConf13float_enabledE"></span><span id="BatConf::float_enabled__b"></span><span class="target" id="structBatConf_1a449a471b7c7c0a10f2a9cfea6d27f939"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">float_enabled</span></span></span><a class="headerlink" href="#_CPPv4N7BatConf13float_enabledE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Enable float/trickle charging</p>
+<p>Caution: Do not enable float charging for lithium-ion batteries </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7BatConf13float_voltageE">
+<span id="_CPPv3N7BatConf13float_voltageE"></span><span id="_CPPv2N7BatConf13float_voltageE"></span><span id="BatConf::float_voltage__float"></span><span class="target" id="structBatConf_1a4b89c4d37bb2dd679d206e0a752d7935"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">float_voltage</span></span></span><a class="headerlink" href="#_CPPv4N7BatConf13float_voltageE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Float voltage (V)</p>
+<p><a class="reference internal" href="#classCharger"><span class="std std-ref">Charger</span></a> target voltage for float charging of lead-acid batteries </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7BatConf19float_recharge_timeE">
+<span id="_CPPv3N7BatConf19float_recharge_timeE"></span><span id="_CPPv2N7BatConf19float_recharge_timeE"></span><span id="BatConf::float_recharge_time__uint32_t"></span><span class="target" id="structBatConf_1a2cdb6eee11b75fa55c2ecf7f7749e0fb"></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">float_recharge_time</span></span></span><a class="headerlink" href="#_CPPv4N7BatConf19float_recharge_timeE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Float recharge time (s)</p>
+<p>If the float voltage is not reached anymore (e.g. because of lack of solar input power) for this period of time, the charger state machine goes back into CC/bulk charging mode. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7BatConf20equalization_enabledE">
+<span id="_CPPv3N7BatConf20equalization_enabledE"></span><span id="_CPPv2N7BatConf20equalization_enabledE"></span><span id="BatConf::equalization_enabled__b"></span><span class="target" id="structBatConf_1aed3ee651061f59a1e1409ed42a43df06"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">equalization_enabled</span></span></span><a class="headerlink" href="#_CPPv4N7BatConf20equalization_enabledE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Enable equalization charging</p>
+<p>Caution: Do not enable float charging for lithium-ion batteries </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7BatConf20equalization_voltageE">
+<span id="_CPPv3N7BatConf20equalization_voltageE"></span><span id="_CPPv2N7BatConf20equalization_voltageE"></span><span id="BatConf::equalization_voltage__float"></span><span class="target" id="structBatConf_1a2149d2f31d548440f8e6ae96f6a4d00b"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">equalization_voltage</span></span></span><a class="headerlink" href="#_CPPv4N7BatConf20equalization_voltageE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Equalization voltage (V)</p>
+<p><a class="reference internal" href="#classCharger"><span class="std std-ref">Charger</span></a> target voltage for equalization charging of lead-acid batteries </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7BatConf21equalization_durationE">
+<span id="_CPPv3N7BatConf21equalization_durationE"></span><span id="_CPPv2N7BatConf21equalization_durationE"></span><span id="BatConf::equalization_duration__uint32_t"></span><span class="target" id="structBatConf_1a1aee91409627aad701d137ddbcb28a91"></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">equalization_duration</span></span></span><a class="headerlink" href="#_CPPv4N7BatConf21equalization_durationE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Equalization cut-off time limit (s)</p>
+<p>After this time, equalization charging is stopped. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7BatConf26equalization_current_limitE">
+<span id="_CPPv3N7BatConf26equalization_current_limitE"></span><span id="_CPPv2N7BatConf26equalization_current_limitE"></span><span id="BatConf::equalization_current_limit__float"></span><span class="target" id="structBatConf_1a4735ca1e6eb6076ec59b48e1c97d7ab9"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">equalization_current_limit</span></span></span><a class="headerlink" href="#_CPPv4N7BatConf26equalization_current_limitE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Equalization phase maximum current (A)</p>
+<p>The current of the charger is controlled to stay below this limit during equalization. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7BatConf25equalization_trigger_daysE">
+<span id="_CPPv3N7BatConf25equalization_trigger_daysE"></span><span id="_CPPv2N7BatConf25equalization_trigger_daysE"></span><span id="BatConf::equalization_trigger_days__uint32_t"></span><span class="target" id="structBatConf_1a990b7b1663095520a349bda8dd5ae97e"></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">equalization_trigger_days</span></span></span><a class="headerlink" href="#_CPPv4N7BatConf25equalization_trigger_daysE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Equalization trigger time interval (days)</p>
+<p>After passing specified amount of days, an equalization charge is triggered. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7BatConf32equalization_trigger_deep_cyclesE">
+<span id="_CPPv3N7BatConf32equalization_trigger_deep_cyclesE"></span><span id="_CPPv2N7BatConf32equalization_trigger_deep_cyclesE"></span><span id="BatConf::equalization_trigger_deep_cycles__uint32_t"></span><span class="target" id="structBatConf_1a10d1fde5694ec794046ba762818f180f"></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">equalization_trigger_deep_cycles</span></span></span><a class="headerlink" href="#_CPPv4N7BatConf32equalization_trigger_deep_cyclesE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Equalization trigger deep-discharge cycles</p>
+<p>After specified number of deep discharges, an equalization charge is triggered. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7BatConf23load_disconnect_voltageE">
+<span id="_CPPv3N7BatConf23load_disconnect_voltageE"></span><span id="_CPPv2N7BatConf23load_disconnect_voltageE"></span><span id="BatConf::load_disconnect_voltage__float"></span><span class="target" id="structBatConf_1ad7fb31dac3b0a8fa118d190f2a4fef3e"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">load_disconnect_voltage</span></span></span><a class="headerlink" href="#_CPPv4N7BatConf23load_disconnect_voltageE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Load disconnect open circuit voltage (V)</p>
+<p>Load output is disabled if battery voltage is below this threshold.</p>
+<p>The voltage is current-compensated using the battery internal resistance: threshold = load_disconnect_voltage + battery_current * internal_resistance</p>
+<p>(Remark: battery_current negative during discharge, internal_resistance positive) </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7BatConf22load_reconnect_voltageE">
+<span id="_CPPv3N7BatConf22load_reconnect_voltageE"></span><span id="_CPPv2N7BatConf22load_reconnect_voltageE"></span><span id="BatConf::load_reconnect_voltage__float"></span><span class="target" id="structBatConf_1a87cd7ff4326fdaf7442c75416a9e0b81"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">load_reconnect_voltage</span></span></span><a class="headerlink" href="#_CPPv4N7BatConf22load_reconnect_voltageE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Load reconnect open circuit voltage (V)</p>
+<p>Re-enable the load only after charged beyond this value.</p>
+<p>The voltage is current-compensated using the battery internal resistance: threshold = load_reconnect_voltage + battery_current * internal_resistance</p>
+<p>(Remark: battery_current positive during charge, internal_resistance positive) </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7BatConf19internal_resistanceE">
+<span id="_CPPv3N7BatConf19internal_resistanceE"></span><span id="_CPPv2N7BatConf19internal_resistanceE"></span><span id="BatConf::internal_resistance__float"></span><span class="target" id="structBatConf_1a28fc0fde2678b4d914951624be353f31"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">internal_resistance</span></span></span><a class="headerlink" href="#_CPPv4N7BatConf19internal_resistanceE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Battery internal resistance (Ohm)</p>
+<p>Resistance value for current-compensation of load switch voltage thresholds.</p>
+<p>The value must have a positive sign. Only resistance values leading to less than 10% voltage drop at max. current are allowed. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7BatConf15wire_resistanceE">
+<span id="_CPPv3N7BatConf15wire_resistanceE"></span><span id="_CPPv2N7BatConf15wire_resistanceE"></span><span id="BatConf::wire_resistance__float"></span><span class="target" id="structBatConf_1a7c755cd57ee3ee51d04d307375524e51"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">wire_resistance</span></span></span><a class="headerlink" href="#_CPPv4N7BatConf15wire_resistanceE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Resistance of wire between charge controller and battery (Ohm)</p>
+<p>Resistance value for current-compensation of charging voltages.</p>
+<p>The value must have a positive sign. Only resistance values leading to less than 3% voltage loss at max. current are allowed. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7BatConf8ocv_fullE">
+<span id="_CPPv3N7BatConf8ocv_fullE"></span><span id="_CPPv2N7BatConf8ocv_fullE"></span><span id="BatConf::ocv_full__float"></span><span class="target" id="structBatConf_1a87815c87c7e4345a44ff062f093a472c"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ocv_full</span></span></span><a class="headerlink" href="#_CPPv4N7BatConf8ocv_fullE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Open circuit voltage of full battery (V)</p>
+<p>Used for simple state of charge (SOC) algorithm. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7BatConf9ocv_emptyE">
+<span id="_CPPv3N7BatConf9ocv_emptyE"></span><span id="_CPPv2N7BatConf9ocv_emptyE"></span><span id="BatConf::ocv_empty__float"></span><span class="target" id="structBatConf_1afa6c8e0362bd6b13a15c6b6e54d71137"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ocv_empty</span></span></span><a class="headerlink" href="#_CPPv4N7BatConf9ocv_emptyE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Open circuit voltage of empty battery (V)</p>
+<p>Used for simple state of charge (SOC) algorithm. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7BatConf15charge_temp_maxE">
+<span id="_CPPv3N7BatConf15charge_temp_maxE"></span><span id="_CPPv2N7BatConf15charge_temp_maxE"></span><span id="BatConf::charge_temp_max__float"></span><span class="target" id="structBatConf_1a7f0eb5ecd62b5d4fd037412c41191cc0"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">charge_temp_max</span></span></span><a class="headerlink" href="#_CPPv4N7BatConf15charge_temp_maxE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Maximum allowed charging temperature of the battery (°C) </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7BatConf15charge_temp_minE">
+<span id="_CPPv3N7BatConf15charge_temp_minE"></span><span id="_CPPv2N7BatConf15charge_temp_minE"></span><span id="BatConf::charge_temp_min__float"></span><span class="target" id="structBatConf_1a3b7d752cd820f89df7875c9983d6cdc8"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">charge_temp_min</span></span></span><a class="headerlink" href="#_CPPv4N7BatConf15charge_temp_minE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Minimum allowed charging temperature of the battery (°C) </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7BatConf18discharge_temp_maxE">
+<span id="_CPPv3N7BatConf18discharge_temp_maxE"></span><span id="_CPPv2N7BatConf18discharge_temp_maxE"></span><span id="BatConf::discharge_temp_max__float"></span><span class="target" id="structBatConf_1a58c89d2c8c28c67e5afeba7885e9a689"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">discharge_temp_max</span></span></span><a class="headerlink" href="#_CPPv4N7BatConf18discharge_temp_maxE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Maximum allowed discharging temperature of the battery (°C) </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7BatConf18discharge_temp_minE">
+<span id="_CPPv3N7BatConf18discharge_temp_minE"></span><span id="_CPPv2N7BatConf18discharge_temp_minE"></span><span id="BatConf::discharge_temp_min__float"></span><span class="target" id="structBatConf_1acb86a7437628d663b6e4924e2c692ecc"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">discharge_temp_min</span></span></span><a class="headerlink" href="#_CPPv4N7BatConf18discharge_temp_minE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Minimum allowed discharging temperature of the battery (°C) </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7BatConf24temperature_compensationE">
+<span id="_CPPv3N7BatConf24temperature_compensationE"></span><span id="_CPPv2N7BatConf24temperature_compensationE"></span><span id="BatConf::temperature_compensation__float"></span><span class="target" id="structBatConf_1a38612b1efcf9f5392831140b8d2c6934"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">temperature_compensation</span></span></span><a class="headerlink" href="#_CPPv4N7BatConf24temperature_compensationE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Voltage compensation based on battery temperature (mV/K/cell)</p>
+<p>Suggested value: -3 mV/K/cell </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv47Charger">
+<span id="_CPPv37Charger"></span><span id="_CPPv27Charger"></span><span id="Charger"></span><span class="target" id="classCharger"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Charger</span></span></span><a class="headerlink" href="#_CPPv47Charger" title="Permalink to this definition"></a><br /></dt>
+<dd><div class="docutils container">
+<em>#include &lt;bat_charger.h&gt;</em></div>
+<p><a class="reference internal" href="#classCharger"><span class="std std-ref">Charger</span></a> configuration and battery state </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N7Charger7ChargerEP9PowerPort">
+<span id="_CPPv3N7Charger7ChargerEP9PowerPort"></span><span id="_CPPv2N7Charger7ChargerEP9PowerPort"></span><span id="Charger::Charger__PowerPortP"></span><span class="target" id="classCharger_1af5a44affdea04f99a189d8aaf22d4da3"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Charger</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="power_port.html#_CPPv49PowerPort" title="PowerPort"><span class="n"><span class="pre">PowerPort</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pwr_port</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N7Charger7ChargerEP9PowerPort" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK7Charger20detect_num_batteriesEP7BatConf">
+<span id="_CPPv3NK7Charger20detect_num_batteriesEP7BatConf"></span><span id="_CPPv2NK7Charger20detect_num_batteriesEP7BatConf"></span><span id="Charger::detect_num_batteries__BatConfPC"></span><span class="target" id="classCharger_1af3ea9940b84f4866b23900204c061fea"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">detect_num_batteries</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv47BatConf" title="BatConf"><span class="n"><span class="pre">BatConf</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">bat</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK7Charger20detect_num_batteriesEP7BatConf" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Detect if two batteries are connected in series (12V/24V auto-detection) </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N7Charger17discharge_controlEP7BatConf">
+<span id="_CPPv3N7Charger17discharge_controlEP7BatConf"></span><span id="_CPPv2N7Charger17discharge_controlEP7BatConf"></span><span id="Charger::discharge_control__BatConfP"></span><span class="target" id="classCharger_1a21cfa6bd056875b84c7ef245fdb6e167"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">discharge_control</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv47BatConf" title="BatConf"><span class="n"><span class="pre">BatConf</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">bat_conf</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N7Charger17discharge_controlEP7BatConf" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Discharging control update (for load output), should be called once per second </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N7Charger14charge_controlEP7BatConf">
+<span id="_CPPv3N7Charger14charge_controlEP7BatConf"></span><span id="_CPPv2N7Charger14charge_controlEP7BatConf"></span><span id="Charger::charge_control__BatConfP"></span><span class="target" id="classCharger_1a65639d90dd653dae408d8f068295c93d"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">charge_control</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv47BatConf" title="BatConf"><span class="n"><span class="pre">BatConf</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">bat_conf</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N7Charger14charge_controlEP7BatConf" title="Permalink to this definition"></a><br /></dt>
+<dd><p><a class="reference internal" href="#classCharger"><span class="std std-ref">Charger</span></a> state machine update, should be called once per second </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N7Charger10update_socEP7BatConf">
+<span id="_CPPv3N7Charger10update_socEP7BatConf"></span><span id="_CPPv2N7Charger10update_socEP7BatConf"></span><span id="Charger::update_soc__BatConfP"></span><span class="target" id="classCharger_1a0ea0728511468c6060f1480a7d2ed7ae"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">update_soc</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv47BatConf" title="BatConf"><span class="n"><span class="pre">BatConf</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">bat_conf</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N7Charger10update_socEP7BatConf" title="Permalink to this definition"></a><br /></dt>
+<dd><p>SOC estimation</p>
+<p>Must be called exactly once per second, otherwise SOC calculation gets wrong. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK7Charger13init_terminalEP7BatConf">
+<span id="_CPPv3NK7Charger13init_terminalEP7BatConf"></span><span id="_CPPv2NK7Charger13init_terminalEP7BatConf"></span><span id="Charger::init_terminal__BatConfPC"></span><span class="target" id="classCharger_1a0f15ee6d9f3a32b7dda844621e140532"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">init_terminal</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv47BatConf" title="BatConf"><span class="n"><span class="pre">BatConf</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">bat</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK7Charger13init_terminalEP7BatConf" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Initialize terminal and dc bus for battery connection</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>bat</strong> – Configuration to be used for terminal setpoints </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7Charger4portE">
+<span id="_CPPv3N7Charger4portE"></span><span id="_CPPv2N7Charger4portE"></span><span id="Charger::port__PowerPortP"></span><span class="target" id="classCharger_1aebe1440a423d98a905e68d4420d75a28"></span><a class="reference internal" href="power_port.html#_CPPv49PowerPort" title="PowerPort"><span class="n"><span class="pre">PowerPort</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">port</span></span></span><a class="headerlink" href="#_CPPv4N7Charger4portE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7Charger5stateE">
+<span id="_CPPv3N7Charger5stateE"></span><span id="_CPPv2N7Charger5stateE"></span><span id="Charger::state__uint32_t"></span><span class="target" id="classCharger_1ac01168813e9190726c9291ba65d1dda1"></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">state</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N12ChargerState14CHG_STATE_IDLEE" title="CHG_STATE_IDLE"><span class="n"><span class="pre">CHG_STATE_IDLE</span></span></a><a class="headerlink" href="#_CPPv4N7Charger5stateE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Current charger state (see enum ChargerState) </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7Charger15bat_temperatureE">
+<span id="_CPPv3N7Charger15bat_temperatureE"></span><span id="_CPPv2N7Charger15bat_temperatureE"></span><span id="Charger::bat_temperature__float"></span><span class="target" id="classCharger_1ad2cdd72f8c6d2b0088f44122926827b1"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">bat_temperature</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">25</span></span><a class="headerlink" href="#_CPPv4N7Charger15bat_temperatureE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Battery temperature (°C) from ext. temperature sensor (if existing) </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7Charger15ext_temp_sensorE">
+<span id="_CPPv3N7Charger15ext_temp_sensorE"></span><span id="_CPPv2N7Charger15ext_temp_sensorE"></span><span id="Charger::ext_temp_sensor__b"></span><span class="target" id="classCharger_1a9cf2c6f365e8915a49bbf010c265fc61"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ext_temp_sensor</span></span></span><a class="headerlink" href="#_CPPv4N7Charger15ext_temp_sensorE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Flag to indicate if external temperature sensor was detected </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7Charger15usable_capacityE">
+<span id="_CPPv3N7Charger15usable_capacityE"></span><span id="_CPPv2N7Charger15usable_capacityE"></span><span id="Charger::usable_capacity__float"></span><span class="target" id="classCharger_1aaafddd76a5333552add646c9913f8ceb"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">usable_capacity</span></span></span><a class="headerlink" href="#_CPPv4N7Charger15usable_capacityE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Estimated usable capacity (Ah) based on coulomb counting </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7Charger13discharged_AhE">
+<span id="_CPPv3N7Charger13discharged_AhE"></span><span id="_CPPv2N7Charger13discharged_AhE"></span><span id="Charger::discharged_Ah__float"></span><span class="target" id="classCharger_1ab1f40ebd0bd54edb3076aac2855be9ea"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">discharged_Ah</span></span></span><a class="headerlink" href="#_CPPv4N7Charger13discharged_AhE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Coulomb counter for SOH calculation </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7Charger16num_full_chargesE">
+<span id="_CPPv3N7Charger16num_full_chargesE"></span><span id="_CPPv2N7Charger16num_full_chargesE"></span><span id="Charger::num_full_charges__uint16_t"></span><span class="target" id="classCharger_1ae8463f780ed4e2df6c2c62a506bb06eb"></span><span class="n"><span class="pre">uint16_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">num_full_charges</span></span></span><a class="headerlink" href="#_CPPv4N7Charger16num_full_chargesE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Number of full charge cycles </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7Charger19num_deep_dischargesE">
+<span id="_CPPv3N7Charger19num_deep_dischargesE"></span><span id="_CPPv2N7Charger19num_deep_dischargesE"></span><span id="Charger::num_deep_discharges__uint16_t"></span><span class="target" id="classCharger_1af79f5624d3098f1ca8537a226f2988f5"></span><span class="n"><span class="pre">uint16_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">num_deep_discharges</span></span></span><a class="headerlink" href="#_CPPv4N7Charger19num_deep_dischargesE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Number of deep-discharge cycles </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7Charger3socE">
+<span id="_CPPv3N7Charger3socE"></span><span id="_CPPv2N7Charger3socE"></span><span id="Charger::soc__uint16_t"></span><span class="target" id="classCharger_1aeb3b41c1c91de5b3951aa326251949c5"></span><span class="n"><span class="pre">uint16_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">soc</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">100</span></span><a class="headerlink" href="#_CPPv4N7Charger3socE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>State of Charge (%) </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7Charger3sohE">
+<span id="_CPPv3N7Charger3sohE"></span><span id="_CPPv2N7Charger3sohE"></span><span id="Charger::soh__uint16_t"></span><span class="target" id="classCharger_1a742db8e04d56770eff4a2f953f360332"></span><span class="n"><span class="pre">uint16_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">soh</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">100</span></span><a class="headerlink" href="#_CPPv4N7Charger3sohE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>State of Health (%) </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7Charger18time_state_changedE">
+<span id="_CPPv3N7Charger18time_state_changedE"></span><span id="_CPPv2N7Charger18time_state_changedE"></span><span id="Charger::time_state_changed__time_t"></span><span class="target" id="classCharger_1a54dca140edceeb98e0596b51f04c4b73"></span><span class="n"><span class="pre">time_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">time_state_changed</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">CHARGER_TIME_NEVER</span></span><a class="headerlink" href="#_CPPv4N7Charger18time_state_changedE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Timestamp of last state change </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7Charger27time_target_voltage_reachedE">
+<span id="_CPPv3N7Charger27time_target_voltage_reachedE"></span><span id="_CPPv2N7Charger27time_target_voltage_reachedE"></span><span id="Charger::time_target_voltage_reached__time_t"></span><span class="target" id="classCharger_1a1c7f0a4b7d9db4d0040fe6056a8a54ca"></span><span class="n"><span class="pre">time_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">time_target_voltage_reached</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">CHARGER_TIME_NEVER</span></span><a class="headerlink" href="#_CPPv4N7Charger27time_target_voltage_reachedE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Last time the CV limit was reached </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7Charger20target_voltage_timerE">
+<span id="_CPPv3N7Charger20target_voltage_timerE"></span><span id="_CPPv2N7Charger20target_voltage_timerE"></span><span id="Charger::target_voltage_timer__uint32_t"></span><span class="target" id="classCharger_1a18b9e1d4bb5b615189a0ff83b10fa925"></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">target_voltage_timer</span></span></span><a class="headerlink" href="#_CPPv4N7Charger20target_voltage_timerE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Counts the number of seconds during which the target voltage of current charging phase was reached. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7Charger22time_last_equalizationE">
+<span id="_CPPv3N7Charger22time_last_equalizationE"></span><span id="_CPPv2N7Charger22time_last_equalizationE"></span><span id="Charger::time_last_equalization__time_t"></span><span class="target" id="classCharger_1abea51def6a0756c20961a1ca43e3b8de"></span><span class="n"><span class="pre">time_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">time_last_equalization</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">CHARGER_TIME_NEVER</span></span><a class="headerlink" href="#_CPPv4N7Charger22time_last_equalizationE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Timestamp after finish of last equalization charge </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7Charger26deep_dis_last_equalizationE">
+<span id="_CPPv3N7Charger26deep_dis_last_equalizationE"></span><span id="_CPPv2N7Charger26deep_dis_last_equalizationE"></span><span id="Charger::deep_dis_last_equalization__uint32_t"></span><span class="target" id="classCharger_1af80dd1f79014c0bd509e28aa8ba06b6f"></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">deep_dis_last_equalization</span></span></span><a class="headerlink" href="#_CPPv4N7Charger26deep_dis_last_equalizationE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Deep discharge counter value after last equalization </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7Charger4fullE">
+<span id="_CPPv3N7Charger4fullE"></span><span id="_CPPv2N7Charger4fullE"></span><span id="Charger::full__b"></span><span class="target" id="classCharger_1a54035c0e5f69566290084795b4c21eb9"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">full</span></span></span><a class="headerlink" href="#_CPPv4N7Charger4fullE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Flag to indicate if battery was fully charged </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7Charger5emptyE">
+<span id="_CPPv3N7Charger5emptyE"></span><span id="_CPPv2N7Charger5emptyE"></span><span id="Charger::empty__b"></span><span class="target" id="classCharger_1a5833a993fb1dea47408ed48381898eba"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">empty</span></span></span><a class="headerlink" href="#_CPPv4N7Charger5emptyE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Flag to indicate if battery was completely discharged </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7Charger18time_last_ctrl_msgE">
+<span id="_CPPv3N7Charger18time_last_ctrl_msgE"></span><span id="_CPPv2N7Charger18time_last_ctrl_msgE"></span><span id="Charger::time_last_ctrl_msg__time_t"></span><span class="target" id="classCharger_1a1d44a291d20f91e919f38549ac08ee6f"></span><span class="n"><span class="pre">time_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">time_last_ctrl_msg</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">CHARGER_TIME_NEVER</span></span><a class="headerlink" href="#_CPPv4N7Charger18time_last_ctrl_msgE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Last time a control message from external device was received </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N7Charger22target_current_controlE">
+<span id="_CPPv3N7Charger22target_current_controlE"></span><span id="_CPPv2N7Charger22target_current_controlE"></span><span id="Charger::target_current_control__float"></span><span class="target" id="classCharger_1a42366a7000ee3815511b10d8fff7bd74"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">target_current_control</span></span></span><a class="headerlink" href="#_CPPv4N7Charger22target_current_controlE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Target current of the converter if operating in follower mode (received from external converter with higher priority via CAN) </p>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-private-functions">Private Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N7Charger11enter_stateEi">
+<span id="_CPPv3N7Charger11enter_stateEi"></span><span id="_CPPv2N7Charger11enter_stateEi"></span><span id="Charger::enter_state__i"></span><span class="target" id="classCharger_1a1b62d133925e8da43df92d2f18085fdb"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">enter_state</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">next_state</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N7Charger11enter_stateEi" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../dev/troubleshooting.html" class="btn btn-neutral float-left" title="Troubleshoting" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="daq.html" class="btn btn-neutral float-right" title="Data Acquisition" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023 The Libre Solar Project.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

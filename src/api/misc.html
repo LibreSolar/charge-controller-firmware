@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Misc &mdash; Charge Controller  documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="prev" title="PWM Switch" href="pwm_switch.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #005e83" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Charge Controller
+              <img src="../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                v21.0
+
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../overview/features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/supported_hardware.html">Supported Hardware</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/charger_concepts.html">Charger Concepts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../overview/charger_concepts.html#bus-and-port-structure">Bus and port structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/charger_concepts.html#charger-state-machine">Charger state machine</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../overview/charger_concepts.html#standby">0. Standby</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../overview/charger_concepts.html#bulk-stage">1. Bulk stage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../overview/charger_concepts.html#topping-stage">2. Topping stage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../overview/charger_concepts.html#equalization-stage">3. Equalization stage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../overview/charger_concepts.html#float-stage">4. Float stage</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/workspace_setup.html">Workspace Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/building_flashing.html">Building and Flashing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/customization.html">Customization</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../dev/customization.html#hardware-specific-changes">Hardware-specific changes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dev/customization.html#application-firmware-configuration">Application firmware configuration</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../dev/customization.html#change-the-battery-type">Change the battery type</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../dev/customization.html#configure-serial-for-thingset-protocol">Configure serial for ThingSet protocol</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../dev/customization.html#custom-functions-separate-c-c-files">Custom functions (separate C/C++ files)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/unit_tests.html">Unit Tests</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../dev/unit_tests.html#conformance-testing">Conformance testing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/troubleshooting.html">Troubleshoting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../dev/troubleshooting.html#errors-with-stm32l072-mcu-using-openocd">Errors with STM32L072 MCU using OpenOCD</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="bat_charger.html">Battery Charger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="daq.html">Data Acquisition</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_objects.html">Data Objects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dcdc.html">DC/DC converter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="device_status.html">Device Status</a></li>
+<li class="toctree-l1"><a class="reference internal" href="half_bridge.html">Half Bridge Driver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="load.html">Load Output</a></li>
+<li class="toctree-l1"><a class="reference internal" href="power_port.html">DC Bus and Power Port</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pwm_switch.html">PWM Switch</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Misc</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#data-storage">Data Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#hardware">Hardware</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#helper">Helper</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#leds">LEDs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#setup">Setup</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #005e83" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Charge Controller</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Misc</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/LibreSolar/charge-controller-firmware/blob/main/docs/src/api/misc.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="misc">
+<h1>Misc<a class="headerlink" href="#misc" title="Permalink to this heading"></a></h1>
+<section id="data-storage">
+<h2>Data Storage<a class="headerlink" href="#data-storage" title="Permalink to this heading"></a></h2>
+<p>Handling of internal or external EEPROM to store device configuration. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-functions">Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv418data_storage_writev">
+<span id="_CPPv318data_storage_writev"></span><span id="_CPPv218data_storage_writev"></span><span id="data_storage_write"></span><span class="target" id="data__storage_8h_1af22a9b105766b7d395944f8773e44ce5"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">data_storage_write</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv418data_storage_writev" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Store current charge controller data to EEPROM </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv417data_storage_readv">
+<span id="_CPPv317data_storage_readv"></span><span id="_CPPv217data_storage_readv"></span><span id="data_storage_read"></span><span class="target" id="data__storage_8h_1ad3b6d70ff82ac8725d2bb6078bf89814"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">data_storage_read</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv417data_storage_readv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Restore charge controller data from EEPROM and write to variables in RAM </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv419data_storage_updatev">
+<span id="_CPPv319data_storage_updatev"></span><span id="_CPPv219data_storage_updatev"></span><span id="data_storage_update"></span><span class="target" id="data__storage_8h_1ae03539f5fcbea71af8f41e32c416811a"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">data_storage_update</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv419data_storage_updatev" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Stores data to EEPROM every 6 hours (can be called regularly) </p>
+</dd></dl>
+
+</div>
+</section>
+<section id="hardware">
+<h2>Hardware<a class="headerlink" href="#hardware" title="Permalink to this heading"></a></h2>
+<p>Hardware-specific functions like timers, watchdog, bootloader. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-functions">Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv414system_controlv">
+<span id="_CPPv314system_controlv"></span><span id="_CPPv214system_controlv"></span><span id="system_control"></span><span class="target" id="hardware_8h_1aa31298578dd3330f7979ebbee923d5de"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">system_control</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv414system_controlv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>DC/DC or PWM control loop (implemented in main.cpp) </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv422start_stm32_bootloaderv">
+<span id="_CPPv322start_stm32_bootloaderv"></span><span id="_CPPv222start_stm32_bootloaderv"></span><span id="start_stm32_bootloader"></span><span class="target" id="hardware_8h_1a8bb1ff1ac2f3c06f91dc0a438ae47c0f"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">start_stm32_bootloader</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv422start_stm32_bootloaderv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Reset device and start STM32 internal bootloader </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv412reset_devicev">
+<span id="_CPPv312reset_devicev"></span><span id="_CPPv212reset_devicev"></span><span id="reset_device"></span><span class="target" id="hardware_8h_1a99ecd64ace3a2da5deb6872c73c058ea"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">reset_device</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv412reset_devicev" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Reset device </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv417task_wdt_callbackiPv">
+<span id="_CPPv317task_wdt_callbackiPv"></span><span id="_CPPv217task_wdt_callbackiPv"></span><span id="task_wdt_callback__i.voidP"></span><span class="target" id="hardware_8h_1af5878942c712fcb92bb9607897c1d0c1"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">task_wdt_callback</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">channel_id</span></span>, <span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">user_data</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv417task_wdt_callbackiPv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Callback for task watchdogs used in multiple threads </p>
+</dd></dl>
+
+</div>
+</section>
+<section id="helper">
+<h2>Helper<a class="headerlink" href="#helper" title="Permalink to this heading"></a></h2>
+<p>General helper functions. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-functions">Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv46uptimev">
+<span id="_CPPv36uptimev"></span><span id="_CPPv26uptimev"></span><span id="uptime"></span><span class="target" id="helper_8h_1a6f8f4c33ea6b74d2e591f4c463103459"></span><span class="k"><span class="pre">static</span></span><span class="w"> </span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">uptime</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv46uptimev" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Framework-independent system uptime</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>seconds since the system booted </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv49flags_setP8uint32_t8uint32_t">
+<span id="_CPPv39flags_setP8uint32_t8uint32_t"></span><span id="_CPPv29flags_setP8uint32_t8uint32_t"></span><span id="flags_set__uint32_tP.uint32_t"></span><span class="target" id="helper_8h_1adb98d0f2748ba50ed7c5a9bcc8c9eca5"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">flags_set</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">field</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">mask</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv49flags_setP8uint32_t8uint32_t" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Sets one or more flags in given field</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>field</strong> – pointer to the field that will be manipulated </p></li>
+<li><p><strong>mask</strong> – a single flag or bitwise OR-ed flags </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv411flags_clearP8uint32_t8uint32_t">
+<span id="_CPPv311flags_clearP8uint32_t8uint32_t"></span><span id="_CPPv211flags_clearP8uint32_t8uint32_t"></span><span id="flags_clear__uint32_tP.uint32_t"></span><span class="target" id="helper_8h_1a01571492b64c516bc95efe048a86bce4"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">flags_clear</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">field</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">mask</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv411flags_clearP8uint32_t8uint32_t" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Clears one or more flags in the bit field</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>field</strong> – pointer to the field that will be manipulated </p></li>
+<li><p><strong>mask</strong> – a single flag or bitwise OR-ed flags </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv411flags_checkP8uint32_t8uint32_t">
+<span id="_CPPv311flags_checkP8uint32_t8uint32_t"></span><span id="_CPPv211flags_checkP8uint32_t8uint32_t"></span><span id="flags_check__uint32_tP.uint32_t"></span><span class="target" id="helper_8h_1a70bc4d49ad3e4103f496e898684de6cf"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">flags_check</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">field</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">mask</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv411flags_checkP8uint32_t8uint32_t" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Queries one or more flags in the bit field</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>field</strong> – pointer to the field that will be manipulated </p></li>
+<li><p><strong>mask</strong> – a single flag or bitwise OR-ed </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>true if any of the flags given in mask are set in the bit field </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</section>
+<section id="leds">
+<h2>LEDs<a class="headerlink" href="#leds" title="Permalink to this heading"></a></h2>
+<p>Control of status LEDs with charlieplexing. </p>
+<p>Provides higher-level access to different LEDs (e.g. blinking and flickering). Internally, charlieplexing is used for some boards to optimize power consumption and needed pin numbers. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-enums">Enums</p>
+<dl class="cpp enum">
+<dt class="sig sig-object cpp" id="_CPPv4Ut1_1">
+<span id="_CPPv3Ut1_1"></span><span class="target" id="leds_8h_1adf764cbdea00d65edcd07bb9953ad2b7"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">[anonymous]</span></span></span><a class="headerlink" href="#_CPPv4Ut1_1" title="Permalink to this definition"></a><br /></dt>
+<dd><p><em>Values:</em></p>
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4NUt1_116DT_FOREACH_CHILDE">
+<span id="_CPPv3NUt1_116DT_FOREACH_CHILDE"></span><span class="target" id="leds_8h_1adf764cbdea00d65edcd07bb9953ad2b7a41c4f5baa60445f1c5faefaa586602be"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">DT_FOREACH_CHILD</span></span></span><a class="headerlink" href="#_CPPv4NUt1_116DT_FOREACH_CHILDE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="cpp enum">
+<dt class="sig sig-object cpp" id="_CPPv48LedState">
+<span id="_CPPv38LedState"></span><span id="_CPPv28LedState"></span><span class="target" id="leds_8h_1a406de9d429029db9e502b1c78c73d46e"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">LedState</span></span></span><a class="headerlink" href="#_CPPv48LedState" title="Permalink to this definition"></a><br /></dt>
+<dd><p>LED states </p>
+<p><em>Values:</em></p>
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N8LedState13LED_STATE_OFFE">
+<span id="_CPPv3N8LedState13LED_STATE_OFFE"></span><span id="_CPPv2N8LedState13LED_STATE_OFFE"></span><span class="target" id="leds_8h_1a406de9d429029db9e502b1c78c73d46ea0eebea54c4dc200be6939742385ee789"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">LED_STATE_OFF</span></span></span><a class="headerlink" href="#_CPPv4N8LedState13LED_STATE_OFFE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N8LedState12LED_STATE_ONE">
+<span id="_CPPv3N8LedState12LED_STATE_ONE"></span><span id="_CPPv2N8LedState12LED_STATE_ONE"></span><span class="target" id="leds_8h_1a406de9d429029db9e502b1c78c73d46ea024f137d8368d2d31196fbcfb8345550"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">LED_STATE_ON</span></span></span><a class="headerlink" href="#_CPPv4N8LedState12LED_STATE_ONE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N8LedState15LED_STATE_BLINKE">
+<span id="_CPPv3N8LedState15LED_STATE_BLINKE"></span><span id="_CPPv2N8LedState15LED_STATE_BLINKE"></span><span class="target" id="leds_8h_1a406de9d429029db9e502b1c78c73d46ea1ece422fa8a2fee52f384f6833704a1f"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">LED_STATE_BLINK</span></span></span><a class="headerlink" href="#_CPPv4N8LedState15LED_STATE_BLINKE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N8LedState17LED_STATE_FLICKERE">
+<span id="_CPPv3N8LedState17LED_STATE_FLICKERE"></span><span id="_CPPv2N8LedState17LED_STATE_FLICKERE"></span><span class="target" id="leds_8h_1a406de9d429029db9e502b1c78c73d46eac4240d4cb701c61b8a8b9bf9089aadec"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">LED_STATE_FLICKER</span></span></span><a class="headerlink" href="#_CPPv4N8LedState17LED_STATE_FLICKERE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="cpp enum">
+<dt class="sig sig-object cpp" id="_CPPv48PinState">
+<span id="_CPPv38PinState"></span><span id="_CPPv28PinState"></span><span class="target" id="leds_8h_1a481bba4ee500a381c7ae5b767e641bdc"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PinState</span></span></span><a class="headerlink" href="#_CPPv48PinState" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Pin states </p>
+<p><em>Values:</em></p>
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N8PinState7PIN_LOWE">
+<span id="_CPPv3N8PinState7PIN_LOWE"></span><span id="_CPPv2N8PinState7PIN_LOWE"></span><span class="target" id="leds_8h_1a481bba4ee500a381c7ae5b767e641bdcaf6ea07d163784d7bef21d4c12fa77ec7"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PIN_LOW</span></span></span><a class="headerlink" href="#_CPPv4N8PinState7PIN_LOWE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N8PinState8PIN_HIGHE">
+<span id="_CPPv3N8PinState8PIN_HIGHE"></span><span id="_CPPv2N8PinState8PIN_HIGHE"></span><span class="target" id="leds_8h_1a481bba4ee500a381c7ae5b767e641bdca75e7ef64e7e3e078a6d2a7cc2d790226"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PIN_HIGH</span></span></span><a class="headerlink" href="#_CPPv4N8PinState8PIN_HIGHE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N8PinState9PIN_FLOATE">
+<span id="_CPPv3N8PinState9PIN_FLOATE"></span><span id="_CPPv2N8PinState9PIN_FLOATE"></span><span class="target" id="leds_8h_1a481bba4ee500a381c7ae5b767e641bdca0ab3f9163e8b96b1060285058136f703"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PIN_FLOAT</span></span></span><a class="headerlink" href="#_CPPv4N8PinState9PIN_FLOATE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-functions">Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv49leds_initb">
+<span id="_CPPv39leds_initb"></span><span id="_CPPv29leds_initb"></span><span id="leds_init__b"></span><span class="target" id="leds_8h_1a8812ee635724c9ffd85c71ca77728152"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">leds_init</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">enabled</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv49leds_initb" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Initialize LEDs (called at the beginning of leds_update_thread) </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv418leds_update_threadv">
+<span id="_CPPv318leds_update_threadv"></span><span id="_CPPv218leds_update_threadv"></span><span id="leds_update_thread"></span><span class="target" id="leds_8h_1a7e66bf4dd5ab30eb95842208a72c5b1e"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">leds_update_thread</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv418leds_update_threadv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Main thread for LED control. Performs pin initializations and charlieplexing at 60 Hz </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv417leds_set_chargingb">
+<span id="_CPPv317leds_set_chargingb"></span><span id="_CPPv217leds_set_chargingb"></span><span id="leds_set_charging__b"></span><span class="target" id="leds_8h_1a927af69938ce1f35734653a3e6d23eb9"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">leds_set_charging</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">enabled</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv417leds_set_chargingb" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Enables/disables dedicated charging LED if existing or blinks SOC LED when solar power is coming in. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv48leds_setjbi">
+<span id="_CPPv38leds_setjbi"></span><span id="_CPPv28leds_setjbi"></span><span id="leds_set__unsigned-i.b.i"></span><span class="target" id="leds_8h_1ae3320f75caecf55face1428e44be0c20"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">leds_set</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">unsigned</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">led</span></span>, <span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">enabled</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">timeout</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv48leds_setjbi" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Enables/disables LED</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>led</strong> – Number of LED in array defined in PCB configuration </p></li>
+<li><p><strong>enabled</strong> – LED is switched on if enabled is set to true </p></li>
+<li><p><strong>timeout</strong> – Defines for how long this state should be set (-1 for permanent setting) </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv47leds_onji">
+<span id="_CPPv37leds_onji"></span><span id="_CPPv27leds_onji"></span><span id="leds_on__unsigned-i.i"></span><span class="target" id="leds_8h_1a7386ab3da5cb95ccc5b75078ff4a49f1"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">leds_on</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">unsigned</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">led</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">timeout</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv47leds_onji" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Enable LED</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>led</strong> – Number of LED in array defined in PCB configuration </p></li>
+<li><p><strong>timeout</strong> – Defines for how long this state should be set (-1 for permanent setting) </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv48leds_offj">
+<span id="_CPPv38leds_offj"></span><span id="_CPPv28leds_offj"></span><span id="leds_off__unsigned-i"></span><span class="target" id="leds_8h_1a0c8ce9de44e50e3d76b7d0abb56e961d"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">leds_off</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">unsigned</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">led</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv48leds_offj" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Disable LED</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>led</strong> – Number of LED in array defined in PCB configuration </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv410leds_blinkji">
+<span id="_CPPv310leds_blinkji"></span><span id="_CPPv210leds_blinkji"></span><span id="leds_blink__unsigned-i.i"></span><span class="target" id="leds_8h_1aef4d965d1f8a644efa88df0b95d9dc26"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">leds_blink</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">unsigned</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">led</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">timeout</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv410leds_blinkji" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Blink LED</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>led</strong> – Number of LED in array defined in PCB configuration </p></li>
+<li><p><strong>timeout</strong> – Defines for how long this state should be set (-1 for permanent setting) </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv412leds_flickerji">
+<span id="_CPPv312leds_flickerji"></span><span id="_CPPv212leds_flickerji"></span><span id="leds_flicker__unsigned-i.i"></span><span class="target" id="leds_8h_1aec38b08ee701ecca858d53fafb08ae6f"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">leds_flicker</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">unsigned</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">led</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">timeout</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv412leds_flickerji" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Flicker LED</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>led</strong> – Number of LED in array defined in PCB configuration </p></li>
+<li><p><strong>timeout</strong> – Defines for how long this state should be set (-1 for permanent setting) </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv414leds_update_1sv">
+<span id="_CPPv314leds_update_1sv"></span><span id="_CPPv214leds_update_1sv"></span><span id="leds_update_1s"></span><span class="target" id="leds_8h_1a507778c54fa5dbe1fc8aec7bf275b804"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">leds_update_1s</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv414leds_update_1sv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Updates LED blink and timeout states, must be called every second </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv415leds_update_socib">
+<span id="_CPPv315leds_update_socib"></span><span id="_CPPv215leds_update_socib"></span><span id="leds_update_soc__i.b"></span><span class="target" id="leds_8h_1a1a08b17716c884a3373408b1a1961ae3"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">leds_update_soc</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">soc</span></span>, <span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">load_off_low_soc</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv415leds_update_socib" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Update SOC LED bar (if existing)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>soc</strong> – SOC in percent </p></li>
+<li><p><strong>load_off_low_soc</strong> – Prevents showing two SOC LEDs if load is switched off because of low SOC </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv417leds_toggle_errorv">
+<span id="_CPPv317leds_toggle_errorv"></span><span id="_CPPv217leds_toggle_errorv"></span><span id="leds_toggle_error"></span><span class="target" id="leds_8h_1a2e59170dfe60695be3da46905a6a7dbe"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">leds_toggle_error</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv417leds_toggle_errorv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Toggle between even and uneven LEDs switched on/off to create annoying flashing in case of an error. </p>
+</dd></dl>
+
+</div>
+</section>
+<section id="setup">
+<h2>Setup<a class="headerlink" href="#setup" title="Permalink to this heading"></a></h2>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-functions">Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv45setupv">
+<span id="_CPPv35setupv"></span><span id="_CPPv25setupv"></span><span class="target" id="setup_8h_1a4fc01d736fe50cf5b977f755b675f11d"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setup</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv45setupv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Perform some device setup tasks (currently only used in Zephyr) </p>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-variables">Variables</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv46lv_bus">
+<span id="_CPPv36lv_bus"></span><span id="_CPPv26lv_bus"></span><span id="lv_bus__DcBus"></span><span class="target" id="setup_8h_1a1b6246c290c7df282e7c8fc7797c29c1"></span><a class="reference internal" href="power_port.html#_CPPv45DcBus" title="DcBus"><span class="n"><span class="pre">DcBus</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">lv_bus</span></span></span><a class="headerlink" href="#_CPPv46lv_bus" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv411lv_terminal">
+<span id="_CPPv311lv_terminal"></span><span id="_CPPv211lv_terminal"></span><span id="lv_terminal__PowerPort"></span><span class="target" id="setup_8h_1a112327719f6a9f7b282829927f2aa993"></span><a class="reference internal" href="power_port.html#_CPPv49PowerPort" title="PowerPort"><span class="n"><span class="pre">PowerPort</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">lv_terminal</span></span></span><a class="headerlink" href="#_CPPv411lv_terminal" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv46hv_bus">
+<span id="_CPPv36hv_bus"></span><span id="_CPPv26hv_bus"></span><span id="hv_bus__DcBus"></span><span class="target" id="setup_8h_1af1f30d29800f08a90ded61c0f1464f12"></span><a class="reference internal" href="power_port.html#_CPPv45DcBus" title="DcBus"><span class="n"><span class="pre">DcBus</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">hv_bus</span></span></span><a class="headerlink" href="#_CPPv46hv_bus" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv411hv_terminal">
+<span id="_CPPv311hv_terminal"></span><span id="_CPPv211hv_terminal"></span><span id="hv_terminal__PowerPort"></span><span class="target" id="setup_8h_1aaf8ad390d4cb1671ebbf64d8ae087e5b"></span><a class="reference internal" href="power_port.html#_CPPv49PowerPort" title="PowerPort"><span class="n"><span class="pre">PowerPort</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">hv_terminal</span></span></span><a class="headerlink" href="#_CPPv411hv_terminal" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv44dcdc">
+<span id="_CPPv34dcdc"></span><span id="_CPPv24dcdc"></span><span id="dcdc__Dcdc"></span><span class="target" id="setup_8h_1a27bb2ecce5c83e5acb9e085dff3ed0b4"></span><a class="reference internal" href="dcdc.html#_CPPv44Dcdc" title="Dcdc"><span class="n"><span class="pre">Dcdc</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">dcdc</span></span></span><a class="headerlink" href="#_CPPv44dcdc" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv410pwm_switch">
+<span id="_CPPv310pwm_switch"></span><span id="_CPPv210pwm_switch"></span><span id="pwm_switch__PwmSwitch"></span><span class="target" id="setup_8h_1a80e7794d67b004742c798b178e90b886"></span><a class="reference internal" href="pwm_switch.html#_CPPv49PwmSwitch" title="PwmSwitch"><span class="n"><span class="pre">PwmSwitch</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">pwm_switch</span></span></span><a class="headerlink" href="#_CPPv410pwm_switch" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv412bat_terminal">
+<span id="_CPPv312bat_terminal"></span><span id="_CPPv212bat_terminal"></span><span id="bat_terminal__PowerPortR"></span><span class="target" id="setup_8h_1ada216b65caafe9614dd6f2f1082f0497"></span><a class="reference internal" href="power_port.html#_CPPv49PowerPort" title="PowerPort"><span class="n"><span class="pre">PowerPort</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">bat_terminal</span></span></span><a class="headerlink" href="#_CPPv412bat_terminal" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv414solar_terminal">
+<span id="_CPPv314solar_terminal"></span><span id="_CPPv214solar_terminal"></span><span id="solar_terminal__PowerPortR"></span><span class="target" id="setup_8h_1a9f6615b5903cae1106a09be4d907641b"></span><a class="reference internal" href="power_port.html#_CPPv49PowerPort" title="PowerPort"><span class="n"><span class="pre">PowerPort</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">solar_terminal</span></span></span><a class="headerlink" href="#_CPPv414solar_terminal" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv413grid_terminal">
+<span id="_CPPv313grid_terminal"></span><span id="_CPPv213grid_terminal"></span><span id="grid_terminal__PowerPortR"></span><span class="target" id="setup_8h_1aa507a1b1e85477d0a6fa52564d3242d4"></span><a class="reference internal" href="power_port.html#_CPPv49PowerPort" title="PowerPort"><span class="n"><span class="pre">PowerPort</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">grid_terminal</span></span></span><a class="headerlink" href="#_CPPv413grid_terminal" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv48dev_stat">
+<span id="_CPPv38dev_stat"></span><span id="_CPPv28dev_stat"></span><span id="dev_stat__DeviceStatus"></span><span class="target" id="setup_8h_1a137b544ed99024b9e95a97fa585657fe"></span><a class="reference internal" href="device_status.html#_CPPv412DeviceStatus" title="DeviceStatus"><span class="n"><span class="pre">DeviceStatus</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">dev_stat</span></span></span><a class="headerlink" href="#_CPPv48dev_stat" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv47charger">
+<span id="_CPPv37charger"></span><span id="_CPPv27charger"></span><span id="charger__Charger"></span><span class="target" id="setup_8h_1a792bdbb284c6725d60484fd271628ef3"></span><a class="reference internal" href="bat_charger.html#_CPPv47Charger" title="Charger"><span class="n"><span class="pre">Charger</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">charger</span></span></span><a class="headerlink" href="#_CPPv47charger" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv48bat_conf">
+<span id="_CPPv38bat_conf"></span><span id="_CPPv28bat_conf"></span><span id="bat_conf__BatConf"></span><span class="target" id="setup_8h_1a9d9ef88f2b85bd367557c1288b5fab1f"></span><a class="reference internal" href="bat_charger.html#_CPPv47BatConf" title="BatConf"><span class="n"><span class="pre">BatConf</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">bat_conf</span></span></span><a class="headerlink" href="#_CPPv48bat_conf" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv413bat_conf_user">
+<span id="_CPPv313bat_conf_user"></span><span id="_CPPv213bat_conf_user"></span><span id="bat_conf_user__BatConf"></span><span class="target" id="setup_8h_1a91990f52cf878b30584c02ba1a2662ec"></span><a class="reference internal" href="bat_charger.html#_CPPv47BatConf" title="BatConf"><span class="n"><span class="pre">BatConf</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">bat_conf_user</span></span></span><a class="headerlink" href="#_CPPv413bat_conf_user" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv44load">
+<span id="_CPPv34load"></span><span id="_CPPv24load"></span><span id="load__LoadOutput"></span><span class="target" id="setup_8h_1aef3e0440c2002458f213cfada99567d8"></span><a class="reference internal" href="load.html#_CPPv410LoadOutput" title="LoadOutput"><span class="n"><span class="pre">LoadOutput</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">load</span></span></span><a class="headerlink" href="#_CPPv44load" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv47usb_pwr">
+<span id="_CPPv37usb_pwr"></span><span id="_CPPv27usb_pwr"></span><span id="usb_pwr__LoadOutput"></span><span class="target" id="setup_8h_1a6258aefbeeb4c4c1e1115323ca747d37"></span><a class="reference internal" href="load.html#_CPPv410LoadOutput" title="LoadOutput"><span class="n"><span class="pre">LoadOutput</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">usb_pwr</span></span></span><a class="headerlink" href="#_CPPv47usb_pwr" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv42ts">
+<span id="_CPPv32ts"></span><span id="_CPPv22ts"></span><span id="ts__ThingSet"></span><span class="target" id="setup_8h_1a8e52c22ac650fcc01ad5c7d69c53d2ae"></span><span class="n"><span class="pre">ThingSet</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ts</span></span></span><a class="headerlink" href="#_CPPv42ts" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv49timestamp">
+<span id="_CPPv39timestamp"></span><span id="_CPPv29timestamp"></span><span id="timestamp__uint32_t"></span><span class="target" id="setup_8h_1ab20b0c7772544cf5d318507f34231fbe"></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">timestamp</span></span></span><a class="headerlink" href="#_CPPv49timestamp" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="pwm_switch.html" class="btn btn-neutral float-left" title="PWM Switch" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023 The Libre Solar Project.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

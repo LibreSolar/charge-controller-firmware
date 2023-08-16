@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DC/DC converter &mdash; Charge Controller  documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Device Status" href="device_status.html" />
+    <link rel="prev" title="Data Objects" href="data_objects.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #005e83" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Charge Controller
+              <img src="../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                v21.0
+
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../overview/features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/supported_hardware.html">Supported Hardware</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/charger_concepts.html">Charger Concepts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../overview/charger_concepts.html#bus-and-port-structure">Bus and port structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/charger_concepts.html#charger-state-machine">Charger state machine</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../overview/charger_concepts.html#standby">0. Standby</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../overview/charger_concepts.html#bulk-stage">1. Bulk stage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../overview/charger_concepts.html#topping-stage">2. Topping stage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../overview/charger_concepts.html#equalization-stage">3. Equalization stage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../overview/charger_concepts.html#float-stage">4. Float stage</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/workspace_setup.html">Workspace Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/building_flashing.html">Building and Flashing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/customization.html">Customization</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../dev/customization.html#hardware-specific-changes">Hardware-specific changes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dev/customization.html#application-firmware-configuration">Application firmware configuration</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../dev/customization.html#change-the-battery-type">Change the battery type</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../dev/customization.html#configure-serial-for-thingset-protocol">Configure serial for ThingSet protocol</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../dev/customization.html#custom-functions-separate-c-c-files">Custom functions (separate C/C++ files)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/unit_tests.html">Unit Tests</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../dev/unit_tests.html#conformance-testing">Conformance testing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/troubleshooting.html">Troubleshoting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../dev/troubleshooting.html#errors-with-stm32l072-mcu-using-openocd">Errors with STM32L072 MCU using OpenOCD</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="bat_charger.html">Battery Charger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="daq.html">Data Acquisition</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_objects.html">Data Objects</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">DC/DC converter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="device_status.html">Device Status</a></li>
+<li class="toctree-l1"><a class="reference internal" href="half_bridge.html">Half Bridge Driver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="load.html">Load Output</a></li>
+<li class="toctree-l1"><a class="reference internal" href="power_port.html">DC Bus and Power Port</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pwm_switch.html">PWM Switch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="misc.html">Misc</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="misc.html#data-storage">Data Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html#hardware">Hardware</a></li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html#helper">Helper</a></li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html#leds">LEDs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html#setup">Setup</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #005e83" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Charge Controller</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">DC/DC converter</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/LibreSolar/charge-controller-firmware/blob/main/docs/src/api/dcdc.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="dc-dc-converter">
+<h1>DC/DC converter<a class="headerlink" href="#dc-dc-converter" title="Permalink to this heading"></a></h1>
+<p>DC/DC buck/boost control functions. </p>
+<p>High-level functions to control the DC/DC converter. This module does not directly access any hardware. The PWM signal for the half bridge is generated in a separate module. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-enums">Enums</p>
+<dl class="cpp enum">
+<dt class="sig sig-object cpp" id="_CPPv417DcdcOperationMode">
+<span id="_CPPv317DcdcOperationMode"></span><span id="_CPPv217DcdcOperationMode"></span><span class="target" id="dcdc_8h_1a3e5b2912733f0851a6e26bb61b3db32d"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">DcdcOperationMode</span></span></span><a class="headerlink" href="#_CPPv417DcdcOperationMode" title="Permalink to this definition"></a><br /></dt>
+<dd><p>DC/DC operation mode</p>
+<p>Defines which type of device is connected to the high side and low side ports </p>
+<p><em>Values:</em></p>
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N17DcdcOperationMode13DCDC_MODE_OFFE">
+<span id="_CPPv3N17DcdcOperationMode13DCDC_MODE_OFFE"></span><span id="_CPPv2N17DcdcOperationMode13DCDC_MODE_OFFE"></span><span class="target" id="dcdc_8h_1a3e5b2912733f0851a6e26bb61b3db32da1a5ddfc485d95a3f11ff8be9a3e248a9"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">DCDC_MODE_OFF</span></span></span><a class="headerlink" href="#_CPPv4N17DcdcOperationMode13DCDC_MODE_OFFE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>DC/DC converter switched off </p>
+</dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N17DcdcOperationMode14DCDC_MODE_BUCKE">
+<span id="_CPPv3N17DcdcOperationMode14DCDC_MODE_BUCKE"></span><span id="_CPPv2N17DcdcOperationMode14DCDC_MODE_BUCKE"></span><span class="target" id="dcdc_8h_1a3e5b2912733f0851a6e26bb61b3db32da43081133eb99a93d231142931bd8cda8"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">DCDC_MODE_BUCK</span></span></span><a class="headerlink" href="#_CPPv4N17DcdcOperationMode14DCDC_MODE_BUCKE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Buck converter mode</p>
+<p>Solar panel at high side port, battery / load at low side port (typical MPPT). </p>
+</dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N17DcdcOperationMode15DCDC_MODE_BOOSTE">
+<span id="_CPPv3N17DcdcOperationMode15DCDC_MODE_BOOSTE"></span><span id="_CPPv2N17DcdcOperationMode15DCDC_MODE_BOOSTE"></span><span class="target" id="dcdc_8h_1a3e5b2912733f0851a6e26bb61b3db32daa204d8837e60539b7df6d3a818d911af"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">DCDC_MODE_BOOST</span></span></span><a class="headerlink" href="#_CPPv4N17DcdcOperationMode15DCDC_MODE_BOOSTE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Boost converter mode</p>
+<p>Battery at high side port, solar panel at low side (e.g. e-bike charging). </p>
+</dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N17DcdcOperationMode14DCDC_MODE_AUTOE">
+<span id="_CPPv3N17DcdcOperationMode14DCDC_MODE_AUTOE"></span><span id="_CPPv2N17DcdcOperationMode14DCDC_MODE_AUTOE"></span><span class="target" id="dcdc_8h_1a3e5b2912733f0851a6e26bb61b3db32da70b8c345ed9b9722a60b0d83a28722d7"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">DCDC_MODE_AUTO</span></span></span><a class="headerlink" href="#_CPPv4N17DcdcOperationMode14DCDC_MODE_AUTOE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Automatic mode selection</p>
+<p>Boost or buck mode is automatically chosen based on high-side and low-side port settings.</p>
+<p>May be used in nanogrid applications: Accept input power (if available and need for charging) or provide output power (if no other power source available on the grid and battery charged) </p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="cpp enum">
+<dt class="sig sig-object cpp" id="_CPPv416DcdcControlState">
+<span id="_CPPv316DcdcControlState"></span><span id="_CPPv216DcdcControlState"></span><span class="target" id="dcdc_8h_1a3ef53a86bc923a83b6ad8758daf43be8"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">DcdcControlState</span></span></span><a class="headerlink" href="#_CPPv416DcdcControlState" title="Permalink to this definition"></a><br /></dt>
+<dd><p>DC/DC control state</p>
+<p>Allows to determine the current control state (off, CC, CV and MPPT) </p>
+<p><em>Values:</em></p>
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N16DcdcControlState16DCDC_CONTROL_OFFE">
+<span id="_CPPv3N16DcdcControlState16DCDC_CONTROL_OFFE"></span><span id="_CPPv2N16DcdcControlState16DCDC_CONTROL_OFFE"></span><span class="target" id="dcdc_8h_1a3ef53a86bc923a83b6ad8758daf43be8a0dfce0e9f062d855483469c90f78da7c"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">DCDC_CONTROL_OFF</span></span></span><a class="headerlink" href="#_CPPv4N16DcdcControlState16DCDC_CONTROL_OFFE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>DC/DC switched off (low input power or actively disabled) </p>
+</dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N16DcdcControlState17DCDC_CONTROL_MPPTE">
+<span id="_CPPv3N16DcdcControlState17DCDC_CONTROL_MPPTE"></span><span id="_CPPv2N16DcdcControlState17DCDC_CONTROL_MPPTE"></span><span class="target" id="dcdc_8h_1a3ef53a86bc923a83b6ad8758daf43be8af92384503d120ae29510a1aa5ad71db9"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">DCDC_CONTROL_MPPT</span></span></span><a class="headerlink" href="#_CPPv4N16DcdcControlState17DCDC_CONTROL_MPPTE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Maximum Power Point Tracking. </p>
+</dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N16DcdcControlState18DCDC_CONTROL_CC_LSE">
+<span id="_CPPv3N16DcdcControlState18DCDC_CONTROL_CC_LSE"></span><span id="_CPPv2N16DcdcControlState18DCDC_CONTROL_CC_LSE"></span><span class="target" id="dcdc_8h_1a3ef53a86bc923a83b6ad8758daf43be8a3752535bc14f70d29fac1c70ba64b764"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">DCDC_CONTROL_CC_LS</span></span></span><a class="headerlink" href="#_CPPv4N16DcdcControlState18DCDC_CONTROL_CC_LSE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Constant-Current control at low-side. </p>
+</dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N16DcdcControlState18DCDC_CONTROL_CV_LSE">
+<span id="_CPPv3N16DcdcControlState18DCDC_CONTROL_CV_LSE"></span><span id="_CPPv2N16DcdcControlState18DCDC_CONTROL_CV_LSE"></span><span class="target" id="dcdc_8h_1a3ef53a86bc923a83b6ad8758daf43be8adab84a8ef7524c1faee4e769e3437892"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">DCDC_CONTROL_CV_LS</span></span></span><a class="headerlink" href="#_CPPv4N16DcdcControlState18DCDC_CONTROL_CV_LSE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Constant-Voltage control at low-side. </p>
+</dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N16DcdcControlState18DCDC_CONTROL_CC_HSE">
+<span id="_CPPv3N16DcdcControlState18DCDC_CONTROL_CC_HSE"></span><span id="_CPPv2N16DcdcControlState18DCDC_CONTROL_CC_HSE"></span><span class="target" id="dcdc_8h_1a3ef53a86bc923a83b6ad8758daf43be8a35d6d0370fe1d3d5f0dcbfe57d3e8203"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">DCDC_CONTROL_CC_HS</span></span></span><a class="headerlink" href="#_CPPv4N16DcdcControlState18DCDC_CONTROL_CC_HSE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Constant-Current control at high-side. </p>
+</dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N16DcdcControlState18DCDC_CONTROL_CV_HSE">
+<span id="_CPPv3N16DcdcControlState18DCDC_CONTROL_CV_HSE"></span><span id="_CPPv2N16DcdcControlState18DCDC_CONTROL_CV_HSE"></span><span class="target" id="dcdc_8h_1a3ef53a86bc923a83b6ad8758daf43be8aa6a8d4066831cbf2711dfd7bdffeaa8b"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">DCDC_CONTROL_CV_HS</span></span></span><a class="headerlink" href="#_CPPv4N16DcdcControlState18DCDC_CONTROL_CV_HSE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Constant-Voltage control at high-side. </p>
+</dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N16DcdcControlState21DCDC_CONTROL_DERATINGE">
+<span id="_CPPv3N16DcdcControlState21DCDC_CONTROL_DERATINGE"></span><span id="_CPPv2N16DcdcControlState21DCDC_CONTROL_DERATINGE"></span><span class="target" id="dcdc_8h_1a3ef53a86bc923a83b6ad8758daf43be8a9bbcbeb1ed8d33161e9b6c11a7bd0cf5"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">DCDC_CONTROL_DERATING</span></span></span><a class="headerlink" href="#_CPPv4N16DcdcControlState21DCDC_CONTROL_DERATINGE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Hardware-limits (current or temperature) reached. </p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-functions">Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv425dcdc_low_level_controllerv">
+<span id="_CPPv325dcdc_low_level_controllerv"></span><span id="_CPPv225dcdc_low_level_controllerv"></span><span id="dcdc_low_level_controller"></span><span class="target" id="dcdc_8h_1ab431639a6991536ab0c747f205dd3594"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">dcdc_low_level_controller</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv425dcdc_low_level_controllerv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Low-level control function</p>
+<p>Implement this function e.g. for cycle-by-cylce current limitation.</p>
+<p>It is called from the DMA after each new current reading, i.e. it runs in ISR context with high frequency and must be VERY fast! </p>
+</dd></dl>
+
+</div>
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv44Dcdc">
+<span id="_CPPv34Dcdc"></span><span id="_CPPv24Dcdc"></span><span id="Dcdc"></span><span class="target" id="classDcdc"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Dcdc</span></span></span><a class="headerlink" href="#_CPPv44Dcdc" title="Permalink to this definition"></a><br /></dt>
+<dd><div class="docutils container">
+<em>#include &lt;dcdc.h&gt;</em></div>
+<p>DC/DC class</p>
+<p>Contains all data belonging to the DC/DC sub-component of the PCB, incl. actual measurements and calibration parameters. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4Dcdc4DcdcEP5DcBusP5DcBus17DcdcOperationMode">
+<span id="_CPPv3N4Dcdc4DcdcEP5DcBusP5DcBus17DcdcOperationMode"></span><span id="_CPPv2N4Dcdc4DcdcEP5DcBusP5DcBus17DcdcOperationMode"></span><span id="Dcdc::Dcdc__DcBusP.DcBusP.DcdcOperationMode"></span><span class="target" id="classDcdc_1a1b7166e2159649c44261bc1edc407ad8"></span><span class="sig-name descname"><span class="n"><span class="pre">Dcdc</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="power_port.html#_CPPv45DcBus" title="DcBus"><span class="n"><span class="pre">DcBus</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">high</span></span>, <a class="reference internal" href="power_port.html#_CPPv45DcBus" title="DcBus"><span class="n"><span class="pre">DcBus</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">low</span></span>, <a class="reference internal" href="#_CPPv417DcdcOperationMode" title="DcdcOperationMode"><span class="n"><span class="pre">DcdcOperationMode</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">mode</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4Dcdc4DcdcEP5DcBusP5DcBus17DcdcOperationMode" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Initialize DC/DC and DC/DC port structs</p>
+<p>See <a class="reference external" href="http://libre.solar/docs/dcdc_control">http://libre.solar/docs/dcdc_control</a> for detailed information</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>high</strong> – High voltage bus (e.g. solar input for MPPT buck) </p></li>
+<li><p><strong>low</strong> – Low voltage bus (e.g. battery output for MPPT buck) </p></li>
+<li><p><strong>mode</strong> – Operation mode (buck, boost or nanogrid) </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4Dcdc22check_start_conditionsEv">
+<span id="_CPPv3N4Dcdc22check_start_conditionsEv"></span><span id="_CPPv2N4Dcdc22check_start_conditionsEv"></span><span id="Dcdc::check_start_conditions"></span><span class="target" id="classDcdc_1a87ff9cd1a91eb23358937a5713dcc993"></span><a class="reference internal" href="#_CPPv417DcdcOperationMode" title="DcdcOperationMode"><span class="n"><span class="pre">DcdcOperationMode</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">check_start_conditions</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4Dcdc22check_start_conditionsEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Check for valid start conditions of the DC/DC converter</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>operation mode that is valid for starting up </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4Dcdc7controlEv">
+<span id="_CPPv3N4Dcdc7controlEv"></span><span id="_CPPv2N4Dcdc7controlEv"></span><span id="Dcdc::control"></span><span class="target" id="classDcdc_1ad4fa9967257ff854b5aaf1e7d4c112db"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">control</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4Dcdc7controlEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Main control function for the DC/DC converter</p>
+<p>If DC/DC is off, this function checks start conditions and starts conversion if possible. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4Dcdc4testEv">
+<span id="_CPPv3N4Dcdc4testEv"></span><span id="_CPPv2N4Dcdc4testEv"></span><span id="Dcdc::test"></span><span class="target" id="classDcdc_1a7215e0d3e8b222c129c2dc7aa3360908"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">test</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4Dcdc4testEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Test mode for DC/DC, ramping up/down to 50% duty cycle </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4Dcdc4stopEv">
+<span id="_CPPv3N4Dcdc4stopEv"></span><span id="_CPPv2N4Dcdc4stopEv"></span><span id="Dcdc::stop"></span><span class="target" id="classDcdc_1ac8f5471b62eb6b255a2e8c93af739659"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">stop</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4Dcdc4stopEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Fast stop function (bypassing control loop)</p>
+<p>May be called from an ISR which detected overvoltage / overcurrent conditions.</p>
+<p>DC/DC will be restarted automatically from control function if condtions are valid. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4Dcdc16fuse_destructionEv">
+<span id="_CPPv3N4Dcdc16fuse_destructionEv"></span><span id="_CPPv2N4Dcdc16fuse_destructionEv"></span><span id="Dcdc::fuse_destruction"></span><span class="target" id="classDcdc_1afae9e3de9f42acc5d1fa0a997b506ab0"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">fuse_destruction</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4Dcdc16fuse_destructionEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Prevent overcharging of battery in case of shorted HS MOSFET</p>
+<p>This function switches the LS MOSFET continuously on to blow the battery input fuse. The reason for self destruction should be logged and stored to EEPROM prior to calling this function, as the charge controller power supply will be cut after the fuse is destroyed. </p>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4Dcdc4modeE">
+<span id="_CPPv3N4Dcdc4modeE"></span><span id="_CPPv2N4Dcdc4modeE"></span><span id="Dcdc::mode__DcdcOperationMode"></span><span class="target" id="classDcdc_1a3a9d02ef12dc190a2c09ab7f8f88c84a"></span><a class="reference internal" href="#_CPPv417DcdcOperationMode" title="DcdcOperationMode"><span class="n"><span class="pre">DcdcOperationMode</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">mode</span></span></span><a class="headerlink" href="#_CPPv4N4Dcdc4modeE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>DC/DC mode (buck, boost or nanogrid) </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4Dcdc6enableE">
+<span id="_CPPv3N4Dcdc6enableE"></span><span id="_CPPv2N4Dcdc6enableE"></span><span id="Dcdc::enable__b"></span><span class="target" id="classDcdc_1a6f5bf624f9391a184b3f9e94f552750a"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">enable</span></span></span><a class="headerlink" href="#_CPPv4N4Dcdc6enableE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Can be used to disable the DC/DC power stage. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4Dcdc5stateE">
+<span id="_CPPv3N4Dcdc5stateE"></span><span id="_CPPv2N4Dcdc5stateE"></span><span id="Dcdc::state__uint16_t"></span><span class="target" id="classDcdc_1ae237a4d26d0399eedaa82fe98408f319"></span><span class="n"><span class="pre">uint16_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">state</span></span></span><a class="headerlink" href="#_CPPv4N4Dcdc5stateE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Control state (off / MPPT / CC / CV) </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4Dcdc3hvbE">
+<span id="_CPPv3N4Dcdc3hvbE"></span><span id="_CPPv2N4Dcdc3hvbE"></span><span id="Dcdc::hvb__DcBusP"></span><span class="target" id="classDcdc_1a4df09276042a30df9c28df6965ce32cc"></span><a class="reference internal" href="power_port.html#_CPPv45DcBus" title="DcBus"><span class="n"><span class="pre">DcBus</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">hvb</span></span></span><a class="headerlink" href="#_CPPv4N4Dcdc3hvbE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Pointer to DC bus at high voltage side. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4Dcdc3lvbE">
+<span id="_CPPv3N4Dcdc3lvbE"></span><span id="_CPPv2N4Dcdc3lvbE"></span><span id="Dcdc::lvb__DcBusP"></span><span class="target" id="classDcdc_1a6462df662b9d2dc3500e839762604e7a"></span><a class="reference internal" href="power_port.html#_CPPv45DcBus" title="DcBus"><span class="n"><span class="pre">DcBus</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">lvb</span></span></span><a class="headerlink" href="#_CPPv4N4Dcdc3lvbE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Pointer to DC bus at low voltage (inductor) side. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4Dcdc16inductor_currentE">
+<span id="_CPPv3N4Dcdc16inductor_currentE"></span><span id="_CPPv2N4Dcdc16inductor_currentE"></span><span id="Dcdc::inductor_current__float"></span><span class="target" id="classDcdc_1a93ae3f19d1211813e1aa816eb7976c12"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">inductor_current</span></span></span><a class="headerlink" href="#_CPPv4N4Dcdc16inductor_currentE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Inductor current. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4Dcdc5powerE">
+<span id="_CPPv3N4Dcdc5powerE"></span><span id="_CPPv2N4Dcdc5powerE"></span><span id="Dcdc::power__float"></span><span class="target" id="classDcdc_1a2f2833012a9dda298c72240a59bf601e"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">power</span></span></span><a class="headerlink" href="#_CPPv4N4Dcdc5powerE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Low-side power. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4Dcdc12temp_mosfetsE">
+<span id="_CPPv3N4Dcdc12temp_mosfetsE"></span><span id="_CPPv2N4Dcdc12temp_mosfetsE"></span><span id="Dcdc::temp_mosfets__float"></span><span class="target" id="classDcdc_1acfad3e3ba92bfa67e7388746372eccae"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">temp_mosfets</span></span></span><a class="headerlink" href="#_CPPv4N4Dcdc12temp_mosfetsE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>MOSFET temperature measurement (if existing) </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4Dcdc10power_prevE">
+<span id="_CPPv3N4Dcdc10power_prevE"></span><span id="_CPPv2N4Dcdc10power_prevE"></span><span id="Dcdc::power_prev__float"></span><span class="target" id="classDcdc_1a81661f12937c507e059166760cae2859"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">power_prev</span></span></span><a class="headerlink" href="#_CPPv4N4Dcdc10power_prevE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Stores previous conversion power (set via dcdc_control) </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4Dcdc13pwm_directionE">
+<span id="_CPPv3N4Dcdc13pwm_directionE"></span><span id="_CPPv2N4Dcdc13pwm_directionE"></span><span id="Dcdc::pwm_direction__int32_t"></span><span class="target" id="classDcdc_1a3f072c257bee380abb5bf9dc4d1651bf"></span><span class="n"><span class="pre">int32_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">pwm_direction</span></span></span><a class="headerlink" href="#_CPPv4N4Dcdc13pwm_directionE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Direction of PWM change for MPPT. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4Dcdc13off_timestampE">
+<span id="_CPPv3N4Dcdc13off_timestampE"></span><span id="_CPPv2N4Dcdc13off_timestampE"></span><span id="Dcdc::off_timestamp__int32_t"></span><span class="target" id="classDcdc_1a812fd091e04199d77398c6e5347e866e"></span><span class="n"><span class="pre">int32_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">off_timestamp</span></span></span><a class="headerlink" href="#_CPPv4N4Dcdc13off_timestampE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Last time the DC/DC was switched off. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4Dcdc20power_good_timestampE">
+<span id="_CPPv3N4Dcdc20power_good_timestampE"></span><span id="_CPPv2N4Dcdc20power_good_timestampE"></span><span id="Dcdc::power_good_timestamp__int32_t"></span><span class="target" id="classDcdc_1ad3da9c8b2189c0d76ea6eafddb3ed6ef"></span><span class="n"><span class="pre">int32_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">power_good_timestamp</span></span></span><a class="headerlink" href="#_CPPv4N4Dcdc20power_good_timestampE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Last time the DC/DC reached above minimum output power. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4Dcdc20inductor_current_maxE">
+<span id="_CPPv3N4Dcdc20inductor_current_maxE"></span><span id="_CPPv2N4Dcdc20inductor_current_maxE"></span><span id="Dcdc::inductor_current_max__float"></span><span class="target" id="classDcdc_1a8a2e900a573ffaa254933aeba2efb110"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">inductor_current_max</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N4Dcdc20inductor_current_maxE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Maximum low-side (inductor) current. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4Dcdc14hs_voltage_maxE">
+<span id="_CPPv3N4Dcdc14hs_voltage_maxE"></span><span id="_CPPv2N4Dcdc14hs_voltage_maxE"></span><span id="Dcdc::hs_voltage_max__float"></span><span class="target" id="classDcdc_1aaa7d3cb39db17f7a49a7dea209ad9833"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">hs_voltage_max</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N4Dcdc14hs_voltage_maxE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Maximum high-side voltage. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4Dcdc14ls_voltage_maxE">
+<span id="_CPPv3N4Dcdc14ls_voltage_maxE"></span><span id="_CPPv2N4Dcdc14ls_voltage_maxE"></span><span id="Dcdc::ls_voltage_max__float"></span><span class="target" id="classDcdc_1a50ef0d44cf610aeb35b52de0aa46ce37"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ls_voltage_max</span></span></span><a class="headerlink" href="#_CPPv4N4Dcdc14ls_voltage_maxE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Maximum low-side voltage. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4Dcdc14ls_voltage_minE">
+<span id="_CPPv3N4Dcdc14ls_voltage_minE"></span><span id="_CPPv2N4Dcdc14ls_voltage_minE"></span><span id="Dcdc::ls_voltage_min__float"></span><span class="target" id="classDcdc_1a52b25b2d8c0c615df655b8adda44fc7b"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ls_voltage_min</span></span></span><a class="headerlink" href="#_CPPv4N4Dcdc14ls_voltage_minE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Minimum low-side voltage, e.g. for driver supply. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4Dcdc16output_power_minE">
+<span id="_CPPv3N4Dcdc16output_power_minE"></span><span id="_CPPv2N4Dcdc16output_power_minE"></span><span id="Dcdc::output_power_min__float"></span><span class="target" id="classDcdc_1a6d3ae280d6ba4f579fb1544589dd1896"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">output_power_min</span></span></span><a class="headerlink" href="#_CPPv4N4Dcdc16output_power_minE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Minimum output power (if lower, DC/DC is switched off) </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4Dcdc16restart_intervalE">
+<span id="_CPPv3N4Dcdc16restart_intervalE"></span><span id="_CPPv2N4Dcdc16restart_intervalE"></span><span id="Dcdc::restart_interval__uint32_t"></span><span class="target" id="classDcdc_1a4ea68a948902a5f8aa80d670d5fd3c2f"></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">restart_interval</span></span></span><a class="headerlink" href="#_CPPv4N4Dcdc16restart_intervalE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Restart interval (s): When should we retry to start charging after low output power cut-off? </p>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-private-functions">Private Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4Dcdc20perturb_observe_buckEv">
+<span id="_CPPv3N4Dcdc20perturb_observe_buckEv"></span><span id="_CPPv2N4Dcdc20perturb_observe_buckEv"></span><span id="Dcdc::perturb_observe_buck"></span><span class="target" id="classDcdc_1a31ec5d1da73be27d428405ff35b56201"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">perturb_observe_buck</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4Dcdc20perturb_observe_buckEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>MPPT perturb &amp; observe control (buck mode)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>calculated pwm duty cycle delta or 0 if the DC/DC should be stopped </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4Dcdc21perturb_observe_boostEv">
+<span id="_CPPv3N4Dcdc21perturb_observe_boostEv"></span><span id="_CPPv2N4Dcdc21perturb_observe_boostEv"></span><span id="Dcdc::perturb_observe_boost"></span><span class="target" id="classDcdc_1ac4aa5ccbe429a66de5d32b6a2ccb1b8c"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">perturb_observe_boost</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4Dcdc21perturb_observe_boostEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>MPPT perturb &amp; observe control (boost mode)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>calculated pwm duty cycle delta or 0 if the DC/DC should be stopped </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4Dcdc17output_hvs_enableEv">
+<span id="_CPPv3N4Dcdc17output_hvs_enableEv"></span><span id="_CPPv2N4Dcdc17output_hvs_enableEv"></span><span id="Dcdc::output_hvs_enable"></span><span class="target" id="classDcdc_1acedcdc09a350f60396b1a63b486c72aa"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">output_hvs_enable</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4Dcdc17output_hvs_enableEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>If manual control of the reverse polarity MOSFET on the high-side is available, this function enables it to use the high voltage side as output. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4Dcdc18output_hvs_disableEv">
+<span id="_CPPv3N4Dcdc18output_hvs_disableEv"></span><span id="_CPPv2N4Dcdc18output_hvs_disableEv"></span><span id="Dcdc::output_hvs_disable"></span><span class="target" id="classDcdc_1a664577c7a3c6354db2887d2d115be683"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">output_hvs_disable</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4Dcdc18output_hvs_disableEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Disable the reverse polarity MOSFET on the high-side (if option available) </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4Dcdc21check_hs_mosfet_shortEv">
+<span id="_CPPv3N4Dcdc21check_hs_mosfet_shortEv"></span><span id="_CPPv2N4Dcdc21check_hs_mosfet_shortEv"></span><span id="Dcdc::check_hs_mosfet_short"></span><span class="target" id="classDcdc_1a08dba1296e982bfc3b23535ea67d5ec5"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">check_hs_mosfet_short</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4Dcdc21check_hs_mosfet_shortEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Check if the high-side MOSFET is shorted </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4Dcdc15startup_inhibitEb">
+<span id="_CPPv3N4Dcdc15startup_inhibitEb"></span><span id="_CPPv2N4Dcdc15startup_inhibitEb"></span><span id="Dcdc::startup_inhibit__b"></span><span class="target" id="classDcdc_1aa653a476758c7e5f88133aa8ab0c6af8"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">startup_inhibit</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">reset</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">false</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4Dcdc15startup_inhibitEb" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Check if we need to wait for voltages to settle before starting the DC/DC</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>reset</strong> – Reset the inhibit counter if set to true</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>true if we need to wait </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="data_objects.html" class="btn btn-neutral float-left" title="Data Objects" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="device_status.html" class="btn btn-neutral float-right" title="Device Status" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023 The Libre Solar Project.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

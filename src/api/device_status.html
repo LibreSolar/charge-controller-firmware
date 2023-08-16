@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Device Status &mdash; Charge Controller  documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Half Bridge Driver" href="half_bridge.html" />
+    <link rel="prev" title="DC/DC converter" href="dcdc.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #005e83" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Charge Controller
+              <img src="../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                v21.0
+
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../overview/features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/supported_hardware.html">Supported Hardware</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/charger_concepts.html">Charger Concepts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../overview/charger_concepts.html#bus-and-port-structure">Bus and port structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/charger_concepts.html#charger-state-machine">Charger state machine</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../overview/charger_concepts.html#standby">0. Standby</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../overview/charger_concepts.html#bulk-stage">1. Bulk stage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../overview/charger_concepts.html#topping-stage">2. Topping stage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../overview/charger_concepts.html#equalization-stage">3. Equalization stage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../overview/charger_concepts.html#float-stage">4. Float stage</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/workspace_setup.html">Workspace Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/building_flashing.html">Building and Flashing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/customization.html">Customization</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../dev/customization.html#hardware-specific-changes">Hardware-specific changes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dev/customization.html#application-firmware-configuration">Application firmware configuration</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../dev/customization.html#change-the-battery-type">Change the battery type</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../dev/customization.html#configure-serial-for-thingset-protocol">Configure serial for ThingSet protocol</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../dev/customization.html#custom-functions-separate-c-c-files">Custom functions (separate C/C++ files)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/unit_tests.html">Unit Tests</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../dev/unit_tests.html#conformance-testing">Conformance testing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/troubleshooting.html">Troubleshoting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../dev/troubleshooting.html#errors-with-stm32l072-mcu-using-openocd">Errors with STM32L072 MCU using OpenOCD</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="bat_charger.html">Battery Charger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="daq.html">Data Acquisition</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_objects.html">Data Objects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dcdc.html">DC/DC converter</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Device Status</a></li>
+<li class="toctree-l1"><a class="reference internal" href="half_bridge.html">Half Bridge Driver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="load.html">Load Output</a></li>
+<li class="toctree-l1"><a class="reference internal" href="power_port.html">DC Bus and Power Port</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pwm_switch.html">PWM Switch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="misc.html">Misc</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="misc.html#data-storage">Data Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html#hardware">Hardware</a></li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html#helper">Helper</a></li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html#leds">LEDs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html#setup">Setup</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #005e83" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Charge Controller</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Device Status</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/LibreSolar/charge-controller-firmware/blob/main/docs/src/api/device_status.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="device-status">
+<h1>Device Status<a class="headerlink" href="#device-status" title="Permalink to this heading"></a></h1>
+<p>Device-level data storage and functions (like max/min values, error flags, etc.) </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-enums">Enums</p>
+<dl class="cpp enum">
+<dt class="sig sig-object cpp" id="_CPPv49ErrorFlag">
+<span id="_CPPv39ErrorFlag"></span><span id="_CPPv29ErrorFlag"></span><span class="target" id="device__status_8h_1a5750f08f569c148e4def60e87465f397"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ErrorFlag</span></span></span><a class="headerlink" href="#_CPPv49ErrorFlag" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Error Flags</p>
+<p>When adding new flags, please make sure to use only up to 32 errors Each enum must represent a unique power of 2 number </p>
+<p><em>Values:</em></p>
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N9ErrorFlag20ERR_BAT_UNDERVOLTAGEE">
+<span id="_CPPv3N9ErrorFlag20ERR_BAT_UNDERVOLTAGEE"></span><span id="_CPPv2N9ErrorFlag20ERR_BAT_UNDERVOLTAGEE"></span><span class="target" id="device__status_8h_1a5750f08f569c148e4def60e87465f397ac0973505aac843ada59e7d3074440cee"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ERR_BAT_UNDERVOLTAGE</span></span></span><a class="headerlink" href="#_CPPv4N9ErrorFlag20ERR_BAT_UNDERVOLTAGEE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Battery voltage too low</p>
+<p>Set and cleared in <a class="reference internal" href="bat_charger.html#classCharger_1a21cfa6bd056875b84c7ef245fdb6e167"><span class="std std-ref">Charger::discharge_control()</span></a> if the battery voltage dropped to lower than absolute minimum. Load outputs should have switched off earlier. </p>
+</dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N9ErrorFlag19ERR_BAT_OVERVOLTAGEE">
+<span id="_CPPv3N9ErrorFlag19ERR_BAT_OVERVOLTAGEE"></span><span id="_CPPv2N9ErrorFlag19ERR_BAT_OVERVOLTAGEE"></span><span class="target" id="device__status_8h_1a5750f08f569c148e4def60e87465f397a65dba864c2d731fbe0c4decd5ea5be89"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ERR_BAT_OVERVOLTAGE</span></span></span><a class="headerlink" href="#_CPPv4N9ErrorFlag19ERR_BAT_OVERVOLTAGEE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Battery voltage too high</p>
+<p>Set directly in ISR after ADC conversion finished, cleared in <a class="reference internal" href="bat_charger.html#classCharger_1a65639d90dd653dae408d8f068295c93d"><span class="std std-ref">Charger::charge_control()</span></a> when voltage reached lower level again. </p>
+</dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N9ErrorFlag23ERR_BAT_DIS_OVERCURRENTE">
+<span id="_CPPv3N9ErrorFlag23ERR_BAT_DIS_OVERCURRENTE"></span><span id="_CPPv2N9ErrorFlag23ERR_BAT_DIS_OVERCURRENTE"></span><span class="target" id="device__status_8h_1a5750f08f569c148e4def60e87465f397a5976e223ef16018186f8fb69f2d592b6"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ERR_BAT_DIS_OVERCURRENT</span></span></span><a class="headerlink" href="#_CPPv4N9ErrorFlag23ERR_BAT_DIS_OVERCURRENTE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Battery discharge overcurrent</p>
+<p>Not used yet, reserved for future. </p>
+</dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N9ErrorFlag23ERR_BAT_CHG_OVERCURRENTE">
+<span id="_CPPv3N9ErrorFlag23ERR_BAT_CHG_OVERCURRENTE"></span><span id="_CPPv2N9ErrorFlag23ERR_BAT_CHG_OVERCURRENTE"></span><span class="target" id="device__status_8h_1a5750f08f569c148e4def60e87465f397af0e2c2a072287f7e439ef351edcf2789"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ERR_BAT_CHG_OVERCURRENT</span></span></span><a class="headerlink" href="#_CPPv4N9ErrorFlag23ERR_BAT_CHG_OVERCURRENTE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Battery charge overcurrent</p>
+<p>Not used yet, reserved for future. </p>
+</dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N9ErrorFlag21ERR_BAT_DIS_UNDERTEMPE">
+<span id="_CPPv3N9ErrorFlag21ERR_BAT_DIS_UNDERTEMPE"></span><span id="_CPPv2N9ErrorFlag21ERR_BAT_DIS_UNDERTEMPE"></span><span class="target" id="device__status_8h_1a5750f08f569c148e4def60e87465f397a2bc6a577ff4040d36883d760909f28a7"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ERR_BAT_DIS_UNDERTEMP</span></span></span><a class="headerlink" href="#_CPPv4N9ErrorFlag21ERR_BAT_DIS_UNDERTEMPE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Temperature below discharge minimum limit</p>
+<p>Set and cleared in <a class="reference internal" href="bat_charger.html#classCharger_1a21cfa6bd056875b84c7ef245fdb6e167"><span class="std std-ref">Charger::discharge_control</span></a> (with 2°C hysteresis) </p>
+</dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N9ErrorFlag20ERR_BAT_DIS_OVERTEMPE">
+<span id="_CPPv3N9ErrorFlag20ERR_BAT_DIS_OVERTEMPE"></span><span id="_CPPv2N9ErrorFlag20ERR_BAT_DIS_OVERTEMPE"></span><span class="target" id="device__status_8h_1a5750f08f569c148e4def60e87465f397a07516734d2417df95906b3e340b818cc"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ERR_BAT_DIS_OVERTEMP</span></span></span><a class="headerlink" href="#_CPPv4N9ErrorFlag20ERR_BAT_DIS_OVERTEMPE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Temperature above discharge maximum limit</p>
+<p>Set and cleared in <a class="reference internal" href="bat_charger.html#classCharger_1a21cfa6bd056875b84c7ef245fdb6e167"><span class="std std-ref">Charger::discharge_control</span></a> (with 2°C hysteresis) </p>
+</dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N9ErrorFlag21ERR_BAT_CHG_UNDERTEMPE">
+<span id="_CPPv3N9ErrorFlag21ERR_BAT_CHG_UNDERTEMPE"></span><span id="_CPPv2N9ErrorFlag21ERR_BAT_CHG_UNDERTEMPE"></span><span class="target" id="device__status_8h_1a5750f08f569c148e4def60e87465f397a440ed9349e1352e90c4b593be101c2b4"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ERR_BAT_CHG_UNDERTEMP</span></span></span><a class="headerlink" href="#_CPPv4N9ErrorFlag21ERR_BAT_CHG_UNDERTEMPE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Temperature below charge minimum limit</p>
+<p>Set and cleared in <a class="reference internal" href="bat_charger.html#classCharger_1a65639d90dd653dae408d8f068295c93d"><span class="std std-ref">Charger::charge_control</span></a> (with 2°C hysteresis) </p>
+</dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N9ErrorFlag20ERR_BAT_CHG_OVERTEMPE">
+<span id="_CPPv3N9ErrorFlag20ERR_BAT_CHG_OVERTEMPE"></span><span id="_CPPv2N9ErrorFlag20ERR_BAT_CHG_OVERTEMPE"></span><span class="target" id="device__status_8h_1a5750f08f569c148e4def60e87465f397a4a740f61c67e2137ab40c6b4014df087"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ERR_BAT_CHG_OVERTEMP</span></span></span><a class="headerlink" href="#_CPPv4N9ErrorFlag20ERR_BAT_CHG_OVERTEMPE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Temperature above charge maximum limit</p>
+<p>Set and cleared in <a class="reference internal" href="bat_charger.html#classCharger_1a65639d90dd653dae408d8f068295c93d"><span class="std std-ref">Charger::charge_control</span></a> (with 2°C hysteresis) </p>
+</dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N9ErrorFlag16ERR_INT_OVERTEMPE">
+<span id="_CPPv3N9ErrorFlag16ERR_INT_OVERTEMPE"></span><span id="_CPPv2N9ErrorFlag16ERR_INT_OVERTEMPE"></span><span class="target" id="device__status_8h_1a5750f08f569c148e4def60e87465f397a9e74bc20096f596cf94181337b7cf80b"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ERR_INT_OVERTEMP</span></span></span><a class="headerlink" href="#_CPPv4N9ErrorFlag16ERR_INT_OVERTEMPE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Charge controller internal temperature too high</p>
+<p>Set and cleared by <a class="reference internal" href="daq.html#daq_8h_1acafc998ba4a4e78aae9ed20c181611af"><span class="std std-ref">daq_update()</span></a></p>
+</dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N9ErrorFlag24ERR_DCDC_HS_MOSFET_SHORTE">
+<span id="_CPPv3N9ErrorFlag24ERR_DCDC_HS_MOSFET_SHORTE"></span><span id="_CPPv2N9ErrorFlag24ERR_DCDC_HS_MOSFET_SHORTE"></span><span class="target" id="device__status_8h_1a5750f08f569c148e4def60e87465f397add67bff881df490e51d217efc610add9"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ERR_DCDC_HS_MOSFET_SHORT</span></span></span><a class="headerlink" href="#_CPPv4N9ErrorFlag24ERR_DCDC_HS_MOSFET_SHORTE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Short-circuit in HS MOSFET</p>
+<p>Set in <a class="reference internal" href="dcdc.html#classDcdc_1ad4fa9967257ff854b5aaf1e7d4c112db"><span class="std std-ref">Dcdc::control()</span></a> and never cleared </p>
+</dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N9ErrorFlag23ERR_DCDC_HS_OVERVOLTAGEE">
+<span id="_CPPv3N9ErrorFlag23ERR_DCDC_HS_OVERVOLTAGEE"></span><span id="_CPPv2N9ErrorFlag23ERR_DCDC_HS_OVERVOLTAGEE"></span><span class="target" id="device__status_8h_1a5750f08f569c148e4def60e87465f397a1d761d47003a0c3e298b1b47537d2b02"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ERR_DCDC_HS_OVERVOLTAGE</span></span></span><a class="headerlink" href="#_CPPv4N9ErrorFlag23ERR_DCDC_HS_OVERVOLTAGEE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Overvoltage in HS MOSFET</p>
+<p>Set in DAQ alert and never cleared </p>
+</dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N9ErrorFlag26ERR_PWM_SWITCH_OVERVOLTAGEE">
+<span id="_CPPv3N9ErrorFlag26ERR_PWM_SWITCH_OVERVOLTAGEE"></span><span id="_CPPv2N9ErrorFlag26ERR_PWM_SWITCH_OVERVOLTAGEE"></span><span class="target" id="device__status_8h_1a5750f08f569c148e4def60e87465f397a98ba2b4f5ac654993d71e5e9209cb298"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ERR_PWM_SWITCH_OVERVOLTAGE</span></span></span><a class="headerlink" href="#_CPPv4N9ErrorFlag26ERR_PWM_SWITCH_OVERVOLTAGEE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Overvoltage caused by PWM switch</p>
+<p>Set and cleared in <a class="reference internal" href="pwm_switch.html#classPwmSwitch_1aee3bfd2fa194ed1169f19fa99c3a9a37"><span class="std std-ref">PwmSwitch::control()</span></a></p>
+</dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N9ErrorFlag13ERR_ANY_ERRORE">
+<span id="_CPPv3N9ErrorFlag13ERR_ANY_ERRORE"></span><span id="_CPPv2N9ErrorFlag13ERR_ANY_ERRORE"></span><span class="target" id="device__status_8h_1a5750f08f569c148e4def60e87465f397a1e1ab278115fa195981915322b0a931f"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ERR_ANY_ERROR</span></span></span><a class="headerlink" href="#_CPPv4N9ErrorFlag13ERR_ANY_ERRORE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Mask to catch all error flags (up to 32 errors) </p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv412DeviceStatus">
+<span id="_CPPv312DeviceStatus"></span><span id="_CPPv212DeviceStatus"></span><span id="DeviceStatus"></span><span class="target" id="classDeviceStatus"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">DeviceStatus</span></span></span><a class="headerlink" href="#_CPPv412DeviceStatus" title="Permalink to this definition"></a><br /></dt>
+<dd><div class="docutils container">
+<em>#include &lt;device_status.h&gt;</em></div>
+<p>Device Status data</p>
+<p>Stores error counters and some maximum ever measured values to EEPROM </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N12DeviceStatus13update_energyEv">
+<span id="_CPPv3N12DeviceStatus13update_energyEv"></span><span id="_CPPv2N12DeviceStatus13update_energyEv"></span><span id="DeviceStatus::update_energy"></span><span class="target" id="classDeviceStatus_1ab5072532d2b0d105b9d6cbad252edc6b"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">update_energy</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N12DeviceStatus13update_energyEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Updates the total energy counters for solar, battery and load bus </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N12DeviceStatus21update_min_max_valuesEv">
+<span id="_CPPv3N12DeviceStatus21update_min_max_valuesEv"></span><span id="_CPPv2N12DeviceStatus21update_min_max_valuesEv"></span><span id="DeviceStatus::update_min_max_values"></span><span class="target" id="classDeviceStatus_1abe68482c928359268df3a07c0e2fcd53"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">update_min_max_values</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N12DeviceStatus21update_min_max_valuesEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Updates the logged min/max values for voltages, power, temperatures etc. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N12DeviceStatus9set_errorE8uint32_t">
+<span id="_CPPv3N12DeviceStatus9set_errorE8uint32_t"></span><span id="_CPPv2N12DeviceStatus9set_errorE8uint32_t"></span><span id="DeviceStatus::set_error__uint32_t"></span><span class="target" id="classDeviceStatus_1ae7369f856ec507e47ecc4e87f96cc8f8"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">set_error</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">e</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N12DeviceStatus9set_errorE8uint32_t" title="Permalink to this definition"></a><br /></dt>
+<dd><p>sets one or more error flags in device state </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>e</strong> – a single ErrorFlag or “bitwise ORed” ERR_XXX | ERR_YYY </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N12DeviceStatus11clear_errorE8uint32_t">
+<span id="_CPPv3N12DeviceStatus11clear_errorE8uint32_t"></span><span id="_CPPv2N12DeviceStatus11clear_errorE8uint32_t"></span><span id="DeviceStatus::clear_error__uint32_t"></span><span class="target" id="classDeviceStatus_1a254cdf1cc522079a993720677f9e0cae"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">clear_error</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">e</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N12DeviceStatus11clear_errorE8uint32_t" title="Permalink to this definition"></a><br /></dt>
+<dd><p>clears one or more error flags in device state </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>e</strong> – a single ErrorFlag or “bitwise ORed” ERR_XXX | ERR_YYY </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N12DeviceStatus9has_errorE8uint32_t">
+<span id="_CPPv3N12DeviceStatus9has_errorE8uint32_t"></span><span id="_CPPv2N12DeviceStatus9has_errorE8uint32_t"></span><span id="DeviceStatus::has_error__uint32_t"></span><span class="target" id="classDeviceStatus_1af1f95251ee063ae9926f90eeab754c8e"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">has_error</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">e</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N12DeviceStatus9has_errorE8uint32_t" title="Permalink to this definition"></a><br /></dt>
+<dd><p>queries one or more error flags in device state </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>e</strong> – a single ErrorFlag or “bitwise ORed” ERR_XXX | ERR_YYY </p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>true if any of the error flags given in e are set in device state </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N12DeviceStatus16bat_chg_total_WhE">
+<span id="_CPPv3N12DeviceStatus16bat_chg_total_WhE"></span><span id="_CPPv2N12DeviceStatus16bat_chg_total_WhE"></span><span id="DeviceStatus::bat_chg_total_Wh__uint32_t"></span><span class="target" id="classDeviceStatus_1ae5654b6a1a11ca5e7336936392870fa2"></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">bat_chg_total_Wh</span></span></span><a class="headerlink" href="#_CPPv4N12DeviceStatus16bat_chg_total_WhE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N12DeviceStatus16bat_dis_total_WhE">
+<span id="_CPPv3N12DeviceStatus16bat_dis_total_WhE"></span><span id="_CPPv2N12DeviceStatus16bat_dis_total_WhE"></span><span id="DeviceStatus::bat_dis_total_Wh__uint32_t"></span><span class="target" id="classDeviceStatus_1afb5cdb41037ad42d33be3b2dab63ce91"></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">bat_dis_total_Wh</span></span></span><a class="headerlink" href="#_CPPv4N12DeviceStatus16bat_dis_total_WhE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N12DeviceStatus17solar_in_total_WhE">
+<span id="_CPPv3N12DeviceStatus17solar_in_total_WhE"></span><span id="_CPPv2N12DeviceStatus17solar_in_total_WhE"></span><span id="DeviceStatus::solar_in_total_Wh__uint32_t"></span><span class="target" id="classDeviceStatus_1a19e992e9bf15904116cb82bf258176d4"></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">solar_in_total_Wh</span></span></span><a class="headerlink" href="#_CPPv4N12DeviceStatus17solar_in_total_WhE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N12DeviceStatus17load_out_total_WhE">
+<span id="_CPPv3N12DeviceStatus17load_out_total_WhE"></span><span id="_CPPv2N12DeviceStatus17load_out_total_WhE"></span><span id="DeviceStatus::load_out_total_Wh__uint32_t"></span><span class="target" id="classDeviceStatus_1a1eed5ec09445f6ed3e56650b7a942d8b"></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">load_out_total_Wh</span></span></span><a class="headerlink" href="#_CPPv4N12DeviceStatus17load_out_total_WhE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N12DeviceStatus20grid_import_total_WhE">
+<span id="_CPPv3N12DeviceStatus20grid_import_total_WhE"></span><span id="_CPPv2N12DeviceStatus20grid_import_total_WhE"></span><span id="DeviceStatus::grid_import_total_Wh__uint32_t"></span><span class="target" id="classDeviceStatus_1ad238b65085dec6a2aea2fe0aa6ab772b"></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">grid_import_total_Wh</span></span></span><a class="headerlink" href="#_CPPv4N12DeviceStatus20grid_import_total_WhE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N12DeviceStatus20grid_export_total_WhE">
+<span id="_CPPv3N12DeviceStatus20grid_export_total_WhE"></span><span id="_CPPv2N12DeviceStatus20grid_export_total_WhE"></span><span id="DeviceStatus::grid_export_total_Wh__uint32_t"></span><span class="target" id="classDeviceStatus_1abeffc33f35f5beb03051d4e2867d0608"></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">grid_export_total_Wh</span></span></span><a class="headerlink" href="#_CPPv4N12DeviceStatus20grid_export_total_WhE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N12DeviceStatus19solar_power_max_dayE">
+<span id="_CPPv3N12DeviceStatus19solar_power_max_dayE"></span><span id="_CPPv2N12DeviceStatus19solar_power_max_dayE"></span><span id="DeviceStatus::solar_power_max_day__uint16_t"></span><span class="target" id="classDeviceStatus_1a5262029b6d404ec510bb7febd49dcb31"></span><span class="n"><span class="pre">uint16_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">solar_power_max_day</span></span></span><a class="headerlink" href="#_CPPv4N12DeviceStatus19solar_power_max_dayE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N12DeviceStatus18load_power_max_dayE">
+<span id="_CPPv3N12DeviceStatus18load_power_max_dayE"></span><span id="_CPPv2N12DeviceStatus18load_power_max_dayE"></span><span id="DeviceStatus::load_power_max_day__uint16_t"></span><span class="target" id="classDeviceStatus_1a292981df5286c634799e0e82657a34d6"></span><span class="n"><span class="pre">uint16_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">load_power_max_day</span></span></span><a class="headerlink" href="#_CPPv4N12DeviceStatus18load_power_max_dayE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N12DeviceStatus21solar_power_max_totalE">
+<span id="_CPPv3N12DeviceStatus21solar_power_max_totalE"></span><span id="_CPPv2N12DeviceStatus21solar_power_max_totalE"></span><span id="DeviceStatus::solar_power_max_total__uint16_t"></span><span class="target" id="classDeviceStatus_1aada57b0603937d54ad49811369c1b3b0"></span><span class="n"><span class="pre">uint16_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">solar_power_max_total</span></span></span><a class="headerlink" href="#_CPPv4N12DeviceStatus21solar_power_max_totalE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N12DeviceStatus20load_power_max_totalE">
+<span id="_CPPv3N12DeviceStatus20load_power_max_totalE"></span><span id="_CPPv2N12DeviceStatus20load_power_max_totalE"></span><span id="DeviceStatus::load_power_max_total__uint16_t"></span><span class="target" id="classDeviceStatus_1a653f5f0fdcef6cd58813d531861ebedf"></span><span class="n"><span class="pre">uint16_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">load_power_max_total</span></span></span><a class="headerlink" href="#_CPPv4N12DeviceStatus20load_power_max_totalE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N12DeviceStatus19battery_voltage_maxE">
+<span id="_CPPv3N12DeviceStatus19battery_voltage_maxE"></span><span id="_CPPv2N12DeviceStatus19battery_voltage_maxE"></span><span id="DeviceStatus::battery_voltage_max__float"></span><span class="target" id="classDeviceStatus_1a6bc53cab24e0ee9fc9fe6873316492ff"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">battery_voltage_max</span></span></span><a class="headerlink" href="#_CPPv4N12DeviceStatus19battery_voltage_maxE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N12DeviceStatus17solar_voltage_maxE">
+<span id="_CPPv3N12DeviceStatus17solar_voltage_maxE"></span><span id="_CPPv2N12DeviceStatus17solar_voltage_maxE"></span><span id="DeviceStatus::solar_voltage_max__float"></span><span class="target" id="classDeviceStatus_1a2a0ec46e70107c7e85f33c9c8ce5a659"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">solar_voltage_max</span></span></span><a class="headerlink" href="#_CPPv4N12DeviceStatus17solar_voltage_maxE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N12DeviceStatus16dcdc_current_maxE">
+<span id="_CPPv3N12DeviceStatus16dcdc_current_maxE"></span><span id="_CPPv2N12DeviceStatus16dcdc_current_maxE"></span><span id="DeviceStatus::dcdc_current_max__float"></span><span class="target" id="classDeviceStatus_1abc2fe9e4833b9665ad0facf2d5d6a01a"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">dcdc_current_max</span></span></span><a class="headerlink" href="#_CPPv4N12DeviceStatus16dcdc_current_maxE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N12DeviceStatus16load_current_maxE">
+<span id="_CPPv3N12DeviceStatus16load_current_maxE"></span><span id="_CPPv2N12DeviceStatus16load_current_maxE"></span><span id="DeviceStatus::load_current_max__float"></span><span class="target" id="classDeviceStatus_1ae65875afd7e1409be83bf34c43635655"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">load_current_max</span></span></span><a class="headerlink" href="#_CPPv4N12DeviceStatus16load_current_maxE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N12DeviceStatus12bat_temp_maxE">
+<span id="_CPPv3N12DeviceStatus12bat_temp_maxE"></span><span id="_CPPv2N12DeviceStatus12bat_temp_maxE"></span><span id="DeviceStatus::bat_temp_max__int16_t"></span><span class="target" id="classDeviceStatus_1ae5661dbad7109bf69e78a1ead7344493"></span><span class="n"><span class="pre">int16_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">bat_temp_max</span></span></span><a class="headerlink" href="#_CPPv4N12DeviceStatus12bat_temp_maxE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N12DeviceStatus12int_temp_maxE">
+<span id="_CPPv3N12DeviceStatus12int_temp_maxE"></span><span id="_CPPv2N12DeviceStatus12int_temp_maxE"></span><span id="DeviceStatus::int_temp_max__int16_t"></span><span class="target" id="classDeviceStatus_1a0c69cbae117e36aeb9c0221eb5ccf6ba"></span><span class="n"><span class="pre">int16_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">int_temp_max</span></span></span><a class="headerlink" href="#_CPPv4N12DeviceStatus12int_temp_maxE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N12DeviceStatus15mosfet_temp_maxE">
+<span id="_CPPv3N12DeviceStatus15mosfet_temp_maxE"></span><span id="_CPPv2N12DeviceStatus15mosfet_temp_maxE"></span><span id="DeviceStatus::mosfet_temp_max__int16_t"></span><span class="target" id="classDeviceStatus_1a1a781a74c0b3e9a8bc1a1659c1ee9423"></span><span class="n"><span class="pre">int16_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">mosfet_temp_max</span></span></span><a class="headerlink" href="#_CPPv4N12DeviceStatus15mosfet_temp_maxE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N12DeviceStatus11day_counterE">
+<span id="_CPPv3N12DeviceStatus11day_counterE"></span><span id="_CPPv2N12DeviceStatus11day_counterE"></span><span id="DeviceStatus::day_counter__uint32_t"></span><span class="target" id="classDeviceStatus_1a9b1615e147c8596facedabb234b18d9e"></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">day_counter</span></span></span><a class="headerlink" href="#_CPPv4N12DeviceStatus11day_counterE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N12DeviceStatus11error_flagsE">
+<span id="_CPPv3N12DeviceStatus11error_flagsE"></span><span id="_CPPv2N12DeviceStatus11error_flagsE"></span><span id="DeviceStatus::error_flags__uint32_t"></span><span class="target" id="classDeviceStatus_1a5f62da1d497817df8c57c8c75f2bc901"></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">error_flags</span></span></span><a class="headerlink" href="#_CPPv4N12DeviceStatus11error_flagsE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Currently detected errors. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N12DeviceStatus13internal_tempE">
+<span id="_CPPv3N12DeviceStatus13internal_tempE"></span><span id="_CPPv2N12DeviceStatus13internal_tempE"></span><span id="DeviceStatus::internal_temp__float"></span><span class="target" id="classDeviceStatus_1a8af95e5296e382c5054d0b896083cb09"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">internal_temp</span></span></span><a class="headerlink" href="#_CPPv4N12DeviceStatus13internal_tempE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Internal temperature (measured in MCU) </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="dcdc.html" class="btn btn-neutral float-left" title="DC/DC converter" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="half_bridge.html" class="btn btn-neutral float-right" title="Half Bridge Driver" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023 The Libre Solar Project.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DC Bus and Power Port &mdash; Charge Controller  documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="PWM Switch" href="pwm_switch.html" />
+    <link rel="prev" title="Load Output" href="load.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #005e83" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Charge Controller
+              <img src="../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                v21.0
+
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../overview/features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/supported_hardware.html">Supported Hardware</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/charger_concepts.html">Charger Concepts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../overview/charger_concepts.html#bus-and-port-structure">Bus and port structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/charger_concepts.html#charger-state-machine">Charger state machine</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../overview/charger_concepts.html#standby">0. Standby</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../overview/charger_concepts.html#bulk-stage">1. Bulk stage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../overview/charger_concepts.html#topping-stage">2. Topping stage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../overview/charger_concepts.html#equalization-stage">3. Equalization stage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../overview/charger_concepts.html#float-stage">4. Float stage</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/workspace_setup.html">Workspace Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/building_flashing.html">Building and Flashing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/customization.html">Customization</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../dev/customization.html#hardware-specific-changes">Hardware-specific changes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dev/customization.html#application-firmware-configuration">Application firmware configuration</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../dev/customization.html#change-the-battery-type">Change the battery type</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../dev/customization.html#configure-serial-for-thingset-protocol">Configure serial for ThingSet protocol</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../dev/customization.html#custom-functions-separate-c-c-files">Custom functions (separate C/C++ files)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/unit_tests.html">Unit Tests</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../dev/unit_tests.html#conformance-testing">Conformance testing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/troubleshooting.html">Troubleshoting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../dev/troubleshooting.html#errors-with-stm32l072-mcu-using-openocd">Errors with STM32L072 MCU using OpenOCD</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="bat_charger.html">Battery Charger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="daq.html">Data Acquisition</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_objects.html">Data Objects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dcdc.html">DC/DC converter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="device_status.html">Device Status</a></li>
+<li class="toctree-l1"><a class="reference internal" href="half_bridge.html">Half Bridge Driver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="load.html">Load Output</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">DC Bus and Power Port</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pwm_switch.html">PWM Switch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="misc.html">Misc</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="misc.html#data-storage">Data Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html#hardware">Hardware</a></li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html#helper">Helper</a></li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html#leds">LEDs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html#setup">Setup</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #005e83" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Charge Controller</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">DC Bus and Power Port</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/LibreSolar/charge-controller-firmware/blob/main/docs/src/api/power_port.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="dc-bus-and-power-port">
+<h1>DC Bus and Power Port<a class="headerlink" href="#dc-bus-and-power-port" title="Permalink to this heading"></a></h1>
+<p>Definition of charge controller terminals and internal DC buses. </p>
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv45DcBus">
+<span id="_CPPv35DcBus"></span><span id="_CPPv25DcBus"></span><span id="DcBus"></span><span class="target" id="classDcBus"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">DcBus</span></span></span><a class="headerlink" href="#_CPPv45DcBus" title="Permalink to this definition"></a><br /></dt>
+<dd><div class="docutils container">
+<em>#include &lt;power_port.h&gt;</em></div>
+<p>DC bus class</p>
+<p>Stores measurement data and settings necessary for voltage control </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N5DcBus19src_control_voltageEf">
+<span id="_CPPv3N5DcBus19src_control_voltageEf"></span><span id="_CPPv2N5DcBus19src_control_voltageEf"></span><span id="DcBus::src_control_voltage__float"></span><span class="target" id="classDcBus_1ab91b09e0a188695a2274503bf5480653"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">src_control_voltage</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">voltage_zero_current</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5DcBus19src_control_voltageEf" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Calculate current-compensated src control voltage, considering droop and series multiplier</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>voltage_zero_current</strong> – Voltage at zero current (without droop). If this parameter is left empty, the src_voltage_intercept is considered. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N5DcBus20sink_control_voltageEf">
+<span id="_CPPv3N5DcBus20sink_control_voltageEf"></span><span id="_CPPv2N5DcBus20sink_control_voltageEf"></span><span id="DcBus::sink_control_voltage__float"></span><span class="target" id="classDcBus_1ad613f28c007f9e6eb150c5bbacaa938f"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">sink_control_voltage</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">voltage_zero_current</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5DcBus20sink_control_voltageEf" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Calculate current-compensated sink control voltage, considering droop and series multiplier</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>voltage_zero_current</strong> – Voltage at zero current (without droop). If this parameter is left empty, the sink_voltage_intercept is considered. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N5DcBus14series_voltageEf">
+<span id="_CPPv3N5DcBus14series_voltageEf"></span><span id="_CPPv2N5DcBus14series_voltageEf"></span><span id="DcBus::series_voltage__float"></span><span class="target" id="classDcBus_1a0f7c803845d6b9a5d2dd24cfe74a0a2d"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">series_voltage</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">single_voltage</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5DcBus14series_voltageEf" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Calculate voltage for series connected batteries based on setpoint for single battery</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>single_voltage</strong> – Voltage for single battery</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Total voltage </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N5DcBus7voltageE">
+<span id="_CPPv3N5DcBus7voltageE"></span><span id="_CPPv2N5DcBus7voltageE"></span><span id="DcBus::voltage__float"></span><span class="target" id="classDcBus_1ad271d08ce6c4e1b6370cf1b73b63aa5b"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">voltage</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N5DcBus7voltageE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Measured bus voltage </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N5DcBus16voltage_filteredE">
+<span id="_CPPv3N5DcBus16voltage_filteredE"></span><span id="_CPPv2N5DcBus16voltage_filteredE"></span><span id="DcBus::voltage_filtered__float"></span><span class="target" id="classDcBus_1aea22a11b4bca96be7e7ee8d15fe1c8d1"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">voltage_filtered</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N5DcBus16voltage_filteredE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Filtered bus voltage</p>
+<p>Suitable filter time constants depend on type of DC bus. This filtering is applied in addition to the raw ADC value filtering. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N5DcBus17series_multiplierE">
+<span id="_CPPv3N5DcBus17series_multiplierE"></span><span id="_CPPv2N5DcBus17series_multiplierE"></span><span id="DcBus::series_multiplier__int16_t"></span><span class="target" id="classDcBus_1a72222e79a88936623d9bd2c87d6388ec"></span><span class="n"><span class="pre">int16_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">series_multiplier</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">1</span></span><a class="headerlink" href="#_CPPv4N5DcBus17series_multiplierE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Multiplier for series connection of batteries</p>
+<p>Used for automatic 12V/24V battery detection at start-up (can be 1 or 2 only)</p>
+<p>This factor must be applied to all voltage setpoints </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N5DcBus22sink_voltage_interceptE">
+<span id="_CPPv3N5DcBus22sink_voltage_interceptE"></span><span id="_CPPv2N5DcBus22sink_voltage_interceptE"></span><span id="DcBus::sink_voltage_intercept__float"></span><span class="target" id="classDcBus_1a9d671ad1e0a644292a7597a05c0068b3"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">sink_voltage_intercept</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N5DcBus22sink_voltage_interceptE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Upper voltage boundary where this bus may be used to sink current.</p>
+<p>This value is the voltage at zero current. Values for other currents are calculated using the droop resistance. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N5DcBus21src_voltage_interceptE">
+<span id="_CPPv3N5DcBus21src_voltage_interceptE"></span><span id="_CPPv2N5DcBus21src_voltage_interceptE"></span><span id="DcBus::src_voltage_intercept__float"></span><span class="target" id="classDcBus_1a6d427f126afe0a21b6a0d4b690f7dff7"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">src_voltage_intercept</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N5DcBus21src_voltage_interceptE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Lower voltage boundary where this bus may be used to source current.</p>
+<p>This value is the voltage at zero current. Values for other currents are calculated using the droop resistance. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N5DcBus13src_droop_resE">
+<span id="_CPPv3N5DcBus13src_droop_resE"></span><span id="_CPPv2N5DcBus13src_droop_resE"></span><span id="DcBus::src_droop_res__float"></span><span class="target" id="classDcBus_1a2239babd4dcde82156fe89f4dc146001"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">src_droop_res</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N5DcBus13src_droop_resE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Droop resistance to adjust voltage bounds for current in sourcing direction</p>
+<p>control voltage = nominal voltage - droop_res * current </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N5DcBus14sink_droop_resE">
+<span id="_CPPv3N5DcBus14sink_droop_resE"></span><span id="_CPPv2N5DcBus14sink_droop_resE"></span><span id="DcBus::sink_droop_res__float"></span><span class="target" id="classDcBus_1a76486a4a095b4bf78f0f9334d781afe4"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">sink_droop_res</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N5DcBus14sink_droop_resE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Droop resistance to adjust voltage bounds for current in sinking direction</p>
+<p>control voltage = nominal voltage - droop_res * current </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N5DcBus11ref_currentE">
+<span id="_CPPv3N5DcBus11ref_currentE"></span><span id="_CPPv2N5DcBus11ref_currentE"></span><span id="DcBus::ref_current__floatP"></span><span class="target" id="classDcBus_1a677ea545f4eb64095fa9a1374ebcfaf3"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">ref_current</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">NULL</span></span><a class="headerlink" href="#_CPPv4N5DcBus11ref_currentE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Pointer to current measurement that is used to determine the droop. This is typically the battery or nanogrid terminal. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N5DcBus19sink_current_marginE">
+<span id="_CPPv3N5DcBus19sink_current_marginE"></span><span id="_CPPv2N5DcBus19sink_current_marginE"></span><span id="DcBus::sink_current_margin__float"></span><span class="target" id="classDcBus_1aadf01500d8e25a52e7210d783c95add1"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">sink_current_margin</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N5DcBus19sink_current_marginE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Available additional current towards the DC bus until limits of the connected ports are reached </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N5DcBus18src_current_marginE">
+<span id="_CPPv3N5DcBus18src_current_marginE"></span><span id="_CPPv2N5DcBus18src_current_marginE"></span><span id="DcBus::src_current_margin__float"></span><span class="target" id="classDcBus_1ae791dd721113e5c3982eb0f010a98121"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">src_current_margin</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N5DcBus18src_current_marginE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Available additional current from the DC bus until limits of the connected ports are reached (has a negative sign)</p>
+<p>If for example a battery connected to the bus is not allowed to be discharged anymore, but we still get power via solar, current up to the amount of solar input can be diverted into the load (until the margin gets 0 and the battery would be discharged). </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv49PowerPort">
+<span id="_CPPv39PowerPort"></span><span id="_CPPv29PowerPort"></span><span id="PowerPort"></span><span class="target" id="classPowerPort"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PowerPort</span></span></span><a class="headerlink" href="#_CPPv49PowerPort" title="Permalink to this definition"></a><br /></dt>
+<dd><div class="docutils container">
+<em>#include &lt;power_port.h&gt;</em></div>
+<p>Power Port class</p>
+<p>Stores current measurements and limits for external terminals or internal ports</p>
+<p>The signs follow the passive sign convention. Current or power from the considered system or circuit towards an external device connected to the port has a positive sign. For all terminals, the entire charge controller is considered as the system boundary and acts as a source or a sink. For internal sub-circuits, e.g. the DC/DC converter circuit defines the sub-system boundaries.</p>
+<p>
+ | | &gt;&gt; positive current/power direction | o-&amp;#8212;&gt;-&amp;#8212; | | + | | considered | | | external device: battery / solar panel / load / DC grid | system or | | | | sub-circuit | | | (the port should be named after the external device) | | - | | o——&amp;#8212; </p>
+<p>Subclassed by <a class="reference internal" href="load.html#classLoadOutput"><span class="std std-ref">LoadOutput</span></a>, <a class="reference internal" href="pwm_switch.html#classPwmSwitch"><span class="std std-ref">PwmSwitch</span></a></p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N9PowerPort9PowerPortEP5DcBusb">
+<span id="_CPPv3N9PowerPort9PowerPortEP5DcBusb"></span><span id="_CPPv2N9PowerPort9PowerPortEP5DcBusb"></span><span id="PowerPort::PowerPort__DcBusP.b"></span><span class="target" id="classPowerPort_1a8583573660b395b7fa941b5c5acd565d"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PowerPort</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv45DcBus" title="DcBus"><span class="n"><span class="pre">DcBus</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">dc_bus</span></span>, <span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">assign_ref_current</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">false</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N9PowerPort9PowerPortEP5DcBusb" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Constructor assigning the port to a DC bus</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dc_bus</strong> – The DC bus this port is assigned to </p></li>
+<li><p><strong>assign_ref_current</strong> – defines if the bus ref_current should point to the current of this port (must be true for at least one port) </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N9PowerPort10init_solarEv">
+<span id="_CPPv3N9PowerPort10init_solarEv"></span><span id="_CPPv2N9PowerPort10init_solarEv"></span><span id="PowerPort::init_solar"></span><span class="target" id="classPowerPort_1a0ec263bc4cc2f6afd955df8232bade97"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">init_solar</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N9PowerPort10init_solarEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Initialize power port for solar panel connection </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N9PowerPort13init_nanogridEv">
+<span id="_CPPv3N9PowerPort13init_nanogridEv"></span><span id="_CPPv2N9PowerPort13init_nanogridEv"></span><span id="PowerPort::init_nanogrid"></span><span class="target" id="classPowerPort_1ac1a1c28dee0de7373b8b35c96d232750"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">init_nanogrid</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N9PowerPort13init_nanogridEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Initialize power port for nanogrid connection </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N9PowerPort14energy_balanceEv">
+<span id="_CPPv3N9PowerPort14energy_balanceEv"></span><span id="_CPPv2N9PowerPort14energy_balanceEv"></span><span id="PowerPort::energy_balance"></span><span class="target" id="classPowerPort_1a40b0f476f20cb1346fc769fda780848e"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">energy_balance</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N9PowerPort14energy_balanceEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Energy balance calculation for power port</p>
+<p>Must be called exactly once per second, otherwise energy calculation gets wrong. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK9PowerPort26update_bus_current_marginsEv">
+<span id="_CPPv3NK9PowerPort26update_bus_current_marginsEv"></span><span id="_CPPv2NK9PowerPort26update_bus_current_marginsEv"></span><span id="PowerPort::update_bus_current_marginsC"></span><span class="target" id="classPowerPort_1ac151febfd58849740d0ec0a3e28800dc"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">update_bus_current_margins</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK9PowerPort26update_bus_current_marginsEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Sets current limits for control of the bus voltage</p>
+<p>This function has to be called using the port defining the bus control targets, i.e. the battery, the solar panel or the DC grid. </p>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N9PowerPort3busE">
+<span id="_CPPv3N9PowerPort3busE"></span><span id="_CPPv2N9PowerPort3busE"></span><span id="PowerPort::bus__DcBusP"></span><span class="target" id="classPowerPort_1a18422999901d1138a6b00021ac5cb929"></span><a class="reference internal" href="#_CPPv45DcBus" title="DcBus"><span class="n"><span class="pre">DcBus</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">bus</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">NULL</span></span><a class="headerlink" href="#_CPPv4N9PowerPort3busE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Each power port is connected to a DC bus, containing relevant voltage information </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N9PowerPort7currentE">
+<span id="_CPPv3N9PowerPort7currentE"></span><span id="_CPPv2N9PowerPort7currentE"></span><span id="PowerPort::current__float"></span><span class="target" id="classPowerPort_1a7002281191a3eaadf07d30121e2b42b9"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">current</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N9PowerPort7currentE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Measured current through this port (positive sign = current into the external device) </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N9PowerPort16current_filteredE">
+<span id="_CPPv3N9PowerPort16current_filteredE"></span><span id="_CPPv2N9PowerPort16current_filteredE"></span><span id="PowerPort::current_filtered__float"></span><span class="target" id="classPowerPort_1a0a8e8b84e7a7333e0e08f95cd1a1d5bf"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">current_filtered</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N9PowerPort16current_filteredE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Filtered port current</p>
+<p>Suitable filter time constants depend on type of port. This filtering is applied in addition to the raw ADC value filtering. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N9PowerPort5powerE">
+<span id="_CPPv3N9PowerPort5powerE"></span><span id="_CPPv2N9PowerPort5powerE"></span><span id="PowerPort::power__float"></span><span class="target" id="classPowerPort_1adad50595d274ee7b5c6394448fb99413"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">power</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N9PowerPort5powerE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Product of port current and bus voltage </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N9PowerPort17pos_current_limitE">
+<span id="_CPPv3N9PowerPort17pos_current_limitE"></span><span id="_CPPv2N9PowerPort17pos_current_limitE"></span><span id="PowerPort::pos_current_limit__float"></span><span class="target" id="classPowerPort_1a31f378e479a523f893da76268679bdc5"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">pos_current_limit</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N9PowerPort17pos_current_limitE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Maximum positive current (valid values &gt;= 0.0) </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N9PowerPort17neg_current_limitE">
+<span id="_CPPv3N9PowerPort17neg_current_limitE"></span><span id="_CPPv2N9PowerPort17neg_current_limitE"></span><span id="PowerPort::neg_current_limit__float"></span><span class="target" id="classPowerPort_1a3bd0129586169facef0d5ff466eb8772"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">neg_current_limit</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N9PowerPort17neg_current_limitE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Maximum negative current (valid values &lt;= 0.0) </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N9PowerPort13pos_energy_WhE">
+<span id="_CPPv3N9PowerPort13pos_energy_WhE"></span><span id="_CPPv2N9PowerPort13pos_energy_WhE"></span><span id="PowerPort::pos_energy_Wh__float"></span><span class="target" id="classPowerPort_1ab383b2d3ca7f85bc41265e4faddf565f"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">pos_energy_Wh</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N9PowerPort13pos_energy_WhE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Cumulated energy in positive current direction since last counter reset (Wh) </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N9PowerPort13neg_energy_WhE">
+<span id="_CPPv3N9PowerPort13neg_energy_WhE"></span><span id="_CPPv2N9PowerPort13neg_energy_WhE"></span><span id="PowerPort::neg_energy_Wh__float"></span><span class="target" id="classPowerPort_1af17887cdab7db7733b720686ffbeb209"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">neg_energy_Wh</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N9PowerPort13neg_energy_WhE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Cumulated energy in negative current direction since last counter reset (Wh) </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="load.html" class="btn btn-neutral float-left" title="Load Output" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="pwm_switch.html" class="btn btn-neutral float-right" title="PWM Switch" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023 The Libre Solar Project.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
