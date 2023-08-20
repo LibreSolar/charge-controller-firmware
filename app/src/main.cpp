@@ -27,6 +27,7 @@
 #include "leds.h"       // LED switching using charlieplexing
 #include "load.h"       // load and USB output management
 #include "pwm_switch.h" // PWM charge controller
+#include "kalman_soc.h"         // caculation of SoC using extended Kalman filter
 
 int main(void)
 {
@@ -60,7 +61,7 @@ int main(void)
     daq_setup();
 
     charger.detect_num_batteries(&bat_conf); // check if we have 24V instead of 12V system
-    charger.init_terminal(&bat_conf);
+    charger.init_terminal(&bat_conf, &ekf_soc);
 
 #if BOARD_HAS_LOAD_OUTPUT
     load.set_voltage_limits(bat_conf.load_disconnect_voltage, bat_conf.load_reconnect_voltage,
@@ -106,7 +107,7 @@ int main(void)
 
         dev_stat.update_energy();
         dev_stat.update_min_max_values();
-        charger.update_soc(&bat_conf);
+        charger.update_soc(&bat_conf, &ekf_soc);
 
 #if CONFIG_HS_MOSFET_FAIL_SAFE_PROTECTION && BOARD_HAS_DCDC
         if (dev_stat.has_error(ERR_DCDC_HS_MOSFET_SHORT)) {

@@ -22,12 +22,72 @@ LOG_MODULE_REGISTER(bat_charger, CONFIG_BAT_LOG_LEVEL);
 extern DeviceStatus dev_stat;
 extern LoadOutput load;
 
+uint32_t milli_seconds_in_float = 0;
+uint32_t float_reset_duration = 600000;             // 10 minutes in milliseconds
+const uint32_t soc_scaled_hundred_percent = 100000; // 100% charge = 100000
+const uint32_t soc_scaled_max =
+    2 * soc_scaled_hundred_percent; // allow soc to track up higher than 100% to gauge efficiency
+
 // DISCHARGE_CURRENT_MAX used to estimate current-compensation of load disconnect voltage
 #if BOARD_HAS_LOAD_OUTPUT
 #define DISCHARGE_CURRENT_MAX DT_PROP(DT_CHILD(DT_PATH(outputs), load), current_max)
 #else
 #define DISCHARGE_CURRENT_MAX DT_PROP(DT_PATH(pcb), dcdc_current_max)
 #endif
+
+float calculate_initial_soc(float battery_voltage_mV)
+{
+    // TODO will need to add 24 V compatability
+    const uint32_t soc_scaled_hundred_percent = 100000;
+    const uint8_t voltages_size = 10;
+    const float batt_soc_voltages[voltages_size] = { 12720, 12600, 12480, 12360, 12240,
+                                                     12120, 12000, 11880, 11760, 11640 };
+
+    uint8_t index;
+    for (index = 0; index < voltages_size; index++) {
+        if (battery_voltage_mV > batt_soc_voltages[index]) {
+            break;
+        }
+    }
+    return (voltages_size - index) * (soc_scaled_hundred_percent / voltages_size);
+}
+
+void diagonal_matrix(float *A, float value, int n, int m)
+{
+    int i, j;
+    for (i = 0; i < n; i++) {
+        for (j = 0; j < m; j++) {
+            if (i == j) {
+                A[i * n + j] = value;
+            }
+            else {
+                A[i * n + j] = 0;
+            }
+            LOG_DBG("%f ", A[i * n + j]);
+        }
+        LOG_DBG("\n");
+    }
+}
+
+void init_soc(EkfSoc *ekf_soc, float v0, float P0, float Q0, float R0, float initial_soc)
+{
+    // Init State vector
+    // use stored soc, unless it's out of range, in which case calculate new starting point
+    ekf_soc->x[0] = (initial_soc >= 0 && initial_soc <= soc_scaled_max) ? initial_soc
+                                                                        : calculate_initial_soc(v0);
+    ekf_soc->x[1] = 0.0; // TODO Check what init makes sense
+    ekf_soc->x[2] = 0.0; // TODO Check what init makes sense
+
+    LOG_DBG("Init Matrix F\n");
+    diagonal_matrix(&ekf_soc->F[0][0], 1, NUMBER_OF_STATES_SOC,
+                    NUMBER_OF_STATES_SOC); // F identity matrix
+    LOG_DBG("\nInit Matrix P\n");
+    diagonal_matrix(&ekf_soc->P[0][0], P0, NUMBER_OF_STATES_SOC, NUMBER_OF_STATES_SOC);
+    LOG_DBG("\nInit Matrix Q\n");
+    diagonal_matrix(&ekf_soc->Q[0][0], Q0, NUMBER_OF_STATES_SOC, NUMBER_OF_STATES_SOC);
+    LOG_DBG("\nInit Matrix R\n");
+    diagonal_matrix(&ekf_soc->R[0][0], R0, NUMBER_OF_OBSERVABLES_SOC, NUMBER_OF_OBSERVABLES_SOC);
+}
 
 void battery_conf_init(BatConf *bat, int type, int num_cells, float nominal_capacity)
 {
@@ -362,7 +422,7 @@ void Charger::detect_num_batteries(BatConf *bat) const
     }
 }
 
-void Charger::update_soc(BatConf *bat_conf)
+void Charger::update_soc_voltage_based(BatConf *bat_conf)
 {
     static int soc_filtered = 0; // SOC / 100 for better filtering
 
@@ -657,7 +717,7 @@ void Charger::charge_control(BatConf *bat_conf)
     }
 }
 
-void Charger::init_terminal(BatConf *bat) const
+void Charger::init_terminal(BatConf *bat, EkfSoc *ekf_soc) const
 {
     port->bus->sink_voltage_intercept = bat->topping_voltage;
     port->bus->src_voltage_intercept = bat->load_disconnect_voltage;
@@ -681,4 +741,165 @@ void Charger::init_terminal(BatConf *bat) const
     port->bus->src_droop_res =
         -bat->wire_resistance / static_cast<float>(port->bus->series_multiplier)
         - bat->internal_resistance;
+
+    float P0 = 0.1;   // initial covariance of state noise  (aka process noise)
+    float Q0 = 0.001; // Initial state uncertainty covariance matrix
+    float R0 = 0.1;   // initial covariance of measurement noise
+    float battery_voltage_mV[1] = {
+        port->bus->voltage * 1000
+    }; // intial Voltage measurement to calculate SoC if initial_soc is out of range
+    float initial_soc = soc * 1000; // last known SoC
+    // Do generic EKF initialization
+    ekf_init(ekf_soc, NUMBER_OF_STATES_SOC, NUMBER_OF_OBSERVABLES_SOC);
+    init_soc(ekf_soc, battery_voltage_mV[0], P0, Q0, R0, initial_soc);
+}
+
+float clamp(float value, float min, float max)
+{
+    if (value > max) {
+        return max;
+    }
+    else if (value < min) {
+        return min;
+    }
+    return value;
+}
+
+float model_soc(EkfSoc *ekf_soc, bool is_battery_in_float, float battery_eff,
+                float battery_current_mA, float sample_period_milli_sec, float battery_capacity_Ah)
+{
+    // $\hat{x}_k = f(\hat{x}_{k-1})$
+    battery_eff = f(ekf_soc, is_battery_in_float, battery_eff, battery_current_mA,
+                    sample_period_milli_sec, battery_capacity_Ah);
+    LOG_DBG("The SoC by f()  %f \n", ekf_soc->x[0]);
+    // update measurable (voltage) based on predicted state (SoC)
+    h(ekf_soc, battery_current_mA);
+    return battery_eff;
+}
+
+float f(EkfSoc *ekf_soc, bool is_battery_in_float, float battery_eff, float battery_current_mA,
+        float sample_period_milli_sec, float battery_capacity_Ah)
+{
+    float milli_sec_to_hours = 3600000;
+    float charge_change = (battery_current_mA / 1000) * battery_eff / 100000
+                          * (sample_period_milli_sec / milli_sec_to_hours);
+    float previous_soc = ekf_soc->x[0];
+    float new_soc = (ekf_soc->x[0] * battery_capacity_Ah + charge_change * 1000)
+                    / battery_capacity_Ah; // scaling should be fine here
+    ekf_soc->fx[0] = new_soc;
+
+    if (is_battery_in_float) {
+        milli_seconds_in_float += sample_period_milli_sec;
+        if (milli_seconds_in_float > float_reset_duration) {
+
+            battery_eff = (float)battery_eff * (float)soc_scaled_hundred_percent / previous_soc;
+            battery_eff = clamp(battery_eff, 0, soc_scaled_hundred_percent);
+            ekf_soc->fx[0] = soc_scaled_hundred_percent;
+        }
+    }
+    else {
+        milli_seconds_in_float = 0;
+    }
+
+    return battery_eff;
+}
+
+void h(EkfSoc *ekf_soc, float battery_current_mA)
+{
+    // _hx is the voltage that most closely matches current SoC (a number)
+    // _H is an array of form [ocv gradient, measured current, 1] (the last parameter is the offset)
+    // x_[0] = SOC, _x[1] = R0 _x[2]=U1 units are unknown.
+
+    bool is_battery_12_V = true;
+    bool is_battery_lithium = false;
+    int index_R0 = 1;
+    int index_U1 = 2;
+
+    // Hardcoded  SoC-OCV Curve aka Lookuptable
+    float dummy_lead_acid_voltage[101] = {
+        11640, 11653, 11666, 11679, 11692, 11706, 11719, 11732, 11745, 11758, 11772, 11785, 11798,
+        11811, 11824, 11838, 11851, 11864, 11877, 11890, 11904, 11917, 11930, 11943, 11956, 11970,
+        11983, 11996, 12009, 12022, 12036, 12049, 12062, 12075, 12088, 12102, 12115, 12128, 12141,
+        12154, 12168, 12181, 12194, 12207, 12220, 12234, 12247, 12260, 12273, 12286, 12300, 12313,
+        12326, 12339, 12352, 12366, 12379, 12392, 12405, 12418, 12432, 12445, 12458, 12471, 12484,
+        12498, 12511, 12524, 12537, 12550, 12564, 12577, 12590, 12603, 12616, 12630, 12643, 12656,
+        12669, 12682, 12696, 12709, 12722, 12735, 12748, 12762, 12775, 12788, 12801, 12814, 12828,
+        12841, 12854, 12867, 12880, 12894, 12907, 12920, 12933, 12946, 12960
+    };
+    float dummy_lithium_voltage[101] = {
+        5000,  6266,  7434,  8085,  8531,  8867,  9134,  9355,  9543,  9705,  9847,  9974,  10088,
+        10191, 10285, 10372, 10451, 10525, 10595, 10659, 10720, 10777, 10831, 10882, 10931, 10977,
+        11021, 11063, 11104, 11142, 11180, 11216, 11251, 11284, 11317, 11349, 11379, 11409, 11438,
+        11467, 11495, 11522, 11548, 11574, 11600, 11625, 11650, 11675, 11699, 11723, 11746, 11769,
+        11793, 11815, 11838, 11861, 11883, 11906, 11928, 11950, 11972, 11994, 12017, 12039, 12061,
+        12083, 12105, 12127, 12150, 12172, 12195, 12217, 12240, 12263, 12286, 12309, 12333, 12356,
+        12380, 12404, 12428, 12452, 12477, 12501, 12526, 12552, 12577, 12603, 12629, 12655, 12682,
+        12708, 12735, 12763, 12790, 12818, 12846, 12875, 12903, 12931, 12960
+    };
+    float dummy_ocv_soc[101] = {
+        0,     1000,  2000,  3000,  4000,  5000,  6000,  7000,  8000,  9000,  10000, 11000, 12000,
+        13000, 14000, 15000, 16000, 17000, 18000, 19000, 20000, 21000, 22000, 23000, 24000, 25000,
+        26000, 27000, 28000, 29000, 30000, 31000, 32000, 33000, 34000, 35000, 36000, 37000, 38000,
+        39000, 40000, 41000, 42000, 43000, 44000, 45000, 46000, 47000, 48000, 49000, 50000, 51000,
+        52000, 53000, 54000, 55000, 56000, 57000, 58000, 59000, 60000, 61000, 62000, 63000, 64000,
+        65000, 66000, 67000, 68000, 69000, 70000, 71000, 72000, 73000, 74000, 75000, 76000, 77000,
+        78000, 79000, 80000, 81000, 82000, 83000, 84000, 85000, 86000, 87000, 88000, 89000, 90000,
+        91000, 92000, 93000, 94000, 95000, 96000, 97000, 98000, 99000, 100000
+    };
+    // update voltage closest to current state of charge as well as gradient
+    int i;
+    float multiplier;
+
+    if (is_battery_12_V) {
+        multiplier = 1;
+    }
+    else {
+        multiplier = 2;
+    }
+    for (i = 0; i < 101; i++) {
+
+        if (dummy_ocv_soc[i] > (float)ekf_soc->x[0]) {
+            if (is_battery_lithium) {
+                ekf_soc->hx[0] =
+                    (dummy_lithium_voltage[i] + dummy_lithium_voltage[i - 1]) * multiplier / 2
+                    + (battery_current_mA / 1000 * ekf_soc->x[index_R0] / 100)
+                    + ekf_soc->x[index_U1] / 100; // units should be good her
+                ekf_soc->H[0][0] =
+                    (dummy_lithium_voltage[i] - dummy_lithium_voltage[i - 1]) * multiplier * 100
+                    / (dummy_ocv_soc[i] - dummy_ocv_soc[i - 1]); // units are good here
+            }
+            else {
+                ekf_soc->hx[0] =
+                    (dummy_lead_acid_voltage[i] + dummy_lead_acid_voltage[i - 1]) * multiplier / 2
+                    + (battery_current_mA / 1000 * ekf_soc->x[index_R0] / 100)
+                    + ekf_soc->x[index_U1] / 100;
+                ekf_soc->H[0][0] = (dummy_lead_acid_voltage[i] - dummy_lead_acid_voltage[i - 1])
+                                   * multiplier * 100 / (dummy_ocv_soc[i] - dummy_ocv_soc[i - 1]);
+            }
+            ekf_soc->H[0][1] = battery_current_mA / 1000; // should be good in Amps
+            ekf_soc->H[0][2] = 1;                         // offset
+            printf("U0= I*R0 = %fmV \n", (battery_current_mA / 1000 * ekf_soc->x[index_R0]) / 100);
+            printf("U1= %fmV \n", ekf_soc->x[index_U1] / 100);
+            printf("For single Cell Lithium would be \nU0/4= I*R0/4Cells = %fmV \n",
+                   (battery_current_mA / 1000 * ekf_soc->x[index_R0]) / 4 / 100);
+            printf("U1/4Cells= %fmV \n", ekf_soc->x[index_U1] / 4 / 100);
+            return;
+        }
+    }
+}
+
+void Charger::update_soc(BatConf *bat_conf, EkfSoc *ekf_soc)
+{
+    int cholsl_error = 0;
+    float battery_eff = 100000; // fixed to 100% implemented to use later on.
+    float sample_period_milli_sec = 1000;
+    float battery_voltage_mV[1] = { port->bus->voltage * 1000 };
+
+    battery_eff = model_soc(ekf_soc, bat_conf->float_enabled, battery_eff, (port->current * 1000),
+                            sample_period_milli_sec, bat_conf->nominal_capacity);
+    cholsl_error = ekf_step(ekf_soc, battery_voltage_mV);
+    LOG_DBG("Numerical Error in EKF_Step 1=true, 0 = false %d\n", cholsl_error);
+    LOG_DBG("Soc after EKF and before clamp %f\n", ekf_soc->x[0]);
+    ekf_soc->x[0] = clamp((float)ekf_soc->x[0], 0, soc_scaled_hundred_percent);
+    soc = ekf_soc->x[0] / 1000;
 }

@@ -12,6 +12,7 @@
  * @brief Battery and charger configuration and functions
  */
 
+#include "kalman_soc.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -20,6 +21,192 @@
 #include "power_port.h"
 
 #define CHARGER_TIME_NEVER INT32_MIN
+
+//#define DEBUG 0
+#define NUMBER_OF_STATES_SOC      3
+#define NUMBER_OF_OBSERVABLES_SOC 1
+
+/**
+ * Extended Kalman Filter (EKF) configuration data
+ *
+ * Data will be initialized in Charger::init_terminal
+ */
+typedef struct
+{
+    /**
+     * number of state values
+     *
+     */
+    int n;
+
+    /**
+     * number of observables
+     *
+     */
+    int m;
+
+    /**
+     * state vector
+     *
+     * [ir0 hk0 SOC0] TODO
+     */
+    float x[NUMBER_OF_STATES_SOC];
+
+    /**
+     * prediction error covariance
+     *
+     */
+    float P[NUMBER_OF_STATES_SOC][NUMBER_OF_STATES_SOC];
+
+    /**
+     * process noise covariance
+     *
+     * uncertainty of current sensor, state equation defined as fx
+     */
+    float Q[NUMBER_OF_STATES_SOC][NUMBER_OF_STATES_SOC];
+
+    /**
+     *  measurement error covariance
+     *
+     * uncertainty of voltage sensor, output equation defined as hx
+     */
+    float R[NUMBER_OF_OBSERVABLES_SOC][NUMBER_OF_OBSERVABLES_SOC];
+
+    /**
+     * Kalman gain; a.k.a. K
+     *
+     */
+    float G[NUMBER_OF_STATES_SOC][NUMBER_OF_OBSERVABLES_SOC];
+
+    /**
+     * Jacobian of process model
+     *
+     */
+    float F[NUMBER_OF_STATES_SOC][NUMBER_OF_STATES_SOC];
+
+    /**
+     * Jacobian of measurement model
+     *
+     */
+    float H[NUMBER_OF_OBSERVABLES_SOC][NUMBER_OF_STATES_SOC];
+
+    /**
+     *  transpose of measurement Jacobian
+     *
+     */
+    float Ht[NUMBER_OF_STATES_SOC][NUMBER_OF_OBSERVABLES_SOC];
+
+    /**
+     * transpose of process Jacobian
+     *
+     */
+    float Ft[NUMBER_OF_STATES_SOC][NUMBER_OF_STATES_SOC];
+
+    /**
+     *  P, post-prediction, pre-update
+     *
+     */
+    float Pp[NUMBER_OF_STATES_SOC][NUMBER_OF_STATES_SOC];
+
+    /**
+     * output of user defined f() state-transition function
+     *
+     */
+    float fx[NUMBER_OF_STATES_SOC];
+
+    /**
+     * output of user defined h() measurement function
+     *
+     */
+    float hx[NUMBER_OF_OBSERVABLES_SOC];
+
+    /**
+     * temporary storage
+     *
+     */
+    float tmp0[NUMBER_OF_STATES_SOC][NUMBER_OF_STATES_SOC];
+    float tmp1[NUMBER_OF_STATES_SOC][NUMBER_OF_OBSERVABLES_SOC];
+    float tmp2[NUMBER_OF_OBSERVABLES_SOC][NUMBER_OF_STATES_SOC];
+    float tmp3[NUMBER_OF_OBSERVABLES_SOC][NUMBER_OF_OBSERVABLES_SOC];
+    float tmp4[NUMBER_OF_OBSERVABLES_SOC][NUMBER_OF_OBSERVABLES_SOC];
+    float tmp5[NUMBER_OF_OBSERVABLES_SOC];
+
+} EkfSoc;
+
+/**
+ * Clamp function to ensure SoC within min max boders.
+ *
+ * @param value SoC value for which to ensure to be within borders min, max
+ * @param min The minimum value 0% the SoC is allowed to have
+ * @param max The maximum value 100% the SoC is allowed to have
+ * @return float Either the handed value or 0%, 100$ when excisting borders.
+ */
+float clamp(float value, float min, float max);
+
+/**
+ * Calculates initial SoC based on handed voltage
+ *
+ * @param battery_voltage_mV
+ * @return float Inital SoC
+ */
+float calculate_initial_soc(float battery_voltage_mV);
+
+/**
+ * Initializes Extended Kalman Filter matrices based on handed parameters
+ *
+ * *
+ * WARNING TODO: It is unclear if the equations used are correct, thus the init of F might be wrong
+ *
+ * @param ekf_soc struct in which initialized matrices are stored
+ * @param v0 initial voltage on which the inital SoC is based
+ * @param P0 Diagonal values for P matrix
+ * @param Q0 Diagonal values for Q matrix
+ * @param R0 Diagonal values for R matrix
+ * @param initial_soc inital SoC if known.
+ */
+void init_soc(EkfSoc *ekf_soc, float v0, float P0, float Q0, float R0, float initial_soc);
+
+/**
+ * Unites f and h function and forms the complete battery model
+ *
+ * @param ekf_soc struct with EKF Parameters
+ * @param is_battery_in_float for Lead Acid Batterys Float Charging Status
+ * @param battery_eff Efficieny currently not used
+ * @param battery_current_mA
+ * @param sample_period_milli_sec Period between battery current and voltage measurements
+ * @param battery_capacity_Ah
+ * @return float Efficiency currently not used
+ */
+float model_soc(EkfSoc *ekf_soc, bool is_battery_in_float, float battery_eff,
+                float battery_current_mA, float sample_period_milli_sec, float battery_capacity_Ah);
+
+/**
+ * project the state of charge ahead one step using a Coulomb counting model
+ * (Integration of the current over time)
+ * x{k+1}(index_soc) = x{k} - \frac{1}{{Q_{C}}}\int_{0}^{\Delta t} {i(t)\ dt}
+ *
+ * @param ekf_soc  struct with EKF Parameters
+ * @param is_battery_in_float Is the lead acid batterie in float charge?
+ * @param battery_eff Efficiency c   urrently not used
+ * @param battery_current_mA
+ * @param sample_period_milli_sec Period between battery measurements
+ * @param battery_capacity_Ah
+ * @return float
+ */
+float f(EkfSoc *ekf_soc, bool is_battery_in_float, float battery_eff, float battery_current_mA,
+        float sample_period_milli_sec, float battery_capacity_Ah);
+
+/**
+ * predict the measurable value (voltage) ahead one step using the newly estimated state of charge
+ * {h}(k) = {OCV}(x{k}) - {R}_{0} i(t) - {R}_{1} {i}_{R_1}(t) in mV
+ *
+ * WARNING TODO: It is unclear if the equations used are correct and if so if their implementation
+ * is correct thus x vector and H Matrix might be wrong.
+ *
+ * @param ekf_soc  struct with EKF Parameters
+ * @param battery_current_mA
+ */
+void h(EkfSoc *ekf_soc, float battery_current_mA);
 
 /**
  * Battery cell types
@@ -457,14 +644,21 @@ public:
      *
      * Must be called exactly once per second, otherwise SOC calculation gets wrong.
      */
-    void update_soc(BatConf *bat_conf);
+    void update_soc(BatConf *bat_conf, EkfSoc *ekf_soc);
+
+    /**
+     * SOC estimation
+     *
+     * WARNING: TODO obsolte function, replaced by void update_soc(BatConf *bat_conf, EkfSoc *ekf_soc)
+     */
+    void update_soc_voltage_based(BatConf *bat_conf);
 
     /**
      * Initialize terminal and dc bus for battery connection
      *
      * @param bat Configuration to be used for terminal setpoints
      */
-    void init_terminal(BatConf *bat) const;
+    void init_terminal(BatConf *bat, EkfSoc *ekf_soc) const;
 
 private:
     void enter_state(int next_state);
