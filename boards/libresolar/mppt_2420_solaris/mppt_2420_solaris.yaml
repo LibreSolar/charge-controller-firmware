@@ -1,0 +1,18 @@
+identifier: mppt_2420_solaris
+name: MPPT-2420-SOLARIS
+type: mcu
+arch: arm
+toolchain:
+  - zephyr
+  - gnuarmemb
+  - xtools
+ram: 112
+flash: 256
+supported:
+  - nvs
+  - pwm
+  - i2c
+  - gpio
+  - usb device
+  - counter
+  - spi

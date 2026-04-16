@@ -1,0 +1,5 @@
+# Copyright (c) The Libre Solar Project Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+config BOARD_MPPT_2420_SOLARIS
+	select SOC_STM32G491XX
