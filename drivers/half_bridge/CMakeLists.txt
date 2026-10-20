@@ -3,6 +3,8 @@
 
 zephyr_library()
 
-zephyr_library_sources_ifdef(CONFIG_HALF_BRIDGE_STM32 half_bridge_stm32.c)
+zephyr_library_sources_ifdef(CONFIG_HALF_BRIDGE_STM32_TIM half_bridge_stm32_tim.c)
+zephyr_library_sources_ifdef(CONFIG_HALF_BRIDGE_STM32_ADVTIM half_bridge_stm32_advtim.c)
+zephyr_library_sources_ifdef(CONFIG_HALF_BRIDGE_STM32_GPTIM half_bridge_stm32_gptim.c)
 zephyr_library_sources_ifdef(CONFIG_HALF_BRIDGE_STM32_HRTIM half_bridge_stm32_hrtim.c)
 zephyr_library_sources_ifdef(CONFIG_HALF_BRIDGE_EMUL half_bridge_emul.c)

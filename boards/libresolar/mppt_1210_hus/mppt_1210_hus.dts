@@ -195,10 +195,10 @@
 	status = "okay";
 
 	halfbridge: halfbridge {
-		compatible = "libresolar,stm32-half-bridge";
+		compatible = "libresolar,stm32-gptim-half-bridge";
 		pinctrl-0 = <&tim3_ch3_pb0 &tim3_ch4_pb1>;
 		pinctrl-names = "default";
-		channel = <3>;
+		high-side-channel = <3>;
 		low-side-channel = <4>;
 		frequency = <50000>;
 		deadtime-ns = <230>;

@@ -225,7 +225,7 @@
 	status = "okay";
 
 	halfbridge: halfbridge {
-		compatible = "libresolar,stm32-half-bridge";
+		compatible = "libresolar,stm32-advtim-half-bridge";
 		pinctrl-0 = <&tim1_ch1_pa8 &tim1_ch1n_pb13>;
 		pinctrl-names = "default";
 		channel = <1>;
