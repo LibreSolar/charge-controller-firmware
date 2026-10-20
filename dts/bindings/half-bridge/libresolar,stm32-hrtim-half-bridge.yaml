@@ -1,0 +1,41 @@
+# Copyright (c) The Libre Solar Project Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+description: |
+  Half bridge using the STM32 high-resolution timer (HRTIM)
+
+  The node must be a child of the HRTIM node, which provides the register address, the clocks
+  and (optionally) the reset line. The first clock is used to enable the peripheral, the second
+  clock must specify the timer clock source (e.g. STM32_SRC_TIMPCLK2).
+
+  Only timer A with outputs TA1 (high-side) and TA2 (low-side) is supported at the moment.
+
+  Example:
+
+    &hrtim1 {
+        status = "okay";
+
+        halfbridge: half-bridge {
+            compatible = "libresolar,stm32-hrtim-half-bridge";
+            pinctrl-0 = <&hrtim1_cha1_pa8 &hrtim1_cha2_pa9>;
+            pinctrl-names = "default";
+            frequency = <70000>;
+            deadtime-ns = <300>;
+        };
+    };
+
+compatible: "libresolar,stm32-hrtim-half-bridge"
+
+include: [base.yaml, pinctrl-device.yaml, half-bridge-common.yaml]
+
+properties:
+  pinctrl-0:
+    required: true
+
+  pinctrl-names:
+    required: true
+
+  adc-trigger:
+    type: boolean
+    description: |
+      Trigger ADC1 conversions in the middle of the on-time using timer A compare 3

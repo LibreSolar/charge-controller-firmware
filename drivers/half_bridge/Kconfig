@@ -4,6 +4,7 @@
 menuconfig HALF_BRIDGE
     bool "Half-bridge drivers"
     default y if DT_HAS_LIBRESOLAR_STM32_HALF_BRIDGE_ENABLED
+    default y if DT_HAS_LIBRESOLAR_STM32_HRTIM_HALF_BRIDGE_ENABLED
     default y if DT_HAS_LIBRESOLAR_HALF_BRIDGE_EMUL_ENABLED
     help
       Enable drivers for half bridges consisting of two complementary PWM outputs with dead time,
@@ -30,6 +31,15 @@ config HALF_BRIDGE_STM32
     select RESET
     help
       Enable half-bridge driver for STM32 timers (TIM).
+
+config HALF_BRIDGE_STM32_HRTIM
+    bool "STM32 HRTIM half-bridge driver"
+    default y
+    depends on DT_HAS_LIBRESOLAR_STM32_HRTIM_HALF_BRIDGE_ENABLED
+    select PINCTRL
+    select RESET
+    help
+      Enable half-bridge driver for the STM32 high-resolution timer (HRTIM).
 
 config HALF_BRIDGE_EMUL
     bool "Emulated half-bridge driver"

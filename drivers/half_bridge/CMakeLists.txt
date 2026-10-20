@@ -4,4 +4,5 @@
 zephyr_library()
 
 zephyr_library_sources_ifdef(CONFIG_HALF_BRIDGE_STM32 half_bridge_stm32.c)
+zephyr_library_sources_ifdef(CONFIG_HALF_BRIDGE_STM32_HRTIM half_bridge_stm32_hrtim.c)
 zephyr_library_sources_ifdef(CONFIG_HALF_BRIDGE_EMUL half_bridge_emul.c)
