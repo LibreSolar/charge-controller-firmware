@@ -32,7 +32,7 @@ menu "Charge Controller Setup"
 
 choice
     prompt "High-voltage terminal"
-    depends on $(dt_compat_enabled,half-bridge)
+    depends on $(dt_nodelabel_enabled,halfbridge)
     help
       Select the device connected to the high-voltage
       side terminal of the DC/DC converter.
@@ -401,7 +401,7 @@ config CUSTOM_DATA_OBJECTS_FILE
 
 config CUSTOM_DCDC_CONTROLLER
     bool "Custom implementation of DC/DC controller"
-    depends on $(dt_compat_enabled,half-bridge)
+    depends on $(dt_nodelabel_enabled,halfbridge)
     default n
     help
       Use a custom implementation instead of the default perturb & observe

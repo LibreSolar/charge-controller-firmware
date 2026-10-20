@@ -16,9 +16,10 @@
 #include <stdlib.h> // for min/max function
 
 #include "device_status.h"
-#include "half_bridge.h"
 #include "helper.h"
 #include "setup.h"
+
+#include <libresolar/drivers/half_bridge.h>
 
 #include <thingset.h>
 #include <thingset/sdk.h>
@@ -46,8 +47,9 @@ LOG_MODULE_REGISTER(dcdc, CONFIG_DCDC_LOG_LEVEL);
 
 extern DeviceStatus dev_stat;
 
-Dcdc::Dcdc(DcBus *high, DcBus *low, DcdcOperationMode op_mode)
+Dcdc::Dcdc(const struct device *hb, DcBus *high, DcBus *low, DcdcOperationMode op_mode)
 {
+    half_bridge = hb;
     hvb = high;
     lvb = low;
     mode = op_mode;
@@ -61,9 +63,15 @@ Dcdc::Dcdc(DcBus *high, DcBus *low, DcdcOperationMode op_mode)
     restart_interval = 60;
     off_timestamp = -10000; // start immediately
 
+    if (!device_is_ready(half_bridge)) {
+        LOG_ERR("Half bridge not ready");
+        enable = false;
+        return;
+    }
+
     // lower duty limit might have to be adjusted dynamically depending on LS voltage
-    half_bridge_init(DT_PROP(DT_INST(0, half_bridge), frequency) / 1000,
-                     DT_PROP(DT_INST(0, half_bridge), deadtime), 12 / hs_voltage_max, 0.97);
+    half_bridge_set_duty_limits(half_bridge, 12 / hs_voltage_max, 0.97);
+    half_bridge_set_duty_cycle(half_bridge, 0.97); // init with allowed value
 }
 
 void Dcdc::perturb_observe_buck()
@@ -186,7 +194,7 @@ __weak DcdcOperationMode Dcdc::check_start_conditions()
 bool Dcdc::check_hs_mosfet_short()
 {
     static uint32_t first_time_detected;
-    if (half_bridge_enabled() == false && inductor_current > 0.5F
+    if (half_bridge_is_enabled(half_bridge) == false && inductor_current > 0.5F
         && lvb->voltage_filtered > lvb->sink_control_voltage())
     {
         // if there is current even though the DC/DC is switched off, the
@@ -224,7 +232,7 @@ bool Dcdc::startup_inhibit(bool reset)
 
 __weak void Dcdc::control()
 {
-    if (half_bridge_enabled() == false) {
+    if (half_bridge_is_enabled(half_bridge) == false) {
 
         if (check_hs_mosfet_short()) {
             return;
@@ -249,21 +257,21 @@ __weak void Dcdc::control()
                 pwm_direction = BUCK_DUTY_POWER_INCREASE;
                 // Don't start directly at Vmpp (approx. 0.8 * Voc) to prevent high inrush
                 // currents and stress on MOSFETs
-                half_bridge_set_duty_cycle(lvb->voltage / (hvb->voltage - 1));
+                half_bridge_set_duty_cycle(half_bridge, lvb->voltage / (hvb->voltage - 1));
             }
             else {
                 mode_name = "boost";
                 pwm_direction = BOOST_DUTY_POWER_INCREASE;
                 // Will automatically start with max. duty (0.97) if connected to a
                 // nanogrid not yet started up (zero voltage)
-                half_bridge_set_duty_cycle(lvb->voltage / (hvb->voltage + 1));
+                half_bridge_set_duty_cycle(half_bridge, lvb->voltage / (hvb->voltage + 1));
             }
 
-            half_bridge_start();
+            half_bridge_start(half_bridge);
             power_good_timestamp = uptime();
             printf("DC/DC %s mode start (HV: %.2fV, LV: %.2fV, PWM: %.1f).\n", mode_name,
                    (double)hvb->voltage, (double)lvb->voltage,
-                   (double)half_bridge_get_duty_cycle() * 100.0);
+                   (double)half_bridge_get_duty_cycle(half_bridge) * 100.0);
         }
         else {
             startup_inhibit(true); // reset inhibit counter
@@ -287,7 +295,8 @@ __weak void Dcdc::control()
             }
 
             if (pwm_direction != 0) {
-                half_bridge_set_ccr(half_bridge_get_ccr() + pwm_direction * DUTY_STEP_SIZE);
+                half_bridge_set_compare(half_bridge, half_bridge_get_compare(half_bridge)
+                                                         + pwm_direction * DUTY_STEP_SIZE);
 
                 // requires floating point support with CONFIG_CBPRINTF_FP_SUPPORT=y
                 LOG_DBG("P %.2fW, inductor %.2fA, HS: %.2fV, %.2fA margin, "
@@ -296,7 +305,8 @@ __weak void Dcdc::control()
                         (double)power, (double)inductor_current, (double)hvb->voltage,
                         (double)hvb->src_current_margin, (double)lvb->voltage,
                         (double)lvb->sink_voltage_intercept, (double)lvb->sink_current_margin,
-                        (double)half_bridge_get_duty_cycle() * 100.0, state, pwm_direction);
+                        (double)half_bridge_get_duty_cycle(half_bridge) * 100.0, state,
+                        pwm_direction);
             }
             else {
                 stop_reason = "low power";
@@ -312,7 +322,7 @@ __weak void Dcdc::control()
 
 void Dcdc::test()
 {
-    if (half_bridge_enabled()) {
+    if (half_bridge_is_enabled(half_bridge)) {
         const char *stop_reason = NULL;
         if (lvb->voltage > ls_voltage_max || hvb->voltage > hs_voltage_max) {
             stop_reason = "emergency (voltage limits exceeded)";
@@ -321,11 +331,11 @@ void Dcdc::test()
             stop_reason = "disabled";
         }
         else {
-            if (half_bridge_get_duty_cycle() > 0.50f) {
-                half_bridge_set_ccr(half_bridge_get_ccr() - 1);
+            if (half_bridge_get_duty_cycle(half_bridge) > 0.50f) {
+                half_bridge_set_compare(half_bridge, half_bridge_get_compare(half_bridge) - 1);
             }
             else {
-                half_bridge_set_ccr(half_bridge_get_ccr() + 1);
+                half_bridge_set_compare(half_bridge, half_bridge_get_compare(half_bridge) + 1);
             }
         }
         if (stop_reason != NULL) {
@@ -340,11 +350,11 @@ void Dcdc::test()
                 return;
             }
 
-            half_bridge_set_duty_cycle(lvb->voltage / hvb->voltage);
-            half_bridge_start();
+            half_bridge_set_duty_cycle(half_bridge, lvb->voltage / hvb->voltage);
+            half_bridge_start(half_bridge);
             printf("DC/DC test mode start (HV: %.2fV, LV: %.2fV, PWM: %.1f).\n",
                    (double)hvb->voltage, (double)lvb->voltage,
-                   (double)half_bridge_get_duty_cycle() * 100.0);
+                   (double)half_bridge_get_duty_cycle(half_bridge) * 100.0);
         }
         else {
             startup_inhibit(true); // reset inhibit counter
@@ -354,7 +364,7 @@ void Dcdc::test()
 
 void Dcdc::stop()
 {
-    half_bridge_stop();
+    half_bridge_stop(half_bridge);
     state = DCDC_CONTROL_OFF;
     off_timestamp = uptime();
     output_hvs_disable();
@@ -367,10 +377,11 @@ void Dcdc::fuse_destruction()
     if (counter > 20) { // wait 20s to be able to send out data
         LOG_ERR("Charge controller fuse destruction called!\n");
         thingset_storage_save();
-        half_bridge_stop();
-        half_bridge_init(50, 0, 0, 0.98); // reset safety limits to allow 0% duty cycle
-        half_bridge_set_duty_cycle(0);
-        half_bridge_start();
+        half_bridge_stop(half_bridge);
+        // reset safety limits to allow 0% duty cycle
+        half_bridge_set_duty_limits(half_bridge, 0, 0.98);
+        half_bridge_set_duty_cycle(half_bridge, 0);
+        half_bridge_start(half_bridge);
         // now the fuse should be triggered and we disappear
     }
     counter++;
@@ -400,7 +411,7 @@ void Dcdc::output_hvs_disable()
 
 #else
 
-Dcdc::Dcdc(DcBus *high, DcBus *low, DcdcOperationMode op_mode)
+Dcdc::Dcdc(const struct device *hb, DcBus *high, DcBus *low, DcdcOperationMode op_mode)
 {}
 
 #endif /* BOARD_HAS_DCDC */

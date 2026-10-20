@@ -15,12 +15,13 @@
 #include "helper.h"
 #include "setup.h"
 
+#include <libresolar/drivers/half_bridge.h>
+
 #include "bat_charger.h"   // battery settings and charger state machine
 #include "daq.h"           // ADC using DMA and conversion to measurement values
 #include "data_objects.h"  // for access to internal data via ThingSet
 #include "dcdc.h"          // DC/DC converter control (hardware independent)
 #include "device_status.h" // log data (error memory, min/max measurements, etc.)
-#include "half_bridge.h"   // PWM generation for DC/DC converter
 #include "hardware.h" // hardware-related functions like load switch, LED control, watchdog, etc.
 #include "leds.h"     // LED switching using charlieplexing
 #include "load.h"     // load and USB output management
@@ -154,7 +155,7 @@ void control_thread()
 #if BOARD_HAS_DCDC
         hv_terminal.update_bus_current_margins();
         dcdc.control(); // control of DC/DC including MPPT algorithm
-        charging |= half_bridge_enabled();
+        charging |= half_bridge_is_enabled(dcdc.half_bridge);
 #endif
 
         leds_set_charging(charging);

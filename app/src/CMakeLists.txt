@@ -8,7 +8,6 @@ target_sources(app PRIVATE
         daq_driver.c
         device_status.cpp
         dcdc.cpp
-        half_bridge.c
         hardware.cpp
         oled.cpp
         leds.cpp

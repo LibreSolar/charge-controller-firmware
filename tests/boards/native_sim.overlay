@@ -130,15 +130,12 @@
 		};
 	};
 
-        timers1: timers1 {
-                status = "okay";
-
-                halfbridge: halfbridge {
-                        compatible = "half-bridge";
-                        frequency = <70000>;
-                        deadtime = <300>;
-                };
-        };
+	halfbridge: halfbridge {
+		compatible = "libresolar,half-bridge-emul";
+		clock-frequency = <24000000>;
+		frequency = <70000>;
+		deadtime-ns = <300>;
+	};
 
 	timers3: timers {
 		status = "okay";

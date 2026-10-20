@@ -6,7 +6,6 @@
 
 #include "hardware.h"
 
-#include "half_bridge.h"
 #include "helper.h"
 #include "leds.h"
 #include "load.h"

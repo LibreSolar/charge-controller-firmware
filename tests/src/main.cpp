@@ -33,7 +33,6 @@ int main()
     err += daq_tests();
     err += bat_charger_tests();
     err += power_port_tests();
-    err += half_bridge_tests();
     err += dcdc_tests();
     err += device_status_tests();
     err += load_tests();

@@ -13,8 +13,6 @@ int daq_tests();
 
 int power_port_tests();
 
-int half_bridge_tests();
-
 int dcdc_tests();
 
 int device_status_tests();

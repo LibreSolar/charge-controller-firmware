@@ -181,11 +181,13 @@
 	status = "okay";
 
 	halfbridge: halfbridge {
-		compatible = "half-bridge";
+		compatible = "libresolar,stm32-half-bridge";
 		pinctrl-0 = <&tim1_ch1_pa8 &tim1_ch1n_pb13>;
 		pinctrl-names = "default";
+		channel = <1>;
 		frequency = <70000>;
-		deadtime = <300>;
+		deadtime-ns = <300>;
+		adc-trigger;
 	};
 };
 

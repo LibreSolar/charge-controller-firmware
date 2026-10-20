@@ -19,7 +19,6 @@
 #include "data_objects.h"  // for access to internal data via ThingSet
 #include "dcdc.h"          // DC/DC converter control (hardware independent)
 #include "device_status.h" // log data (error memory, min/max measurements, etc.)
-#include "half_bridge.h"   // PWM generation for DC/DC converter
 #include "hardware.h"   // hardware-related functions like load switch, LED control, watchdog, etc.
 #include "leds.h"       // LED switching using charlieplexing
 #include "load.h"       // load and USB output management
@@ -32,11 +31,11 @@ PowerPort lv_terminal(&lv_bus, true); // low voltage terminal (battery for typic
 DcBus hv_bus;
 PowerPort hv_terminal(&hv_bus, true); // high voltage terminal (solar for typical MPPT)
 #if CONFIG_HV_TERMINAL_NANOGRID
-Dcdc dcdc(&hv_bus, &lv_bus, DCDC_MODE_AUTO);
+Dcdc dcdc(DEVICE_DT_GET(HALF_BRIDGE_NODE), &hv_bus, &lv_bus, DCDC_MODE_AUTO);
 #elif CONFIG_HV_TERMINAL_BATTERY
-Dcdc dcdc(&hv_bus, &lv_bus, DCDC_MODE_BOOST);
+Dcdc dcdc(DEVICE_DT_GET(HALF_BRIDGE_NODE), &hv_bus, &lv_bus, DCDC_MODE_BOOST);
 #else
-Dcdc dcdc(&hv_bus, &lv_bus, DCDC_MODE_BUCK);
+Dcdc dcdc(DEVICE_DT_GET(HALF_BRIDGE_NODE), &hv_bus, &lv_bus, DCDC_MODE_BUCK);
 #endif // CONFIG_HV_TERMINAL
 #endif
 

@@ -30,7 +30,6 @@ target_sources(app PRIVATE
         src/tests_daq.cpp
         src/tests_dcdc.cpp
         src/tests_device_status.cpp
-        src/tests_half_bridge.cpp
         src/tests_load.cpp
         src/tests_power_port.cpp
 )

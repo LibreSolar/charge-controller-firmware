@@ -105,7 +105,8 @@
 		hrtim1: timers@40016800 {
 			compatible = "st,stm32-timers";
 			reg = <0x40016800 0x400>;
-			clocks = <&rcc STM32_CLOCK(APB2, 26)>;
+			clocks = <&rcc STM32_CLOCK(APB2, 26)>,
+				 <&rcc STM32_SRC_TIMPCLK2 NO_SEL>;
 			resets = <&rctl STM32_RESET(APB2, 26)>;
 			interrupts = <67 0>, <68 0>, <69 0>, <70 0>,
 				     <71 0>, <72 0>, <73 0>, <74 0>;
@@ -121,11 +122,12 @@
 	status = "okay";
 
 	halfbridge: halfbridge {
-		compatible = "half-bridge";
+		compatible = "libresolar,stm32-hrtim-half-bridge";
 		pinctrl-0 = <&hrtim1_cha1_pa8 &hrtim1_cha2_pa9>;
 		pinctrl-names = "default";
 		frequency = <70000>;
-		deadtime = <300>;
+		deadtime-ns = <300>;
+		adc-trigger;
 	};
 };
 
@@ -135,11 +137,13 @@
 	status = "okay";
 
 	halfbridge: halfbridge {
-		compatible = "half-bridge";
+		compatible = "libresolar,stm32-half-bridge";
 		pinctrl-0 = <&tim1_ch1_pa8 &tim1_ch1n_pb13>;
 		pinctrl-names = "default";
+		channel = <1>;
 		frequency = <70000>;
-		deadtime = <300>;
+		deadtime-ns = <300>;
+		adc-trigger;
 	};
 };
 */

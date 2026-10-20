@@ -15,7 +15,8 @@
 
 #include "oled_ssd1306.h"
 
-#include "half_bridge.h"
+#include <libresolar/drivers/half_bridge.h>
+
 #include "setup.h"
 
 #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), uext_en))
@@ -57,7 +58,7 @@ void oled_update()
     oled.drawBitmap(6, 0, bmp_pv_panel, 16, 16, 1);
     oled.drawBitmap(104, 0, bmp_load, 16, 16, 1);
 
-    if (half_bridge_enabled() == false) {
+    if (half_bridge_is_enabled(dcdc.half_bridge) == false) {
         oled.drawBitmap(27, 3, bmp_disconnected, 32, 8, 1);
     }
     else {
@@ -94,7 +95,7 @@ void oled_update()
 #if BOARD_HAS_PWM_PORT
     if (pwm_switch.active()) {
 #else
-    if (half_bridge_enabled()) {
+    if (half_bridge_is_enabled(dcdc.half_bridge)) {
 #endif
         oled.setTextCursor(0, 18);
         len = snprintf(buf, sizeof(buf), "%4.0fW",
@@ -149,8 +150,8 @@ void oled_update()
     bool pwm_enabled = pwm_switch.active();
     float duty_cycle = pwm_switch.get_duty_cycle();
 #else
-    bool pwm_enabled = half_bridge_enabled();
-    float duty_cycle = half_bridge_get_duty_cycle();
+    bool pwm_enabled = half_bridge_is_enabled(dcdc.half_bridge);
+    float duty_cycle = half_bridge_get_duty_cycle(dcdc.half_bridge);
 #endif
 
     float temp = charger.ext_temp_sensor ? charger.bat_temperature : dev_stat.internal_temp;
