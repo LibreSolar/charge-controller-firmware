@@ -1,0 +1,22 @@
+# Copyright (c) The Libre Solar Project Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig HALF_BRIDGE
+    bool "Half-bridge drivers"
+    help
+      Enable drivers for half bridges consisting of two complementary PWM outputs with dead time,
+      e.g. used in DC/DC converters.
+
+if HALF_BRIDGE
+
+config HALF_BRIDGE_INIT_PRIORITY
+    int "Half-bridge init priority"
+    default KERNEL_INIT_PRIORITY_DEVICE
+    help
+      Half-bridge driver device initialization priority.
+
+module = HALF_BRIDGE
+module-str = half_bridge
+source "subsys/logging/Kconfig.template.log_config"
+
+endif # HALF_BRIDGE

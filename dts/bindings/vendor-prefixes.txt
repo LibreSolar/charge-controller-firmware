@@ -1,0 +1,6 @@
+# Copyright (c) The Libre Solar Project Contributors
+# SPDX-License-Identifier: Apache-2.0
+#
+# Additional devicetree vendor prefixes used in this module
+
+libresolar	Libre Solar Project

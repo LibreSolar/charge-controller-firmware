@@ -1,0 +1,16 @@
+# Copyright (c) The Libre Solar Project Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+description: Common properties for half bridges consisting of two complementary PWM outputs
+
+properties:
+  frequency:
+    type: int
+    required: true
+    description: Switching frequency in Hz
+
+  deadtime-ns:
+    type: int
+    required: true
+    description: |
+      Dead time in nanoseconds between switching off one MOSFET and switching on the other one
