@@ -44,6 +44,11 @@ struct half_bridge_stm32_tim_config
     static const struct stm32_pclken half_bridge_stm32_tim_pclken_##n[] = \
         STM32_DT_CLOCKS(DT_INST_PARENT(n));
 
+/*
+ * Formatting disabled, as different clang-format versions disagree on braced lists in macros.
+ */
+/* clang-format off */
+
 /**
  * Initializer for struct half_bridge_stm32_tim_config of instance n
  */
@@ -55,6 +60,8 @@ struct half_bridge_stm32_tim_config
         .reset = RESET_DT_SPEC_GET(DT_INST_PARENT(n)), \
         .pcfg = PINCTRL_DT_INST_DEV_CONFIG_GET(n), \
     }
+
+/* clang-format on */
 
 /** LL channel definitions for channels 1 to 4 */
 extern const uint32_t half_bridge_stm32_tim_ll_channels[4];
