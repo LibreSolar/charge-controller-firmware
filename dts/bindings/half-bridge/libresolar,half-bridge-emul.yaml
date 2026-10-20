@@ -1,0 +1,17 @@
+# Copyright (c) The Libre Solar Project Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+description: |
+  Emulated half bridge for tests on native_sim
+
+  Behaves like an edge-aligned timer, i.e. the period is clock-frequency / frequency.
+
+compatible: "libresolar,half-bridge-emul"
+
+include: [base.yaml, half-bridge-common.yaml]
+
+properties:
+  clock-frequency:
+    type: int
+    default: 24000000
+    description: Emulated timer clock frequency in Hz

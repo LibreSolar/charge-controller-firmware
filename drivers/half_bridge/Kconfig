@@ -3,6 +3,7 @@
 
 menuconfig HALF_BRIDGE
     bool "Half-bridge drivers"
+    default y if DT_HAS_LIBRESOLAR_HALF_BRIDGE_EMUL_ENABLED
     help
       Enable drivers for half bridges consisting of two complementary PWM outputs with dead time,
       e.g. used in DC/DC converters.
@@ -18,5 +19,12 @@ config HALF_BRIDGE_INIT_PRIORITY
 module = HALF_BRIDGE
 module-str = half_bridge
 source "subsys/logging/Kconfig.template.log_config"
+
+config HALF_BRIDGE_EMUL
+    bool "Emulated half-bridge driver"
+    default y
+    depends on DT_HAS_LIBRESOLAR_HALF_BRIDGE_EMUL_ENABLED
+    help
+      Enable emulated half-bridge driver for tests on native_sim.
 
 endif # HALF_BRIDGE
