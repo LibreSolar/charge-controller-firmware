@@ -1,0 +1,14 @@
+/*
+ * Copyright (c) The Libre Solar Project Contributors
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/ {
+	halfbridge: half-bridge {
+		compatible = "libresolar,half-bridge-emul";
+		clock-frequency = <24000000>;
+		frequency = <70000>;
+		deadtime-ns = <300>;
+	};
+};

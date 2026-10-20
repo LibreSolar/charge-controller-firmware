@@ -52,3 +52,7 @@ jobs:
       - name: Run tests
         run: |
           west build -b native_sim -t run tests -p
+
+      - name: Run driver tests
+        run: |
+          west twister -T tests/drivers --integration --inline-logs

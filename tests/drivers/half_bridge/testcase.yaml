@@ -8,3 +8,19 @@ tests:
       - native_sim/native/64
     integration_platforms:
       - native_sim
+  # The tests switch the power stage of real hardware, so they must only be built for the boards.
+  drivers.half_bridge.stm32:
+    build_only: true
+    tags:
+      - drivers
+      - half_bridge
+    platform_allow:
+      - mppt_1210_hus
+      - mppt_2420_hc
+      - mppt_2420_lc
+      - nucleo_g474re
+    integration_platforms:
+      - mppt_1210_hus
+      - mppt_2420_hc
+      - mppt_2420_lc
+      - nucleo_g474re

@@ -1,0 +1,34 @@
+/*
+ * Copyright (c) The Libre Solar Project Contributors
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/* HRTIM node is not yet defined in Zephyr's STM32G4 devicetree */
+
+/ {
+	soc {
+		hrtim1: timers@40016800 {
+			compatible = "st,stm32-timers";
+			reg = <0x40016800 0x400>;
+			clocks = <&rcc STM32_CLOCK(APB2, 26)>,
+				 <&rcc STM32_SRC_TIMPCLK2 NO_SEL>;
+			resets = <&rctl STM32_RESET(APB2, 26)>;
+			interrupts = <67 0>, <68 0>, <69 0>, <70 0>,
+				     <71 0>, <72 0>, <73 0>, <74 0>;
+			interrupt-names = "master", "tima", "timb", "timc",
+					  "timd", "time", "flt", "timf";
+			st,prescaler = <0>;
+			status = "okay";
+
+			halfbridge: halfbridge {
+				compatible = "libresolar,stm32-hrtim-half-bridge";
+				pinctrl-0 = <&hrtim1_cha1_pa8 &hrtim1_cha2_pa9>;
+				pinctrl-names = "default";
+				frequency = <70000>;
+				deadtime-ns = <300>;
+				adc-trigger;
+			};
+		};
+	};
+};
