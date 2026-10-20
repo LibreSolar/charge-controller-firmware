@@ -38,10 +38,14 @@ static void half_bridge_before(void *fixture)
 
 ZTEST(half_bridge, test_period_from_devicetree)
 {
+#if DT_NODE_HAS_COMPAT(HALF_BRIDGE_NODE, libresolar_half_bridge_emul)
     uint32_t expected =
         DT_PROP(HALF_BRIDGE_NODE, clock_frequency) / DT_PROP(HALF_BRIDGE_NODE, frequency);
 
     zassert_equal(half_bridge_get_period(dev), expected);
+#else
+    ztest_test_skip();
+#endif
 }
 
 ZTEST(half_bridge, test_set_duty_cycle)

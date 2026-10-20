@@ -3,6 +3,7 @@
 
 menuconfig HALF_BRIDGE
     bool "Half-bridge drivers"
+    default y if DT_HAS_LIBRESOLAR_STM32_HALF_BRIDGE_ENABLED
     default y if DT_HAS_LIBRESOLAR_HALF_BRIDGE_EMUL_ENABLED
     help
       Enable drivers for half bridges consisting of two complementary PWM outputs with dead time,
@@ -19,6 +20,16 @@ config HALF_BRIDGE_INIT_PRIORITY
 module = HALF_BRIDGE
 module-str = half_bridge
 source "subsys/logging/Kconfig.template.log_config"
+
+config HALF_BRIDGE_STM32
+    bool "STM32 timer half-bridge driver"
+    default y
+    depends on DT_HAS_LIBRESOLAR_STM32_HALF_BRIDGE_ENABLED
+    select USE_STM32_LL_TIM
+    select PINCTRL
+    select RESET
+    help
+      Enable half-bridge driver for STM32 timers (TIM).
 
 config HALF_BRIDGE_EMUL
     bool "Emulated half-bridge driver"
