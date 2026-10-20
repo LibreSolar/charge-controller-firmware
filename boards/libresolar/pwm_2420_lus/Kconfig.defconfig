@@ -3,15 +3,11 @@
 
 if BOARD_PWM_2420_LUS
 
-config LIBRE_SOLAR_TYPE_ID
-	default 5
-
 if SPI
 
 config SPI_STM32_INTERRUPT
 	default y
 
 endif # SPI
-
 
 endif # BOARD_PWM_2420_LUS

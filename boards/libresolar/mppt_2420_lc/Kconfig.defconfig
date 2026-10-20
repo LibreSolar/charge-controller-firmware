@@ -3,9 +3,6 @@
 
 if BOARD_MPPT_2420_LC
 
-config LIBRE_SOLAR_TYPE_ID
-	default 1
-
 if SPI
 
 config SPI_STM32_INTERRUPT
