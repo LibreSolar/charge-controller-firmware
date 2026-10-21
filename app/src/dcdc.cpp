@@ -232,6 +232,12 @@ bool Dcdc::startup_inhibit(bool reset)
 
 __weak void Dcdc::control()
 {
+    if (dev_stat.has_error(ERR_DCDC_HS_MOSFET_SHORT)) {
+        // DC/DC must not be operated anymore and the low-side switch might be forced on to blow
+        // the fuse, so don't touch the half bridge
+        return;
+    }
+
     if (half_bridge_is_enabled(half_bridge) == false) {
 
         if (check_hs_mosfet_short()) {
@@ -375,13 +381,14 @@ void Dcdc::fuse_destruction()
     static int counter = 0;
 
     if (counter > 20) { // wait 20s to be able to send out data
-        LOG_ERR("Charge controller fuse destruction called!\n");
-        thingset_storage_save();
-        half_bridge_stop(half_bridge);
-        // reset safety limits to allow 0% duty cycle
-        half_bridge_set_duty_limits(half_bridge, 0, 0.98);
-        half_bridge_set_duty_cycle(half_bridge, 0);
-        half_bridge_start(half_bridge);
+        if (counter == 21) {
+            LOG_ERR("Charge controller fuse destruction called!\n");
+#ifdef CONFIG_THINGSET_STORAGE
+            thingset_storage_save();
+#endif
+        }
+        // repeated in case the half bridge was stopped in the meantime
+        half_bridge_force_low_side(half_bridge);
         // now the fuse should be triggered and we disappear
     }
     counter++;

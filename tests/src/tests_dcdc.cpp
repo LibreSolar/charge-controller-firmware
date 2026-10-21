@@ -415,6 +415,36 @@ void boost_correct_mppt_operation()
     TEST_ASSERT(pwm3 > pwm2);
 }
 
+void fuse_destruction_forces_low_side_on()
+{
+    start_buck();
+    dev_stat.set_error(ERR_DCDC_HS_MOSFET_SHORT);
+
+    // fuse destruction is delayed by 21 calls (seconds) to be able to send out data
+    for (int i = 0; i < 21; i++) {
+        dcdc.fuse_destruction();
+    }
+    TEST_ASSERT_NOT_EQUAL(0, half_bridge_get_compare(dcdc.half_bridge));
+
+    dcdc.fuse_destruction();
+    TEST_ASSERT_TRUE(half_bridge_is_enabled(dcdc.half_bridge));
+    TEST_ASSERT_EQUAL(0, half_bridge_get_compare(dcdc.half_bridge));
+
+    // control loop must not override the forced low side
+    dcdc.control();
+    TEST_ASSERT_TRUE(half_bridge_is_enabled(dcdc.half_bridge));
+    TEST_ASSERT_EQUAL(0, half_bridge_get_compare(dcdc.half_bridge));
+
+    // forced state is restored after the half bridge was stopped
+    dcdc.stop();
+    dcdc.fuse_destruction();
+    TEST_ASSERT_TRUE(half_bridge_is_enabled(dcdc.half_bridge));
+    TEST_ASSERT_EQUAL(0, half_bridge_get_compare(dcdc.half_bridge));
+
+    dcdc.stop();
+    dev_stat.clear_error(ERR_DCDC_HS_MOSFET_SHORT);
+}
+
 int dcdc_tests()
 {
     UNITY_BEGIN();
@@ -473,6 +503,8 @@ int dcdc_tests()
     RUN_TEST(boost_stop_input_power_too_low);
     RUN_TEST(boost_stop_high_voltage_emergency);
     RUN_TEST(boost_correct_mppt_operation);
+
+    RUN_TEST(fuse_destruction_forces_low_side_on);
 
     return UNITY_END();
 }
