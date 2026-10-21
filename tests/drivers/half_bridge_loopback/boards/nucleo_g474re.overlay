@@ -39,23 +39,26 @@
 	status = "disabled";
 };
 
-/* pull-downs, as some half bridges leave their outputs floating if disabled */
+/*
+ * Pull-ups to detect outputs which are not actively driven low when switched off. The outputs
+ * must never be left floating, as the gate drivers would switch on the MOSFETs.
+ */
 &tim2_ch1_pa0 {
-	bias-pull-down;
+	bias-pull-up;
 };
 
 &tim2_ch2_pa1 {
-	bias-pull-down;
+	bias-pull-up;
 };
 
 &tim2_ch3_pb10 {
-	bias-pull-down;
+	bias-pull-up;
 };
 
 &tim5_ch1_pb2 {
-	bias-pull-down;
+	bias-pull-up;
 };
 
 &tim5_ch2_pc12 {
-	bias-pull-down;
+	bias-pull-up;
 };
