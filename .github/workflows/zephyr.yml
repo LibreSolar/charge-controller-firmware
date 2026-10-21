@@ -41,13 +41,7 @@ jobs:
 
       - name: Build firmware
         run: |
-          west build -b mppt_1210_hus app -p
-          west build -b mppt_2420_hc app -p
-          west build -b mppt_2420_hpx app -p
-          west build -b mppt_2420_lc app -p
-          west build -b mppt_2420_rc app -p
-          west build -b nucleo_g474re app -p
-          west build -b pwm_2420_lus app -p
+          west twister -T app --integration --inline-logs
 
       - name: Run tests
         run: |

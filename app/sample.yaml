@@ -1,0 +1,20 @@
+sample:
+  name: Libre Solar charge controller firmware
+common:
+  build_only: true
+  tags:
+    - charge_controller
+tests:
+  charge_controller.firmware:
+    platform_allow: &boards
+      - mppt_1210_hus@0.4.0
+      - mppt_1210_hus@0.7.0
+      - mppt_2420_hc@0.1.0
+      - mppt_2420_hc@0.2.0
+      - mppt_2420_hpx
+      - mppt_2420_lc
+      - mppt_2420_rc
+      - nucleo_g474re
+      - pwm_2420_lus@0.2.0
+      - pwm_2420_lus@0.3.0
+    integration_platforms: *boards
