@@ -22,6 +22,7 @@
 		hs-voltage-max = <80>;
 		ls-voltage-max = <32>;
 		dcdc-current-max = <20>;
+		ls-fuse;
 	};
 
 	chosen {

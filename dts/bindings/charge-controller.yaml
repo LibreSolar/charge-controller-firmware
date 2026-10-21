@@ -29,6 +29,14 @@ properties:
   dcdc-current-max:
     type: int
     description: Maximum inductor current in amps (if existing in the charge controller)
+  ls-fuse:
+    type: boolean
+    description: |
+      Low-side (typically battery) terminal is protected by a fuse
+
+      The fuse can be blown by switching on the low-side MOSFET of the DC/DC converter
+      continuously, which shorts the low-side terminal through the inductor. This is used to
+      prevent overcharging of the battery in case of a shorted high-side MOSFET.
   internal-tref-max:
     type: int
     default: 50

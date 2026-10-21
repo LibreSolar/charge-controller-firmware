@@ -19,10 +19,14 @@ config CONTROL_FREQUENCY
 config HS_MOSFET_FAIL_SAFE_PROTECTION
     bool
     default y
+    depends on $(dt_node_bool_prop,/pcb,ls-fuse)
     help
-      If enabled, the DC/DC control function will will detect if the high-side MOSFET has failed
+      If enabled, the DC/DC control function will detect if the high-side MOSFET has failed
       short and trip the fuse by switching the low-side MOSFET continuously on. This will prevent
       accidental overcharging of the battery.
+
+      Only available if the board has a fuse at the low-side terminal (ls-fuse property of the
+      pcb devicetree node).
 
 #
 # Visible (user-configurable) Kconfig symbols
