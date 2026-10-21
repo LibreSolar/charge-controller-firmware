@@ -1,8 +1,8 @@
 # Copyright (c) The Libre Solar Project Contributors
 # SPDX-License-Identifier: Apache-2.0
 
-set(BOARD_ROOT ${CMAKE_SOURCE_DIR}/..)
-set(DTS_ROOT ${CMAKE_SOURCE_DIR}/..)
+set(BOARD_ROOT ${CMAKE_SOURCE_DIR}/../..)
+set(DTS_ROOT ${CMAKE_SOURCE_DIR}/../..)
 
 #set(BOARD "native_posix")
 #set(ZEPHYR_TOOLCHAIN_VARIANT "host")
@@ -15,16 +15,16 @@ add_definitions(-DUNIT_TEST=1)
 add_definitions(-DUNITY_OUTPUT_COLOR)
 add_definitions(-DUNITY_EXCLUDE_SETJMP)
 
-add_subdirectory(../app/src build/app)
+add_subdirectory(../../app/src build/app)
 
 zephyr_include_directories(./src)
-zephyr_include_directories(../app/src)
+zephyr_include_directories(../../app/src)
 
-zephyr_include_directories(../../modules/thingset/src)
-zephyr_include_directories(../../modules/unity/src)
+zephyr_include_directories(../../../modules/thingset/src)
+zephyr_include_directories(../../../modules/unity/src)
 
 target_sources(app PRIVATE
-        ../../modules/unity/src/unity.c
+        ../../../modules/unity/src/unity.c
         src/main.cpp
         src/tests_bat_charger.cpp
         src/tests_daq.cpp

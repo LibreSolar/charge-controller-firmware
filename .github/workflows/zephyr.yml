@@ -45,7 +45,7 @@ jobs:
 
       - name: Run tests
         run: |
-          west build -b native_sim -t run tests -p
+          west build -b native_sim -t run tests/app -p
 
       - name: Run driver tests
         run: |
