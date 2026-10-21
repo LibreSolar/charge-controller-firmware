@@ -22,60 +22,60 @@ static void init_structs()
     bat_terminal.current = 0;
 }
 
-void no_start_at_high_voltage()
+ZTEST(bat_charger, test_no_start_at_high_voltage)
 {
     init_structs();
     bat_terminal.bus->voltage = bat_conf.recharge_voltage + 0.1f;
     charger.charge_control(&bat_conf);
-    TEST_ASSERT_EQUAL(CHG_STATE_IDLE, charger.state);
+    zassert_equal(charger.state, CHG_STATE_IDLE);
 }
 
-void no_start_after_short_rest()
+ZTEST(bat_charger, test_no_start_after_short_rest)
 {
     init_structs();
     charger.time_state_changed = time(NULL) - bat_conf.time_limit_recharge + 1;
     bat_terminal.bus->voltage = bat_conf.recharge_voltage - 0.1f;
     charger.charge_control(&bat_conf);
-    TEST_ASSERT_EQUAL(CHG_STATE_IDLE, charger.state);
+    zassert_equal(charger.state, CHG_STATE_IDLE);
 }
 
-void no_start_outside_temperature_limits()
+ZTEST(bat_charger, test_no_start_outside_temperature_limits)
 {
     init_structs();
     charger.bat_temperature = bat_conf.charge_temp_max + 1;
     bat_terminal.bus->voltage = bat_conf.recharge_voltage - 0.1f;
     charger.charge_control(&bat_conf);
-    TEST_ASSERT_EQUAL(CHG_STATE_IDLE, charger.state);
+    zassert_equal(charger.state, CHG_STATE_IDLE);
 
     charger.bat_temperature = bat_conf.charge_temp_min - 1;
     charger.charge_control(&bat_conf);
-    TEST_ASSERT_EQUAL(CHG_STATE_IDLE, charger.state);
+    zassert_equal(charger.state, CHG_STATE_IDLE);
 }
 
-void start_if_everything_just_fine()
+ZTEST(bat_charger, test_start_if_everything_just_fine)
 {
     init_structs();
     charger.time_state_changed = time(NULL) - bat_conf.time_limit_recharge - 1;
     bat_terminal.bus->voltage = bat_conf.recharge_voltage - 0.1f;
     charger.charge_control(&bat_conf);
-    TEST_ASSERT_EQUAL(CHG_STATE_BULK, charger.state);
+    zassert_equal(charger.state, CHG_STATE_BULK);
 }
 
-void enter_topping_at_voltage_setpoint()
+static void enter_topping_at_voltage_setpoint()
 {
     init_structs();
     charger.time_state_changed = time(NULL) - bat_conf.time_limit_recharge - 1;
     bat_terminal.bus->voltage = bat_conf.recharge_voltage - 0.1f;
     bat_terminal.bus->voltage_filtered = bat_terminal.bus->voltage;
     charger.charge_control(&bat_conf);
-    TEST_ASSERT_EQUAL(CHG_STATE_BULK, charger.state);
+    zassert_equal(charger.state, CHG_STATE_BULK);
     bat_terminal.bus->voltage = bat_conf.topping_voltage + 0.1f;
     bat_terminal.bus->voltage_filtered = bat_terminal.bus->voltage;
     charger.charge_control(&bat_conf);
-    TEST_ASSERT_EQUAL(CHG_STATE_TOPPING, charger.state);
+    zassert_equal(charger.state, CHG_STATE_TOPPING);
 }
 
-void topping_to_bulk_after_8h_low_power()
+ZTEST(bat_charger, test_topping_to_bulk_after_8h_low_power)
 {
     enter_topping_at_voltage_setpoint();
 
@@ -86,14 +86,14 @@ void topping_to_bulk_after_8h_low_power()
     bat_terminal.current_filtered = bat_terminal.current;
 
     charger.charge_control(&bat_conf);
-    TEST_ASSERT_EQUAL(CHG_STATE_TOPPING, charger.state);
+    zassert_equal(charger.state, CHG_STATE_TOPPING);
 
     charger.time_state_changed = time(NULL) - 8 * 60 * 60 - 1;
     charger.charge_control(&bat_conf);
-    TEST_ASSERT_EQUAL(CHG_STATE_BULK, charger.state);
+    zassert_equal(charger.state, CHG_STATE_BULK);
 }
 
-void stop_topping_after_time_limit()
+ZTEST(bat_charger, test_stop_topping_after_time_limit)
 {
     enter_topping_at_voltage_setpoint();
 
@@ -105,14 +105,14 @@ void stop_topping_after_time_limit()
     bat_terminal.bus->voltage_filtered = bat_terminal.bus->voltage;
 
     charger.charge_control(&bat_conf);
-    TEST_ASSERT_EQUAL(CHG_STATE_TOPPING, charger.state);
+    zassert_equal(charger.state, CHG_STATE_TOPPING);
 
     charger.target_voltage_timer = bat_conf.topping_duration + 1;
     charger.charge_control(&bat_conf);
-    TEST_ASSERT_EQUAL(CHG_STATE_FLOAT, charger.state);
+    zassert_equal(charger.state, CHG_STATE_FLOAT);
 }
 
-void stop_topping_at_cutoff_current()
+ZTEST(bat_charger, test_stop_topping_at_cutoff_current)
 {
     enter_topping_at_voltage_setpoint();
 
@@ -123,10 +123,10 @@ void stop_topping_at_cutoff_current()
         bat_conf.topping_voltage - bat_terminal.current * bat_terminal.bus->sink_droop_res + 0.1f;
     bat_terminal.bus->voltage_filtered = bat_terminal.bus->voltage;
     charger.charge_control(&bat_conf);
-    TEST_ASSERT_EQUAL(CHG_STATE_FLOAT, charger.state);
+    zassert_equal(charger.state, CHG_STATE_FLOAT);
 }
 
-void float_to_idle_for_li_ion()
+ZTEST(bat_charger, test_float_to_idle_for_li_ion)
 {
     enter_topping_at_voltage_setpoint();
     battery_conf_init(&bat_conf, BAT_TYPE_LFP, 4, 100);
@@ -136,10 +136,10 @@ void float_to_idle_for_li_ion()
     bat_terminal.bus->voltage =
         bat_conf.topping_voltage - bat_terminal.current * bat_terminal.bus->sink_droop_res + 0.1f;
     charger.charge_control(&bat_conf);
-    TEST_ASSERT_EQUAL(CHG_STATE_IDLE, charger.state);
+    zassert_equal(charger.state, CHG_STATE_IDLE);
 }
 
-void no_equalization_if_disabled()
+ZTEST(bat_charger, test_no_equalization_if_disabled)
 {
     enter_topping_at_voltage_setpoint();
     bat_conf.equalization_enabled = false;
@@ -153,10 +153,10 @@ void no_equalization_if_disabled()
     bat_terminal.bus->voltage = bat_conf.topping_voltage + 0.1f;
     bat_terminal.current = bat_conf.topping_cutoff_current - 0.1f;
     charger.charge_control(&bat_conf);
-    TEST_ASSERT_NOT_EQUAL(CHG_STATE_EQUALIZATION, charger.state);
+    zassert_not_equal(charger.state, CHG_STATE_EQUALIZATION);
 }
 
-void no_equalization_if_limits_not_reached()
+ZTEST(bat_charger, test_no_equalization_if_limits_not_reached)
 {
     enter_topping_at_voltage_setpoint();
     bat_conf.equalization_enabled = true;
@@ -171,10 +171,10 @@ void no_equalization_if_limits_not_reached()
     bat_terminal.bus->voltage = bat_conf.topping_voltage + 0.1f;
     bat_terminal.current = bat_conf.topping_cutoff_current - 0.1f;
     charger.charge_control(&bat_conf);
-    TEST_ASSERT_NOT_EQUAL(CHG_STATE_EQUALIZATION, charger.state);
+    zassert_not_equal(charger.state, CHG_STATE_EQUALIZATION);
 }
 
-void float_to_equalization_if_enabled_and_time_limit_reached()
+static void float_to_equalization_if_enabled_and_time_limit_reached()
 {
     enter_topping_at_voltage_setpoint();
     bat_conf.equalization_enabled = true;
@@ -185,10 +185,10 @@ void float_to_equalization_if_enabled_and_time_limit_reached()
     bat_terminal.bus->voltage =
         bat_conf.topping_voltage - bat_terminal.current * bat_terminal.bus->sink_droop_res + 0.1f;
     charger.charge_control(&bat_conf);
-    TEST_ASSERT_EQUAL(CHG_STATE_EQUALIZATION, charger.state);
+    zassert_equal(charger.state, CHG_STATE_EQUALIZATION);
 }
 
-void float_to_equalization_if_enabled_and_deep_dis_limit_reached()
+ZTEST(bat_charger, test_float_to_equalization_if_enabled_and_deep_dis_limit_reached)
 {
     enter_topping_at_voltage_setpoint();
     bat_conf.equalization_enabled = true;
@@ -200,10 +200,10 @@ void float_to_equalization_if_enabled_and_deep_dis_limit_reached()
     bat_terminal.bus->voltage =
         bat_conf.topping_voltage - bat_terminal.current * bat_terminal.bus->sink_droop_res + 0.1f;
     charger.charge_control(&bat_conf);
-    TEST_ASSERT_EQUAL(CHG_STATE_EQUALIZATION, charger.state);
+    zassert_equal(charger.state, CHG_STATE_EQUALIZATION);
 }
 
-void stop_equalization_after_time_limit()
+ZTEST(bat_charger, test_stop_equalization_after_time_limit)
 {
     float_to_equalization_if_enabled_and_time_limit_reached();
 
@@ -212,127 +212,94 @@ void stop_equalization_after_time_limit()
                                 - bat_terminal.current * bat_terminal.bus->sink_droop_res + 0.1f;
 
     charger.charge_control(&bat_conf);
-    TEST_ASSERT_EQUAL(CHG_STATE_EQUALIZATION, charger.state);
+    zassert_equal(charger.state, CHG_STATE_EQUALIZATION);
 
     charger.time_state_changed = time(NULL) - bat_conf.topping_duration - 1;
     charger.charge_control(&bat_conf);
-    TEST_ASSERT_EQUAL(CHG_STATE_FLOAT, charger.state);
+    zassert_equal(charger.state, CHG_STATE_FLOAT);
 }
 
 void restart_bulk_from_float_if_voltage_drops()
 {
-    TEST_ASSERT(0);
+    zassert_true(0);
 }
 
-void stop_discharge_at_low_voltage()
+ZTEST(bat_charger, test_stop_discharge_at_low_voltage)
 {
     init_structs();
 
     bat_terminal.bus->voltage = 14;
     charger.discharge_control(&bat_conf);
-    TEST_ASSERT_LESS_THAN(0, bat_terminal.neg_current_limit);
+    zassert_true(bat_terminal.neg_current_limit < 0);
 
     bat_terminal.bus->voltage = bat_conf.absolute_min_voltage - 0.1f;
     charger.discharge_control(&bat_conf);
-    TEST_ASSERT_EQUAL(0, bat_terminal.neg_current_limit);
+    zassert_equal(bat_terminal.neg_current_limit, 0);
 }
 
-void stop_discharge_at_overtemp()
+ZTEST(bat_charger, test_stop_discharge_at_overtemp)
 {
     init_structs();
-    TEST_ASSERT_LESS_THAN(0, bat_terminal.neg_current_limit);
+    zassert_true(bat_terminal.neg_current_limit < 0);
 
     charger.bat_temperature = bat_conf.discharge_temp_max + 1;
     charger.discharge_control(&bat_conf);
-    TEST_ASSERT_EQUAL(0, bat_terminal.neg_current_limit);
+    zassert_equal(bat_terminal.neg_current_limit, 0);
 }
 
-void stop_discharge_at_undertemp()
+ZTEST(bat_charger, test_stop_discharge_at_undertemp)
 {
     init_structs();
-    TEST_ASSERT_LESS_THAN(0, bat_terminal.neg_current_limit);
+    zassert_true(bat_terminal.neg_current_limit < 0);
 
     charger.bat_temperature = bat_conf.discharge_temp_min - 1;
     charger.discharge_control(&bat_conf);
-    TEST_ASSERT_EQUAL(0, bat_terminal.neg_current_limit);
+    zassert_equal(bat_terminal.neg_current_limit, 0);
 }
 
-void restart_discharge_if_allowed()
+ZTEST(bat_charger, test_restart_discharge_if_allowed)
 {
     init_structs();
 
     // stop because of undervoltage
     bat_terminal.bus->voltage = bat_conf.absolute_min_voltage - 0.1f;
     charger.discharge_control(&bat_conf);
-    TEST_ASSERT_EQUAL(0, bat_terminal.neg_current_limit);
+    zassert_equal(bat_terminal.neg_current_limit, 0);
 
     // increase voltage slightly above absolute minimum
     bat_terminal.bus->voltage = bat_conf.absolute_min_voltage + 0.05f;
     charger.discharge_control(&bat_conf);
-    TEST_ASSERT_EQUAL(0, bat_terminal.neg_current_limit);
+    zassert_equal(bat_terminal.neg_current_limit, 0);
 
     // increase voltage above hysteresis voltage
     bat_terminal.bus->voltage = bat_conf.absolute_min_voltage + 0.15f;
     charger.discharge_control(&bat_conf);
-    TEST_ASSERT_LESS_THAN(0, bat_terminal.neg_current_limit);
+    zassert_true(bat_terminal.neg_current_limit < 0);
 }
 
 void battery_values_propagated_to_lv_bus_int()
 {
-    TEST_ASSERT(0);
+    zassert_true(0);
 }
 
 void no_soc_above_100()
 {
-    TEST_ASSERT(0);
+    zassert_true(0);
 }
 
 void no_soc_below_0()
 {
-    TEST_ASSERT(0);
+    zassert_true(0);
 }
 
-int bat_charger_tests()
+ZTEST(bat_charger, test_enter_topping_at_voltage_setpoint)
 {
-    UNITY_BEGIN();
-
-    // startup of charging
-    RUN_TEST(no_start_at_high_voltage);
-    RUN_TEST(no_start_after_short_rest);
-    RUN_TEST(no_start_outside_temperature_limits);
-    RUN_TEST(start_if_everything_just_fine);
-
-    // topping
-    RUN_TEST(enter_topping_at_voltage_setpoint);
-    RUN_TEST(topping_to_bulk_after_8h_low_power);
-    RUN_TEST(stop_topping_after_time_limit);
-    RUN_TEST(stop_topping_at_cutoff_current);
-
-    // float
-    RUN_TEST(float_to_idle_for_li_ion);
-
-    // equalization
-    RUN_TEST(no_equalization_if_disabled);
-    RUN_TEST(no_equalization_if_limits_not_reached);
-    RUN_TEST(float_to_equalization_if_enabled_and_time_limit_reached);
-    RUN_TEST(float_to_equalization_if_enabled_and_deep_dis_limit_reached);
-    RUN_TEST(stop_equalization_after_time_limit);
-
-    // RUN_TEST(restart_bulk_from_float_if_voltage_drops);
-
-    // TODO: temperature compensation
-    // TODO: current compensation
-
-    RUN_TEST(stop_discharge_at_low_voltage);
-    RUN_TEST(stop_discharge_at_overtemp);
-    RUN_TEST(stop_discharge_at_undertemp);
-    RUN_TEST(restart_discharge_if_allowed);
-
-    // RUN_TEST(battery_values_propagated_to_lv_bus_int);
-
-    // ToDo: SOC calculation
-    // RUN_TEST(no_soc_above_100);
-    // RUN_TEST(no_soc_below_0);
-
-    return UNITY_END();
+    enter_topping_at_voltage_setpoint();
 }
+
+ZTEST(bat_charger, test_float_to_equalization_if_enabled_and_time_limit_reached)
+{
+    float_to_equalization_if_enabled_and_time_limit_reached();
+}
+
+ZTEST_SUITE(bat_charger, NULL, NULL, NULL, NULL, NULL);

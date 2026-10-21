@@ -47,11 +47,11 @@ static void load_init(LoadOutput *l, bool on = false, int num_batteries = 1)
 
         // check if it stays on
         l->control();
-        TEST_ASSERT_EQUAL(LOAD_STATE_ON, l->state);
+        zassert_equal(l->state, LOAD_STATE_ON);
     }
 }
 
-static void control_off_to_on_if_everything_fine()
+ZTEST(load, test_control_off_to_on_if_everything_fine)
 {
     DcBus bus = {};
     LoadOutput load_out(&bus, &load_drv_set, &load_drv_init, NULL);
@@ -59,11 +59,11 @@ static void control_off_to_on_if_everything_fine()
 
     load_out.enable = true;
     load_out.control();
-    TEST_ASSERT_EQUAL(0, load_out.error_flags);
-    TEST_ASSERT_EQUAL(LOAD_STATE_ON, load_out.state);
+    zassert_equal(load_out.error_flags, 0);
+    zassert_equal(load_out.state, LOAD_STATE_ON);
 }
 
-static void control_off_to_on_if_everything_fine_dual_battery()
+ZTEST(load, test_control_off_to_on_if_everything_fine_dual_battery)
 {
     DcBus bus = {};
     LoadOutput load_out(&bus, &load_drv_set, &load_drv_init, NULL);
@@ -71,11 +71,11 @@ static void control_off_to_on_if_everything_fine_dual_battery()
 
     load_out.enable = true;
     load_out.control();
-    TEST_ASSERT_EQUAL(0, load_out.error_flags);
-    TEST_ASSERT_EQUAL(LOAD_STATE_ON, load_out.state);
+    zassert_equal(load_out.error_flags, 0);
+    zassert_equal(load_out.state, LOAD_STATE_ON);
 }
 
-static void control_on_to_off_shedding()
+ZTEST(load, test_control_on_to_off_shedding)
 {
     DcBus bus = {};
     LoadOutput load_out(&bus, &load_drv_set, &load_drv_init, NULL);
@@ -83,11 +83,11 @@ static void control_on_to_off_shedding()
 
     bus.voltage = load_out.disconnect_voltage - 0.1f;
     load_out.control();
-    TEST_ASSERT_EQUAL(ERR_LOAD_SHEDDING, load_out.error_flags);
-    TEST_ASSERT_EQUAL(LOAD_STATE_OFF, load_out.state);
+    zassert_equal(load_out.error_flags, ERR_LOAD_SHEDDING);
+    zassert_equal(load_out.state, LOAD_STATE_OFF);
 }
 
-void control_on_to_off_overvoltage()
+ZTEST(load, test_control_on_to_off_overvoltage)
 {
     DcBus bus = {};
     LoadOutput load_out(&bus, &load_drv_set, &load_drv_init, NULL);
@@ -100,15 +100,15 @@ void control_on_to_off_overvoltage()
         load_out.control();
     }
 
-    TEST_ASSERT_EQUAL(0, load_out.error_flags);
-    TEST_ASSERT_EQUAL(LOAD_STATE_ON, load_out.state);
+    zassert_equal(load_out.error_flags, 0);
+    zassert_equal(load_out.state, LOAD_STATE_ON);
 
     load_out.control(); // once more
-    TEST_ASSERT_EQUAL(ERR_LOAD_OVERVOLTAGE, load_out.error_flags);
-    TEST_ASSERT_EQUAL(LOAD_STATE_OFF, load_out.state);
+    zassert_equal(load_out.error_flags, ERR_LOAD_OVERVOLTAGE);
+    zassert_equal(load_out.state, LOAD_STATE_OFF);
 }
 
-void control_on_to_off_overvoltage_dual_battery()
+ZTEST(load, test_control_on_to_off_overvoltage_dual_battery)
 {
     DcBus bus = {};
     LoadOutput load_out(&bus, &load_drv_set, &load_drv_init, NULL);
@@ -121,15 +121,15 @@ void control_on_to_off_overvoltage_dual_battery()
         load_out.control();
     }
 
-    TEST_ASSERT_EQUAL(0, load_out.error_flags);
-    TEST_ASSERT_EQUAL(LOAD_STATE_ON, load_out.state);
+    zassert_equal(load_out.error_flags, 0);
+    zassert_equal(load_out.state, LOAD_STATE_ON);
 
     load_out.control(); // once more
-    TEST_ASSERT_EQUAL(ERR_LOAD_OVERVOLTAGE, load_out.error_flags);
-    TEST_ASSERT_EQUAL(LOAD_STATE_OFF, load_out.state);
+    zassert_equal(load_out.error_flags, ERR_LOAD_OVERVOLTAGE);
+    zassert_equal(load_out.state, LOAD_STATE_OFF);
 }
 
-void control_on_to_off_overcurrent()
+ZTEST(load, test_control_on_to_off_overcurrent)
 {
     DcBus bus = {};
     LoadOutput load_out(&bus, &load_drv_set, &load_drv_init, NULL);
@@ -138,7 +138,7 @@ void control_on_to_off_overcurrent()
     // current slightly below factor 2 so that it is not switched off immediately
     load_out.current = DT_PROP(DT_CHILD(DT_PATH(outputs), load), current_max) * 1.9f;
     load_out.control();
-    TEST_ASSERT_EQUAL(LOAD_STATE_ON, load_out.state);
+    zassert_equal(load_out.state, LOAD_STATE_ON);
 
     // almost 2x current = 4x heat generation: Should definitely trigger after waiting one time
     // constant
@@ -146,11 +146,11 @@ void control_on_to_off_overcurrent()
     for (int i = 0; i <= trigger_steps; i++) {
         load_out.control();
     }
-    TEST_ASSERT_EQUAL(ERR_LOAD_OVERCURRENT, load_out.error_flags);
-    TEST_ASSERT_EQUAL(LOAD_STATE_OFF, load_out.state);
+    zassert_equal(load_out.error_flags, ERR_LOAD_OVERCURRENT);
+    zassert_equal(load_out.state, LOAD_STATE_OFF);
 }
 
-void control_on_to_off_voltage_dip()
+ZTEST(load, test_control_on_to_off_voltage_dip)
 {
     DcBus bus = {};
     LoadOutput load_out(&bus, &load_drv_set, &load_drv_init, NULL);
@@ -158,11 +158,11 @@ void control_on_to_off_voltage_dip()
 
     load_out.stop(ERR_LOAD_VOLTAGE_DIP);
     load_out.control();
-    TEST_ASSERT_EQUAL(ERR_LOAD_VOLTAGE_DIP, load_out.error_flags);
-    TEST_ASSERT_EQUAL(LOAD_STATE_OFF, load_out.state);
+    zassert_equal(load_out.error_flags, ERR_LOAD_VOLTAGE_DIP);
+    zassert_equal(load_out.state, LOAD_STATE_OFF);
 }
 
-void control_on_to_off_bus_limit()
+ZTEST(load, test_control_on_to_off_bus_limit)
 {
     DcBus bus = {};
     LoadOutput load_out(&bus, &load_drv_set, &load_drv_init, NULL);
@@ -170,11 +170,11 @@ void control_on_to_off_bus_limit()
 
     load_out.bus->src_current_margin = 0;
     load_out.control();
-    TEST_ASSERT_EQUAL(ERR_LOAD_BUS_SRC_CURRENT, load_out.error_flags);
-    TEST_ASSERT_EQUAL(LOAD_STATE_OFF, load_out.state);
+    zassert_equal(load_out.error_flags, ERR_LOAD_BUS_SRC_CURRENT);
+    zassert_equal(load_out.state, LOAD_STATE_OFF);
 }
 
-void control_on_to_off_if_enable_false()
+ZTEST(load, test_control_on_to_off_if_enable_false)
 {
     DcBus bus = {};
     LoadOutput load_out(&bus, &load_drv_set, &load_drv_init, NULL);
@@ -182,11 +182,11 @@ void control_on_to_off_if_enable_false()
 
     load_out.enable = false;
     load_out.control();
-    TEST_ASSERT_EQUAL(LOAD_STATE_OFF, load_out.state);
-    TEST_ASSERT_EQUAL(0, load_out.error_flags);
+    zassert_equal(load_out.state, LOAD_STATE_OFF);
+    zassert_equal(load_out.error_flags, 0);
 }
 
-void control_off_shedding_to_on_after_delay()
+ZTEST(load, test_control_off_shedding_to_on_after_delay)
 {
     DcBus bus = {};
     LoadOutput load_out(&bus, &load_drv_set, &load_drv_init, NULL);
@@ -195,16 +195,16 @@ void control_off_shedding_to_on_after_delay()
 
     load_out.lvd_timestamp = time(NULL) - load_out.lvd_recovery_delay + 1;
     load_out.control();
-    TEST_ASSERT_EQUAL(ERR_LOAD_SHEDDING, load_out.error_flags);
-    TEST_ASSERT_EQUAL(LOAD_STATE_OFF, load_out.state);
+    zassert_equal(load_out.error_flags, ERR_LOAD_SHEDDING);
+    zassert_equal(load_out.state, LOAD_STATE_OFF);
 
     load_out.lvd_timestamp = time(NULL) - load_out.lvd_recovery_delay - 1;
     load_out.control();
-    TEST_ASSERT_EQUAL(0, load_out.error_flags);
-    TEST_ASSERT_EQUAL(LOAD_STATE_ON, load_out.state);
+    zassert_equal(load_out.error_flags, 0);
+    zassert_equal(load_out.state, LOAD_STATE_ON);
 }
 
-void control_off_overcurrent_to_on_after_delay()
+ZTEST(load, test_control_off_overcurrent_to_on_after_delay)
 {
     DcBus bus = {};
     LoadOutput load_out(&bus, &load_drv_set, &load_drv_init, NULL);
@@ -213,16 +213,16 @@ void control_off_overcurrent_to_on_after_delay()
 
     load_out.oc_timestamp = time(NULL) - load_out.oc_recovery_delay + 1;
     load_out.control();
-    TEST_ASSERT_EQUAL(ERR_LOAD_OVERCURRENT, load_out.error_flags);
-    TEST_ASSERT_EQUAL(LOAD_STATE_OFF, load_out.state);
+    zassert_equal(load_out.error_flags, ERR_LOAD_OVERCURRENT);
+    zassert_equal(load_out.state, LOAD_STATE_OFF);
 
     load_out.oc_timestamp = time(NULL) - load_out.oc_recovery_delay - 1;
     load_out.control();
-    TEST_ASSERT_EQUAL(0, load_out.error_flags);
-    TEST_ASSERT_EQUAL(LOAD_STATE_ON, load_out.state);
+    zassert_equal(load_out.error_flags, 0);
+    zassert_equal(load_out.state, LOAD_STATE_ON);
 }
 
-void control_off_overvoltage_to_on_at_lower_voltage()
+ZTEST(load, test_control_off_overvoltage_to_on_at_lower_voltage)
 {
     DcBus bus = {};
     LoadOutput load_out(&bus, &load_drv_set, &load_drv_init, NULL);
@@ -231,21 +231,21 @@ void control_off_overvoltage_to_on_at_lower_voltage()
     load_out.error_flags = ERR_LOAD_OVERVOLTAGE;
 
     load_out.control();
-    TEST_ASSERT_EQUAL(ERR_LOAD_OVERVOLTAGE, load_out.error_flags);
-    TEST_ASSERT_EQUAL(LOAD_STATE_OFF, load_out.state);
+    zassert_equal(load_out.error_flags, ERR_LOAD_OVERVOLTAGE);
+    zassert_equal(load_out.state, LOAD_STATE_OFF);
 
     bus.voltage = load_out.overvoltage - 0.1f; // test hysteresis
     load_out.control();
-    TEST_ASSERT_EQUAL(ERR_LOAD_OVERVOLTAGE, load_out.error_flags);
-    TEST_ASSERT_EQUAL(LOAD_STATE_OFF, load_out.state);
+    zassert_equal(load_out.error_flags, ERR_LOAD_OVERVOLTAGE);
+    zassert_equal(load_out.state, LOAD_STATE_OFF);
 
     bus.voltage = load_out.overvoltage - load_out.ov_hysteresis - 0.1f;
     load_out.control();
-    TEST_ASSERT_EQUAL(0, load_out.error_flags);
-    TEST_ASSERT_EQUAL(LOAD_STATE_ON, load_out.state);
+    zassert_equal(load_out.error_flags, 0);
+    zassert_equal(load_out.state, LOAD_STATE_ON);
 }
 
-void control_off_overvoltage_to_on_at_lower_voltage_dual_battery()
+ZTEST(load, test_control_off_overvoltage_to_on_at_lower_voltage_dual_battery)
 {
     DcBus bus = {};
     LoadOutput load_out(&bus, &load_drv_set, &load_drv_init, NULL);
@@ -254,21 +254,21 @@ void control_off_overvoltage_to_on_at_lower_voltage_dual_battery()
     load_out.error_flags = ERR_LOAD_OVERVOLTAGE;
 
     load_out.control();
-    TEST_ASSERT_EQUAL(ERR_LOAD_OVERVOLTAGE, load_out.error_flags);
-    TEST_ASSERT_EQUAL(LOAD_STATE_OFF, load_out.state);
+    zassert_equal(load_out.error_flags, ERR_LOAD_OVERVOLTAGE);
+    zassert_equal(load_out.state, LOAD_STATE_OFF);
 
     bus.voltage = (load_out.overvoltage - 0.1f) * bus.series_multiplier; // test hysteresis
     load_out.control();
-    TEST_ASSERT_EQUAL(ERR_LOAD_OVERVOLTAGE, load_out.error_flags);
-    TEST_ASSERT_EQUAL(LOAD_STATE_OFF, load_out.state);
+    zassert_equal(load_out.error_flags, ERR_LOAD_OVERVOLTAGE);
+    zassert_equal(load_out.state, LOAD_STATE_OFF);
 
     bus.voltage = (load_out.overvoltage - load_out.ov_hysteresis - 0.1f) * bus.series_multiplier;
     load_out.control();
-    TEST_ASSERT_EQUAL(0, load_out.error_flags);
-    TEST_ASSERT_EQUAL(LOAD_STATE_ON, load_out.state);
+    zassert_equal(load_out.error_flags, 0);
+    zassert_equal(load_out.state, LOAD_STATE_ON);
 }
 
-void control_off_short_circuit_flag_reset()
+ZTEST(load, test_control_off_short_circuit_flag_reset)
 {
     DcBus bus = {};
     LoadOutput load_out(&bus, &load_drv_set, &load_drv_init, NULL);
@@ -276,41 +276,17 @@ void control_off_short_circuit_flag_reset()
     load_out.error_flags = ERR_LOAD_SHORT_CIRCUIT;
 
     load_out.control();
-    TEST_ASSERT_EQUAL(ERR_LOAD_SHORT_CIRCUIT, load_out.error_flags);
-    TEST_ASSERT_EQUAL(LOAD_STATE_OFF, load_out.state);
+    zassert_equal(load_out.error_flags, ERR_LOAD_SHORT_CIRCUIT);
+    zassert_equal(load_out.state, LOAD_STATE_OFF);
 
     load_out.enable = false; // this is like a manual reset
     load_out.control();
-    TEST_ASSERT_EQUAL(0, load_out.error_flags);
-    TEST_ASSERT_EQUAL(LOAD_STATE_OFF, load_out.state);
+    zassert_equal(load_out.error_flags, 0);
+    zassert_equal(load_out.state, LOAD_STATE_OFF);
 
     load_out.enable = true;
     load_out.control();
-    TEST_ASSERT_EQUAL(LOAD_STATE_ON, load_out.state);
+    zassert_equal(load_out.state, LOAD_STATE_ON);
 }
 
-int load_tests()
-{
-    UNITY_BEGIN();
-
-    // control tests
-    RUN_TEST(control_off_to_on_if_everything_fine);
-    RUN_TEST(control_off_to_on_if_everything_fine_dual_battery);
-    RUN_TEST(control_on_to_off_shedding);
-    RUN_TEST(control_on_to_off_overvoltage);
-    RUN_TEST(control_on_to_off_overvoltage_dual_battery);
-    RUN_TEST(control_on_to_off_overcurrent);
-    RUN_TEST(control_on_to_off_voltage_dip);
-    RUN_TEST(control_on_to_off_bus_limit);
-    RUN_TEST(control_on_to_off_if_enable_false);
-
-    RUN_TEST(control_off_shedding_to_on_after_delay);
-    RUN_TEST(control_off_overcurrent_to_on_after_delay);
-    RUN_TEST(control_off_overvoltage_to_on_at_lower_voltage);
-    RUN_TEST(control_off_overvoltage_to_on_at_lower_voltage_dual_battery);
-    RUN_TEST(control_off_short_circuit_flag_reset);
-
-    // ToDo: What to do if port current is above the limit, but the hardware can still handle it?
-
-    return UNITY_END();
-}
+ZTEST_SUITE(load, NULL, NULL, NULL, NULL, NULL);

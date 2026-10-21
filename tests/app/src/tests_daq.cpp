@@ -14,36 +14,36 @@
 
 static AdcValues adcval;
 
-void test_adc_voltage_to_raw()
+ZTEST(daq, test_adc_voltage_to_raw)
 {
     int32_t raw;
 
     raw = adc_voltage_to_raw(0.0, 3300);
-    TEST_ASSERT_EQUAL_INT32(0, raw);
+    zassert_equal(raw, 0);
 
     raw = adc_voltage_to_raw(3.3, 3300);
-    TEST_ASSERT_EQUAL_INT32(65535, raw);
+    zassert_equal(raw, 65535);
 
     raw = adc_voltage_to_raw(1.65, 3300);
-    TEST_ASSERT_EQUAL_INT32(32767, raw);
+    zassert_equal(raw, 32767);
 }
 
-void test_adc_raw_to_voltage()
+ZTEST(daq, test_adc_raw_to_voltage)
 {
     float voltage;
 
     voltage = adc_raw_to_voltage(0, 3300);
-    TEST_ASSERT_EQUAL_FLOAT(0.0, voltage);
+    assert_float_equal(voltage, 0.0);
 
     voltage = adc_raw_to_voltage(65535, 3300);
-    TEST_ASSERT_FLOAT_WITHIN(0.01, 3.3, voltage);
+    zassert_within(voltage, 3.3F, 0.01F);
 
     voltage = adc_raw_to_voltage(32767, 3300);
-    TEST_ASSERT_FLOAT_WITHIN(0.01, 1.65, voltage);
+    zassert_within(voltage, 1.65F, 0.01F);
 }
 
 // testing only for 2 values
-void check_filtering()
+ZTEST(daq, test_check_filtering)
 {
     // reset values
     clear_adc_filtered();
@@ -62,36 +62,36 @@ void check_filtering()
     // overwrite filtered values
     prepare_adc_filtered();
 
-    TEST_ASSERT_EQUAL(get_adc_filtered(ADC_POS(vref_mcu)), adc_filtered_bak[ADC_POS(vref_mcu)]);
-    TEST_ASSERT_EQUAL(get_adc_filtered(ADC_POS(v_high)), adc_filtered_bak[ADC_POS(v_high)]);
+    zassert_equal(adc_filtered_bak[ADC_POS(vref_mcu)], get_adc_filtered(ADC_POS(vref_mcu)));
+    zassert_equal(adc_filtered_bak[ADC_POS(v_high)], get_adc_filtered(ADC_POS(v_high)));
 }
 
-void check_solar_terminal_readings()
+ZTEST(daq, test_check_solar_terminal_readings)
 {
-    TEST_ASSERT_EQUAL_FLOAT(adcval.solar_voltage, round(hv_terminal.bus->voltage * 10) / 10);
-    TEST_ASSERT_EQUAL_FLOAT(adcval.dcdc_current / adcval.solar_voltage * adcval.battery_voltage,
-                            -round(hv_terminal.current * 10) / 10);
+    assert_float_equal(round(hv_terminal.bus->voltage * 10) / 10, adcval.solar_voltage);
+    assert_float_equal(-round(hv_terminal.current * 10) / 10,
+                       adcval.dcdc_current / adcval.solar_voltage * adcval.battery_voltage);
 }
 
-void check_bat_terminal_readings()
+ZTEST(daq, test_check_bat_terminal_readings)
 {
-    TEST_ASSERT_EQUAL_FLOAT(adcval.battery_voltage, round(lv_terminal.bus->voltage * 10) / 10);
-    TEST_ASSERT_EQUAL_FLOAT(adcval.dcdc_current - adcval.load_current,
-                            round(lv_terminal.current * 10) / 10);
+    assert_float_equal(round(lv_terminal.bus->voltage * 10) / 10, adcval.battery_voltage);
+    assert_float_equal(round(lv_terminal.current * 10) / 10,
+                       adcval.dcdc_current - adcval.load_current);
 }
 
-void check_load_terminal_readings()
+ZTEST(daq, test_check_load_terminal_readings)
 {
-    TEST_ASSERT_EQUAL_FLOAT(adcval.battery_voltage, round(load.bus->voltage * 10) / 10);
-    TEST_ASSERT_EQUAL_FLOAT(adcval.load_current, round(load.current * 10) / 10);
+    assert_float_equal(round(load.bus->voltage * 10) / 10, adcval.battery_voltage);
+    assert_float_equal(round(load.current * 10) / 10, adcval.load_current);
 }
 
 void check_temperature_readings()
 {
-    TEST_ASSERT_EQUAL_FLOAT(adcval.bat_temperature, round(charger.bat_temperature * 10) / 10);
+    assert_float_equal(round(charger.bat_temperature * 10) / 10, adcval.bat_temperature);
 }
 
-void adc_alert_lv_undervoltage_triggering()
+ZTEST(daq, test_adc_alert_lv_undervoltage_triggering)
 {
     dev_stat.clear_error(ERR_ANY_ERROR);
     battery_conf_init(&bat_conf, BAT_TYPE_LFP, 4, 100);
@@ -103,11 +103,11 @@ void adc_alert_lv_undervoltage_triggering()
     adcval.battery_voltage = bat_conf.absolute_min_voltage - 0.1f;
     prepare_adc_readings(adcval);
     adc_update_value(ADC_POS(v_low));
-    TEST_ASSERT_EQUAL(false, dev_stat.has_error(ERR_LOAD_VOLTAGE_DIP));
+    zassert_equal(dev_stat.has_error(ERR_LOAD_VOLTAGE_DIP), false);
     adc_update_value(ADC_POS(v_low));
     load.control();
-    TEST_ASSERT_EQUAL(true, flags_check(&load.error_flags, ERR_LOAD_VOLTAGE_DIP));
-    TEST_ASSERT_EQUAL(LOAD_STATE_OFF, load.state);
+    zassert_equal(flags_check(&load.error_flags, ERR_LOAD_VOLTAGE_DIP), true);
+    zassert_equal(load.state, LOAD_STATE_OFF);
 
     // reset values
     adcval.battery_voltage = 13;
@@ -116,10 +116,10 @@ void adc_alert_lv_undervoltage_triggering()
     daq_update();
 
     charger.discharge_control(&bat_conf);
-    TEST_ASSERT_EQUAL(false, dev_stat.has_error(ERR_BAT_UNDERVOLTAGE)); // ToDo
+    zassert_equal(dev_stat.has_error(ERR_BAT_UNDERVOLTAGE), false); // ToDo
 }
 
-void adc_alert_lv_overvoltage_triggering()
+ZTEST(daq, test_adc_alert_lv_overvoltage_triggering)
 {
     dev_stat.clear_error(ERR_ANY_ERROR);
     battery_conf_init(&bat_conf, BAT_TYPE_LFP, 4, 100);
@@ -133,11 +133,11 @@ void adc_alert_lv_overvoltage_triggering()
     adcval.battery_voltage = bat_conf.absolute_max_voltage + 0.1f;
     prepare_adc_readings(adcval);
     adc_update_value(ADC_POS(v_low));
-    TEST_ASSERT_EQUAL(false, dev_stat.has_error(ERR_BAT_OVERVOLTAGE));
+    zassert_equal(dev_stat.has_error(ERR_BAT_OVERVOLTAGE), false);
     adc_update_value(ADC_POS(v_low));
-    TEST_ASSERT_EQUAL(true, dev_stat.has_error(ERR_BAT_OVERVOLTAGE));
-    // TEST_ASSERT_EQUAL(false, pwm_switch.active());
-    TEST_ASSERT_EQUAL(DCDC_CONTROL_OFF, dcdc.state);
+    zassert_equal(dev_stat.has_error(ERR_BAT_OVERVOLTAGE), true);
+    // zassert_equal(pwm_switch.active(), false);
+    zassert_equal(dcdc.state, DCDC_CONTROL_OFF);
 
     // reset values
     adcval.battery_voltage = 12;
@@ -147,10 +147,10 @@ void adc_alert_lv_overvoltage_triggering()
 
     charger.time_state_changed = time(NULL) - bat_conf.time_limit_recharge - 1;
     charger.charge_control(&bat_conf);
-    TEST_ASSERT_EQUAL(false, dev_stat.has_error(ERR_BAT_OVERVOLTAGE));
+    zassert_equal(dev_stat.has_error(ERR_BAT_OVERVOLTAGE), false);
 }
 
-void adc_alert_hv_overvoltage_triggering()
+ZTEST(daq, test_adc_alert_hv_overvoltage_triggering)
 {
     dev_stat.clear_error(ERR_ANY_ERROR);
     daq_set_hv_limit(DT_PROP(DT_PATH(pcb), hs_voltage_max));
@@ -161,17 +161,17 @@ void adc_alert_hv_overvoltage_triggering()
     adcval.solar_voltage = 85.0F;
     prepare_adc_readings(adcval);
     adc_update_value(ADC_POS(v_high));
-    TEST_ASSERT_EQUAL(false, dev_stat.has_error(ERR_DCDC_HS_OVERVOLTAGE));
+    zassert_equal(dev_stat.has_error(ERR_DCDC_HS_OVERVOLTAGE), false);
     adc_update_value(ADC_POS(v_high));
-    TEST_ASSERT_EQUAL(true, dev_stat.has_error(ERR_DCDC_HS_OVERVOLTAGE));
-    TEST_ASSERT_EQUAL(DCDC_CONTROL_OFF, dcdc.state);
+    zassert_equal(dev_stat.has_error(ERR_DCDC_HS_OVERVOLTAGE), true);
+    zassert_equal(dcdc.state, DCDC_CONTROL_OFF);
 }
 
-void adc_alert_overflow_prevention()
+ZTEST(daq, test_adc_alert_overflow_prevention)
 {
     // try to set an alert that overflows the 12-bit ADC resolution
     uint16_t limit = adc_raw_clamp(1, UINT16_MAX + 1);
-    TEST_ASSERT_EQUAL_HEX(UINT16_MAX, limit);
+    zassert_equal(limit, UINT16_MAX);
 }
 
 /** Data acquisition tests
@@ -179,8 +179,10 @@ void adc_alert_overflow_prevention()
  * Purpose: Check if raw data from 2 voltage and 2 current measurements are converted
  * to calculated voltage/current measurements of different DC buses
  */
-int daq_tests()
+static void daq_before(void *fixture)
 {
+    ARG_UNUSED(fixture);
+
     adcval.bat_temperature = 25;
     adcval.battery_voltage = 12;
     adcval.dcdc_current = 3;
@@ -188,27 +190,10 @@ int daq_tests()
     adcval.load_current = 1;
     adcval.solar_voltage = 30;
     prepare_adc_readings(adcval);
-
-    UNITY_BEGIN();
-
-    RUN_TEST(test_adc_voltage_to_raw);
-    RUN_TEST(test_adc_raw_to_voltage);
-
-    RUN_TEST(check_filtering);
+    prepare_adc_filtered();
 
     // call original daq_update function
     daq_update();
-
-    RUN_TEST(check_solar_terminal_readings);
-    RUN_TEST(check_bat_terminal_readings);
-    RUN_TEST(check_load_terminal_readings);
-
-    // RUN_TEST(check_temperature_readings);     // TODO
-
-    RUN_TEST(adc_alert_lv_undervoltage_triggering);
-    RUN_TEST(adc_alert_lv_overvoltage_triggering);
-    RUN_TEST(adc_alert_hv_overvoltage_triggering);
-    RUN_TEST(adc_alert_overflow_prevention);
-
-    return UNITY_END();
 }
+
+ZTEST_SUITE(daq, NULL, NULL, daq_before, NULL, NULL);

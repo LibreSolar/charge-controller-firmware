@@ -4,21 +4,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#ifndef TESTS_H_
+#define TESTS_H_
+
+#include <zephyr/ztest.h>
+
+#include <math.h>
 #include <time.h>
-#include <unity.h>
 
-int bat_charger_tests();
+/**
+ * Assert that two floating point values are equal within a relative precision of 1e-5
+ *
+ * Same behavior as TEST_ASSERT_EQUAL_FLOAT of the previously used Unity framework.
+ */
+#define assert_float_equal(actual, expected) \
+    zassert_within((double)(actual), (double)(expected), fabs((double)(expected)) * 1e-5, \
+                   #actual " not equal to " #expected)
 
-int daq_tests();
-
-int power_port_tests();
-
-int dcdc_tests();
-
-int device_status_tests();
-
-int load_tests();
-
-#ifdef CONFIG_CUSTOM_TESTS
-int custom_tests();
-#endif
+#endif /* TESTS_H_ */
