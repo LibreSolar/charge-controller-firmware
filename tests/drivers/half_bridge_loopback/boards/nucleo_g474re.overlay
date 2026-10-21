@@ -1,0 +1,61 @@
+/*
+ * Copyright (c) The Libre Solar Project Contributors
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Common settings for loop-back tests on Nucleo-G474RE. Required wiring:
+ *
+ *   PA8  (TIM1_CH1 / HRTIM_CHA1) -> PA0  (TIM2_CH1)
+ *   PB13 (TIM1_CH1N)             -> PA1  (TIM2_CH2)
+ *   PA9  (HRTIM_CHA2)            -> PB10 (TIM2_CH3)
+ *   PB0  (TIM3_CH3)              -> PB2  (TIM5_CH1)
+ *   PB1  (TIM3_CH4)              -> PC12 (TIM5_CH2)
+ */
+
+/ {
+	/* PWM LED uses TIM2, which is needed for input capture */
+	/delete-node/ pwmleds;
+
+	aliases {
+		/delete-property/ pwm-led0;
+	};
+};
+
+/* PB13 is used as TIM1_CH1N */
+&spi2 {
+	status = "disabled";
+};
+
+/* PC12 is used as TIM5_CH2 */
+&spi3 {
+	status = "disabled";
+};
+
+&pwm2 {
+	status = "disabled";
+};
+
+&pwm3 {
+	status = "disabled";
+};
+
+/* pull-downs, as some half bridges leave their outputs floating if disabled */
+&tim2_ch1_pa0 {
+	bias-pull-down;
+};
+
+&tim2_ch2_pa1 {
+	bias-pull-down;
+};
+
+&tim2_ch3_pb10 {
+	bias-pull-down;
+};
+
+&tim5_ch1_pb2 {
+	bias-pull-down;
+};
+
+&tim5_ch2_pc12 {
+	bias-pull-down;
+};

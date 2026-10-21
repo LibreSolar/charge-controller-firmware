@@ -1,0 +1,37 @@
+/*
+ * Copyright (c) The Libre Solar Project Contributors
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+&timers3 {
+	status = "okay";
+
+	halfbridge: half-bridge {
+		compatible = "libresolar,stm32-gptim-half-bridge";
+		pinctrl-0 = <&tim3_ch3_pb0 &tim3_ch4_pb1>;
+		pinctrl-names = "default";
+		high-side-channel = <3>;
+		low-side-channel = <4>;
+		frequency = <50000>;
+		deadtime-ns = <230>;
+	};
+};
+
+&timers5 {
+	status = "okay";
+};
+
+/ {
+	loopback {
+		compatible = "test-half-bridge-loopback";
+		half-bridge = <&halfbridge>;
+		capture-timer = <&timers5>;
+		high-side-channel = <1>;
+		low-side-channel = <2>;
+		high-side-gpios = <&gpiob 2 GPIO_ACTIVE_HIGH>;
+		low-side-gpios = <&gpioc 12 GPIO_ACTIVE_HIGH>;
+		pinctrl-0 = <&tim5_ch1_pb2 &tim5_ch2_pc12>;
+		pinctrl-names = "default";
+	};
+};

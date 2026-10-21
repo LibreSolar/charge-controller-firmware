@@ -1,0 +1,22 @@
+common:
+  tags:
+    - drivers
+    - half_bridge
+  platform_allow:
+    - nucleo_g474re
+  integration_platforms:
+    - nucleo_g474re
+  harness: ztest
+  harness_config:
+    # requires the loop-back wiring described in boards/nucleo_g474re.overlay
+    fixture: half_bridge_loopback
+tests:
+  drivers.half_bridge.loopback.advtim:
+    extra_args:
+      - EXTRA_DTC_OVERLAY_FILE=advtim.overlay
+  drivers.half_bridge.loopback.gptim:
+    extra_args:
+      - EXTRA_DTC_OVERLAY_FILE=gptim.overlay
+  drivers.half_bridge.loopback.hrtim:
+    extra_args:
+      - EXTRA_DTC_OVERLAY_FILE=hrtim.overlay

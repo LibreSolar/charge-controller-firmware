@@ -1,0 +1,52 @@
+# Copyright (c) The Libre Solar Project Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+description: |
+  Loop-back wiring for half-bridge tests on STM32
+
+  The high-side and low-side outputs of the half bridge under test are wired to two input capture
+  channels of a separate STM32 timer. Both channels share the same counter, so that the time
+  between edges of the two signals (e.g. the dead time) can be measured.
+
+compatible: "test-half-bridge-loopback"
+
+include: [base.yaml, pinctrl-device.yaml]
+
+properties:
+  half-bridge:
+    type: phandle
+    required: true
+    description: Half bridge under test
+
+  capture-timer:
+    type: phandle
+    required: true
+    description: st,stm32-timers node of the timer used for input capture
+
+  high-side-channel:
+    type: int
+    required: true
+    enum: [1, 2, 3, 4]
+    description: Capture timer channel connected to the high-side output
+
+  low-side-channel:
+    type: int
+    required: true
+    enum: [1, 2, 3, 4]
+    description: Capture timer channel connected to the low-side output
+
+  high-side-gpios:
+    type: phandle-array
+    required: true
+    description: GPIO of the high-side capture input (used to read the signal level)
+
+  low-side-gpios:
+    type: phandle-array
+    required: true
+    description: GPIO of the low-side capture input (used to read the signal level)
+
+  pinctrl-0:
+    required: true
+
+  pinctrl-names:
+    required: true
