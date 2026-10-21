@@ -1,5 +1,4 @@
-identifier: mppt_2420_hc
-name: MPPT-2420-HC
+name: MPPT-2420-RC
 type: mcu
 arch: arm
 toolchain:

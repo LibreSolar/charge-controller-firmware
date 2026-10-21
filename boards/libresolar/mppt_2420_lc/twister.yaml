@@ -1,13 +1,12 @@
-identifier: mppt_1210_hus
-name: MPPT-1210-HUS
+name: MPPT-2420-LC
 type: mcu
 arch: arm
 toolchain:
   - zephyr
   - gnuarmemb
   - xtools
-ram: 20
-flash: 192
+ram: 16
+flash: 128
 supported:
   - arduino_i2c
   - gpio
@@ -15,4 +14,3 @@ supported:
   - spi
   - watchdog
   - adc
-  - eeprom

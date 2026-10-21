@@ -1,17 +1,17 @@
-identifier: mppt_2420_lc
-name: MPPT-2420-LC
+name: MPPT-2420-HPX
 type: mcu
 arch: arm
 toolchain:
   - zephyr
   - gnuarmemb
   - xtools
-ram: 16
+ram: 32
 flash: 128
 supported:
-  - arduino_i2c
-  - gpio
+  - nvs
+  - pwm
   - i2c
+  - gpio
+  - usb device
+  - counter
   - spi
-  - watchdog
-  - adc

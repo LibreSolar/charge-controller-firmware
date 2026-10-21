@@ -1,5 +1,4 @@
-identifier: pwm_2420_lus
-name: PWM-2420-LUS
+name: MPPT-1210-HUS
 type: mcu
 arch: arm
 toolchain:
