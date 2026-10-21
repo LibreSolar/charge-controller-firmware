@@ -55,6 +55,7 @@ struct half_bridge_stm32_hrtim_data
 {
     uint32_t compare_min;
     uint32_t compare_max;
+    bool low_side_forced;
 };
 
 static inline HRTIM_Timerx_TypeDef *timer_a(const struct device *dev)
@@ -67,6 +68,11 @@ static inline HRTIM_Timerx_TypeDef *timer_a(const struct device *dev)
 static int half_bridge_stm32_hrtim_start(const struct device *dev)
 {
     const struct half_bridge_stm32_hrtim_config *config = dev->config;
+    struct half_bridge_stm32_hrtim_data *data = dev->data;
+
+    if (data->low_side_forced) {
+        return -EBUSY;
+    }
 
     config->hrtim->sCommonRegs.OENR = HRTIM_OENR_TA1OEN | HRTIM_OENR_TA2OEN;
 
@@ -76,8 +82,17 @@ static int half_bridge_stm32_hrtim_start(const struct device *dev)
 static int half_bridge_stm32_hrtim_stop(const struct device *dev)
 {
     const struct half_bridge_stm32_hrtim_config *config = dev->config;
+    struct half_bridge_stm32_hrtim_data *data = dev->data;
 
     config->hrtim->sCommonRegs.ODISR = HRTIM_ODISR_TA1ODIS | HRTIM_ODISR_TA2ODIS;
+
+    if (data->low_side_forced) {
+        /* restore PWM generation for output 1 */
+        HRTIM_Timerx_TypeDef *tim = timer_a(dev);
+        tim->SETx1R = HRTIM_SET1R_PER;
+        tim->RSTx1R = HRTIM_RST1R_CMP1;
+        data->low_side_forced = false;
+    }
 
     return 0;
 }
@@ -94,6 +109,10 @@ static int half_bridge_stm32_hrtim_set_compare(const struct device *dev, uint32_
     const struct half_bridge_stm32_hrtim_config *config = dev->config;
     struct half_bridge_stm32_hrtim_data *data = dev->data;
     HRTIM_Timerx_TypeDef *tim = timer_a(dev);
+
+    if (data->low_side_forced) {
+        return -EBUSY;
+    }
 
     /* protection against wrong settings which could destroy the hardware */
     compare = CLAMP(compare, data->compare_min, data->compare_max);
@@ -123,6 +142,10 @@ static int half_bridge_stm32_hrtim_set_compare_limits(const struct device *dev, 
 {
     struct half_bridge_stm32_hrtim_data *data = dev->data;
 
+    if (data->low_side_forced) {
+        return -EBUSY;
+    }
+
     if (min > max || max > half_bridge_stm32_hrtim_get_period(dev)) {
         return -EINVAL;
     }
@@ -133,6 +156,26 @@ static int half_bridge_stm32_hrtim_set_compare_limits(const struct device *dev, 
     return half_bridge_stm32_hrtim_set_compare(dev, half_bridge_stm32_hrtim_get_compare(dev));
 }
 
+static int half_bridge_stm32_hrtim_force_low_side(const struct device *dev)
+{
+    const struct half_bridge_stm32_hrtim_config *config = dev->config;
+    struct half_bridge_stm32_hrtim_data *data = dev->data;
+    HRTIM_Timerx_TypeDef *tim = timer_a(dev);
+
+    data->low_side_forced = true;
+
+    /*
+     * Remove all set events and reset output 1 (high side) by software, so that it stays
+     * inactive. Output 2 (low side) is generated as the complement with dead time and stays on.
+     */
+    tim->SETx1R = 0;
+    tim->RSTx1R = HRTIM_RST1R_SRT;
+
+    config->hrtim->sCommonRegs.OENR = HRTIM_OENR_TA1OEN | HRTIM_OENR_TA2OEN;
+
+    return 0;
+}
+
 static DEVICE_API(half_bridge, half_bridge_stm32_hrtim_api) = {
     .start = half_bridge_stm32_hrtim_start,
     .stop = half_bridge_stm32_hrtim_stop,
@@ -141,6 +184,7 @@ static DEVICE_API(half_bridge, half_bridge_stm32_hrtim_api) = {
     .get_compare = half_bridge_stm32_hrtim_get_compare,
     .get_period = half_bridge_stm32_hrtim_get_period,
     .set_compare_limits = half_bridge_stm32_hrtim_set_compare_limits,
+    .force_low_side = half_bridge_stm32_hrtim_force_low_side,
 };
 
 static int half_bridge_stm32_hrtim_init(const struct device *dev)

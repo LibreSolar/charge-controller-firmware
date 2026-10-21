@@ -31,11 +31,16 @@ struct half_bridge_emul_data
     uint32_t compare_min;
     uint32_t compare_max;
     bool enabled;
+    bool low_side_forced;
 };
 
 static int half_bridge_emul_start(const struct device *dev)
 {
     struct half_bridge_emul_data *data = dev->data;
+
+    if (data->low_side_forced) {
+        return -EBUSY;
+    }
 
     data->enabled = true;
 
@@ -47,6 +52,7 @@ static int half_bridge_emul_stop(const struct device *dev)
     struct half_bridge_emul_data *data = dev->data;
 
     data->enabled = false;
+    data->low_side_forced = false;
 
     return 0;
 }
@@ -61,6 +67,10 @@ static bool half_bridge_emul_is_enabled(const struct device *dev)
 static int half_bridge_emul_set_compare(const struct device *dev, uint32_t compare)
 {
     struct half_bridge_emul_data *data = dev->data;
+
+    if (data->low_side_forced) {
+        return -EBUSY;
+    }
 
     data->compare = CLAMP(compare, data->compare_min, data->compare_max);
 
@@ -85,6 +95,10 @@ static int half_bridge_emul_set_compare_limits(const struct device *dev, uint32_
 {
     struct half_bridge_emul_data *data = dev->data;
 
+    if (data->low_side_forced) {
+        return -EBUSY;
+    }
+
     if (min > max || max > data->period) {
         return -EINVAL;
     }
@@ -95,6 +109,17 @@ static int half_bridge_emul_set_compare_limits(const struct device *dev, uint32_
     return half_bridge_emul_set_compare(dev, data->compare);
 }
 
+static int half_bridge_emul_force_low_side(const struct device *dev)
+{
+    struct half_bridge_emul_data *data = dev->data;
+
+    data->compare = 0;
+    data->enabled = true;
+    data->low_side_forced = true;
+
+    return 0;
+}
+
 static DEVICE_API(half_bridge, half_bridge_emul_api) = {
     .start = half_bridge_emul_start,
     .stop = half_bridge_emul_stop,
@@ -103,6 +128,7 @@ static DEVICE_API(half_bridge, half_bridge_emul_api) = {
     .get_compare = half_bridge_emul_get_compare,
     .get_period = half_bridge_emul_get_period,
     .set_compare_limits = half_bridge_emul_set_compare_limits,
+    .force_low_side = half_bridge_emul_force_low_side,
 };
 
 static int half_bridge_emul_init(const struct device *dev)

@@ -46,6 +46,7 @@ __subsystem struct half_bridge_driver_api
     uint32_t (*get_compare)(const struct device *dev);
     uint32_t (*get_period)(const struct device *dev);
     int (*set_compare_limits)(const struct device *dev, uint32_t min, uint32_t max);
+    int (*force_low_side)(const struct device *dev);
 };
 
 /** @endcond */
@@ -60,6 +61,7 @@ __subsystem struct half_bridge_driver_api
  *
  * @retval 0 on success
  * @retval -EINVAL if the output could not be started with the current compare value
+ * @retval -EBUSY if the low-side switch is forced on
  */
 static inline int half_bridge_start(const struct device *dev)
 {
@@ -68,6 +70,8 @@ static inline int half_bridge_start(const struct device *dev)
 
 /**
  * Stop the PWM generation, i.e. switch off both high-side and low-side switches
+ *
+ * This also ends the state entered with half_bridge_force_low_side().
  *
  * @param dev Half-bridge device
  *
@@ -100,6 +104,7 @@ static inline bool half_bridge_is_enabled(const struct device *dev)
  * @param compare Timer compare value (between 0 and period)
  *
  * @retval 0 on success
+ * @retval -EBUSY if the low-side switch is forced on (setting is ignored)
  */
 static inline int half_bridge_set_compare(const struct device *dev, uint32_t compare)
 {
@@ -143,11 +148,29 @@ static inline uint32_t half_bridge_get_period(const struct device *dev)
  *
  * @retval 0 on success
  * @retval -EINVAL if min > max or max > period
+ * @retval -EBUSY if the low-side switch is forced on (setting is ignored)
  */
 static inline int half_bridge_set_compare_limits(const struct device *dev, uint32_t min,
                                                  uint32_t max)
 {
     return DEVICE_API_GET(half_bridge, dev)->set_compare_limits(dev, min, max);
+}
+
+/**
+ * Switch the low-side switch continuously on and the high-side switch off
+ *
+ * This bypasses the compare value limits and is intended for safety measures, e.g. to blow a
+ * fuse at the low-side terminal by shorting it through the inductor. The state is kept until
+ * half_bridge_stop() is called. Changes of the compare value or its limits are rejected in the
+ * meantime.
+ *
+ * @param dev Half-bridge device
+ *
+ * @retval 0 on success
+ */
+static inline int half_bridge_force_low_side(const struct device *dev)
+{
+    return DEVICE_API_GET(half_bridge, dev)->force_low_side(dev);
 }
 
 /**

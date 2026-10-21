@@ -31,9 +31,10 @@ static void half_bridge_before(void *fixture)
 {
     ARG_UNUSED(fixture);
 
+    /* stop first, as it also ends a forced low-side state from previous tests */
+    zassert_ok(half_bridge_stop(dev));
     zassert_ok(half_bridge_set_duty_limits(dev, MIN_PWM_DUTY, MAX_PWM_DUTY));
     zassert_ok(half_bridge_set_duty_cycle(dev, MAX_PWM_DUTY));
-    zassert_ok(half_bridge_stop(dev));
 }
 
 ZTEST(half_bridge, test_period_from_devicetree)
@@ -115,6 +116,39 @@ ZTEST(half_bridge, test_invalid_limits_rejected)
     zassert_equal(half_bridge_set_duty_limits(dev, MAX_PWM_DUTY, MIN_PWM_DUTY), -EINVAL);
     zassert_equal(half_bridge_set_duty_limits(dev, MIN_PWM_DUTY, 1.1F), -EINVAL);
     zassert_equal(half_bridge_set_compare_limits(dev, 0, period + 1), -EINVAL);
+}
+
+ZTEST(half_bridge, test_force_low_side)
+{
+    zassert_ok(half_bridge_set_duty_cycle(dev, MID_PWM_DUTY));
+    zassert_ok(half_bridge_force_low_side(dev));
+
+    /* duty cycle limits are bypassed */
+    zassert_true(half_bridge_is_enabled(dev));
+    zassert_equal(half_bridge_get_compare(dev), 0);
+}
+
+ZTEST(half_bridge, test_force_low_side_rejects_changes)
+{
+    zassert_ok(half_bridge_force_low_side(dev));
+
+    zassert_equal(half_bridge_set_duty_cycle(dev, MID_PWM_DUTY), -EBUSY);
+    zassert_equal(half_bridge_start(dev), -EBUSY);
+    zassert_equal(half_bridge_set_duty_limits(dev, MIN_PWM_DUTY, MID_PWM_DUTY), -EBUSY);
+    zassert_equal(half_bridge_get_compare(dev), 0);
+    zassert_true(half_bridge_is_enabled(dev));
+}
+
+ZTEST(half_bridge, test_stop_ends_forced_low_side)
+{
+    zassert_ok(half_bridge_force_low_side(dev));
+    zassert_ok(half_bridge_stop(dev));
+    zassert_false(half_bridge_is_enabled(dev));
+
+    zassert_ok(half_bridge_set_duty_cycle(dev, MID_PWM_DUTY));
+    zassert_within(half_bridge_get_duty_cycle(dev), MID_PWM_DUTY, DUTY_EPSILON);
+    zassert_ok(half_bridge_start(dev));
+    zassert_true(half_bridge_is_enabled(dev));
 }
 
 ZTEST_SUITE(half_bridge, NULL, half_bridge_setup, half_bridge_before, NULL, NULL);

@@ -42,6 +42,7 @@ struct half_bridge_stm32_gptim_data
     uint32_t deadtime_clocks;
     uint32_t compare_min;
     uint32_t compare_max;
+    bool low_side_forced;
 };
 
 static inline uint32_t ll_channels(const struct half_bridge_stm32_gptim_config *config)
@@ -53,7 +54,12 @@ static inline uint32_t ll_channels(const struct half_bridge_stm32_gptim_config *
 static int half_bridge_stm32_gptim_start(const struct device *dev)
 {
     const struct half_bridge_stm32_gptim_config *config = dev->config;
+    struct half_bridge_stm32_gptim_data *data = dev->data;
     TIM_TypeDef *tim = config->tim.timer;
+
+    if (data->low_side_forced) {
+        return -EBUSY;
+    }
 
     if (half_bridge_stm32_tim_get_compare(tim, config->high_side_channel) == 0U) {
         return -EINVAL;
@@ -67,8 +73,10 @@ static int half_bridge_stm32_gptim_start(const struct device *dev)
 static int half_bridge_stm32_gptim_stop(const struct device *dev)
 {
     const struct half_bridge_stm32_gptim_config *config = dev->config;
+    struct half_bridge_stm32_gptim_data *data = dev->data;
 
     LL_TIM_CC_DisableChannel(config->tim.timer, ll_channels(config));
+    data->low_side_forced = false;
 
     return 0;
 }
@@ -86,6 +94,10 @@ static int half_bridge_stm32_gptim_set_compare(const struct device *dev, uint32_
     const struct half_bridge_stm32_gptim_config *config = dev->config;
     struct half_bridge_stm32_gptim_data *data = dev->data;
     TIM_TypeDef *tim = config->tim.timer;
+
+    if (data->low_side_forced) {
+        return -EBUSY;
+    }
 
     /* protection against wrong settings which could destroy the hardware */
     compare = CLAMP(compare, data->compare_min, data->compare_max);
@@ -116,6 +128,10 @@ static int half_bridge_stm32_gptim_set_compare_limits(const struct device *dev, 
 {
     struct half_bridge_stm32_gptim_data *data = dev->data;
 
+    if (data->low_side_forced) {
+        return -EBUSY;
+    }
+
     if (min > max || max > half_bridge_stm32_gptim_get_period(dev)) {
         return -EINVAL;
     }
@@ -126,6 +142,29 @@ static int half_bridge_stm32_gptim_set_compare_limits(const struct device *dev, 
     return half_bridge_stm32_gptim_set_compare(dev, half_bridge_stm32_gptim_get_compare(dev));
 }
 
+static int half_bridge_stm32_gptim_force_low_side(const struct device *dev)
+{
+    const struct half_bridge_stm32_gptim_config *config = dev->config;
+    struct half_bridge_stm32_gptim_data *data = dev->data;
+    TIM_TypeDef *tim = config->tim.timer;
+
+    data->low_side_forced = true;
+
+    /*
+     * A compare value of 0 keeps OCxREF low in PWM mode 1 for both channels. The high-side output
+     * (active high) stays off and the low-side output (active low) stays on.
+     */
+    half_bridge_stm32_tim_set_compare(tim, config->high_side_channel, 0);
+    half_bridge_stm32_tim_set_compare(tim, config->low_side_channel, 0);
+
+    /* load preload registers immediately */
+    LL_TIM_GenerateEvent_UPDATE(tim);
+
+    LL_TIM_CC_EnableChannel(tim, ll_channels(config));
+
+    return 0;
+}
+
 static DEVICE_API(half_bridge, half_bridge_stm32_gptim_api) = {
     .start = half_bridge_stm32_gptim_start,
     .stop = half_bridge_stm32_gptim_stop,
@@ -134,6 +173,7 @@ static DEVICE_API(half_bridge, half_bridge_stm32_gptim_api) = {
     .get_compare = half_bridge_stm32_gptim_get_compare,
     .get_period = half_bridge_stm32_gptim_get_period,
     .set_compare_limits = half_bridge_stm32_gptim_set_compare_limits,
+    .force_low_side = half_bridge_stm32_gptim_force_low_side,
 };
 
 static int half_bridge_stm32_gptim_init(const struct device *dev)

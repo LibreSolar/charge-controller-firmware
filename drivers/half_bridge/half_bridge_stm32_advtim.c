@@ -42,6 +42,7 @@ struct half_bridge_stm32_advtim_data
 {
     uint32_t compare_min;
     uint32_t compare_max;
+    bool low_side_forced;
 };
 
 static const uint32_t ch2ll_n[] = {
@@ -56,7 +57,12 @@ static const uint32_t ch2ll_n[] = {
 static int half_bridge_stm32_advtim_start(const struct device *dev)
 {
     const struct half_bridge_stm32_advtim_config *config = dev->config;
+    struct half_bridge_stm32_advtim_data *data = dev->data;
     TIM_TypeDef *tim = config->tim.timer;
+
+    if (data->low_side_forced) {
+        return -EBUSY;
+    }
 
     if (half_bridge_stm32_tim_get_compare(tim, config->channel) == 0U) {
         return -EINVAL;
@@ -71,8 +77,10 @@ static int half_bridge_stm32_advtim_start(const struct device *dev)
 static int half_bridge_stm32_advtim_stop(const struct device *dev)
 {
     const struct half_bridge_stm32_advtim_config *config = dev->config;
+    struct half_bridge_stm32_advtim_data *data = dev->data;
 
     LL_TIM_DisableAllOutputs(config->tim.timer);
+    data->low_side_forced = false;
 
     return 0;
 }
@@ -89,6 +97,10 @@ static int half_bridge_stm32_advtim_set_compare(const struct device *dev, uint32
     const struct half_bridge_stm32_advtim_config *config = dev->config;
     struct half_bridge_stm32_advtim_data *data = dev->data;
     TIM_TypeDef *tim = config->tim.timer;
+
+    if (data->low_side_forced) {
+        return -EBUSY;
+    }
 
     /* protection against wrong settings which could destroy the hardware */
     compare = CLAMP(compare, data->compare_min, data->compare_max);
@@ -124,6 +136,10 @@ static int half_bridge_stm32_advtim_set_compare_limits(const struct device *dev,
 {
     struct half_bridge_stm32_advtim_data *data = dev->data;
 
+    if (data->low_side_forced) {
+        return -EBUSY;
+    }
+
     if (min > max || max > half_bridge_stm32_advtim_get_period(dev)) {
         return -EINVAL;
     }
@@ -134,6 +150,29 @@ static int half_bridge_stm32_advtim_set_compare_limits(const struct device *dev,
     return half_bridge_stm32_advtim_set_compare(dev, half_bridge_stm32_advtim_get_compare(dev));
 }
 
+static int half_bridge_stm32_advtim_force_low_side(const struct device *dev)
+{
+    const struct half_bridge_stm32_advtim_config *config = dev->config;
+    struct half_bridge_stm32_advtim_data *data = dev->data;
+    TIM_TypeDef *tim = config->tim.timer;
+
+    data->low_side_forced = true;
+
+    /*
+     * A compare value of 0 keeps OCxREF low in PWM mode 1, so CHx (high side) stays off and the
+     * complementary output CHxN (low side) stays on. The output mode itself can't be changed, as
+     * it is locked after initialization.
+     */
+    half_bridge_stm32_tim_set_compare(tim, config->channel, 0);
+
+    /* load preload registers immediately */
+    LL_TIM_GenerateEvent_UPDATE(tim);
+
+    LL_TIM_EnableAllOutputs(tim);
+
+    return 0;
+}
+
 static DEVICE_API(half_bridge, half_bridge_stm32_advtim_api) = {
     .start = half_bridge_stm32_advtim_start,
     .stop = half_bridge_stm32_advtim_stop,
@@ -142,6 +181,7 @@ static DEVICE_API(half_bridge, half_bridge_stm32_advtim_api) = {
     .get_compare = half_bridge_stm32_advtim_get_compare,
     .get_period = half_bridge_stm32_advtim_get_period,
     .set_compare_limits = half_bridge_stm32_advtim_set_compare_limits,
+    .force_low_side = half_bridge_stm32_advtim_force_low_side,
 };
 
 static int half_bridge_stm32_advtim_init_adc_trigger(TIM_TypeDef *tim)
