@@ -25,6 +25,7 @@ Afterwards, most important folders in your workspace will look like this:
     ├── charge-controller-firmware/     # application firmware repository
     │   ├── app/                        # application source files
     │   ├── boards/                     # board specifications
+    │   ├── drivers/                    # driver source files
     │   ├── tests/                      # unit test source files
     │   └── west.yml                    # main manifest file
     │
