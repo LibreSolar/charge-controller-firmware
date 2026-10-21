@@ -10,6 +10,9 @@
  *
  * The high-side switch is driven by output CHx and the low-side switch by the complementary
  * output CHxN. The timer runs in edge-aligned mode and the dead time is generated in hardware.
+ *
+ * Starting and stopping is done with the main output enable (MOE). While stopped, both outputs
+ * are actively driven low.
  */
 
 #define DT_DRV_COMPAT libresolar_stm32_advtim_half_bridge
@@ -229,6 +232,12 @@ static int half_bridge_stm32_advtim_init(const struct device *dev)
     /* edge-aligned mode to increase resolution (no division by 2 necessary) */
     LL_TIM_SetCounterMode(tim, LL_TIM_COUNTERMODE_UP);
     LL_TIM_SetAutoReload(tim, tim_clk / config->frequency);
+
+    /*
+     * Drive both outputs to their idle level (low, as OISx and OISxN are 0 after reset) while the
+     * main output is disabled, instead of leaving them floating.
+     */
+    LL_TIM_SetOffStates(tim, LL_TIM_OSSI_ENABLE, LL_TIM_OSSR_DISABLE);
 
     /* PWM mode 1 with preload and active high polarity for both outputs */
     LL_TIM_OC_SetMode(tim, ll_channel, LL_TIM_OCMODE_PWM1);

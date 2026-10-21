@@ -71,6 +71,9 @@ static inline int half_bridge_start(const struct device *dev)
 /**
  * Stop the PWM generation, i.e. switch off both high-side and low-side switches
  *
+ * Drivers must actively drive both outputs to their off state instead of leaving them floating.
+ * The same applies after initialization, before the PWM generation is started.
+ *
  * This also ends the state entered with half_bridge_force_low_side().
  *
  * @param dev Half-bridge device
