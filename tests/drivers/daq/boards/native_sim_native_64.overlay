@@ -1,0 +1,37 @@
+/*
+ * Copyright (c) The Libre Solar Project Contributors
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/ {
+	test_adc: test-adc {
+		compatible = "zephyr,dummy-adc";
+		#io-channel-cells = <1>;
+	};
+
+	daq: daq {
+		compatible = "libresolar,daq-emul";
+
+		v-in {
+			io-channels = <&test_adc 3>;
+			multiplier = <105600>;
+			divider = <5600>;
+		};
+
+		/* bi-directional current measurement with zero point at half of the ADC range */
+		i-bidir {
+			io-channels = <&test_adc 1>;
+			multiplier = <1000>;
+			divider = <50>;
+			offset = <32768>;
+			filter-const = <3>;
+		};
+
+		temp-mcu {
+			io-channels = <&test_adc 12>;
+			multiplier = <1>;
+			divider = <1>;
+		};
+	};
+};

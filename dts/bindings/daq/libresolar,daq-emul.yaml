@@ -1,0 +1,11 @@
+# Copyright (c) The Libre Solar Project Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+description: |
+  Emulated data acquisition (DAQ) for tests on native_sim
+
+  Readings are set and processed using the API from <libresolar/drivers/daq_emul.h>.
+
+compatible: "libresolar,daq-emul"
+
+include: daq-common.yaml

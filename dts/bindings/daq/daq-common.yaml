@@ -1,0 +1,55 @@
+# Copyright (c) The Libre Solar Project Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+description: |
+  Common properties for data acquisition (DAQ) devices
+
+  The DAQ samples all inputs given as child nodes with 1 kHz, filters the readings with a
+  low-pass filter and checks them against configurable limits.
+
+  The node is expected at the path /adc-inputs. The following child node names have a special
+  meaning:
+
+  - vref-mcu: Internal reference voltage of the MCU, used to calculate the supply voltage of the
+    ADC if no fixed reference voltage is available.
+  - temp-mcu: Internal temperature sensor of the MCU.
+
+child-binding:
+  description: ADC input
+  properties:
+    io-channels:
+      type: phandle-array
+      required: true
+      description: |
+        ADC channel for this input.
+
+    multiplier:
+      type: int
+      required: true
+      description: |
+        Gain numerator, e.g. the resistance of the full path through a voltage divider.
+
+    divider:
+      type: int
+      required: true
+      description: |
+        Gain denominator, e.g. the resistance of the lower leg of a voltage divider.
+
+    offset:
+      type: int
+      required: false
+      description: |
+        Offset to be subtracted from the 16-bit raw ADC reading before applying the gain
+
+    filter-const:
+      type: int
+      default: 5
+      description: Low-pass filter multiplier 1/(2^filter-const)
+
+    enable-gpios:
+      type: phandle-array
+      required: false
+      description: |
+        Enable the voltage divider input or amplifier.
+
+        If present the corresponding GPIO is set to its active level during initialization.

@@ -1,0 +1,13 @@
+# Copyright (c) The Libre Solar Project Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+description: |
+  Data acquisition (DAQ) using the ADC of STM32 MCUs with DMA
+
+  Conversions are triggered by a timer with 1 kHz and the results are transferred to RAM by the
+  DMA controller. The DAC is used to generate reference voltages for current measurement
+  amplifiers.
+
+compatible: "libresolar,stm32-daq"
+
+include: daq-common.yaml

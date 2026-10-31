@@ -1,0 +1,54 @@
+# Copyright (c) The Libre Solar Project Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig DAQ
+    bool "Data acquisition (DAQ) drivers"
+    default y if DT_HAS_LIBRESOLAR_STM32_DAQ_ENABLED
+    default y if DT_HAS_LIBRESOLAR_DAQ_EMUL_ENABLED
+    help
+      Enable drivers for data acquisition, i.e. continuous sampling, filtering and limit
+      checking of analog inputs.
+
+if DAQ
+
+config DAQ_INIT_PRIORITY
+    int "DAQ init priority"
+    default KERNEL_INIT_PRIORITY_DEVICE
+    help
+      DAQ driver device initialization priority.
+
+module = DAQ
+module-str = daq
+source "subsys/logging/Kconfig.template.log_config"
+
+config DAQ_STM32_CHSEL
+    bool "STM32 DAQ driver for ADCs with fixed channel sequence"
+    default y
+    depends on DT_HAS_LIBRESOLAR_STM32_DAQ_ENABLED
+    depends on SOC_SERIES_STM32F0X || SOC_SERIES_STM32L0X || SOC_SERIES_STM32G0X
+    select USE_STM32_LL_ADC
+    select USE_STM32_LL_DAC
+    select USE_STM32_LL_DMA
+    help
+      Enable DAQ driver for STM32 ADCs converting the selected channels in ascending order
+      (STM32F0, STM32L0 and STM32G0).
+
+config DAQ_STM32_RANK
+    bool "STM32 DAQ driver for ADCs with configurable channel sequence"
+    default y
+    depends on DT_HAS_LIBRESOLAR_STM32_DAQ_ENABLED
+    depends on SOC_SERIES_STM32G4X
+    select USE_STM32_LL_ADC
+    select USE_STM32_LL_DAC
+    select USE_STM32_LL_DMA
+    help
+      Enable DAQ driver for STM32 ADCs with ranks to define the channel sequence (STM32G4).
+
+config DAQ_EMUL
+    bool "Emulated DAQ driver"
+    default y
+    depends on DT_HAS_LIBRESOLAR_DAQ_EMUL_ENABLED
+    help
+      Enable emulated DAQ driver for tests on native_sim.
+
+endif # DAQ
