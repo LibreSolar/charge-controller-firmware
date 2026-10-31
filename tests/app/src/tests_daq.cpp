@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <libresolar/drivers/daq_emul.h>
+
 #include "daq.h"
 #include "daq_stub.h"
 #include "helper.h"
@@ -13,58 +15,6 @@
 #include <stdint.h>
 
 static AdcValues adcval;
-
-ZTEST(daq, test_adc_voltage_to_raw)
-{
-    int32_t raw;
-
-    raw = adc_voltage_to_raw(0.0, 3300);
-    zassert_equal(raw, 0);
-
-    raw = adc_voltage_to_raw(3.3, 3300);
-    zassert_equal(raw, 65535);
-
-    raw = adc_voltage_to_raw(1.65, 3300);
-    zassert_equal(raw, 32767);
-}
-
-ZTEST(daq, test_adc_raw_to_voltage)
-{
-    float voltage;
-
-    voltage = adc_raw_to_voltage(0, 3300);
-    assert_float_equal(voltage, 0.0);
-
-    voltage = adc_raw_to_voltage(65535, 3300);
-    zassert_within(voltage, 3.3F, 0.01F);
-
-    voltage = adc_raw_to_voltage(32767, 3300);
-    zassert_within(voltage, 1.65F, 0.01F);
-}
-
-// testing only for 2 values
-ZTEST(daq, test_check_filtering)
-{
-    // reset values
-    clear_adc_filtered();
-
-    // collect 1000 samples to update filtered values
-    for (int s = 0; s < 1000; s++) {
-        for (int i = 0; i < NUM_ADC_CH; i++) {
-            adc_update_value(i);
-        }
-    }
-
-    uint32_t adc_filtered_bak[NUM_ADC_CH];
-    adc_filtered_bak[ADC_POS(vref_mcu)] = get_adc_filtered(ADC_POS(vref_mcu));
-    adc_filtered_bak[ADC_POS(v_high)] = get_adc_filtered(ADC_POS(v_high));
-
-    // overwrite filtered values
-    prepare_adc_filtered();
-
-    zassert_equal(adc_filtered_bak[ADC_POS(vref_mcu)], get_adc_filtered(ADC_POS(vref_mcu)));
-    zassert_equal(adc_filtered_bak[ADC_POS(v_high)], get_adc_filtered(ADC_POS(v_high)));
-}
 
 ZTEST(daq, test_check_solar_terminal_readings)
 {
@@ -97,14 +47,14 @@ ZTEST(daq, test_adc_alert_lv_undervoltage_triggering)
     battery_conf_init(&bat_conf, BAT_TYPE_LFP, 4, 100);
     daq_set_lv_limits(bat_conf.absolute_max_voltage, bat_conf.absolute_min_voltage);
     prepare_adc_filtered();
-    adc_update_value(ADC_POS(v_low));
+    daq_emul_process(DAQ_DEV, DAQ_CH(v_low));
 
     // undervoltage test
     adcval.battery_voltage = bat_conf.absolute_min_voltage - 0.1f;
     prepare_adc_readings(adcval);
-    adc_update_value(ADC_POS(v_low));
+    daq_emul_process(DAQ_DEV, DAQ_CH(v_low));
     zassert_equal(dev_stat.has_error(ERR_LOAD_VOLTAGE_DIP), false);
-    adc_update_value(ADC_POS(v_low));
+    daq_emul_process(DAQ_DEV, DAQ_CH(v_low));
     load.control();
     zassert_equal(flags_check(&load.error_flags, ERR_LOAD_VOLTAGE_DIP), true);
     zassert_equal(load.state, LOAD_STATE_OFF);
@@ -125,16 +75,16 @@ ZTEST(daq, test_adc_alert_lv_overvoltage_triggering)
     battery_conf_init(&bat_conf, BAT_TYPE_LFP, 4, 100);
     daq_set_lv_limits(bat_conf.absolute_max_voltage, bat_conf.absolute_min_voltage);
     prepare_adc_filtered();
-    adc_update_value(ADC_POS(v_low));
+    daq_emul_process(DAQ_DEV, DAQ_CH(v_low));
 
     dcdc.state = DCDC_CONTROL_MPPT;
 
     // overvoltage test
     adcval.battery_voltage = bat_conf.absolute_max_voltage + 0.1f;
     prepare_adc_readings(adcval);
-    adc_update_value(ADC_POS(v_low));
+    daq_emul_process(DAQ_DEV, DAQ_CH(v_low));
     zassert_equal(dev_stat.has_error(ERR_BAT_OVERVOLTAGE), false);
-    adc_update_value(ADC_POS(v_low));
+    daq_emul_process(DAQ_DEV, DAQ_CH(v_low));
     zassert_equal(dev_stat.has_error(ERR_BAT_OVERVOLTAGE), true);
     // zassert_equal(pwm_switch.active(), false);
     zassert_equal(dcdc.state, DCDC_CONTROL_OFF);
@@ -155,23 +105,16 @@ ZTEST(daq, test_adc_alert_hv_overvoltage_triggering)
     dev_stat.clear_error(ERR_ANY_ERROR);
     daq_set_hv_limit(DT_PROP(DT_PATH(pcb), hs_voltage_max));
     prepare_adc_filtered();
-    adc_update_value(ADC_POS(v_high));
+    daq_emul_process(DAQ_DEV, DAQ_CH(v_high));
 
     // overvoltage test
     adcval.solar_voltage = 85.0F;
     prepare_adc_readings(adcval);
-    adc_update_value(ADC_POS(v_high));
+    daq_emul_process(DAQ_DEV, DAQ_CH(v_high));
     zassert_equal(dev_stat.has_error(ERR_DCDC_HS_OVERVOLTAGE), false);
-    adc_update_value(ADC_POS(v_high));
+    daq_emul_process(DAQ_DEV, DAQ_CH(v_high));
     zassert_equal(dev_stat.has_error(ERR_DCDC_HS_OVERVOLTAGE), true);
     zassert_equal(dcdc.state, DCDC_CONTROL_OFF);
-}
-
-ZTEST(daq, test_adc_alert_overflow_prevention)
-{
-    // try to set an alert that overflows the 12-bit ADC resolution
-    uint16_t limit = adc_raw_clamp(1, UINT16_MAX + 1);
-    zassert_equal(limit, UINT16_MAX);
 }
 
 /** Data acquisition tests

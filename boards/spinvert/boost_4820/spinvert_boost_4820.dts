@@ -63,9 +63,7 @@
 	};
 
 	adc-inputs {
-		compatible = "adc-inputs";
-
-		/* nodes must be sorted by channel number, as the ADC converts in ascending order */
+		compatible = "libresolar,stm32-daq";
 
 		i-dump-load {
 			io-channels = <&adc1 0>;

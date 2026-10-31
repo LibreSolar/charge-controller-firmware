@@ -75,7 +75,7 @@
 	};
 
 	adc-inputs {
-		compatible = "adc-inputs";
+		compatible = "libresolar,stm32-daq";
 
 		temp-bat {
 			io-channels = <&adc1 0>;

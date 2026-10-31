@@ -42,10 +42,6 @@ int main(void)
     battery_conf_init(&bat_conf, CONFIG_BAT_TYPE, CONFIG_BAT_NUM_CELLS, CONFIG_BAT_CAPACITY_AH);
     battery_conf_overwrite(&bat_conf, &bat_conf_user); // initialize conf_user with same values
 
-#if BOARD_HAS_DCDC
-    daq_set_hv_limit(DT_PROP(DT_PATH(pcb), hs_voltage_max));
-#endif
-
 #if CONFIG_HV_TERMINAL_SOLAR || CONFIG_LV_TERMINAL_SOLAR || CONFIG_PWM_TERMINAL_SOLAR
     solar_terminal.init_solar();
 #endif
@@ -59,6 +55,11 @@ int main(void)
 
     // Data Acquisition (DAQ) setup
     daq_setup();
+
+#if BOARD_HAS_DCDC
+    // requires the reference voltage, which may be calculated from initial measurements
+    daq_set_hv_limit(DT_PROP(DT_PATH(pcb), hs_voltage_max));
+#endif
 
     charger.detect_num_batteries(&bat_conf); // check if we have 24V instead of 12V system
     charger.init_terminal(&bat_conf);

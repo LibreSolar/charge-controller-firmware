@@ -352,13 +352,6 @@ config CAN_LOG_LEVEL
     help
       Log level for the CAN module (if included). 0=off, 1=ERR, 2=WRN, 3=INF, 4=DBG
 
-config DAQ_LOG_LEVEL
-    int "Log level for the DAQ module"
-    default 2
-    depends on LOG
-    help
-      Log level for the DAQ module. 0=off, 1=ERR, 2=WRN, 3=INF, 4=DBG
-
 config DATA_OBJECTS_LOG_LEVEL
     int "Log level for the data objects module"
     default 2

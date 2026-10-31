@@ -21,6 +21,7 @@ zephyr_include_directories(../../app/src)
 zephyr_include_directories(../../../modules/thingset/src)
 
 target_sources(app PRIVATE
+        src/daq_stub.cpp
         src/tests_bat_charger.cpp
         src/tests_daq.cpp
         src/tests_dcdc.cpp

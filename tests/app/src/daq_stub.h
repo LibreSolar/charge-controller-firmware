@@ -7,7 +7,7 @@
 #ifndef DAQ_STUB_H_
 #define DAQ_STUB_H_
 
-/** Data to fill adc_filtered array during unit-tests
+/** Data to fill readings of the emulated DAQ during unit-tests
  */
 typedef struct
 {
@@ -19,11 +19,10 @@ typedef struct
     float internal_temperature;
 } AdcValues;
 
+/** Set the readings of the emulated DAQ for the next samples */
 void prepare_adc_readings(AdcValues values);
 
+/** Set the filtered values of the emulated DAQ to the current readings */
 void prepare_adc_filtered();
-void clear_adc_filtered();
-uint32_t get_adc_filtered(uint32_t channel);
-uint16_t adc_raw_clamp(float scale, float limit);
 
 #endif

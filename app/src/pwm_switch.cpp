@@ -48,7 +48,7 @@ void PwmSwitch::test()
     }
     else if (!pwm_active() && enable == true) {
         // turning the PWM switch on creates a short voltage rise, so inhibit alerts by 50 ms
-        adc_upper_alert_inhibit(ADC_POS(v_low), 50);
+        daq_inhibit_alert(DAQ_DEV, DAQ_CH(v_low), DAQ_ALERT_UPPER, 50);
         pwm_signal_start(0.9F);
         LOG_INF("PWM test mode start.");
     }
@@ -127,7 +127,7 @@ void PwmSwitch::control()
             && uptime() > (off_timestamp + restart_interval) && enable == true)
         {
             // turning the PWM switch on creates a short voltage rise, so inhibit alerts by 50 ms
-            adc_upper_alert_inhibit(ADC_POS(v_low), 50);
+            daq_inhibit_alert(DAQ_DEV, DAQ_CH(v_low), DAQ_ALERT_UPPER, 50);
 
             if (dev_stat.has_error(ERR_PWM_SWITCH_OVERVOLTAGE)) {
                 // start with minimum duty cycle in order to prevent another overvoltage event

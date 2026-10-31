@@ -52,7 +52,7 @@
 	};
 
 	adc-inputs {
-		compatible = "adc-inputs";
+		compatible = "libresolar,stm32-daq";
 
 		v-low {
 			io-channels = <&adc1 12>;

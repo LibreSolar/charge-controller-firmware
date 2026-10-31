@@ -73,7 +73,7 @@ static void TIM3_IRQHandler(void *args)
     if ((int)LL_TIM_OC_GetCompare(tim) < _pwm_resolution) {
         // turning the PWM switch on creates a short voltage rise, so inhibit alerts by 10 ms
         // at each rising edge if switch is not continuously on
-        adc_upper_alert_inhibit(ADC_POS(v_low), 10);
+        daq_inhibit_alert(DAQ_DEV, DAQ_CH(v_low), DAQ_ALERT_UPPER, 10);
     }
 }
 

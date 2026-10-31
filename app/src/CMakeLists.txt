@@ -5,7 +5,6 @@ zephyr_include_directories(.)
 target_sources(app PRIVATE
         bat_charger.cpp
         daq.cpp
-        daq_driver.c
         device_status.cpp
         dcdc.cpp
         hardware.cpp

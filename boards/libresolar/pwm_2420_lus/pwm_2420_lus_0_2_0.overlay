@@ -11,7 +11,7 @@
 	};
 
 	adc-inputs {
-		compatible = "adc-inputs";
+		compatible = "libresolar,stm32-daq";
 
 		i-load {
 			io-channels = <&adc1 5>;

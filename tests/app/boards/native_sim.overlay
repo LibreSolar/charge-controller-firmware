@@ -69,7 +69,7 @@
         };
 
 	adc-inputs {
-		compatible = "adc-inputs";
+		compatible = "libresolar,daq-emul";
 
 		v-low {
 			io-channels = <&adc1 12>;
