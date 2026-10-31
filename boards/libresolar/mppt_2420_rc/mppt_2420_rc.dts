@@ -213,7 +213,7 @@
 	status = "okay";
 };
 
-&i2c1 {
+uext_i2c: &i2c1 {
 	/* shared between UEXT and EEPROM */
 	status = "okay";
 	pinctrl-0 = <&i2c1_scl_pa15 &i2c1_sda_pb7>;

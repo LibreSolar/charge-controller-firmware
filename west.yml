@@ -2,8 +2,6 @@ manifest:
   remotes:
     - name: zephyrproject
       url-base: https://github.com/zephyrproject-rtos
-    - name: libresolar
-      url-base: https://github.com/LibreSolar
     - name: thingset
       url-base: https://github.com/ThingSet
   projects:
@@ -16,10 +14,6 @@ manifest:
           - edtt
           - hal_stm32
           - zcbor
-    - name: oled-display-library
-      remote: libresolar
-      revision: 523b26c103de56714fcda655702d600870a671bc
-      path: modules/oled-display
     - name: thingset-zephyr-sdk
       remote: thingset
       revision: 8b32f7db1898dc51daa1834b3f8058de6a67166f

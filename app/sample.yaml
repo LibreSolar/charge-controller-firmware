@@ -18,3 +18,13 @@ tests:
       - pwm_2420_lus@0.2.0
       - pwm_2420_lus@0.3.0
     integration_platforms: *boards
+  charge_controller.firmware.uext_oled:
+    extra_args: SHIELD=uext_oled
+    # mppt_2420_lc and nucleo_g474re excluded: not enough RAM / no UEXT port
+    platform_allow: &uext_oled_boards
+      - mppt_1210_hus@0.7.0
+      - mppt_2420_hc@0.2.0
+      - mppt_2420_hpx
+      - mppt_2420_rc
+      - pwm_2420_lus@0.3.0
+    integration_platforms: *uext_oled_boards

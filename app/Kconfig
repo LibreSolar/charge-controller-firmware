@@ -314,15 +314,32 @@ endmenu # Charge controller setup
 
 menu "UEXT port"
 
-config UEXT_OLED_DISPLAY
-    select I2C
-    bool "OLED display"
+DT_CHOSEN_Z_DISPLAY := zephyr,display
 
-config UEXT_OLED_BRIGHTNESS
-    depends on UEXT_OLED_DISPLAY
-    int "OLED display brightness"
-    range 1 255
-    default 1
+config UEXT_OLED_DISPLAY
+    bool "OLED display"
+    depends on $(dt_chosen_enabled,$(DT_CHOSEN_Z_DISPLAY))
+    default y if SHIELD_UEXT_OLED
+    select DISPLAY
+    select CHARACTER_FRAMEBUFFER
+    help
+      Show live data on a SSD1306 128x64 OLED display connected to the UEXT
+      port. The display is configured via the uext_oled shield:
+
+        west build -b <board> app -- -DSHIELD=uext_oled
+
+      The brightness can be changed via CONFIG_SSD1306_DEFAULT_CONTRAST.
+
+config HEAP_MEM_POOL_ADD_SIZE_UEXT_OLED
+    int
+    default 1280 if UEXT_OLED_DISPLAY
+    default 0
+    help
+      Frame buffer allocated by the character framebuffer subsystem (1024 bytes) plus some
+      margin for the heap management overhead.
+
+config CHARACTER_FRAMEBUFFER_USE_DEFAULT_FONTS
+    default n if UEXT_OLED_DISPLAY
 
 endmenu # UEXT port
 

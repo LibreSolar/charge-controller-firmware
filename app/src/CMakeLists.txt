@@ -9,7 +9,6 @@ target_sources(app PRIVATE
         device_status.cpp
         dcdc.cpp
         hardware.cpp
-        oled.cpp
         leds.cpp
         load.cpp
         load_driver.c
@@ -19,6 +18,8 @@ target_sources(app PRIVATE
         pwm_switch.cpp
         setup.cpp
 )
+
+target_sources_ifdef(CONFIG_UEXT_OLED_DISPLAY app PRIVATE oled.cpp oled_font.c)
 
 if(${CONFIG_CUSTOM_DATA_OBJECTS_FILE})
     target_sources(app PRIVATE data_objects_custom.cpp)

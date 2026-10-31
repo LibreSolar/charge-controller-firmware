@@ -1,0 +1,9 @@
+# Copyright (c) The Libre Solar Project Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+if SHIELD_UEXT_OLED
+
+config SSD1306_DEFAULT_CONTRAST
+	default 1
+
+endif # SHIELD_UEXT_OLED

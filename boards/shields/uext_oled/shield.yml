@@ -1,0 +1,6 @@
+shield:
+  name: uext_oled
+  full_name: SSD1306 128x64 OLED display at UEXT connector
+  vendor: others
+  supported_features:
+    - display
