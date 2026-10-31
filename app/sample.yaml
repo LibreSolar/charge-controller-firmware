@@ -17,6 +17,7 @@ tests:
       - nucleo_g474re
       - pwm_2420_lus@0.2.0
       - pwm_2420_lus@0.3.0
+      - spinvert_boost_4820
     integration_platforms: *boards
   charge_controller.firmware.uext_oled:
     extra_args: SHIELD=uext_oled

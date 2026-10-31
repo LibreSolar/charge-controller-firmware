@@ -17,7 +17,20 @@ CONFIG_UART_CONSOLE=y
 
 CONFIG_PWM=y
 
+CONFIG_FLASH=y
+CONFIG_FLASH_PAGE_LAYOUT=y
+CONFIG_FLASH_LOG_LEVEL_WRN=y
+
+CONFIG_NVS=y
+CONFIG_NVS_LOG_LEVEL_WRN=y
+
 CONFIG_CAN=y
 CONFIG_ISOTP=y
 CONFIG_ISOTP_FAST=y
 CONFIG_THINGSET_CAN=y
+
+# The STM32G0B1 doesn't have an RNG, so a timer-based (non-random) number generator is used for the
+# automatic CAN node address assignment of ThingSet. ENTROPY_GENERATOR is required by THINGSET_CAN,
+# even though there is no entropy driver.
+CONFIG_ENTROPY_GENERATOR=y
+CONFIG_TEST_RANDOM_GENERATOR=y
