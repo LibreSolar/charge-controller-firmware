@@ -1,0 +1,21 @@
+identifier: spinvert_boost_4820
+name: Spinvert Boost 4820
+type: mcu
+arch: arm
+toolchain:
+  - zephyr
+  - gnuarmemb
+ram: 144
+flash: 256
+supported:
+  - adc
+  - can
+  - dac
+  - gpio
+  - nvs
+  - pwm
+  - uart
+  - usb_device
+  - usbd
+  - watchdog
+vendor: spinvert

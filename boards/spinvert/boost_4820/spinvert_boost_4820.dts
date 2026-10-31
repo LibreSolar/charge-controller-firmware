@@ -1,0 +1,250 @@
+/*
+ * Copyright (c) The Libre Solar Project Contributors
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/dts-v1/;
+#include <st/g0/stm32g0b1Xc.dtsi>
+#include <st/g0/stm32g0b1c(b-c-e)txn-pinctrl.dtsi>
+
+/ {
+	model = "Spinvert Boost 4820";
+	compatible = "st,stm32g0b1";
+
+	pcb {
+		compatible = "charge-controller";
+
+		type = "Boost 4820";
+		version-str = "v0.1";
+		version-num = <1>;
+
+		/* high side: battery output (80 V capacitors, 100 V MOSFETs) */
+		hs-voltage-max = <70>;
+		/* low side: rectified generator voltage (58 V TVS diodes D12, D13, D17) */
+		ls-voltage-max = <60>;
+		/* max. inductor current */
+		dcdc-current-max = <10>;
+	};
+
+	chosen {
+		thingset,can = &fdcan1;
+		/* only UART, available at the SBU pins of the USB-C connector (debug accessory mode) */
+		thingset,serial = &usart1;
+		zephyr,console = &usart1;
+		zephyr,shell-uart = &usart1;
+		zephyr,sram = &sram0;
+		zephyr,flash = &flash0;
+	};
+
+	/* dual-color LED with common anode */
+	leds {
+		compatible = "charlieplexing-leds";
+		gpios = <&gpiob 8 GPIO_ACTIVE_LOW>,	/* red */
+			<&gpiob 9 GPIO_ACTIVE_LOW>;	/* green */
+
+		pwr {
+			states = <0 1>;
+		};
+	};
+
+	outputs {
+		compatible = "outputs";
+
+		dump_load {
+			pwms = <&pwm2 2 PWM_MSEC(1) PWM_POLARITY_NORMAL>; /* 1 ms period = 1 kHz */
+			current-max = <20>;
+		};
+
+		can_en {
+			/* TCAN334 is in standby mode if STB is high */
+			gpios = <&gpiod 2 GPIO_ACTIVE_LOW>;
+		};
+	};
+
+	adc-inputs {
+		compatible = "adc-inputs";
+
+		/* nodes must be sorted by channel number, as the ADC converts in ascending order */
+
+		i-dump-load {
+			io-channels = <&adc1 0>;
+			// no amplifier, resistor: 2 mOhm
+			multiplier = <1000>;	// 1000
+			divider = <2>;		// 2*1
+		};
+
+		v-low {
+			io-channels = <&adc1 2>;
+			multiplier = <105600>;
+			divider = <5600>;
+		};
+
+		i-dcdc {
+			io-channels = <&adc1 3>;
+			// amp gain: 50 (INA299A2), resistor: 2 mOhm, offset set via REF pin (DAC1)
+			multiplier = <1000>;	// 1000
+			divider = <100>;	// 2*50
+		};
+
+		v-high {
+			io-channels = <&adc1 5>;
+			multiplier = <102200>;
+			divider = <2200>;
+		};
+
+		temp-fets {
+			io-channels = <&adc1 6>;
+			multiplier = <10000>;	// 10k NTC series resistor
+			divider = <1>;
+		};
+
+		/* generator phase voltages vs. GND for frequency measurement: 2x 150k / 10k divider */
+		v-ac-l1 {
+			io-channels = <&adc1 8>;
+			multiplier = <310000>;
+			divider = <10000>;
+		};
+
+		v-ac-l2 {
+			io-channels = <&adc1 9>;
+			multiplier = <310000>;
+			divider = <10000>;
+		};
+
+		v-ac-l3 {
+			io-channels = <&adc1 10>;
+			multiplier = <310000>;
+			divider = <10000>;
+		};
+
+		temp-mcu {
+			io-channels = <&adc1 12>;
+			multiplier = <1>;
+			divider = <1>;
+		};
+
+		vref-mcu {
+			io-channels = <&adc1 13>;
+			multiplier = <1>;
+			divider = <1>;
+		};
+	};
+
+	aliases {
+		uart-dbg = &usart1;
+	};
+};
+
+&clk_hse {
+	clock-frequency = <DT_FREQ_M(8)>;
+	status = "okay";
+};
+
+&clk_hsi48 {
+	status = "okay";
+	crs-usb-sof;
+};
+
+/* 8 MHz / 1 * 16 = 128 MHz VCO */
+&pll {
+	div-m = <1>;
+	mul-n = <16>;
+	div-p = <2>;
+	div-q = <2>;
+	div-r = <2>;
+	clocks = <&clk_hse>;
+	status = "okay";
+};
+
+&rcc {
+	clocks = <&pll>;
+	clock-frequency = <DT_FREQ_M(64)>;
+	ahb-prescaler = <1>;
+	apb1-prescaler = <1>;
+};
+
+&usart1 {
+	pinctrl-0 = <&usart1_tx_pb6 &usart1_rx_pb7>;
+	pinctrl-names = "default";
+	current-speed = <115200>;
+	status = "okay";
+};
+
+&usart1_rx_pb7 {
+	bias-pull-up;	// avoid junk characters if pin is left floating
+};
+
+zephyr_udc0: &usb {
+	pinctrl-0 = <&usb_dm_pa11 &usb_dp_pa12>;
+	pinctrl-names = "default";
+	status = "okay";
+};
+
+&iwdg {
+	status = "okay";
+};
+
+&adc1 {
+	pinctrl-0 = <&adc1_in0_pa0 &adc1_in2_pa2 &adc1_in3_pa3 &adc1_in5_pa5 &adc1_in6_pa6
+		     &adc1_in8_pb0 &adc1_in9_pb1 &adc1_in10_pb2>;
+	pinctrl-names = "default";
+	st,adc-clock-source = "SYNC";
+	st,adc-prescaler = <4>;
+	status = "okay";
+};
+
+/* reference voltage for the DC/DC current amplifier (INA299 REF pin) */
+&dac1 {
+	pinctrl-0 = <&dac1_out1_pa4>;
+	pinctrl-names = "default";
+	status = "okay";
+};
+
+&timers1 {
+	status = "okay";
+
+	halfbridge: halfbridge {
+		compatible = "libresolar,stm32-advtim-half-bridge";
+		pinctrl-0 = <&tim1_ch2_pb3 &tim1_ch2n_pd3>;
+		pinctrl-names = "default";
+		channel = <2>;
+		frequency = <128000>;
+		deadtime-ns = <300>;
+	};
+};
+
+/* TIM2 (CH2) used for dump load */
+&timers2 {
+	status = "okay";
+	st,prescaler = <63>;	/* reduce counter clock frequency to 1 MHz */
+
+	pwm2: pwm {
+		status = "okay";
+		pinctrl-0 = <&tim2_ch2_pa1>;
+		pinctrl-names = "default";
+	};
+};
+
+&fdcan1 {
+	clocks = <&rcc STM32_CLOCK(APB1, 12)>,
+		 <&rcc STM32_SRC_PLL_Q FDCAN_SEL(1)>;
+	pinctrl-0 = <&fdcan1_rx_pd0 &fdcan1_tx_pd1>;
+	pinctrl-names = "default";
+	bitrate = <500000>;
+	bitrate-data = <2000000>;
+	status = "okay";
+};
+
+&flash0 {
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		/* 4 KiB of storage at the end of the 256 KiB of flash (second bank) */
+		storage_partition: partition@3f000 {
+			reg = <0x0003f000 0x00001000>;
+		};
+	};
+};

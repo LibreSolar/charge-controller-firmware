@@ -1,0 +1,6 @@
+board:
+  name: spinvert_boost_4820
+  full_name: Spinvert Boost 4820
+  vendor: spinvert
+  socs:
+    - name: stm32g0b1xx
