@@ -16,6 +16,17 @@ config CONTROL_FREQUENCY
       Frequencies higher than 10 Hz caused issues with MPPT control during lab test with
       PV simulator. Might be different with actual solar panel.
 
+config DCDC_DUTY_STEP_SIZE
+    int
+    default 3 if SOC_SERIES_STM32G4X
+    default 1
+    help
+      Duty cycle change per control step of the DC/DC MPPT algorithm in timer counts of the
+      half bridge.
+
+      Larger steps are used for faster microcontrollers, as their half-bridge timers have a
+      higher resolution.
+
 config HS_MOSFET_FAIL_SAFE_PROTECTION
     bool
     default y
@@ -372,13 +383,6 @@ config DCDC_LOG_LEVEL
     depends on LOG
     help
       Log level for the DCDC module (if included). 0=off, 1=ERR, 2=WRN, 3=INF, 4=DBG
-
-config HW_LOG_LEVEL
-    int "Log level for the hardware module"
-    default 2
-    depends on LOG
-    help
-      Log level for the hardware module. 0=off, 1=ERR, 2=WRN, 3=INF, 4=DBG
 
 config BAT_LOG_LEVEL
     int "Log level for the battery module"

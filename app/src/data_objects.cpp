@@ -6,15 +6,10 @@
 
 #include "data_objects.h"
 
-#include <soc.h>
 #include <zephyr/kernel.h>
 
 #include <zephyr/drivers/hwinfo.h>
 #include <zephyr/sys/crc.h>
-
-#ifdef CONFIG_SOC_FAMILY_STM32
-#include <stm32_ll_utils.h>
-#endif
 
 #include <stdio.h>
 #include <string.h>
@@ -34,14 +29,6 @@ char manufacturer[] = "Libre Solar";
 char device_type[] = DT_PROP(DT_PATH(pcb), type);
 char hardware_version[] = DT_PROP(DT_PATH(pcb), version_str);
 char firmware_version[] = FIRMWARE_VERSION_ID;
-
-#ifdef CONFIG_SOC_FAMILY_STM32
-uint32_t flash_size = LL_GetFlashSize();
-uint32_t flash_page_size = FLASH_PAGE_SIZE;
-#else
-uint32_t flash_size = 128;
-uint32_t flash_page_size = 0x800;
-#endif
 
 #if CONFIG_LV_TERMINAL_BATTERY
 #define bat_bus lv_bus

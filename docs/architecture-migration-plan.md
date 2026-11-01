@@ -181,8 +181,13 @@ Move all remaining hardware access from `app/src` into Zephyr drivers.
 - [x] NTC thermistors via Zephyr sensor API (replaces `ntc_temp()` in `daq.cpp`)
   - [x] `libresolar,daq-ntc-thermistor` sensor driver using the filtered DAQ readings, as
         Zephyr's NTC driver requires exclusive ADC access
-- [ ] Bootloader entry and SoC-specific setup out of the application (`hardware.cpp`,
+- [x] Bootloader entry and SoC-specific setup out of the application (`hardware.cpp`,
       `setup.cpp`, `mcu.h`)
+  - Unused STM32 bootloader entry and flash size information removed (no ThingSet functions
+    referencing them anymore)
+  - USB-C dead battery pull-downs of STM32G4 are already disabled by Zephyr's SoC init
+  - DC/DC duty cycle step size configurable via `CONFIG_DCDC_DUTY_STEP_SIZE` instead of
+    depending on the SoC series in the code
 
 ### Step 2: Devicetree power model
 

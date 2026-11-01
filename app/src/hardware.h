@@ -10,16 +10,8 @@
 /** @file
  *
  * @brief
- * Hardware-specific functions like timers, watchdog, bootloader
+ * Device reset and watchdog functions
  */
-
-/** DC/DC or PWM control loop (implemented in main.cpp)
- */
-void system_control();
-
-/** Reset device and start STM32 internal bootloader
- */
-void start_stm32_bootloader();
 
 /**
  * Reset device

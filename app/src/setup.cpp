@@ -86,7 +86,6 @@ uint32_t timestamp;
 
 #ifndef UNIT_TEST
 
-#include <soc.h>
 #include <zephyr/kernel.h>
 
 static inline void timestamp_inc(struct k_timer *timer_id)
@@ -107,11 +106,6 @@ void setup()
      */
     void *temp = k_malloc(4);
     k_free(temp);
-
-#ifdef CONFIG_SOC_SERIES_STM32G4X
-    // disable 5k pull-down required for USB-C PD on PB4 and PB6 so that they can be used as inputs
-    PWR->CR3 |= PWR_CR3_UCPD_DBDIS;
-#endif
 }
 
 #endif

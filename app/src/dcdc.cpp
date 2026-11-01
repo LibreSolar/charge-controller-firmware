@@ -35,12 +35,6 @@ LOG_MODULE_REGISTER(dcdc, CONFIG_DCDC_LOG_LEVEL);
 #define BOOST_DUTY_POWER_DECREASE (1)
 #define BOOST_DUTY_POWER_INCREASE (-1)
 
-#ifdef CONFIG_SOC_SERIES_STM32G4X
-#define DUTY_STEP_SIZE (3) // increased step size for fast microcontroller
-#else
-#define DUTY_STEP_SIZE (1) // single minimum step for other microcontrollers
-#endif
-
 #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(outputs), hv_out))
 #define HV_OUT_NODE DT_CHILD(DT_PATH(outputs), hv_out)
 #endif
@@ -301,8 +295,9 @@ __weak void Dcdc::control()
             }
 
             if (pwm_direction != 0) {
-                half_bridge_set_compare(half_bridge, half_bridge_get_compare(half_bridge)
-                                                         + pwm_direction * DUTY_STEP_SIZE);
+                half_bridge_set_compare(half_bridge,
+                                        half_bridge_get_compare(half_bridge)
+                                            + pwm_direction * CONFIG_DCDC_DUTY_STEP_SIZE);
 
                 // requires floating point support with CONFIG_CBPRINTF_FP_SUPPORT=y
                 LOG_DBG("P %.2fW, inductor %.2fA, HS: %.2fV, %.2fA margin, "
