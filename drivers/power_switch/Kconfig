@@ -1,0 +1,54 @@
+# Copyright (c) The Libre Solar Project Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig POWER_SWITCH
+    bool "Power switch drivers"
+    default y if DT_HAS_LIBRESOLAR_GPIO_POWER_SWITCH_ENABLED
+    default y if DT_HAS_LIBRESOLAR_STM32_LPTIM_POWER_SWITCH_ENABLED
+    help
+      Enable drivers for power switches, e.g. used for load or USB outputs.
+
+if POWER_SWITCH
+
+config POWER_SWITCH_INIT_PRIORITY
+    int "Power switch init priority"
+    default 70
+    help
+      Power switch driver device initialization priority. Must be lower than the priority
+      of the GPIO and PWM drivers.
+
+module = POWER_SWITCH
+module-str = power_switch
+source "subsys/logging/Kconfig.template.log_config"
+
+config POWER_SWITCH_GPIO
+    bool "GPIO power switch driver"
+    default y
+    depends on DT_HAS_LIBRESOLAR_GPIO_POWER_SWITCH_ENABLED
+    select GPIO
+    help
+      Enable driver for power switches driven by a GPIO.
+
+DT_COMPAT_LIBRESOLAR_GPIO_POWER_SWITCH := libresolar,gpio-power-switch
+
+config POWER_SWITCH_GPIO_CHARGE_PUMP
+    bool
+    default y
+    depends on POWER_SWITCH_GPIO
+    depends on $(dt_compat_any_has_prop,$(DT_COMPAT_LIBRESOLAR_GPIO_POWER_SWITCH),charge-pump-pwms)
+    select PWM
+    help
+      Support for charge pump PWM signals of GPIO power switches.
+
+config POWER_SWITCH_STM32_LPTIM
+    bool "STM32 LPTIM power switch driver with short-circuit protection"
+    default y
+    depends on DT_HAS_LIBRESOLAR_STM32_LPTIM_POWER_SWITCH_ENABLED
+    depends on SOC_SERIES_STM32L0X
+    select GPIO
+    select PINCTRL
+    help
+      Enable power switch driver using LPTIM1 and COMP2 of STM32L0 for hardware short-circuit
+      protection.
+
+endif # POWER_SWITCH

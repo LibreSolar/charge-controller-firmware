@@ -1,0 +1,41 @@
+# Copyright (c) The Libre Solar Project Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+description: |
+  Power switch driven by a GPIO
+
+  Example of a high-side load switch with charge pump:
+
+    load_switch: load-switch {
+        compatible = "libresolar,gpio-power-switch";
+        gpios = <&gpiob 2 GPIO_ACTIVE_LOW>;
+        charge-pump-pwms = <&pwm8 2 PWM_USEC(200) PWM_POLARITY_NORMAL>;
+        current-max = <20>;
+    };
+
+compatible: "libresolar,gpio-power-switch"
+
+include: [base.yaml, power-switch-common.yaml]
+
+properties:
+  gpios:
+    type: phandle-array
+    required: true
+    description: GPIO to switch the output on and off
+
+  latching-pgood:
+    type: boolean
+    description: |
+      The switch latches its on state and the GPIO is used as power-good feedback
+
+      The GPIO is driven active for a short time to switch on and configured as an input
+      afterwards. The switch pulls the pin to inactive level if it turned off because of a
+      fault (e.g. overcurrent).
+
+  charge-pump-pwms:
+    type: phandle-array
+    specifier-space: pwm
+    description: |
+      PWM signal for the charge pump of a high-side gate driver
+
+      The PWM runs continuously with 50% duty cycle after initialization.

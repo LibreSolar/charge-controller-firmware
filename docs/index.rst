@@ -47,5 +47,6 @@ The full license text is available at `<https://creativecommons.org/licenses/by-
     src/api/half_bridge
     src/api/load
     src/api/power_port
+    src/api/power_switch
     src/api/pwm_switch
     src/api/misc

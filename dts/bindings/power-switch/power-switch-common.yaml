@@ -1,0 +1,9 @@
+# Copyright (c) The Libre Solar Project Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+description: Common properties for power switches
+
+properties:
+  current-max:
+    type: int
+    description: Maximum continuous current of the switch in amps

@@ -1,0 +1,38 @@
+# Copyright (c) The Libre Solar Project Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+description: |
+  Power switch with hardware short-circuit protection for STM32L0
+
+  While switched on, the output is driven by LPTIM1, which is triggered by COMP2 and switches
+  off the output a few microseconds after a short circuit was detected. The positive comparator
+  input is the current measurement, the negative input is 1/4 VREFINT.
+
+  The pinctrl default state must contain the LPTIM1 output on the pin specified in gpios and the
+  COMP2 positive input.
+
+  Example:
+
+    load_switch: load-switch {
+        compatible = "libresolar,stm32-lptim-power-switch";
+        gpios = <&gpiob 2 GPIO_ACTIVE_LOW>;
+        pinctrl-0 = <&lptim1_out_pb2 &comp2_inp_pb4>;
+        pinctrl-names = "default";
+        current-max = <15>;
+    };
+
+compatible: "libresolar,stm32-lptim-power-switch"
+
+include: [base.yaml, pinctrl-device.yaml, power-switch-common.yaml]
+
+properties:
+  gpios:
+    type: phandle-array
+    required: true
+    description: Output pin used as GPIO while the switch is off
+
+  pinctrl-0:
+    required: true
+
+  pinctrl-names:
+    required: true

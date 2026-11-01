@@ -1,0 +1,30 @@
+/*
+ * Copyright (c) The Libre Solar Project Contributors
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/ {
+	fake_pwm: fake-pwm {
+		compatible = "zephyr,fake-pwm";
+		#pwm-cells = <2>;
+		frequency = <1000000>;
+	};
+
+	basic_switch: basic-switch {
+		compatible = "libresolar,gpio-power-switch";
+		gpios = <&gpio0 1 GPIO_ACTIVE_LOW>;
+	};
+
+	latching_switch: latching-switch {
+		compatible = "libresolar,gpio-power-switch";
+		gpios = <&gpio0 2 GPIO_ACTIVE_HIGH>;
+		latching-pgood;
+	};
+
+	charge_pump_switch: charge-pump-switch {
+		compatible = "libresolar,gpio-power-switch";
+		gpios = <&gpio0 3 GPIO_ACTIVE_HIGH>;
+		charge-pump-pwms = <&fake_pwm 0 200000>;
+	};
+};
