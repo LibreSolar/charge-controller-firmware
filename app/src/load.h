@@ -164,7 +164,7 @@ private:
     /**
      * Callback for short circuits detected by the power switch hardware
      */
-    static void short_circuit_callback(const struct device *dev, void *user_data);
+    static void short_circuit_callback(const struct device *dev, uint32_t events, void *user_data);
 
     /**
      * Power switch device

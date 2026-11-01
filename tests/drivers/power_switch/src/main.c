@@ -84,7 +84,18 @@ ZTEST(power_switch, test_on_off)
 ZTEST(power_switch, test_optional_functions_not_supported)
 {
     zassert_equal(power_switch_power_good(basic), -ENOSYS);
-    zassert_equal(power_switch_set_fault_callback(basic, NULL, NULL), -ENOSYS);
+    zassert_equal(power_switch_set_duty_cycle(basic, 0.5F), -ENOSYS);
+    zassert_equal(power_switch_set_callback(basic, POWER_SWITCH_EVENT_FAULT, NULL, NULL), -ENOSYS);
+}
+
+ZTEST(power_switch, test_default_duty_cycle_and_conducting)
+{
+    zassert_equal(power_switch_get_duty_cycle(basic), 0.0F);
+    zassert_false(power_switch_is_conducting(basic));
+
+    zassert_ok(power_switch_on(basic));
+    zassert_equal(power_switch_get_duty_cycle(basic), 1.0F);
+    zassert_true(power_switch_is_conducting(basic));
 }
 
 ZTEST(power_switch, test_latching_releases_pin)

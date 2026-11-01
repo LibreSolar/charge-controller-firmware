@@ -1,5 +1,5 @@
 tests:
-  drivers.power_switch.gpio:
+  drivers.power_switch.native_sim:
     tags:
       - drivers
       - power_switch

@@ -1,0 +1,18 @@
+# Copyright (c) The Libre Solar Project Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+description: |
+  Emulated power switch for tests on native_sim
+
+  Supports PWM, power-good feedback and events, which can be injected by the test via
+  power_switch_emul.h.
+
+compatible: "libresolar,power-switch-emul"
+
+include: [base.yaml, power-switch-common.yaml]
+
+properties:
+  frequency:
+    type: int
+    description: |
+      Emulated PWM frequency in Hz (only informative, no PWM signal is generated)

@@ -40,7 +40,8 @@ LoadOutput::LoadOutput(DcBus *dc_bus, const struct device *sw, int led_pos)
     }
     else {
         // not supported by all switches, so the return value is ignored
-        power_switch_set_fault_callback(power_switch, short_circuit_callback, this);
+        power_switch_set_callback(power_switch, POWER_SWITCH_EVENT_FAULT, short_circuit_callback,
+                                  this);
     }
 
     switch_set(false);
@@ -158,7 +159,8 @@ void LoadOutput::stop(uint32_t flag)
 
     // flicker the load LED if failure was most probably caused by the user
     if (flags_check(&error_flags,
-                    ERR_LOAD_OVERCURRENT | ERR_LOAD_VOLTAGE_DIP | ERR_LOAD_SHORT_CIRCUIT)) {
+                    ERR_LOAD_OVERCURRENT | ERR_LOAD_VOLTAGE_DIP | ERR_LOAD_SHORT_CIRCUIT))
+    {
 #if LED_EXISTS(load)
         leds_flicker(LED_POS(load), LED_TIMEOUT_INFINITE);
 #endif
@@ -190,7 +192,7 @@ void LoadOutput::switch_set(bool on)
     }
 }
 
-void LoadOutput::short_circuit_callback(const struct device *dev, void *user_data)
+void LoadOutput::short_circuit_callback(const struct device *dev, uint32_t events, void *user_data)
 {
     static_cast<LoadOutput *>(user_data)->stop(ERR_LOAD_SHORT_CIRCUIT);
 }

@@ -5,6 +5,8 @@ menuconfig POWER_SWITCH
     bool "Power switch drivers"
     default y if DT_HAS_LIBRESOLAR_GPIO_POWER_SWITCH_ENABLED
     default y if DT_HAS_LIBRESOLAR_STM32_LPTIM_POWER_SWITCH_ENABLED
+    default y if DT_HAS_LIBRESOLAR_STM32_PWM_POWER_SWITCH_ENABLED
+    default y if DT_HAS_LIBRESOLAR_POWER_SWITCH_EMUL_ENABLED
     help
       Enable drivers for power switches, e.g. used for load or USB outputs.
 
@@ -50,5 +52,21 @@ config POWER_SWITCH_STM32_LPTIM
     help
       Enable power switch driver using LPTIM1 and COMP2 of STM32L0 for hardware short-circuit
       protection.
+
+config POWER_SWITCH_STM32_PWM
+    bool "STM32 timer PWM power switch driver"
+    default y
+    depends on DT_HAS_LIBRESOLAR_STM32_PWM_POWER_SWITCH_ENABLED
+    select LIBRESOLAR_STM32_TIM
+    help
+      Enable power switch driver using a PWM signal of an STM32 timer, e.g. for PWM solar
+      charge controllers.
+
+config POWER_SWITCH_EMUL
+    bool "Emulated power switch driver"
+    default y
+    depends on DT_HAS_LIBRESOLAR_POWER_SWITCH_EMUL_ENABLED
+    help
+      Enable emulated power switch driver for tests on native_sim.
 
 endif # POWER_SWITCH

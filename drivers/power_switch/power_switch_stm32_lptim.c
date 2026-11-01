@@ -47,7 +47,7 @@ struct power_switch_stm32_lptim_config
 
 struct power_switch_stm32_lptim_data
 {
-    power_switch_fault_callback_t callback;
+    power_switch_callback_t callback;
     void *user_data;
     bool on;
 };
@@ -144,11 +144,15 @@ static bool power_switch_stm32_lptim_is_on(const struct device *dev)
     return data->on;
 }
 
-static int power_switch_stm32_lptim_set_fault_callback(const struct device *dev,
-                                                       power_switch_fault_callback_t callback,
-                                                       void *user_data)
+static int power_switch_stm32_lptim_set_callback(const struct device *dev, uint32_t events,
+                                                 power_switch_callback_t callback, void *user_data)
 {
     struct power_switch_stm32_lptim_data *data = dev->data;
+
+    if (events & ~POWER_SWITCH_EVENT_FAULT) {
+        return -ENOTSUP;
+    }
+
     unsigned int key = irq_lock();
 
     data->callback = callback;
@@ -171,7 +175,7 @@ static void power_switch_stm32_lptim_isr(const struct device *dev)
         power_switch_stm32_lptim_set(dev, false);
 
         if (data->callback != NULL) {
-            data->callback(dev, data->user_data);
+            data->callback(dev, POWER_SWITCH_EVENT_FAULT, data->user_data);
         }
     }
 
@@ -182,7 +186,7 @@ static void power_switch_stm32_lptim_isr(const struct device *dev)
 static DEVICE_API(power_switch, power_switch_stm32_lptim_api) = {
     .set = power_switch_stm32_lptim_set,
     .is_on = power_switch_stm32_lptim_is_on,
-    .set_fault_callback = power_switch_stm32_lptim_set_fault_callback,
+    .set_callback = power_switch_stm32_lptim_set_callback,
 };
 
 static int power_switch_stm32_lptim_init(const struct device *dev)

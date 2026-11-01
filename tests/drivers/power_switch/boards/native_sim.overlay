@@ -27,4 +27,8 @@
 		gpios = <&gpio0 3 GPIO_ACTIVE_HIGH>;
 		charge-pump-pwms = <&fake_pwm 0 200000>;
 	};
+
+	emul_switch: emul-switch {
+		compatible = "libresolar,power-switch-emul";
+	};
 };

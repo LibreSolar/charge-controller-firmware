@@ -1,0 +1,46 @@
+# Copyright (c) The Libre Solar Project Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+description: |
+  Power switch driven by a PWM signal of an STM32 timer
+
+  The node must be a child of an st,stm32-timers node. The timer is used exclusively by this
+  device, as the prescaler and period are determined by the switch frequency. The PWM output is
+  active high.
+
+  Example:
+
+    &timers3 {
+        status = "okay";
+
+        pwm_switch: pwm-switch {
+            compatible = "libresolar,stm32-pwm-power-switch";
+            pinctrl-0 = <&tim3_ch4_pb1>;
+            pinctrl-names = "default";
+            channel = <4>;
+            frequency = <50>;
+            current-max = <15>;
+        };
+    };
+
+compatible: "libresolar,stm32-pwm-power-switch"
+
+include: [base.yaml, pinctrl-device.yaml, power-switch-common.yaml]
+
+properties:
+  pinctrl-0:
+    required: true
+
+  pinctrl-names:
+    required: true
+
+  channel:
+    type: int
+    required: true
+    enum: [1, 2, 3, 4]
+    description: Timer channel driving the switch
+
+  frequency:
+    type: int
+    required: true
+    description: PWM frequency in Hz
