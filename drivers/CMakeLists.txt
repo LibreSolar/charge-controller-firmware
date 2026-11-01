@@ -4,3 +4,4 @@
 add_subdirectory_ifdef(CONFIG_DAQ daq)
 add_subdirectory_ifdef(CONFIG_HALF_BRIDGE half_bridge)
 add_subdirectory_ifdef(CONFIG_POWER_SWITCH power_switch)
+add_subdirectory_ifdef(CONFIG_LIBRESOLAR_STM32_TIM stm32_tim)

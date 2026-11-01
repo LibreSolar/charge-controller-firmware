@@ -17,7 +17,7 @@
 
 #define DT_DRV_COMPAT libresolar_stm32_advtim_half_bridge
 
-#include "half_bridge_stm32_tim.h"
+#include "stm32_tim.h"
 
 #include <libresolar/drivers/half_bridge.h>
 
@@ -33,7 +33,7 @@ LOG_MODULE_REGISTER(half_bridge_stm32_advtim, CONFIG_HALF_BRIDGE_LOG_LEVEL);
 
 struct half_bridge_stm32_advtim_config
 {
-    struct half_bridge_stm32_tim_config tim;
+    struct stm32_tim_config tim;
     uint32_t frequency;
     uint32_t deadtime_ns;
     /** Timer channel (1-4) for the high-side switch, CHxN is used for the low-side switch */
@@ -67,7 +67,7 @@ static int half_bridge_stm32_advtim_start(const struct device *dev)
         return -EBUSY;
     }
 
-    if (half_bridge_stm32_tim_get_compare(tim, config->channel) == 0U) {
+    if (stm32_tim_get_compare(tim, config->channel) == 0U) {
         return -EINVAL;
     }
 
@@ -108,7 +108,7 @@ static int half_bridge_stm32_advtim_set_compare(const struct device *dev, uint32
     /* protection against wrong settings which could destroy the hardware */
     compare = CLAMP(compare, data->compare_min, data->compare_max);
 
-    half_bridge_stm32_tim_set_compare(tim, config->channel, compare);
+    stm32_tim_set_compare(tim, config->channel, compare);
 
 #ifdef LL_TIM_CHANNEL_CH6
     if (config->adc_trigger) {
@@ -124,7 +124,7 @@ static uint32_t half_bridge_stm32_advtim_get_compare(const struct device *dev)
 {
     const struct half_bridge_stm32_advtim_config *config = dev->config;
 
-    return half_bridge_stm32_tim_get_compare(config->tim.timer, config->channel);
+    return stm32_tim_get_compare(config->tim.timer, config->channel);
 }
 
 static uint32_t half_bridge_stm32_advtim_get_period(const struct device *dev)
@@ -166,7 +166,7 @@ static int half_bridge_stm32_advtim_force_low_side(const struct device *dev)
      * complementary output CHxN (low side) stays on. The output mode itself can't be changed, as
      * it is locked after initialization.
      */
-    half_bridge_stm32_tim_set_compare(tim, config->channel, 0);
+    stm32_tim_set_compare(tim, config->channel, 0);
 
     /* load preload registers immediately */
     LL_TIM_GenerateEvent_UPDATE(tim);
@@ -215,7 +215,7 @@ static int half_bridge_stm32_advtim_init(const struct device *dev)
     const struct half_bridge_stm32_advtim_config *config = dev->config;
     struct half_bridge_stm32_advtim_data *data = dev->data;
     TIM_TypeDef *tim = config->tim.timer;
-    uint32_t ll_channel = half_bridge_stm32_tim_ll_channel(config->channel);
+    uint32_t ll_channel = stm32_tim_ll_channel(config->channel);
     uint32_t tim_clk;
     int err;
 
@@ -224,7 +224,7 @@ static int half_bridge_stm32_advtim_init(const struct device *dev)
         return -ENOTSUP;
     }
 
-    err = half_bridge_stm32_tim_init(&config->tim, &tim_clk);
+    err = stm32_tim_init(&config->tim, &tim_clk);
     if (err < 0) {
         return err;
     }
@@ -268,10 +268,10 @@ static int half_bridge_stm32_advtim_init(const struct device *dev)
 }
 
 #define HALF_BRIDGE_STM32_ADVTIM_INIT(n) \
-    HALF_BRIDGE_STM32_TIM_DEFINE(n) \
+    STM32_TIM_DEFINE(n) \
 \
     static const struct half_bridge_stm32_advtim_config half_bridge_stm32_advtim_config_##n = { \
-        .tim = HALF_BRIDGE_STM32_TIM_CONFIG(n), \
+        .tim = STM32_TIM_CONFIG(n), \
         .frequency = DT_INST_PROP(n, frequency), \
         .deadtime_ns = DT_INST_PROP(n, deadtime_ns), \
         .channel = DT_INST_PROP(n, channel), \

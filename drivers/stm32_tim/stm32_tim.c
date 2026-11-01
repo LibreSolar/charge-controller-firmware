@@ -4,21 +4,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "half_bridge_stm32_tim.h"
+#include "stm32_tim.h"
 
 #include <zephyr/drivers/clock_control.h>
 #include <zephyr/logging/log.h>
 
-LOG_MODULE_REGISTER(half_bridge_stm32_tim, CONFIG_HALF_BRIDGE_LOG_LEVEL);
+LOG_MODULE_REGISTER(stm32_tim, LOG_LEVEL_ERR);
 
-const uint32_t half_bridge_stm32_tim_ll_channels[4] = {
+const uint32_t stm32_tim_ll_channels[4] = {
     LL_TIM_CHANNEL_CH1,
     LL_TIM_CHANNEL_CH2,
     LL_TIM_CHANNEL_CH3,
     LL_TIM_CHANNEL_CH4,
 };
 
-int half_bridge_stm32_tim_init(const struct half_bridge_stm32_tim_config *config, uint32_t *tim_clk)
+int stm32_tim_init(const struct stm32_tim_config *config, uint32_t *tim_clk)
 {
     const struct device *clk = DEVICE_DT_GET(STM32_CLOCK_CONTROL_NODE);
     int err;
@@ -66,7 +66,7 @@ int half_bridge_stm32_tim_init(const struct half_bridge_stm32_tim_config *config
     return 0;
 }
 
-void half_bridge_stm32_tim_set_compare(TIM_TypeDef *tim, uint8_t channel, uint32_t value)
+void stm32_tim_set_compare(TIM_TypeDef *tim, uint8_t channel, uint32_t value)
 {
     switch (channel) {
         case 1:
@@ -84,7 +84,7 @@ void half_bridge_stm32_tim_set_compare(TIM_TypeDef *tim, uint8_t channel, uint32
     }
 }
 
-uint32_t half_bridge_stm32_tim_get_compare(TIM_TypeDef *tim, uint8_t channel)
+uint32_t stm32_tim_get_compare(TIM_TypeDef *tim, uint8_t channel)
 {
     switch (channel) {
         case 1:

@@ -20,7 +20,7 @@
 
 #define DT_DRV_COMPAT libresolar_stm32_gptim_half_bridge
 
-#include "half_bridge_stm32_tim.h"
+#include "stm32_tim.h"
 
 #include <libresolar/drivers/half_bridge.h>
 
@@ -32,7 +32,7 @@ LOG_MODULE_REGISTER(half_bridge_stm32_gptim, CONFIG_HALF_BRIDGE_LOG_LEVEL);
 
 struct half_bridge_stm32_gptim_config
 {
-    struct half_bridge_stm32_tim_config tim;
+    struct stm32_tim_config tim;
     uint32_t frequency;
     uint32_t deadtime_ns;
     /** Timer channel (1-4) for the high-side switch */
@@ -52,8 +52,8 @@ struct half_bridge_stm32_gptim_data
 
 static inline uint32_t ll_channels(const struct half_bridge_stm32_gptim_config *config)
 {
-    return half_bridge_stm32_tim_ll_channel(config->high_side_channel)
-           | half_bridge_stm32_tim_ll_channel(config->low_side_channel);
+    return stm32_tim_ll_channel(config->high_side_channel)
+           | stm32_tim_ll_channel(config->low_side_channel);
 }
 
 /*
@@ -66,8 +66,8 @@ static void set_output_modes(const struct half_bridge_stm32_gptim_config *config
 {
     TIM_TypeDef *tim = config->tim.timer;
 
-    LL_TIM_OC_SetMode(tim, half_bridge_stm32_tim_ll_channel(config->high_side_channel), hs_mode);
-    LL_TIM_OC_SetMode(tim, half_bridge_stm32_tim_ll_channel(config->low_side_channel), ls_mode);
+    LL_TIM_OC_SetMode(tim, stm32_tim_ll_channel(config->high_side_channel), hs_mode);
+    LL_TIM_OC_SetMode(tim, stm32_tim_ll_channel(config->low_side_channel), ls_mode);
 }
 
 static inline void set_outputs_off(const struct half_bridge_stm32_gptim_config *config)
@@ -85,7 +85,7 @@ static int half_bridge_stm32_gptim_start(const struct device *dev)
         return -EBUSY;
     }
 
-    if (half_bridge_stm32_tim_get_compare(tim, config->high_side_channel) == 0U) {
+    if (stm32_tim_get_compare(tim, config->high_side_channel) == 0U) {
         return -EINVAL;
     }
 
@@ -127,9 +127,8 @@ static int half_bridge_stm32_gptim_set_compare(const struct device *dev, uint32_
     /* protection against wrong settings which could destroy the hardware */
     compare = CLAMP(compare, data->compare_min, data->compare_max);
 
-    half_bridge_stm32_tim_set_compare(tim, config->high_side_channel, compare);
-    half_bridge_stm32_tim_set_compare(tim, config->low_side_channel,
-                                      compare + data->deadtime_clocks);
+    stm32_tim_set_compare(tim, config->high_side_channel, compare);
+    stm32_tim_set_compare(tim, config->low_side_channel, compare + data->deadtime_clocks);
 
     return 0;
 }
@@ -138,7 +137,7 @@ static uint32_t half_bridge_stm32_gptim_get_compare(const struct device *dev)
 {
     const struct half_bridge_stm32_gptim_config *config = dev->config;
 
-    return half_bridge_stm32_tim_get_compare(config->tim.timer, config->high_side_channel);
+    return stm32_tim_get_compare(config->tim.timer, config->high_side_channel);
 }
 
 static uint32_t half_bridge_stm32_gptim_get_period(const struct device *dev)
@@ -200,8 +199,8 @@ static int half_bridge_stm32_gptim_init(const struct device *dev)
     const struct half_bridge_stm32_gptim_config *config = dev->config;
     struct half_bridge_stm32_gptim_data *data = dev->data;
     TIM_TypeDef *tim = config->tim.timer;
-    uint32_t ll_channel_hs = half_bridge_stm32_tim_ll_channel(config->high_side_channel);
-    uint32_t ll_channel_ls = half_bridge_stm32_tim_ll_channel(config->low_side_channel);
+    uint32_t ll_channel_hs = stm32_tim_ll_channel(config->high_side_channel);
+    uint32_t ll_channel_ls = stm32_tim_ll_channel(config->low_side_channel);
     uint32_t tim_clk;
     int err;
 
@@ -218,7 +217,7 @@ static int half_bridge_stm32_gptim_init(const struct device *dev)
     }
 #endif
 
-    err = half_bridge_stm32_tim_init(&config->tim, &tim_clk);
+    err = stm32_tim_init(&config->tim, &tim_clk);
     if (err < 0) {
         return err;
     }
@@ -262,10 +261,10 @@ static int half_bridge_stm32_gptim_init(const struct device *dev)
     BUILD_ASSERT(DT_INST_PROP(n, high_side_channel) != DT_INST_PROP(n, low_side_channel), \
                  "High-side and low-side channel must be different"); \
 \
-    HALF_BRIDGE_STM32_TIM_DEFINE(n) \
+    STM32_TIM_DEFINE(n) \
 \
     static const struct half_bridge_stm32_gptim_config half_bridge_stm32_gptim_config_##n = { \
-        .tim = HALF_BRIDGE_STM32_TIM_CONFIG(n), \
+        .tim = STM32_TIM_CONFIG(n), \
         .frequency = DT_INST_PROP(n, frequency), \
         .deadtime_ns = DT_INST_PROP(n, deadtime_ns), \
         .high_side_channel = DT_INST_PROP(n, high_side_channel), \

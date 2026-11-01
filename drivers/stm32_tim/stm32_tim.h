@@ -6,11 +6,11 @@
 
 /**
  * @file
- * @brief Common functions for half-bridge drivers using STM32 timers (TIM)
+ * @brief Common functions for drivers using STM32 timers (TIM)
  */
 
-#ifndef HALF_BRIDGE_STM32_TIM_H_
-#define HALF_BRIDGE_STM32_TIM_H_
+#ifndef LIBRESOLAR_STM32_TIM_H_
+#define LIBRESOLAR_STM32_TIM_H_
 
 #include <zephyr/device.h>
 #include <zephyr/drivers/clock_control/stm32_clock_control.h>
@@ -23,7 +23,7 @@
 /**
  * Timer configuration obtained from the parent st,stm32-timers node
  */
-struct half_bridge_stm32_tim_config
+struct stm32_tim_config
 {
     TIM_TypeDef *timer;
     const struct stm32_pclken *pclken;
@@ -33,16 +33,15 @@ struct half_bridge_stm32_tim_config
 };
 
 /**
- * Define variables required by HALF_BRIDGE_STM32_TIM_CONFIG for instance n
+ * Define variables required by STM32_TIM_CONFIG for instance n
  */
-#define HALF_BRIDGE_STM32_TIM_DEFINE(n) \
+#define STM32_TIM_DEFINE(n) \
     BUILD_ASSERT(DT_NODE_HAS_COMPAT(DT_INST_PARENT(n), st_stm32_timers), \
-                 "Half bridge must be a child of an st,stm32-timers node"); \
+                 "Device must be a child of an st,stm32-timers node"); \
 \
     PINCTRL_DT_INST_DEFINE(n); \
 \
-    static const struct stm32_pclken half_bridge_stm32_tim_pclken_##n[] = \
-        STM32_DT_CLOCKS(DT_INST_PARENT(n));
+    static const struct stm32_pclken stm32_tim_pclken_##n[] = STM32_DT_CLOCKS(DT_INST_PARENT(n));
 
 /*
  * Formatting disabled, as different clang-format versions disagree on braced lists in macros.
@@ -50,12 +49,12 @@ struct half_bridge_stm32_tim_config
 /* clang-format off */
 
 /**
- * Initializer for struct half_bridge_stm32_tim_config of instance n
+ * Initializer for struct stm32_tim_config of instance n
  */
-#define HALF_BRIDGE_STM32_TIM_CONFIG(n) \
+#define STM32_TIM_CONFIG(n) \
     { \
         .timer = (TIM_TypeDef *)DT_REG_ADDR(DT_INST_PARENT(n)), \
-        .pclken = half_bridge_stm32_tim_pclken_##n, \
+        .pclken = stm32_tim_pclken_##n, \
         .pclk_len = DT_NUM_CLOCKS(DT_INST_PARENT(n)), \
         .reset = RESET_DT_SPEC_GET(DT_INST_PARENT(n)), \
         .pcfg = PINCTRL_DT_INST_DEV_CONFIG_GET(n), \
@@ -64,16 +63,16 @@ struct half_bridge_stm32_tim_config
 /* clang-format on */
 
 /** LL channel definitions for channels 1 to 4 */
-extern const uint32_t half_bridge_stm32_tim_ll_channels[4];
+extern const uint32_t stm32_tim_ll_channels[4];
 
 /**
  * Get LL channel definition
  *
  * @param channel Timer channel (1-4)
  */
-static inline uint32_t half_bridge_stm32_tim_ll_channel(uint8_t channel)
+static inline uint32_t stm32_tim_ll_channel(uint8_t channel)
 {
-    return half_bridge_stm32_tim_ll_channels[channel - 1];
+    return stm32_tim_ll_channels[channel - 1];
 }
 
 /**
@@ -85,8 +84,7 @@ static inline uint32_t half_bridge_stm32_tim_ll_channel(uint8_t channel)
  * @retval 0 on success
  * @retval -errno otherwise
  */
-int half_bridge_stm32_tim_init(const struct half_bridge_stm32_tim_config *config,
-                               uint32_t *tim_clk);
+int stm32_tim_init(const struct stm32_tim_config *config, uint32_t *tim_clk);
 
 /**
  * Set compare value of a timer channel
@@ -95,7 +93,7 @@ int half_bridge_stm32_tim_init(const struct half_bridge_stm32_tim_config *config
  * @param channel Timer channel (1-4)
  * @param value Compare value
  */
-void half_bridge_stm32_tim_set_compare(TIM_TypeDef *tim, uint8_t channel, uint32_t value);
+void stm32_tim_set_compare(TIM_TypeDef *tim, uint8_t channel, uint32_t value);
 
 /**
  * Get compare value of a timer channel
@@ -105,6 +103,6 @@ void half_bridge_stm32_tim_set_compare(TIM_TypeDef *tim, uint8_t channel, uint32
  *
  * @returns Compare value
  */
-uint32_t half_bridge_stm32_tim_get_compare(TIM_TypeDef *tim, uint8_t channel);
+uint32_t stm32_tim_get_compare(TIM_TypeDef *tim, uint8_t channel);
 
-#endif /* HALF_BRIDGE_STM32_TIM_H_ */
+#endif /* LIBRESOLAR_STM32_TIM_H_ */
