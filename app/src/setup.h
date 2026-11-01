@@ -10,6 +10,7 @@
 
 #include "bat_charger.h"
 #include "board.h"
+#include "dcdc.h"
 #include "device_status.h"
 #include "load.h"
 #include "power_port.h"
@@ -33,7 +34,7 @@ extern struct power_port &bat_terminal;
 extern struct power_port &solar_terminal;
 extern struct power_port &grid_terminal;
 
-extern DeviceStatus dev_stat;
+extern struct device_status dev_stat;
 extern Charger charger;
 extern BatConf bat_conf;
 extern BatConf bat_conf_user;

@@ -420,7 +420,7 @@ ZTEST(dcdc, test_boost_correct_mppt_operation)
 ZTEST(dcdc, test_fuse_destruction_forces_low_side_on)
 {
     start_buck();
-    dev_stat.set_error(ERR_DCDC_HS_MOSFET_SHORT);
+    device_status_set_error(&dev_stat, ERR_DCDC_HS_MOSFET_SHORT);
 
     // fuse destruction is delayed by 21 calls (seconds) to be able to send out data
     for (int i = 0; i < 21; i++) {
@@ -444,7 +444,7 @@ ZTEST(dcdc, test_fuse_destruction_forces_low_side_on)
     zassert_equal(half_bridge_get_compare(dcdc.half_bridge), 0);
 
     dcdc.stop();
-    dev_stat.clear_error(ERR_DCDC_HS_MOSFET_SHORT);
+    device_status_clear_error(&dev_stat, ERR_DCDC_HS_MOSFET_SHORT);
 }
 
 ZTEST_SUITE(dcdc, NULL, NULL, NULL, NULL, NULL);

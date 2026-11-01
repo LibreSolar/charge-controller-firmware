@@ -205,11 +205,12 @@ void daq_update()
     }
 
     if (dev_stat.internal_temp > 80) {
-        dev_stat.set_error(ERR_INT_OVERTEMP);
+        device_status_set_error(&dev_stat, ERR_INT_OVERTEMP);
     }
-    else if (dev_stat.internal_temp < 70 && (dev_stat.has_error(ERR_INT_OVERTEMP))) {
+    else if (dev_stat.internal_temp < 70 && (device_status_has_error(&dev_stat, ERR_INT_OVERTEMP)))
+    {
         // remove error flag with hysteresis of 10°C
-        dev_stat.clear_error(ERR_INT_OVERTEMP);
+        device_status_clear_error(&dev_stat, ERR_INT_OVERTEMP);
     }
     // else: keep previous setting
 }
@@ -226,7 +227,7 @@ static void lv_overvoltage_alert(const struct device *dev, int channel)
     // do not use enter_state function, as we don't want to wait entire recharge delay
     charger.state = CHG_STATE_IDLE;
 
-    dev_stat.set_error(ERR_BAT_OVERVOLTAGE);
+    device_status_set_error(&dev_stat, ERR_BAT_OVERVOLTAGE);
 
     LOG_ERR("Low-side overvoltage alert");
 }
@@ -258,7 +259,7 @@ static void hv_overvoltage_alert(const struct device *dev, int channel)
     // do not use enter_state function, as we don't want to wait entire recharge delay
     charger.state = CHG_STATE_IDLE;
 
-    dev_stat.set_error(ERR_DCDC_HS_OVERVOLTAGE);
+    device_status_set_error(&dev_stat, ERR_DCDC_HS_OVERVOLTAGE);
 
     LOG_ERR("High-side overvoltage alert");
 }

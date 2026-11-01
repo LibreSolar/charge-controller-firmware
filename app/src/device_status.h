@@ -13,12 +13,12 @@
  * Device-level data storage and functions (like max/min values, error flags, etc.)
  */
 
-#include "bat_charger.h"
-#include "dcdc.h"
-#include "load.h"
-#include "power_port.h"
 #include <stdbool.h>
 #include <stdint.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /** Error Flags
  *
@@ -110,17 +110,8 @@ enum ErrorFlag
  *
  * Stores error counters and some maximum ever measured values to EEPROM
  */
-class DeviceStatus
+struct device_status
 {
-public:
-    /** Updates the total energy counters for solar, battery and load bus
-     */
-    void update_energy();
-
-    /** Updates the logged min/max values for voltages, power, temperatures etc.
-     */
-    void update_min_max_values();
-
     // total energy
     uint32_t bat_chg_total_Wh;
     uint32_t bat_dis_total_Wh;
@@ -149,34 +140,61 @@ public:
     // instantaneous device-level data
     uint32_t error_flags; ///< Currently detected errors
     float internal_temp;  ///< Internal temperature (measured in MCU)
-
-    /**
-     * @brief sets one or more error flags in device state
-     * @param e a single ErrorFlag or "bitwise ORed" ERR_XXX | ERR_YYY
-     */
-    inline void set_error(uint32_t e)
-    {
-        error_flags |= e;
-    }
-
-    /**
-     * @brief clears one or more error flags in device state
-     * @param e a single ErrorFlag or "bitwise ORed" ERR_XXX | ERR_YYY
-     */
-    void clear_error(uint32_t e)
-    {
-        error_flags &= ~e;
-    }
-
-    /**
-     * @brief queries one or more error flags in device state
-     * @param e a single ErrorFlag or "bitwise ORed" ERR_XXX | ERR_YYY
-     * @return true if any of the error flags given in e are set in device state
-     */
-    bool has_error(uint32_t e)
-    {
-        return (error_flags & e) != 0;
-    }
 };
+
+/**
+ * Updates the total energy counters for solar, battery and load bus
+ *
+ * Must be called exactly once per second, otherwise energy calculation gets wrong.
+ *
+ * @param ds Device status
+ */
+void device_status_update_energy(struct device_status *ds);
+
+/**
+ * Updates the logged min/max values for voltages, power, temperatures etc.
+ *
+ * @param ds Device status
+ */
+void device_status_update_min_max_values(struct device_status *ds);
+
+/**
+ * Sets one or more error flags in device state
+ *
+ * @param ds Device status
+ * @param e a single ErrorFlag or "bitwise ORed" ERR_XXX | ERR_YYY
+ */
+static inline void device_status_set_error(struct device_status *ds, uint32_t e)
+{
+    ds->error_flags |= e;
+}
+
+/**
+ * Clears one or more error flags in device state
+ *
+ * @param ds Device status
+ * @param e a single ErrorFlag or "bitwise ORed" ERR_XXX | ERR_YYY
+ */
+static inline void device_status_clear_error(struct device_status *ds, uint32_t e)
+{
+    ds->error_flags &= ~e;
+}
+
+/**
+ * Queries one or more error flags in device state
+ *
+ * @param ds Device status
+ * @param e a single ErrorFlag or "bitwise ORed" ERR_XXX | ERR_YYY
+ *
+ * @return true if any of the error flags given in e are set in device state
+ */
+static inline bool device_status_has_error(const struct device_status *ds, uint32_t e)
+{
+    return (ds->error_flags & e) != 0;
+}
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* DEVICE_STATUS_H */

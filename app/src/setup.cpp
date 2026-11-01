@@ -82,7 +82,7 @@ Charger charger(&bat_terminal);
 BatConf bat_conf;      // actual (used) battery configuration
 BatConf bat_conf_user; // temporary storage where the user can write to
 
-DeviceStatus dev_stat;
+struct device_status dev_stat;
 
 // current unix timestamp (independent of time(NULL), as it is user-configurable)
 // uint32_t considered large enough, so we avoid 64-bit math (overflow in year 2106)

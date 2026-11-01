@@ -43,7 +43,7 @@ void check_temperature_readings()
 
 ZTEST(daq, test_adc_alert_lv_undervoltage_triggering)
 {
-    dev_stat.clear_error(ERR_ANY_ERROR);
+    device_status_clear_error(&dev_stat, ERR_ANY_ERROR);
     battery_conf_init(&bat_conf, BAT_TYPE_LFP, 4, 100);
     daq_set_lv_limits(bat_conf.absolute_max_voltage, bat_conf.absolute_min_voltage);
     prepare_adc_filtered();
@@ -53,7 +53,7 @@ ZTEST(daq, test_adc_alert_lv_undervoltage_triggering)
     adcval.battery_voltage = bat_conf.absolute_min_voltage - 0.1f;
     prepare_adc_readings(adcval);
     daq_emul_process(DAQ_DEV, DAQ_CH(v_low));
-    zassert_equal(dev_stat.has_error(ERR_LOAD_VOLTAGE_DIP), false);
+    zassert_equal(device_status_has_error(&dev_stat, ERR_LOAD_VOLTAGE_DIP), false);
     daq_emul_process(DAQ_DEV, DAQ_CH(v_low));
     load.control();
     zassert_equal(flags_check(&load.error_flags, ERR_LOAD_VOLTAGE_DIP), true);
@@ -66,12 +66,12 @@ ZTEST(daq, test_adc_alert_lv_undervoltage_triggering)
     daq_update();
 
     charger.discharge_control(&bat_conf);
-    zassert_equal(dev_stat.has_error(ERR_BAT_UNDERVOLTAGE), false); // ToDo
+    zassert_equal(device_status_has_error(&dev_stat, ERR_BAT_UNDERVOLTAGE), false); // ToDo
 }
 
 ZTEST(daq, test_adc_alert_lv_overvoltage_triggering)
 {
-    dev_stat.clear_error(ERR_ANY_ERROR);
+    device_status_clear_error(&dev_stat, ERR_ANY_ERROR);
     battery_conf_init(&bat_conf, BAT_TYPE_LFP, 4, 100);
     daq_set_lv_limits(bat_conf.absolute_max_voltage, bat_conf.absolute_min_voltage);
     prepare_adc_filtered();
@@ -83,9 +83,9 @@ ZTEST(daq, test_adc_alert_lv_overvoltage_triggering)
     adcval.battery_voltage = bat_conf.absolute_max_voltage + 0.1f;
     prepare_adc_readings(adcval);
     daq_emul_process(DAQ_DEV, DAQ_CH(v_low));
-    zassert_equal(dev_stat.has_error(ERR_BAT_OVERVOLTAGE), false);
+    zassert_equal(device_status_has_error(&dev_stat, ERR_BAT_OVERVOLTAGE), false);
     daq_emul_process(DAQ_DEV, DAQ_CH(v_low));
-    zassert_equal(dev_stat.has_error(ERR_BAT_OVERVOLTAGE), true);
+    zassert_equal(device_status_has_error(&dev_stat, ERR_BAT_OVERVOLTAGE), true);
     // zassert_equal(pwm_switch.active(), false);
     zassert_equal(dcdc.state, DCDC_CONTROL_OFF);
 
@@ -97,12 +97,12 @@ ZTEST(daq, test_adc_alert_lv_overvoltage_triggering)
 
     charger.time_state_changed = time(NULL) - bat_conf.time_limit_recharge - 1;
     charger.charge_control(&bat_conf);
-    zassert_equal(dev_stat.has_error(ERR_BAT_OVERVOLTAGE), false);
+    zassert_equal(device_status_has_error(&dev_stat, ERR_BAT_OVERVOLTAGE), false);
 }
 
 ZTEST(daq, test_adc_alert_hv_overvoltage_triggering)
 {
-    dev_stat.clear_error(ERR_ANY_ERROR);
+    device_status_clear_error(&dev_stat, ERR_ANY_ERROR);
     daq_set_hv_limit(DT_PROP(DT_PATH(pcb), hs_voltage_max));
     prepare_adc_filtered();
     daq_emul_process(DAQ_DEV, DAQ_CH(v_high));
@@ -111,9 +111,9 @@ ZTEST(daq, test_adc_alert_hv_overvoltage_triggering)
     adcval.solar_voltage = 85.0F;
     prepare_adc_readings(adcval);
     daq_emul_process(DAQ_DEV, DAQ_CH(v_high));
-    zassert_equal(dev_stat.has_error(ERR_DCDC_HS_OVERVOLTAGE), false);
+    zassert_equal(device_status_has_error(&dev_stat, ERR_DCDC_HS_OVERVOLTAGE), false);
     daq_emul_process(DAQ_DEV, DAQ_CH(v_high));
-    zassert_equal(dev_stat.has_error(ERR_DCDC_HS_OVERVOLTAGE), true);
+    zassert_equal(device_status_has_error(&dev_stat, ERR_DCDC_HS_OVERVOLTAGE), true);
     zassert_equal(dcdc.state, DCDC_CONTROL_OFF);
 }
 

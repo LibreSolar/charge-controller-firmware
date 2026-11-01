@@ -39,7 +39,7 @@ LOG_MODULE_REGISTER(dcdc, CONFIG_DCDC_LOG_LEVEL);
 #define HV_OUT_NODE DT_CHILD(DT_PATH(outputs), hv_out)
 #endif
 
-extern DeviceStatus dev_stat;
+extern struct device_status dev_stat;
 
 Dcdc::Dcdc(const struct device *hb, struct dc_bus *high, struct dc_bus *low,
            DcdcOperationMode op_mode)
@@ -164,7 +164,7 @@ __weak DcdcOperationMode Dcdc::check_start_conditions()
     if (enable == false
         || hvb->voltage > hs_voltage_max // also critical for buck mode because of ringing
         || lvb->voltage > ls_voltage_max || lvb->voltage < ls_voltage_min
-        || dev_stat.has_error(ERR_BAT_UNDERVOLTAGE | ERR_BAT_OVERVOLTAGE)
+        || device_status_has_error(&dev_stat, ERR_BAT_UNDERVOLTAGE | ERR_BAT_OVERVOLTAGE)
         || (int)uptime() < (off_timestamp + (int)restart_interval))
     {
         return DCDC_MODE_OFF;
@@ -202,14 +202,14 @@ bool Dcdc::check_hs_mosfet_short()
         }
         else if (now - first_time_detected > 10) {
             // waited approx 10s before setting the flag
-            dev_stat.set_error(ERR_DCDC_HS_MOSFET_SHORT);
+            device_status_set_error(&dev_stat, ERR_DCDC_HS_MOSFET_SHORT);
         }
     }
     else {
         first_time_detected = 0;
     }
 
-    return dev_stat.has_error(ERR_DCDC_HS_MOSFET_SHORT);
+    return device_status_has_error(&dev_stat, ERR_DCDC_HS_MOSFET_SHORT);
 }
 
 bool Dcdc::startup_inhibit(bool reset)
@@ -227,7 +227,7 @@ bool Dcdc::startup_inhibit(bool reset)
 
 __weak void Dcdc::control()
 {
-    if (dev_stat.has_error(ERR_DCDC_HS_MOSFET_SHORT)) {
+    if (device_status_has_error(&dev_stat, ERR_DCDC_HS_MOSFET_SHORT)) {
         // DC/DC must not be operated anymore and the low-side switch might be forced on to blow
         // the fuse, so don't touch the half bridge
         return;

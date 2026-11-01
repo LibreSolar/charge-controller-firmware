@@ -28,7 +28,7 @@ LOG_MODULE_REGISTER(load, CONFIG_LOAD_LOG_LEVEL);
 #define PCB_MOSFETS_TAU_JA    DT_PROP(DT_PATH(pcb), mosfets_tau_ja)
 #define PCB_INTERNAL_TREF_MAX DT_PROP(DT_PATH(pcb), internal_tref_max)
 
-extern DeviceStatus dev_stat;
+extern struct device_status dev_stat;
 
 LoadOutput::LoadOutput(struct dc_bus *dc_bus, const struct device *sw, int led_pos)
     : power_switch(sw), led(led_pos)

@@ -6,6 +6,11 @@
 
 #include "device_status.h"
 
+#include "bat_charger.h"
+#include "dcdc.h"
+#include "load.h"
+#include "power_port.h"
+
 #include <zephyr/kernel.h>
 
 #include <math.h> // for fabs function
@@ -16,7 +21,7 @@
 
 //----------------------------------------------------------------------------
 // must be called exactly once per second, otherwise energy calculation gets wrong
-void DeviceStatus::update_energy()
+void device_status_update_energy(struct device_status *ds)
 {
     // static variables so that it is not reset for each function call
     static int seconds_zero_solar = 0;
@@ -35,13 +40,13 @@ void DeviceStatus::update_energy()
     static bool first_call = true;
     if (first_call) {
         // initialize values with values we got from EEPROM
-        solar_in_total_Wh_prev = solar_in_total_Wh;
-        load_out_total_Wh_prev = load_out_total_Wh;
-        bat_chg_total_Wh_prev = bat_chg_total_Wh;
-        bat_dis_total_Wh_prev = bat_dis_total_Wh;
+        solar_in_total_Wh_prev = ds->solar_in_total_Wh;
+        load_out_total_Wh_prev = ds->load_out_total_Wh;
+        bat_chg_total_Wh_prev = ds->bat_chg_total_Wh;
+        bat_dis_total_Wh_prev = ds->bat_dis_total_Wh;
 #if CONFIG_HV_TERMINAL_NANOGRID
-        grid_import_total_Wh_prev = grid_import_total_Wh;
-        grid_export_total_Wh_prev = grid_export_total_Wh;
+        grid_import_total_Wh_prev = ds->grid_import_total_Wh;
+        grid_export_total_Wh_prev = ds->grid_export_total_Wh;
 #endif
         first_call = false;
     }
@@ -58,14 +63,14 @@ void DeviceStatus::update_energy()
         // solar voltage > battery voltage after 5 hours of night time means sunrise in the morning
         // --> reset daily energy counters
         if (seconds_zero_solar > 60 * 60 * 5) {
-            day_counter++;
-            solar_in_total_Wh_prev = solar_in_total_Wh;
-            load_out_total_Wh_prev = load_out_total_Wh;
-            bat_chg_total_Wh_prev = bat_chg_total_Wh;
-            bat_dis_total_Wh_prev = bat_dis_total_Wh;
+            ds->day_counter++;
+            solar_in_total_Wh_prev = ds->solar_in_total_Wh;
+            load_out_total_Wh_prev = ds->load_out_total_Wh;
+            bat_chg_total_Wh_prev = ds->bat_chg_total_Wh;
+            bat_dis_total_Wh_prev = ds->bat_dis_total_Wh;
 #if CONFIG_HV_TERMINAL_NANOGRID
-            grid_import_total_Wh_prev = grid_import_total_Wh;
-            grid_export_total_Wh_prev = grid_export_total_Wh;
+            grid_import_total_Wh_prev = ds->grid_import_total_Wh;
+            grid_export_total_Wh_prev = ds->grid_export_total_Wh;
 #endif
             solar_terminal.neg_energy_Wh = 0.0;
 #if BOARD_HAS_LOAD_OUTPUT
@@ -82,83 +87,86 @@ void DeviceStatus::update_energy()
     }
 #endif
 
-    bat_chg_total_Wh =
+    ds->bat_chg_total_Wh =
         bat_chg_total_Wh_prev + (bat_terminal.pos_energy_Wh > 0 ? bat_terminal.pos_energy_Wh : 0);
-    bat_dis_total_Wh =
+    ds->bat_dis_total_Wh =
         bat_dis_total_Wh_prev + (bat_terminal.neg_energy_Wh > 0 ? bat_terminal.neg_energy_Wh : 0);
 
 #if CONFIG_HV_TERMINAL_SOLAR || CONFIG_LV_TERMINAL_SOLAR || CONFIG_PWM_TERMINAL_SOLAR
-    solar_in_total_Wh = solar_in_total_Wh_prev
-                        + (solar_terminal.neg_energy_Wh > 0 ? solar_terminal.neg_energy_Wh : 0);
+    ds->solar_in_total_Wh = solar_in_total_Wh_prev
+                            + (solar_terminal.neg_energy_Wh > 0 ? solar_terminal.neg_energy_Wh : 0);
 #endif
 
 #if BOARD_HAS_LOAD_OUTPUT
-    load_out_total_Wh = load_out_total_Wh_prev + (load.pos_energy_Wh > 0 ? load.pos_energy_Wh : 0);
+    ds->load_out_total_Wh =
+        load_out_total_Wh_prev + (load.pos_energy_Wh > 0 ? load.pos_energy_Wh : 0);
 #endif
 
 #if CONFIG_HV_TERMINAL_NANOGRID
-    grid_import_total_Wh = grid_import_total_Wh_prev
-                           + (grid_terminal.neg_energy_Wh > 0 ? grid_terminal.neg_energy_Wh : 0);
-    grid_export_total_Wh = grid_export_total_Wh_prev
-                           + (grid_terminal.pos_energy_Wh > 0 ? grid_terminal.pos_energy_Wh : 0);
+    ds->grid_import_total_Wh =
+        grid_import_total_Wh_prev
+        + (grid_terminal.neg_energy_Wh > 0 ? grid_terminal.neg_energy_Wh : 0);
+    ds->grid_export_total_Wh =
+        grid_export_total_Wh_prev
+        + (grid_terminal.pos_energy_Wh > 0 ? grid_terminal.pos_energy_Wh : 0);
 #endif
 }
 
-void DeviceStatus::update_min_max_values()
+void device_status_update_min_max_values(struct device_status *ds)
 {
-    if (bat_terminal.bus->voltage > battery_voltage_max) {
-        battery_voltage_max = bat_terminal.bus->voltage;
+    if (bat_terminal.bus->voltage > ds->battery_voltage_max) {
+        ds->battery_voltage_max = bat_terminal.bus->voltage;
     }
 
 #if CONFIG_HV_TERMINAL_SOLAR || CONFIG_LV_TERMINAL_SOLAR
-    if (solar_terminal.bus->voltage > solar_voltage_max) {
-        solar_voltage_max = solar_terminal.bus->voltage;
+    if (solar_terminal.bus->voltage > ds->solar_voltage_max) {
+        ds->solar_voltage_max = solar_terminal.bus->voltage;
     }
 #elif CONFIG_PWM_TERMINAL_SOLAR
-    if (pwm_switch.ext_voltage > solar_voltage_max) {
-        solar_voltage_max = pwm_switch.ext_voltage;
+    if (pwm_switch.ext_voltage > ds->solar_voltage_max) {
+        ds->solar_voltage_max = pwm_switch.ext_voltage;
     }
 #endif
 
 #if BOARD_HAS_DCDC
-    if (dcdc.inductor_current > dcdc_current_max) {
-        dcdc_current_max = dcdc.inductor_current;
+    if (dcdc.inductor_current > ds->dcdc_current_max) {
+        ds->dcdc_current_max = dcdc.inductor_current;
     }
 
-    if (dcdc.temp_mosfets > mosfet_temp_max) {
-        mosfet_temp_max = dcdc.temp_mosfets;
+    if (dcdc.temp_mosfets > ds->mosfet_temp_max) {
+        ds->mosfet_temp_max = dcdc.temp_mosfets;
     }
 #endif
 
 #if BOARD_HAS_LOAD_OUTPUT
-    if (load.current > load_current_max) {
-        load_current_max = load.current;
+    if (load.current > ds->load_current_max) {
+        ds->load_current_max = load.current;
     }
 #endif
 
 #if CONFIG_HV_TERMINAL_SOLAR || CONFIG_LV_TERMINAL_SOLAR || CONFIG_PWM_TERMINAL_SOLAR
-    if (-solar_terminal.power > solar_power_max_day) {
-        solar_power_max_day = -solar_terminal.power;
-        if (solar_power_max_day > solar_power_max_total) {
-            solar_power_max_total = solar_power_max_day;
+    if (-solar_terminal.power > ds->solar_power_max_day) {
+        ds->solar_power_max_day = -solar_terminal.power;
+        if (ds->solar_power_max_day > ds->solar_power_max_total) {
+            ds->solar_power_max_total = ds->solar_power_max_day;
         }
     }
 #endif
 
 #if BOARD_HAS_LOAD_OUTPUT
-    if (load.power > load_power_max_day) {
-        load_power_max_day = load.power;
-        if (load_power_max_day > load_power_max_total) {
-            load_power_max_total = load_power_max_day;
+    if (load.power > ds->load_power_max_day) {
+        ds->load_power_max_day = load.power;
+        if (ds->load_power_max_day > ds->load_power_max_total) {
+            ds->load_power_max_total = ds->load_power_max_day;
         }
     }
 #endif
 
-    if (charger.bat_temperature > static_cast<float>(bat_temp_max)) {
-        bat_temp_max = charger.bat_temperature;
+    if (charger.bat_temperature > static_cast<float>(ds->bat_temp_max)) {
+        ds->bat_temp_max = charger.bat_temperature;
     }
 
-    if (internal_temp > static_cast<float>(int_temp_max)) {
-        int_temp_max = internal_temp;
+    if (ds->internal_temp > static_cast<float>(ds->int_temp_max)) {
+        ds->int_temp_max = ds->internal_temp;
     }
 }

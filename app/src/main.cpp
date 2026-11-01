@@ -106,12 +106,12 @@ int main(void)
         }
 #endif
 
-        dev_stat.update_energy();
-        dev_stat.update_min_max_values();
+        device_status_update_energy(&dev_stat);
+        device_status_update_min_max_values(&dev_stat);
         charger.update_soc(&bat_conf);
 
 #if CONFIG_HS_MOSFET_FAIL_SAFE_PROTECTION && BOARD_HAS_DCDC
-        if (dev_stat.has_error(ERR_DCDC_HS_MOSFET_SHORT)) {
+        if (device_status_has_error(&dev_stat, ERR_DCDC_HS_MOSFET_SHORT)) {
             dcdc.fuse_destruction();
         }
 #endif

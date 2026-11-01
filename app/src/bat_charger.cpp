@@ -18,8 +18,9 @@ LOG_MODULE_REGISTER(bat_charger, CONFIG_BAT_LOG_LEVEL);
 #include "board.h"
 #include "device_status.h"
 #include "helper.h"
+#include "load.h"
 
-extern DeviceStatus dev_stat;
+extern struct device_status dev_stat;
 extern LoadOutput load;
 
 // DISCHARGE_CURRENT_MAX used to estimate current-compensation of load disconnect voltage
@@ -439,16 +440,16 @@ void Charger::discharge_control(BatConf *bat_conf)
             < dc_bus_src_control_voltage(port->bus, bat_conf->absolute_min_voltage))
         {
             port->neg_current_limit = 0;
-            dev_stat.set_error(ERR_BAT_UNDERVOLTAGE);
+            device_status_set_error(&dev_stat, ERR_BAT_UNDERVOLTAGE);
         }
 
         if (bat_temperature > bat_conf->discharge_temp_max) {
             port->neg_current_limit = 0;
-            dev_stat.set_error(ERR_BAT_DIS_OVERTEMP);
+            device_status_set_error(&dev_stat, ERR_BAT_DIS_OVERTEMP);
         }
         else if (bat_temperature < bat_conf->discharge_temp_min) {
             port->neg_current_limit = 0;
-            dev_stat.set_error(ERR_BAT_DIS_UNDERTEMP);
+            device_status_set_error(&dev_stat, ERR_BAT_DIS_UNDERTEMP);
         }
     }
     else {
@@ -457,17 +458,17 @@ void Charger::discharge_control(BatConf *bat_conf)
         if (port->bus->voltage
             >= dc_bus_src_control_voltage(port->bus, bat_conf->absolute_min_voltage + 0.1F))
         {
-            dev_stat.clear_error(ERR_BAT_UNDERVOLTAGE);
+            device_status_clear_error(&dev_stat, ERR_BAT_UNDERVOLTAGE);
         }
 
         if (bat_temperature < bat_conf->discharge_temp_max - 1
             && bat_temperature > bat_conf->discharge_temp_min + 1)
         {
-            dev_stat.clear_error(ERR_BAT_DIS_OVERTEMP | ERR_BAT_DIS_UNDERTEMP);
+            device_status_clear_error(&dev_stat, ERR_BAT_DIS_OVERTEMP | ERR_BAT_DIS_UNDERTEMP);
         }
 
-        if (!dev_stat.has_error(ERR_BAT_UNDERVOLTAGE | ERR_BAT_DIS_OVERTEMP
-                                | ERR_BAT_DIS_UNDERTEMP))
+        if (!device_status_has_error(&dev_stat, ERR_BAT_UNDERVOLTAGE | ERR_BAT_DIS_OVERTEMP
+                                                    | ERR_BAT_DIS_UNDERTEMP))
         {
             // discharge current is stored as absolute value in bat_conf, but defined
             // as negative current for power port
@@ -482,20 +483,20 @@ void Charger::charge_control(BatConf *bat_conf)
     // check battery temperature for charging direction
     if (bat_temperature > bat_conf->charge_temp_max) {
         port->pos_current_limit = 0;
-        dev_stat.set_error(ERR_BAT_CHG_OVERTEMP);
+        device_status_set_error(&dev_stat, ERR_BAT_CHG_OVERTEMP);
         enter_state(CHG_STATE_IDLE);
     }
     else if (bat_temperature < bat_conf->charge_temp_min) {
         port->pos_current_limit = 0;
-        dev_stat.set_error(ERR_BAT_CHG_UNDERTEMP);
+        device_status_set_error(&dev_stat, ERR_BAT_CHG_UNDERTEMP);
         enter_state(CHG_STATE_IDLE);
     }
 
-    if (dev_stat.has_error(ERR_BAT_OVERVOLTAGE)
+    if (device_status_has_error(&dev_stat, ERR_BAT_OVERVOLTAGE)
         && port->bus->voltage
                < (bat_conf->absolute_max_voltage - 0.5F) * port->bus->series_multiplier)
     {
-        dev_stat.clear_error(ERR_BAT_OVERVOLTAGE);
+        device_status_clear_error(&dev_stat, ERR_BAT_OVERVOLTAGE);
     }
 
     if (state != CHG_STATE_FOLLOWER && (uptime() - time_last_ctrl_msg) <= 1) {
@@ -520,9 +521,9 @@ void Charger::charge_control(BatConf *bat_conf)
                 port->pos_current_limit = bat_conf->charge_current_max;
                 target_current_control = port->pos_current_limit;
                 full = false;
-                dev_stat.clear_error(ERR_BAT_CHG_OVERTEMP);
-                dev_stat.clear_error(ERR_BAT_CHG_UNDERTEMP);
-                dev_stat.clear_error(ERR_BAT_OVERVOLTAGE);
+                device_status_clear_error(&dev_stat, ERR_BAT_CHG_OVERTEMP);
+                device_status_clear_error(&dev_stat, ERR_BAT_CHG_UNDERTEMP);
+                device_status_clear_error(&dev_stat, ERR_BAT_OVERVOLTAGE);
                 enter_state(CHG_STATE_BULK);
             }
             break;

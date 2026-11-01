@@ -97,7 +97,7 @@ void PwmSwitch::control()
         else if (bus->voltage > dc_bus_sink_control_voltage(bus, 0) + 0.3F) {
             power_switch_off(power_switch);
             off_timestamp = uptime();
-            dev_stat.set_error(ERR_PWM_SWITCH_OVERVOLTAGE);
+            device_status_set_error(&dev_stat, ERR_PWM_SWITCH_OVERVOLTAGE);
             LOG_INF("PWM charger stop, overvoltage.");
         }
         else if (bus->voltage > dc_bus_sink_control_voltage(bus, 0) // bus voltage above target
@@ -117,7 +117,7 @@ void PwmSwitch::control()
                 power_switch_off(power_switch);
                 off_timestamp = uptime();
                 // consider this as overvoltage in order to start again with 5% duty cycle
-                dev_stat.set_error(ERR_PWM_SWITCH_OVERVOLTAGE);
+                device_status_set_error(&dev_stat, ERR_PWM_SWITCH_OVERVOLTAGE);
                 LOG_INF("PWM charger stop, no further derating possible.");
             }
             else {
@@ -138,10 +138,10 @@ void PwmSwitch::control()
             }
         }
 
-        if (dev_stat.has_error(ERR_PWM_SWITCH_OVERVOLTAGE)
+        if (device_status_has_error(&dev_stat, ERR_PWM_SWITCH_OVERVOLTAGE)
             && bus->voltage < dc_bus_sink_control_voltage(bus, 0) - 0.5F)
         {
-            dev_stat.clear_error(ERR_PWM_SWITCH_OVERVOLTAGE);
+            device_status_clear_error(&dev_stat, ERR_PWM_SWITCH_OVERVOLTAGE);
         }
     }
     else {
@@ -153,7 +153,7 @@ void PwmSwitch::control()
             // turning the PWM switch on creates a short voltage rise, so inhibit alerts by 50 ms
             daq_inhibit_alert(DAQ_DEV, DAQ_CH(v_low), DAQ_ALERT_UPPER, 50);
 
-            if (dev_stat.has_error(ERR_PWM_SWITCH_OVERVOLTAGE)) {
+            if (device_status_has_error(&dev_stat, ERR_PWM_SWITCH_OVERVOLTAGE)) {
                 // start with minimum duty cycle in order to prevent another overvoltage event
                 power_switch_set_duty_cycle(power_switch, 0.05F);
                 power_switch_on(power_switch);
