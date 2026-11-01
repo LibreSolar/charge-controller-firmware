@@ -34,12 +34,13 @@ struct power_port lv_terminal = { .bus = &lv_bus };
 extern struct power_port hv_terminal;
 struct dc_bus hv_bus = { .series_multiplier = 1, .ref_current = &hv_terminal.current };
 struct power_port hv_terminal = { .bus = &hv_bus };
+struct dcdc dcdc;
 #if CONFIG_HV_TERMINAL_NANOGRID
-Dcdc dcdc(DEVICE_DT_GET(HALF_BRIDGE_NODE), &hv_bus, &lv_bus, DCDC_MODE_AUTO);
+#define DCDC_MODE DCDC_MODE_AUTO
 #elif CONFIG_HV_TERMINAL_BATTERY
-Dcdc dcdc(DEVICE_DT_GET(HALF_BRIDGE_NODE), &hv_bus, &lv_bus, DCDC_MODE_BOOST);
+#define DCDC_MODE DCDC_MODE_BOOST
 #else
-Dcdc dcdc(DEVICE_DT_GET(HALF_BRIDGE_NODE), &hv_bus, &lv_bus, DCDC_MODE_BUCK);
+#define DCDC_MODE DCDC_MODE_BUCK
 #endif // CONFIG_HV_TERMINAL
 #endif
 
@@ -87,6 +88,21 @@ struct device_status dev_stat;
 // current unix timestamp (independent of time(NULL), as it is user-configurable)
 // uint32_t considered large enough, so we avoid 64-bit math (overflow in year 2106)
 uint32_t timestamp;
+
+/*
+ * Initialize the charge controller objects after all devices are ready (also used by the unit
+ * tests, which don't call main())
+ */
+static int setup_objects(void)
+{
+#if BOARD_HAS_DCDC
+    dcdc_init(&dcdc, DEVICE_DT_GET(HALF_BRIDGE_NODE), &hv_bus, &lv_bus, DCDC_MODE);
+#endif
+
+    return 0;
+}
+
+SYS_INIT(setup_objects, APPLICATION, 0);
 
 #ifndef UNIT_TEST
 

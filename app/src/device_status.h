@@ -142,6 +142,9 @@ struct device_status
     float internal_temp;  ///< Internal temperature (measured in MCU)
 };
 
+/** Global device status */
+extern struct device_status dev_stat;
+
 /**
  * Updates the total energy counters for solar, battery and load bus
  *

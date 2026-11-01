@@ -23,7 +23,7 @@ extern struct power_port lv_terminal;
 #if BOARD_HAS_DCDC
 extern struct dc_bus hv_bus;
 extern struct power_port hv_terminal;
-extern Dcdc dcdc;
+extern struct dcdc dcdc;
 #endif
 
 #if BOARD_HAS_PWM_PORT

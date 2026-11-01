@@ -6,7 +6,7 @@ target_sources(app PRIVATE
         bat_charger.cpp
         daq.cpp
         device_status.cpp
-        dcdc.cpp
+        dcdc.c
         hardware.cpp
         leds.cpp
         load.cpp

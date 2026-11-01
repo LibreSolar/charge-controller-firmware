@@ -21,9 +21,11 @@
 
 #include <zephyr/device.h>
 
-#ifdef __cplusplus
-
 #include "power_port.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define DCDC_STARTUP_INHIBIT_TIME 3 // seconds
 
@@ -34,7 +36,7 @@
  *
  * Defines which type of device is connected to the high side and low side ports
  */
-enum DcdcOperationMode
+enum dcdc_operation_mode
 {
     /**
      * DC/DC converter switched off
@@ -71,7 +73,7 @@ enum DcdcOperationMode
  *
  * Allows to determine the current control state (off, CC, CV and MPPT)
  */
-enum DcdcControlState
+enum dcdc_control_state
 {
     DCDC_CONTROL_OFF,     ///< DC/DC switched off (low input power or actively disabled)
     DCDC_CONTROL_MPPT,    ///< Maximum Power Point Tracking
@@ -83,69 +85,18 @@ enum DcdcControlState
 };
 
 /**
- * DC/DC class
+ * DC/DC converter
  *
  * Contains all data belonging to the DC/DC sub-component of the PCB, incl.
  * actual measurements and calibration parameters.
  */
-class Dcdc
+struct dcdc
 {
-public:
-    /**
-     * Initialize DC/DC and DC/DC port structs
-     *
-     * See http://libre.solar/docs/dcdc_control for detailed information
-     *
-     * @param half_bridge Half-bridge device generating the PWM signal
-     * @param high High voltage bus (e.g. solar input for MPPT buck)
-     * @param low Low voltage bus (e.g. battery output for MPPT buck)
-     * @param mode Operation mode (buck, boost or nanogrid)
-     */
-    Dcdc(const struct device *half_bridge, struct dc_bus *high, struct dc_bus *low,
-         DcdcOperationMode mode);
-
-    /**
-     * Check for valid start conditions of the DC/DC converter
-     *
-     * @returns operation mode that is valid for starting up
-     */
-    DcdcOperationMode check_start_conditions();
-
-    /**
-     * Main control function for the DC/DC converter
-     *
-     * If DC/DC is off, this function checks start conditions and starts conversion if possible.
-     */
-    void control();
-
-    /**
-     * Test mode for DC/DC, ramping up/down to 50% duty cycle
-     */
-    void test();
-
-    /**
-     * Fast stop function (bypassing control loop)
-     *
-     * May be called from an ISR which detected overvoltage / overcurrent conditions.
-     *
-     * DC/DC will be restarted automatically from control function if condtions are valid.
-     */
-    void stop();
-
-    /**
-     * Prevent overcharging of battery in case of shorted HS MOSFET
-     *
-     * This function switches the LS MOSFET continuously on to blow the battery input fuse. The
-     * reason for self destruction should be logged and stored to EEPROM prior to calling this
-     * function, as the charge controller power supply will be cut after the fuse is destroyed.
-     */
-    void fuse_destruction();
-
     const struct device *half_bridge; ///< Half-bridge device generating the PWM signal
 
-    DcdcOperationMode mode; ///< DC/DC mode (buck, boost or nanogrid)
-    bool enable;            ///< Can be used to disable the DC/DC power stage
-    uint16_t state;         ///< Control state (off / MPPT / CC / CV)
+    enum dcdc_operation_mode mode; ///< DC/DC mode (buck, boost or nanogrid)
+    bool enable;                   ///< Can be used to disable the DC/DC power stage
+    uint16_t state;                ///< Control state (off / MPPT / CC / CV)
 
     // actual measurements
     struct dc_bus *hvb;     ///< Pointer to DC bus at high voltage side
@@ -161,62 +112,77 @@ public:
     int32_t power_good_timestamp; ///< Last time the DC/DC reached above minimum output power
 
     // maximum allowed values
-    float inductor_current_max = 0; ///< Maximum low-side (inductor) current
-    float hs_voltage_max = 0;       ///< Maximum high-side voltage
-    float ls_voltage_max;           ///< Maximum low-side voltage
-    float ls_voltage_min;           ///< Minimum low-side voltage, e.g. for driver supply
-    float output_power_min;         ///< Minimum output power (if lower, DC/DC is switched off)
+    float inductor_current_max; ///< Maximum low-side (inductor) current
+    float hs_voltage_max;       ///< Maximum high-side voltage
+    float ls_voltage_max;       ///< Maximum low-side voltage
+    float ls_voltage_min;       ///< Minimum low-side voltage, e.g. for driver supply
+    float output_power_min;     ///< Minimum output power (if lower, DC/DC is switched off)
 
     // calibration parameters
     uint32_t restart_interval; ///< Restart interval (s): When should we retry to start
                                ///< charging after low output power cut-off?
-
-private:
-    /**
-     * MPPT perturb & observe control (buck mode)
-     *
-     * @returns calculated pwm duty cycle delta or 0 if the DC/DC should be stopped
-     */
-    void perturb_observe_buck();
-
-    /**
-     * MPPT perturb & observe control (boost mode)
-     *
-     * @returns calculated pwm duty cycle delta or 0 if the DC/DC should be stopped
-     */
-    void perturb_observe_boost();
-
-    /**
-     * If manual control of the reverse polarity MOSFET on the high-side is available, this
-     * function enables it to use the high voltage side as output.
-     */
-    void output_hvs_enable();
-
-    /**
-     * Disable the reverse polarity MOSFET on the high-side (if option available)
-     */
-    void output_hvs_disable();
-
-    /**
-     * Check if the high-side MOSFET is shorted
-     */
-    bool check_hs_mosfet_short();
-
-    /**
-     * Check if we need to wait for voltages to settle before starting the DC/DC
-     *
-     * @param reset Reset the inhibit counter if set to true
-     *
-     * @returns true if we need to wait
-     */
-    bool startup_inhibit(bool reset = false);
 };
 
-#endif // __cplusplus
+/**
+ * Initialize DC/DC struct and half bridge
+ *
+ * See http://libre.solar/docs/dcdc_control for detailed information
+ *
+ * @param dcdc DC/DC struct
+ * @param half_bridge Half-bridge device generating the PWM signal
+ * @param high High voltage bus (e.g. solar input for MPPT buck)
+ * @param low Low voltage bus (e.g. battery output for MPPT buck)
+ * @param mode Operation mode (buck, boost or nanogrid)
+ */
+void dcdc_init(struct dcdc *dcdc, const struct device *half_bridge, struct dc_bus *high,
+               struct dc_bus *low, enum dcdc_operation_mode mode);
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+/**
+ * Check for valid start conditions of the DC/DC converter
+ *
+ * @param dcdc DC/DC struct
+ *
+ * @returns operation mode that is valid for starting up
+ */
+enum dcdc_operation_mode dcdc_check_start_conditions(struct dcdc *dcdc);
+
+/**
+ * Main control function for the DC/DC converter
+ *
+ * If DC/DC is off, this function checks start conditions and starts conversion if possible.
+ *
+ * @param dcdc DC/DC struct
+ */
+void dcdc_control(struct dcdc *dcdc);
+
+/**
+ * Test mode for DC/DC, ramping up/down to 50% duty cycle
+ *
+ * @param dcdc DC/DC struct
+ */
+void dcdc_test(struct dcdc *dcdc);
+
+/**
+ * Fast stop function (bypassing control loop)
+ *
+ * May be called from an ISR which detected overvoltage / overcurrent conditions.
+ *
+ * DC/DC will be restarted automatically from control function if condtions are valid.
+ *
+ * @param dcdc DC/DC struct
+ */
+void dcdc_stop(struct dcdc *dcdc);
+
+/**
+ * Prevent overcharging of battery in case of shorted HS MOSFET
+ *
+ * This function switches the LS MOSFET continuously on to blow the battery input fuse. The
+ * reason for self destruction should be logged and stored to EEPROM prior to calling this
+ * function, as the charge controller power supply will be cut after the fuse is destroyed.
+ *
+ * @param dcdc DC/DC struct
+ */
+void dcdc_fuse_destruction(struct dcdc *dcdc);
 
 #ifdef CONFIG_CUSTOM_DCDC_CONTROLLER
 

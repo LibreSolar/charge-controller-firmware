@@ -219,7 +219,7 @@ static void lv_overvoltage_alert(const struct device *dev, int channel)
 {
     // disable any sort of input
 #if BOARD_HAS_DCDC
-    dcdc.stop();
+    dcdc_stop(&dcdc);
 #endif
 #if BOARD_HAS_PWM_PORT
     pwm_switch.stop();
@@ -254,7 +254,7 @@ void daq_set_lv_limits(float lv_overvoltage, float lv_undervoltage)
 #if BOARD_HAS_DCDC
 static void hv_overvoltage_alert(const struct device *dev, int channel)
 {
-    dcdc.stop();
+    dcdc_stop(&dcdc);
 
     // do not use enter_state function, as we don't want to wait entire recharge delay
     charger.state = CHG_STATE_IDLE;

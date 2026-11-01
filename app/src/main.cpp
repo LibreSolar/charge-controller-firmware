@@ -112,7 +112,7 @@ int main(void)
 
 #if CONFIG_HS_MOSFET_FAIL_SAFE_PROTECTION && BOARD_HAS_DCDC
         if (device_status_has_error(&dev_stat, ERR_DCDC_HS_MOSFET_SHORT)) {
-            dcdc.fuse_destruction();
+            dcdc_fuse_destruction(&dcdc);
         }
 #endif
 
@@ -155,7 +155,7 @@ void control_thread()
 
 #if BOARD_HAS_DCDC
         power_port_update_bus_current_margins(&hv_terminal);
-        dcdc.control(); // control of DC/DC including MPPT algorithm
+        dcdc_control(&dcdc); // control of DC/DC including MPPT algorithm
         charging |= half_bridge_is_enabled(dcdc.half_bridge);
 #endif
 
