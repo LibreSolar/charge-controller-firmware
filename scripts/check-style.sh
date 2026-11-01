@@ -5,10 +5,12 @@
 
 DEFAULT_BRANCH="origin/main"
 
-if [ -x "$(command -v clang-format-diff)" ]; then
+# clang-format-diff.py installed via pip (pip install clang-format) is preferred, as the same
+# version as in CI can be used locally
+if [ -x "$(command -v clang-format-diff.py)" ]; then
+CLANG_FORMAT_DIFF="clang-format-diff.py"
+elif [ -x "$(command -v clang-format-diff)" ]; then
 CLANG_FORMAT_DIFF="clang-format-diff"
-elif [ -x "$(command -v clang-format-diff-15)" ]; then
-CLANG_FORMAT_DIFF="clang-format-diff-15"
 elif [ -x "$(command -v /usr/share/clang/clang-format-diff.py)" ]; then
 CLANG_FORMAT_DIFF="/usr/share/clang/clang-format-diff.py -v"
 fi
@@ -26,6 +28,7 @@ else
 fi
 
 echo "Checking coding style with clang-format"
+clang-format --version
 
 # clang-format-diff returns 0 even for style differences, so we have to check the length of the
 # response
