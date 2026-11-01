@@ -1,0 +1,11 @@
+# Copyright (c) The Libre Solar Project Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+config DAQ_NTC_THERMISTOR
+    bool "NTC thermistor measured via DAQ"
+    default y
+    depends on DT_HAS_LIBRESOLAR_DAQ_NTC_THERMISTOR_ENABLED
+    depends on DAQ
+    help
+      Enable driver for NTC thermistors measured via a channel of the data acquisition (DAQ)
+      driver.

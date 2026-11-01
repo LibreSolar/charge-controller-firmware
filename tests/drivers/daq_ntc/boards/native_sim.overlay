@@ -1,0 +1,34 @@
+/*
+ * Copyright (c) The Libre Solar Project Contributors
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/ {
+	test_adc: test-adc {
+		compatible = "zephyr,dummy-adc";
+		#io-channel-cells = <1>;
+	};
+
+	daq: daq {
+		compatible = "libresolar,daq-emul";
+
+		v-in {
+			io-channels = <&test_adc 3>;
+			multiplier = <105600>;
+			divider = <5600>;
+		};
+
+		daq_temp: temp {
+			io-channels = <&test_adc 11>;
+			multiplier = <1>;
+			divider = <1>;
+		};
+	};
+
+	ntc: ntc {
+		compatible = "libresolar,daq-ntc-thermistor";
+		daq-channel = <&daq_temp>;
+		pullup-ohm = <10000>;
+	};
+};

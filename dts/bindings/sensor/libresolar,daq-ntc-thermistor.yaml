@@ -1,0 +1,54 @@
+# Copyright (c) The Libre Solar Project Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+description: |
+  NTC thermistor measured via a DAQ channel
+
+  The NTC is connected between the ADC input and ground with a pull-up resistor to the ADC
+  reference voltage. The temperature is calculated using the beta equation.
+
+  Example:
+
+    adc-inputs {
+        compatible = "libresolar,stm32-daq";
+
+        daq_temp_fets: temp-fets {
+            io-channels = <&adc1 11>;
+            multiplier = <1>;
+            divider = <1>;
+        };
+    };
+
+    ntc_fets: ntc-fets {
+        compatible = "libresolar,daq-ntc-thermistor";
+        daq-channel = <&daq_temp_fets>;
+        pullup-ohm = <10000>;
+    };
+
+compatible: "libresolar,daq-ntc-thermistor"
+
+include: [sensor-device.yaml]
+
+properties:
+  daq-channel:
+    type: phandle
+    required: true
+    description: Child node of the DAQ device measuring the NTC voltage
+
+  pullup-ohm:
+    type: int
+    required: true
+    description: Resistance of the pull-up resistor in ohms
+
+  nominal-ohm:
+    type: int
+    default: 10000
+    description: Resistance of the NTC at 25°C in ohms
+
+  beta:
+    type: int
+    default: 3435
+    description: |
+      Beta value of the NTC in kelvin
+
+      The default value is valid for the Semitec 103AT-5 thermistor.

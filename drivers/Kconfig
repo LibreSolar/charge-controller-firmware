@@ -6,6 +6,7 @@ menu "Libre Solar drivers"
 rsource "daq/Kconfig"
 rsource "half_bridge/Kconfig"
 rsource "power_switch/Kconfig"
+rsource "sensor/Kconfig"
 rsource "stm32_tim/Kconfig"
 
 endmenu
