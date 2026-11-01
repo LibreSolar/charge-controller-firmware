@@ -55,6 +55,18 @@
 		};
 	};
 
+	ntc_fets: ntc-fets {
+		compatible = "libresolar,daq-ntc-thermistor";
+		daq-channel = <&daq_temp_fets>;
+		pullup-ohm = <10000>;
+	};
+
+	ntc_bat: ntc-bat {
+		compatible = "libresolar,daq-ntc-thermistor";
+		daq-channel = <&daq_temp_bat>;
+		pullup-ohm = <10000>;
+	};
+
 	adc-inputs {
 		compatible = "libresolar,stm32-daq";
 
@@ -76,15 +88,15 @@
 			divider = <1>;
 		};
 
-		temp-fets {
+		daq_temp_fets: temp-fets {
 			io-channels = <&adc1 2>;
-			multiplier = <10000>;	// 10k NTC series resistor
+			multiplier = <1>;
 			divider = <1>;
 		};
 
-		temp-bat {
+		daq_temp_bat: temp-bat {
 			io-channels = <&adc1 14>;
-			multiplier = <10000>;	// 10k NTC series resistor
+			multiplier = <1>;
 			divider = <1>;
 		};
 

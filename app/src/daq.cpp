@@ -6,17 +6,16 @@
 
 #include "daq.h"
 
+#include <zephyr/drivers/sensor.h>
 #include <zephyr/kernel.h>
 
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(daq_app, CONFIG_DAQ_LOG_LEVEL);
 
-#include <math.h> // log for thermistor calculation
-
 #include "setup.h"
 
-// typical value for Semitec 103AT-5 thermistor: 3435
-#define NTC_BETA_VALUE 3435
+// temperatures below this value are considered as invalid (e.g. sensor not connected)
+#define NTC_TEMP_MIN (-50.0F)
 
 // filter parameter c for additional battery voltage and current low-pass filter
 // c = dt / (tau + dt) = 0.1s / (10s + 0.1s)
@@ -25,29 +24,34 @@ LOG_MODULE_REGISTER(daq_app, CONFIG_DAQ_LOG_LEVEL);
 #define LV_TERMINAL_CURRENT_FILTER_CONST 0.0099F
 #define PWM_CURRENT_FILTER_CONST         0.0625F // 1.5 seconds
 
-#define ADC_GAIN(name) \
-    ((float)DT_PROP(DT_CHILD(DAQ_NODE, name), multiplier) \
-     / DT_PROP(DT_CHILD(DAQ_NODE, name), divider))
-
 static const struct device *const daq = DAQ_DEV;
 
-static inline float ntc_temp(int channel, float ntc_series_resistor)
+#if BOARD_HAS_TEMP_BAT || BOARD_HAS_TEMP_FETS
+/**
+ * Read temperature from an NTC sensor
+ *
+ * @returns 0 on success or negative errno if the temperature is not available or implausible
+ */
+static int ntc_temp(const struct device *sensor, float *temp)
 {
-    /** \todo Improved (faster) temperature calculation:
-       https://www.embeddedrelated.com/showarticle/91.php
-    */
+    struct sensor_value val;
+    int err;
 
-    int vref = daq_get_vref_mv(daq);
+    err = sensor_sample_fetch(sensor);
+    if (err != 0) {
+        return err;
+    }
 
-    // voltage read by ADC (mV)
-    float v_temp = daq_get_pin_voltage(daq, channel) * 1000;
+    err = sensor_channel_get(sensor, SENSOR_CHAN_AMBIENT_TEMP, &val);
+    if (err != 0) {
+        return err;
+    }
 
-    // resistance of NTC (Ohm)
-    float rts = ntc_series_resistor * v_temp / (vref - v_temp);
+    *temp = sensor_value_to_float(&val);
 
-    return 1.0f / (1.0f / (273.15f + 25.0f) + 1.0f / (float)NTC_BETA_VALUE * logf(rts / 10000.0f))
-           - 273.15f; // °C
+    return *temp > NTC_TEMP_MIN ? 0 : -ENODATA;
 }
+#endif
 
 void calibrate_current_sensors()
 {
@@ -173,10 +177,9 @@ void daq_update()
 #endif
 
 #if BOARD_HAS_TEMP_BAT
-    // battery temperature calculation
-    float bat_temp = ntc_temp(DAQ_CH(temp_bat), ADC_GAIN(temp_bat));
+    float bat_temp;
 
-    if (bat_temp > -50) {
+    if (ntc_temp(DEVICE_DT_GET(NTC_BAT_NODE), &bat_temp) == 0) {
         // external sensor connected: take measured value
         charger.bat_temperature = bat_temp;
         charger.ext_temp_sensor = true;
@@ -189,7 +192,11 @@ void daq_update()
 #endif
 
 #if BOARD_HAS_TEMP_FETS
-    dcdc.temp_mosfets = ntc_temp(DAQ_CH(temp_fets), ADC_GAIN(temp_fets));
+    float fets_temp;
+
+    if (ntc_temp(DEVICE_DT_GET(NTC_FETS_NODE), &fets_temp) == 0) {
+        dcdc.temp_mosfets = fets_temp;
+    }
 #endif
 
     float internal_temp;

@@ -62,6 +62,12 @@
 		#io-channel-cells = <1>;
         };
 
+	ntc_fets: ntc-fets {
+		compatible = "libresolar,daq-ntc-thermistor";
+		daq-channel = <&daq_temp_fets>;
+		pullup-ohm = <10000>;
+	};
+
 	adc-inputs {
 		compatible = "libresolar,daq-emul";
 
@@ -84,9 +90,9 @@
 			offset = <37414>;	// 65536 / (1 + 8.2/120 + 8.2/12)
 		};
 
-		temp-fets {
+		daq_temp_fets: temp-fets {
 			io-channels = <&adc1 11>;
-			multiplier = <10000>;	// 10k NTC series resistor
+			multiplier = <1>;
 			divider = <1>;
 		};
 

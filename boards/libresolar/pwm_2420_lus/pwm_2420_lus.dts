@@ -83,6 +83,12 @@
 		};
 	};
 
+	ntc_bat: ntc-bat {
+		compatible = "libresolar,daq-ntc-thermistor";
+		daq-channel = <&daq_temp_bat>;
+		pullup-ohm = <8200>;
+	};
+
 	adc-inputs {
 		compatible = "libresolar,stm32-daq";
 
@@ -114,9 +120,9 @@
 			divider = <136>;	// 2*68
 		};
 
-		temp-bat {
+		daq_temp_bat: temp-bat {
 			io-channels = <&adc1 7>;
-			multiplier = <8200>;	// 8.2k NTC series resistor
+			multiplier = <1>;
 			divider = <1>;
 		};
 

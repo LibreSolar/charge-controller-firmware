@@ -178,7 +178,9 @@ Move all remaining hardware access from `app/src` into Zephyr drivers.
   - [x] STM32 timer backend (`libresolar,stm32-pwm-power-switch`) for PWM charge controllers
         (replaces `pwm_switch_driver.c`), needs hardware test
   - [x] Emulated backend (`libresolar,power-switch-emul`) for tests on native_sim
-- [ ] NTC thermistors via Zephyr sensor API (replaces `ntc_temp()` in `daq.cpp`)
+- [x] NTC thermistors via Zephyr sensor API (replaces `ntc_temp()` in `daq.cpp`)
+  - [x] `libresolar,daq-ntc-thermistor` sensor driver using the filtered DAQ readings, as
+        Zephyr's NTC driver requires exclusive ADC access
 - [ ] Bootloader entry and SoC-specific setup out of the application (`hardware.cpp`,
       `setup.cpp`, `mcu.h`)
 

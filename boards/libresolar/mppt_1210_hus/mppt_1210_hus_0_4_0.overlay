@@ -67,6 +67,9 @@
 	};
 };
 
+/* no battery temperature sensor input */
+/delete-node/ &ntc_bat;
+
 &load_switch {
 	gpios = <&gpioc 13 GPIO_ACTIVE_HIGH>;
 };

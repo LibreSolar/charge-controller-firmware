@@ -77,6 +77,12 @@
 		};
 	};
 
+	ntc_bat: ntc-bat {
+		compatible = "libresolar,daq-ntc-thermistor";
+		daq-channel = <&daq_temp_bat>;
+		pullup-ohm = <10000>;
+	};
+
 	adc-inputs {
 		compatible = "libresolar,stm32-daq";
 
@@ -107,9 +113,9 @@
 			divider = <150>;	// 3*50
 		};
 
-		temp-bat {
+		daq_temp_bat: temp-bat {
 			io-channels = <&adc1 7>;
-			multiplier = <10000>;
+			multiplier = <1>;
 			divider = <1>;
 		};
 
