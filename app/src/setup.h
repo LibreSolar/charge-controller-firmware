@@ -16,12 +16,12 @@
 #include "pwm_switch.h"
 #include "thingset.h"
 
-extern DcBus lv_bus;
-extern PowerPort lv_terminal;
+extern struct dc_bus lv_bus;
+extern struct power_port lv_terminal;
 
 #if BOARD_HAS_DCDC
-extern DcBus hv_bus;
-extern PowerPort hv_terminal;
+extern struct dc_bus hv_bus;
+extern struct power_port hv_terminal;
 extern Dcdc dcdc;
 #endif
 
@@ -29,9 +29,9 @@ extern Dcdc dcdc;
 extern PwmSwitch pwm_switch;
 #endif
 
-extern PowerPort &bat_terminal;
-extern PowerPort &solar_terminal;
-extern PowerPort &grid_terminal;
+extern struct power_port &bat_terminal;
+extern struct power_port &solar_terminal;
+extern struct power_port &grid_terminal;
 
 extern DeviceStatus dev_stat;
 extern Charger charger;

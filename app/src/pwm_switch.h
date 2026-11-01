@@ -29,10 +29,10 @@
  *
  * Contains all data belonging to the PWM switching sub-component.
  */
-class PwmSwitch : public PowerPort
+class PwmSwitch : public power_port
 {
 public:
-    PwmSwitch(DcBus *dc_bus, const struct device *power_switch);
+    PwmSwitch(struct dc_bus *dc_bus, const struct device *power_switch);
 
     /**
      * Main control function for the PWM switching algorithm

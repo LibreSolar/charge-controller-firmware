@@ -24,12 +24,16 @@
 #include "load.h"       // load and USB output management
 #include "pwm_switch.h" // PWM charge controller
 
-DcBus lv_bus;
-PowerPort lv_terminal(&lv_bus, true); // low voltage terminal (battery for typical MPPT)
+// low voltage terminal (battery for typical MPPT)
+extern struct power_port lv_terminal;
+struct dc_bus lv_bus = { .series_multiplier = 1, .ref_current = &lv_terminal.current };
+struct power_port lv_terminal = { .bus = &lv_bus };
 
 #if BOARD_HAS_DCDC
-DcBus hv_bus;
-PowerPort hv_terminal(&hv_bus, true); // high voltage terminal (solar for typical MPPT)
+// high voltage terminal (solar for typical MPPT)
+extern struct power_port hv_terminal;
+struct dc_bus hv_bus = { .series_multiplier = 1, .ref_current = &hv_terminal.current };
+struct power_port hv_terminal = { .bus = &hv_bus };
 #if CONFIG_HV_TERMINAL_NANOGRID
 Dcdc dcdc(DEVICE_DT_GET(HALF_BRIDGE_NODE), &hv_bus, &lv_bus, DCDC_MODE_AUTO);
 #elif CONFIG_HV_TERMINAL_BATTERY
@@ -56,21 +60,21 @@ LoadOutput usb_pwr(&lv_bus, DEVICE_DT_GET(USB_SWITCH_NODE));
 #endif
 
 #if CONFIG_HV_TERMINAL_SOLAR
-PowerPort &solar_terminal = hv_terminal;
+struct power_port &solar_terminal = hv_terminal;
 #elif CONFIG_LV_TERMINAL_SOLAR
-PowerPort &solar_terminal = lv_terminal;
+struct power_port &solar_terminal = lv_terminal;
 #elif CONFIG_PWM_TERMINAL_SOLAR
-PowerPort &solar_terminal = pwm_switch;
+struct power_port &solar_terminal = pwm_switch;
 #endif
 
 #if CONFIG_HV_TERMINAL_NANOGRID
-PowerPort &grid_terminal = hv_terminal;
+struct power_port &grid_terminal = hv_terminal;
 #endif
 
 #if CONFIG_LV_TERMINAL_BATTERY
-PowerPort &bat_terminal = lv_terminal;
+struct power_port &bat_terminal = lv_terminal;
 #elif CONFIG_HV_TERMINAL_BATTERY
-PowerPort &bat_terminal = hv_terminal;
+struct power_port &bat_terminal = hv_terminal;
 #endif
 
 Charger charger(&bat_terminal);

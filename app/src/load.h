@@ -92,7 +92,7 @@ enum LoadErrorFlag
  *
  * Stores status of load output incl. 5V USB output (if existing on PCB)
  */
-class LoadOutput : public PowerPort
+class LoadOutput : public power_port
 {
 public:
     /**
@@ -102,7 +102,7 @@ public:
      * @param power_switch Power switch device of the output
      * @param led LED indicating the switch state or -1 if not existing
      */
-    LoadOutput(DcBus *dc_bus, const struct device *power_switch, int led = -1);
+    LoadOutput(struct dc_bus *dc_bus, const struct device *power_switch, int led = -1);
 
     /** Main load control function, should be called by control timer
      *

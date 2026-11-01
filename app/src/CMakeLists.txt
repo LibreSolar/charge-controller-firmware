@@ -11,7 +11,7 @@ target_sources(app PRIVATE
         leds.cpp
         load.cpp
         main.cpp
-        power_port.cpp
+        power_port.c
         pwm_switch.cpp
         setup.cpp
 )

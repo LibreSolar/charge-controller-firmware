@@ -6,44 +6,60 @@
 
 #include "power_port.h"
 
-void PowerPort::init_solar()
+#include <string.h>
+
+void dc_bus_init(struct dc_bus *bus)
 {
-    neg_current_limit = -50; // derating based on max. DC/DC or PWM switch current only
-    pos_current_limit = 0;   // no current towards solar panel allowed
+    memset(bus, 0, sizeof(*bus));
+    bus->series_multiplier = 1;
 }
 
-void PowerPort::init_nanogrid()
+void power_port_init(struct power_port *port, struct dc_bus *bus, bool assign_ref_current)
 {
-    pos_current_limit = 5.0;
-    neg_current_limit = -5.0;
+    memset(port, 0, sizeof(*port));
+    port->bus = bus;
+
+    if (assign_ref_current) {
+        bus->ref_current = &port->current;
+    }
+}
+
+void power_port_init_solar(struct power_port *port)
+{
+    port->neg_current_limit = -50; // derating based on max. DC/DC or PWM switch current only
+    port->pos_current_limit = 0;   // no current towards solar panel allowed
+}
+
+void power_port_init_nanogrid(struct power_port *port)
+{
+    port->pos_current_limit = 5.0F;
+    port->neg_current_limit = -5.0F;
 
     // 1 Ohm means 1V change of target voltage per amp, same droop for both current directions.
-    bus->sink_droop_res = 0.1;
-    bus->src_droop_res = 0.1;
+    port->bus->sink_droop_res = 0.1F;
+    port->bus->src_droop_res = 0.1F;
 
     // also initialize the connected bus
-    bus->src_voltage_intercept = 30.0;  // starting buck mode above this point
-    bus->sink_voltage_intercept = 28.0; // boost mode until this voltage is reached
+    port->bus->src_voltage_intercept = 30.0F;  // starting buck mode above this point
+    port->bus->sink_voltage_intercept = 28.0F; // boost mode until this voltage is reached
 }
 
-void PowerPort::energy_balance()
+void power_port_energy_balance(struct power_port *port)
 {
     // remark: timespan = 1s, so no multiplication with time necessary for energy calculation
-    if (current >= 0.0F) {
-        pos_energy_Wh += bus->voltage * current / 3600.0F;
+    if (port->current >= 0.0F) {
+        port->pos_energy_Wh += port->bus->voltage * port->current / 3600.0F;
     }
     else {
-        neg_energy_Wh -= bus->voltage * current / 3600.0F;
+        port->neg_energy_Wh -= port->bus->voltage * port->current / 3600.0F;
     }
 }
 
-void PowerPort::update_bus_current_margins() const
+void power_port_update_bus_current_margins(const struct power_port *port)
 {
     // charging direction of battery
-    bus->sink_current_margin = pos_current_limit - current;
+    port->bus->sink_current_margin = port->pos_current_limit - port->current;
 
     // discharging direction of battery
-    bus->src_current_margin = neg_current_limit - current;
-
-    // printf("pos: %.3f neg: %.3f current: %.3f\n", pos_current_limit, neg_current_limit, current);
+    port->bus->src_current_margin = port->neg_current_limit - port->current;
 }

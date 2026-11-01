@@ -47,9 +47,9 @@ void energy_calculation_init()
     daq_update();
 
     for (int i = 0; i < 60 * 60 * sun_hours; i++) {
-        hv_terminal.energy_balance();
-        lv_terminal.energy_balance();
-        load.energy_balance();
+        power_port_energy_balance(&hv_terminal);
+        power_port_energy_balance(&lv_terminal);
+        power_port_energy_balance(&load);
     }
 
     // disable DC/DC = solar charging
@@ -59,9 +59,9 @@ void energy_calculation_init()
     daq_update();
 
     for (int i = 0; i < 60 * 60 * night_hours; i++) {
-        hv_terminal.energy_balance();
-        lv_terminal.energy_balance();
-        load.energy_balance();
+        power_port_energy_balance(&hv_terminal);
+        power_port_energy_balance(&lv_terminal);
+        power_port_energy_balance(&load);
     }
 }
 

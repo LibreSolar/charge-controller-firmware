@@ -43,11 +43,11 @@ int main(void)
     battery_conf_overwrite(&bat_conf, &bat_conf_user); // initialize conf_user with same values
 
 #if CONFIG_HV_TERMINAL_SOLAR || CONFIG_LV_TERMINAL_SOLAR || CONFIG_PWM_TERMINAL_SOLAR
-    solar_terminal.init_solar();
+    power_port_init_solar(&solar_terminal);
 #endif
 
 #if CONFIG_HV_TERMINAL_NANOGRID
-    grid_terminal.init_nanogrid();
+    power_port_init_nanogrid(&grid_terminal);
 #endif
 
     // make sure loaded configuration is valid
@@ -88,21 +88,21 @@ int main(void)
 // energy + soc calculation must be called exactly once per second
 #if BOARD_HAS_DCDC
         if (dcdc.state != DCDC_CONTROL_OFF) {
-            hv_terminal.energy_balance();
+            power_port_energy_balance(&hv_terminal);
         }
 #endif
 
 #if BOARD_HAS_PWM_PORT
         if (pwm_switch.active() == 1) {
-            pwm_switch.energy_balance();
+            power_port_energy_balance(&pwm_switch);
         }
 #endif
 
-        lv_terminal.energy_balance();
+        power_port_energy_balance(&lv_terminal);
 
 #if BOARD_HAS_LOAD_OUTPUT
         if (load.state == 1) {
-            load.energy_balance();
+            power_port_energy_balance(&load);
         }
 #endif
 
@@ -146,7 +146,7 @@ void control_thread()
         // alerts should trigger only for transients, so update based on actual voltage
         daq_set_lv_limits(lv_terminal.bus->voltage * 1.2F, lv_terminal.bus->voltage * 0.8F);
 
-        lv_terminal.update_bus_current_margins();
+        power_port_update_bus_current_margins(&lv_terminal);
 
 #if BOARD_HAS_PWM_PORT
         pwm_switch.control();
@@ -154,7 +154,7 @@ void control_thread()
 #endif
 
 #if BOARD_HAS_DCDC
-        hv_terminal.update_bus_current_margins();
+        power_port_update_bus_current_margins(&hv_terminal);
         dcdc.control(); // control of DC/DC including MPPT algorithm
         charging |= half_bridge_is_enabled(dcdc.half_bridge);
 #endif

@@ -30,9 +30,11 @@ LOG_MODULE_REGISTER(load, CONFIG_LOAD_LOG_LEVEL);
 
 extern DeviceStatus dev_stat;
 
-LoadOutput::LoadOutput(DcBus *dc_bus, const struct device *sw, int led_pos)
-    : PowerPort(dc_bus), power_switch(sw), led(led_pos)
+LoadOutput::LoadOutput(struct dc_bus *dc_bus, const struct device *sw, int led_pos)
+    : power_switch(sw), led(led_pos)
 {
+    power_port_init(this, dc_bus, false);
+
     state = LOAD_STATE_OFF;
 
     if (!device_is_ready(power_switch)) {
@@ -82,14 +84,16 @@ void LoadOutput::control()
             flags_set(&error_flags, ERR_LOAD_BUS_SRC_CURRENT);
         }
 
-        if (bus->voltage < bus->src_control_voltage(disconnect_voltage)) {
+        if (bus->voltage < dc_bus_src_control_voltage(bus, disconnect_voltage)) {
             flags_set(&error_flags, ERR_LOAD_SHEDDING);
             lvd_timestamp = uptime();
         }
 
         // long-term overvoltage (overvoltage transients are detected as an ADC alert and switch
         // off the solar input instead of the load output)
-        if (bus->voltage > bus->series_voltage(overvoltage) || bus->voltage > PCB_LS_VOLTAGE_MAX) {
+        if (bus->voltage > dc_bus_series_voltage(bus, overvoltage)
+            || bus->voltage > PCB_LS_VOLTAGE_MAX)
+        {
             ov_debounce_counter++;
             if (ov_debounce_counter > CONFIG_CONTROL_FREQUENCY) {
                 // waited 1s before setting the flag
@@ -113,7 +117,7 @@ void LoadOutput::control()
         // load is off: check if errors are resolved and if load can be switched on
 
         if (flags_check(&error_flags, ERR_LOAD_SHEDDING)
-            && bus->voltage > bus->src_control_voltage(reconnect_voltage)
+            && bus->voltage > dc_bus_src_control_voltage(bus, reconnect_voltage)
             && uptime() - lvd_timestamp > lvd_recovery_delay)
         {
             flags_clear(&error_flags, ERR_LOAD_SHEDDING);
@@ -126,7 +130,7 @@ void LoadOutput::control()
         }
 
         if (flags_check(&error_flags, ERR_LOAD_OVERVOLTAGE)
-            && bus->voltage < (bus->series_voltage(overvoltage) - ov_hysteresis)
+            && bus->voltage < (dc_bus_series_voltage(bus, overvoltage) - ov_hysteresis)
             && bus->voltage < (PCB_LS_VOLTAGE_MAX - ov_hysteresis))
         {
             flags_clear(&error_flags, ERR_LOAD_OVERVOLTAGE);

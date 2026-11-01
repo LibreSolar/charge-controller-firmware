@@ -435,7 +435,9 @@ void Charger::discharge_control(BatConf *bat_conf)
         // This limit should normally never be reached, as the load output settings should be
         // higher. The flag can be used to trigger actions of last resort, e.g. deep-sleep
         // of the charge controller itself.
-        if (port->bus->voltage < port->bus->src_control_voltage(bat_conf->absolute_min_voltage)) {
+        if (port->bus->voltage
+            < dc_bus_src_control_voltage(port->bus, bat_conf->absolute_min_voltage))
+        {
             port->neg_current_limit = 0;
             dev_stat.set_error(ERR_BAT_UNDERVOLTAGE);
         }
@@ -453,7 +455,7 @@ void Charger::discharge_control(BatConf *bat_conf)
         // discharging currently not allowed. should we allow it?
 
         if (port->bus->voltage
-            >= port->bus->src_control_voltage(bat_conf->absolute_min_voltage + 0.1F))
+            >= dc_bus_src_control_voltage(port->bus, bat_conf->absolute_min_voltage + 0.1F))
         {
             dev_stat.clear_error(ERR_BAT_UNDERVOLTAGE);
         }
@@ -506,9 +508,9 @@ void Charger::charge_control(BatConf *bat_conf)
             if ((time_state_changed == CHARGER_TIME_NEVER
                  || ((uptime() - time_state_changed) > bat_conf->time_limit_recharge
                      && port->bus->voltage
-                            < port->bus->sink_control_voltage(bat_conf->recharge_voltage)))
+                            < dc_bus_sink_control_voltage(port->bus, bat_conf->recharge_voltage)))
                 && port->bus->voltage
-                       > port->bus->sink_control_voltage(bat_conf->absolute_min_voltage)
+                       > dc_bus_sink_control_voltage(port->bus, bat_conf->absolute_min_voltage)
                 && bat_temperature < bat_conf->charge_temp_max - 1
                 && bat_temperature > bat_conf->charge_temp_min + 1)
             {
@@ -531,7 +533,7 @@ void Charger::charge_control(BatConf *bat_conf)
                 bat_conf->topping_voltage
                 + bat_conf->temperature_compensation * (bat_temperature - 25);
 
-            if (port->bus->voltage > port->bus->sink_control_voltage()) {
+            if (port->bus->voltage > dc_bus_sink_control_voltage(port->bus, 0)) {
                 target_voltage_timer = 0;
                 enter_state(CHG_STATE_TOPPING);
             }
@@ -546,7 +548,7 @@ void Charger::charge_control(BatConf *bat_conf)
             // power sharing: multiple devices in parallel supply the same current
             target_current_control = port->current_filtered;
 
-            if (port->bus->voltage_filtered >= port->bus->sink_control_voltage() - 0.05F) {
+            if (port->bus->voltage_filtered >= dc_bus_sink_control_voltage(port->bus, 0) - 0.05F) {
                 // battery is full if topping target voltage is still reached (i.e. sufficient
                 // solar power available) and time limit or cut-off current reached
                 if (port->current_filtered < bat_conf->topping_cutoff_current
@@ -597,13 +599,13 @@ void Charger::charge_control(BatConf *bat_conf)
 
             target_current_control = port->current_filtered;
 
-            if (port->bus->voltage >= port->bus->sink_control_voltage()) {
+            if (port->bus->voltage >= dc_bus_sink_control_voltage(port->bus, 0)) {
                 time_target_voltage_reached = uptime();
             }
 
             if ((uptime() - time_target_voltage_reached > bat_conf->float_recharge_time)
                 && port->bus->voltage_filtered
-                       < port->bus->sink_control_voltage(bat_conf->recharge_voltage))
+                       < dc_bus_sink_control_voltage(port->bus, bat_conf->recharge_voltage))
             {
                 // the battery was discharged: float voltage could not be reached anymore
                 port->pos_current_limit = bat_conf->charge_current_max;

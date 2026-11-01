@@ -41,7 +41,8 @@ LOG_MODULE_REGISTER(dcdc, CONFIG_DCDC_LOG_LEVEL);
 
 extern DeviceStatus dev_stat;
 
-Dcdc::Dcdc(const struct device *hb, DcBus *high, DcBus *low, DcdcOperationMode op_mode)
+Dcdc::Dcdc(const struct device *hb, struct dc_bus *high, struct dc_bus *low,
+           DcdcOperationMode op_mode)
 {
     half_bridge = hb;
     hvb = high;
@@ -78,7 +79,7 @@ void Dcdc::perturb_observe_buck()
         // switch off after 10s low power or negative power (if not in nanogrid mode)
         pwm_direction = 0;
     }
-    else if (lvb->voltage > lvb->sink_control_voltage()) {
+    else if (lvb->voltage > dc_bus_sink_control_voltage(lvb, 0)) {
         state = DCDC_CONTROL_CV_LS;
         pwm_direction = BUCK_DUTY_POWER_DECREASE;
     }
@@ -90,7 +91,7 @@ void Dcdc::perturb_observe_buck()
         state = DCDC_CONTROL_CC_HS;
         pwm_direction = BUCK_DUTY_POWER_DECREASE;
     }
-    else if (hvb->voltage < hvb->src_control_voltage() && power > output_power_min) {
+    else if (hvb->voltage < dc_bus_src_control_voltage(hvb, 0) && power > output_power_min) {
         // input voltage below limit
         state = DCDC_CONTROL_CV_HS;
         pwm_direction = BUCK_DUTY_POWER_DECREASE;
@@ -99,7 +100,7 @@ void Dcdc::perturb_observe_buck()
         state = DCDC_CONTROL_DERATING;
         pwm_direction = BUCK_DUTY_POWER_DECREASE;
     }
-    else if (power < output_power_min && lvb->voltage < lvb->src_control_voltage()) {
+    else if (power < output_power_min && lvb->voltage < dc_bus_src_control_voltage(lvb, 0)) {
         // no load condition (e.g. start-up of nanogrid) --> raise voltage
         pwm_direction = BUCK_DUTY_POWER_INCREASE;
     }
@@ -123,7 +124,7 @@ void Dcdc::perturb_observe_boost()
         // switch off after 10s low power or negative power (if not in nanogrid mode)
         pwm_direction = 0;
     }
-    else if (hvb->voltage > hvb->sink_control_voltage()) {
+    else if (hvb->voltage > dc_bus_sink_control_voltage(hvb, 0)) {
         state = DCDC_CONTROL_CV_HS;
         pwm_direction = BOOST_DUTY_POWER_DECREASE;
     }
@@ -135,7 +136,7 @@ void Dcdc::perturb_observe_boost()
         state = DCDC_CONTROL_CC_LS;
         pwm_direction = BOOST_DUTY_POWER_DECREASE;
     }
-    else if (lvb->voltage < lvb->src_control_voltage() && -power > output_power_min) {
+    else if (lvb->voltage < dc_bus_src_control_voltage(lvb, 0) && -power > output_power_min) {
         // input voltage below limit
         state = DCDC_CONTROL_CV_LS;
         pwm_direction = BOOST_DUTY_POWER_DECREASE;
@@ -144,7 +145,7 @@ void Dcdc::perturb_observe_boost()
         state = DCDC_CONTROL_DERATING;
         pwm_direction = BOOST_DUTY_POWER_DECREASE;
     }
-    else if (-power < output_power_min && hvb->voltage < hvb->src_control_voltage()) {
+    else if (-power < output_power_min && hvb->voltage < dc_bus_src_control_voltage(hvb, 0)) {
         // no load condition (e.g. start-up of nanogrid) --> raise voltage
         pwm_direction = BOOST_DUTY_POWER_INCREASE;
     }
@@ -169,15 +170,15 @@ __weak DcdcOperationMode Dcdc::check_start_conditions()
         return DCDC_MODE_OFF;
     }
 
-    if (lvb->sink_current_margin > 0 && lvb->voltage < lvb->sink_control_voltage()
-        && hvb->src_current_margin < 0 && hvb->voltage > hvb->src_control_voltage()
+    if (lvb->sink_current_margin > 0 && lvb->voltage < dc_bus_sink_control_voltage(lvb, 0)
+        && hvb->src_current_margin < 0 && hvb->voltage > dc_bus_src_control_voltage(hvb, 0)
         && hvb->voltage * 0.85f > lvb->voltage)
     {
         return DCDC_MODE_BUCK;
     }
 
-    if (hvb->sink_current_margin > 0 && hvb->voltage < hvb->sink_control_voltage()
-        && lvb->src_current_margin < 0 && lvb->voltage > lvb->src_control_voltage())
+    if (hvb->sink_current_margin > 0 && hvb->voltage < dc_bus_sink_control_voltage(hvb, 0)
+        && lvb->src_current_margin < 0 && lvb->voltage > dc_bus_src_control_voltage(lvb, 0))
     {
         return DCDC_MODE_BOOST;
     }
@@ -189,7 +190,7 @@ bool Dcdc::check_hs_mosfet_short()
 {
     static uint32_t first_time_detected;
     if (half_bridge_is_enabled(half_bridge) == false && inductor_current > 0.5F
-        && lvb->voltage_filtered > lvb->sink_control_voltage())
+        && lvb->voltage_filtered > dc_bus_sink_control_voltage(lvb, 0))
     {
         // if there is current even though the DC/DC is switched off, the
         // high-side MOSFET must be broken --> set flag and let main() decide
@@ -413,7 +414,8 @@ void Dcdc::output_hvs_disable()
 
 #else
 
-Dcdc::Dcdc(const struct device *hb, DcBus *high, DcBus *low, DcdcOperationMode op_mode)
+Dcdc::Dcdc(const struct device *hb, struct dc_bus *high, struct dc_bus *low,
+           DcdcOperationMode op_mode)
 {}
 
 #endif /* BOARD_HAS_DCDC */

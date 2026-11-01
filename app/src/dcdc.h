@@ -101,7 +101,8 @@ public:
      * @param low Low voltage bus (e.g. battery output for MPPT buck)
      * @param mode Operation mode (buck, boost or nanogrid)
      */
-    Dcdc(const struct device *half_bridge, DcBus *high, DcBus *low, DcdcOperationMode mode);
+    Dcdc(const struct device *half_bridge, struct dc_bus *high, struct dc_bus *low,
+         DcdcOperationMode mode);
 
     /**
      * Check for valid start conditions of the DC/DC converter
@@ -147,8 +148,8 @@ public:
     uint16_t state;         ///< Control state (off / MPPT / CC / CV)
 
     // actual measurements
-    DcBus *hvb;             ///< Pointer to DC bus at high voltage side
-    DcBus *lvb;             ///< Pointer to DC bus at low voltage (inductor) side
+    struct dc_bus *hvb;     ///< Pointer to DC bus at high voltage side
+    struct dc_bus *lvb;     ///< Pointer to DC bus at low voltage (inductor) side
     float inductor_current; ///< Inductor current
     float power;            ///< Low-side power
     float temp_mosfets;     ///< MOSFET temperature measurement (if existing)

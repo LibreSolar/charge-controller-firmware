@@ -36,8 +36,10 @@ bool PwmSwitch::signal_high()
     return power_switch_is_conducting(power_switch);
 }
 
-PwmSwitch::PwmSwitch(DcBus *dc_bus, const struct device *sw) : PowerPort(dc_bus), power_switch(sw)
+PwmSwitch::PwmSwitch(struct dc_bus *dc_bus, const struct device *sw) : power_switch(sw)
 {
+    power_port_init(this, dc_bus, false);
+
     if (!device_is_ready(power_switch)) {
         LOG_ERR("PWM switch not ready");
         enable = false;
@@ -92,15 +94,15 @@ void PwmSwitch::control()
             off_timestamp = uptime();
             LOG_INF("PWM charger stop, current = %d mA", (int)(current * 1000.0F));
         }
-        else if (bus->voltage > bus->sink_control_voltage() + 0.3F) {
+        else if (bus->voltage > dc_bus_sink_control_voltage(bus, 0) + 0.3F) {
             power_switch_off(power_switch);
             off_timestamp = uptime();
             dev_stat.set_error(ERR_PWM_SWITCH_OVERVOLTAGE);
             LOG_INF("PWM charger stop, overvoltage.");
         }
-        else if (bus->voltage > bus->sink_control_voltage() // bus voltage above target
-                 || current < neg_current_limit             // port current limit exceeded
-                 || current < -PWM_CURRENT_MAX)             // PCB current limit exceeded
+        else if (bus->voltage > dc_bus_sink_control_voltage(bus, 0) // bus voltage above target
+                 || current < neg_current_limit                     // port current limit exceeded
+                 || current < -PWM_CURRENT_MAX)                     // PCB current limit exceeded
         {
             // decrease power, as limits were reached
 
@@ -137,14 +139,14 @@ void PwmSwitch::control()
         }
 
         if (dev_stat.has_error(ERR_PWM_SWITCH_OVERVOLTAGE)
-            && bus->voltage < bus->sink_control_voltage() - 0.5F)
+            && bus->voltage < dc_bus_sink_control_voltage(bus, 0) - 0.5F)
         {
             dev_stat.clear_error(ERR_PWM_SWITCH_OVERVOLTAGE);
         }
     }
     else {
         if (bus->sink_current_margin > 0 && // charging allowed
-            bus->voltage < bus->sink_control_voltage()
+            bus->voltage < dc_bus_sink_control_voltage(bus, 0)
             && ext_voltage > bus->voltage + offset_voltage_start
             && uptime() > (off_timestamp + restart_interval) && enable == true)
         {

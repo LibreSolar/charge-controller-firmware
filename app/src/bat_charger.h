@@ -341,9 +341,9 @@ enum ChargerState
 class Charger
 {
 public:
-    Charger(PowerPort *pwr_port) : port(pwr_port){};
+    Charger(struct power_port *pwr_port) : port(pwr_port) {};
 
-    PowerPort *port;
+    struct power_port *port;
 
     /**
      * Current charger state (see enum ChargerState)

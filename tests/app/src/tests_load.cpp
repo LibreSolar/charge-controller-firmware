@@ -45,7 +45,8 @@ static void load_init(LoadOutput *l, bool on = false, int num_batteries = 1)
 
 ZTEST(load, test_control_off_to_on_if_everything_fine)
 {
-    DcBus bus = {};
+    struct dc_bus bus;
+    dc_bus_init(&bus);
     LoadOutput load_out(&bus, load_switch);
     load_init(&load_out);
     zassert_false(power_switch_is_on(load_switch));
@@ -59,7 +60,8 @@ ZTEST(load, test_control_off_to_on_if_everything_fine)
 
 ZTEST(load, test_control_off_to_on_if_everything_fine_dual_battery)
 {
-    DcBus bus = {};
+    struct dc_bus bus;
+    dc_bus_init(&bus);
     LoadOutput load_out(&bus, load_switch);
     load_init(&load_out, false, 2);
 
@@ -71,7 +73,8 @@ ZTEST(load, test_control_off_to_on_if_everything_fine_dual_battery)
 
 ZTEST(load, test_control_on_to_off_shedding)
 {
-    DcBus bus = {};
+    struct dc_bus bus;
+    dc_bus_init(&bus);
     LoadOutput load_out(&bus, load_switch);
     load_init(&load_out, true);
 
@@ -84,7 +87,8 @@ ZTEST(load, test_control_on_to_off_shedding)
 
 ZTEST(load, test_control_on_to_off_overvoltage)
 {
-    DcBus bus = {};
+    struct dc_bus bus;
+    dc_bus_init(&bus);
     LoadOutput load_out(&bus, load_switch);
     load_init(&load_out, true);
 
@@ -105,7 +109,8 @@ ZTEST(load, test_control_on_to_off_overvoltage)
 
 ZTEST(load, test_control_on_to_off_overvoltage_dual_battery)
 {
-    DcBus bus = {};
+    struct dc_bus bus;
+    dc_bus_init(&bus);
     LoadOutput load_out(&bus, load_switch);
     load_init(&load_out, true, 2);
 
@@ -126,7 +131,8 @@ ZTEST(load, test_control_on_to_off_overvoltage_dual_battery)
 
 ZTEST(load, test_control_on_to_off_overcurrent)
 {
-    DcBus bus = {};
+    struct dc_bus bus;
+    dc_bus_init(&bus);
     LoadOutput load_out(&bus, load_switch);
     load_init(&load_out, true);
 
@@ -147,7 +153,8 @@ ZTEST(load, test_control_on_to_off_overcurrent)
 
 ZTEST(load, test_control_on_to_off_voltage_dip)
 {
-    DcBus bus = {};
+    struct dc_bus bus;
+    dc_bus_init(&bus);
     LoadOutput load_out(&bus, load_switch);
     load_init(&load_out, true);
 
@@ -159,7 +166,8 @@ ZTEST(load, test_control_on_to_off_voltage_dip)
 
 ZTEST(load, test_control_on_to_off_bus_limit)
 {
-    DcBus bus = {};
+    struct dc_bus bus;
+    dc_bus_init(&bus);
     LoadOutput load_out(&bus, load_switch);
     load_init(&load_out, true);
 
@@ -171,7 +179,8 @@ ZTEST(load, test_control_on_to_off_bus_limit)
 
 ZTEST(load, test_control_on_to_off_if_enable_false)
 {
-    DcBus bus = {};
+    struct dc_bus bus;
+    dc_bus_init(&bus);
     LoadOutput load_out(&bus, load_switch);
     load_init(&load_out, true);
 
@@ -183,7 +192,8 @@ ZTEST(load, test_control_on_to_off_if_enable_false)
 
 ZTEST(load, test_control_off_shedding_to_on_after_delay)
 {
-    DcBus bus = {};
+    struct dc_bus bus;
+    dc_bus_init(&bus);
     LoadOutput load_out(&bus, load_switch);
     load_init(&load_out);
     load_out.error_flags = ERR_LOAD_SHEDDING;
@@ -201,7 +211,8 @@ ZTEST(load, test_control_off_shedding_to_on_after_delay)
 
 ZTEST(load, test_control_off_overcurrent_to_on_after_delay)
 {
-    DcBus bus = {};
+    struct dc_bus bus;
+    dc_bus_init(&bus);
     LoadOutput load_out(&bus, load_switch);
     load_init(&load_out);
     load_out.error_flags = ERR_LOAD_OVERCURRENT;
@@ -219,7 +230,8 @@ ZTEST(load, test_control_off_overcurrent_to_on_after_delay)
 
 ZTEST(load, test_control_off_overvoltage_to_on_at_lower_voltage)
 {
-    DcBus bus = {};
+    struct dc_bus bus;
+    dc_bus_init(&bus);
     LoadOutput load_out(&bus, load_switch);
     load_init(&load_out);
     bus.voltage = load_out.overvoltage + 0.1f;
@@ -242,7 +254,8 @@ ZTEST(load, test_control_off_overvoltage_to_on_at_lower_voltage)
 
 ZTEST(load, test_control_off_overvoltage_to_on_at_lower_voltage_dual_battery)
 {
-    DcBus bus = {};
+    struct dc_bus bus;
+    dc_bus_init(&bus);
     LoadOutput load_out(&bus, load_switch);
     load_init(&load_out, false, 2);
     bus.voltage = (load_out.overvoltage + 0.1f) * bus.series_multiplier;
@@ -265,7 +278,8 @@ ZTEST(load, test_control_off_overvoltage_to_on_at_lower_voltage_dual_battery)
 
 ZTEST(load, test_control_off_short_circuit_flag_reset)
 {
-    DcBus bus = {};
+    struct dc_bus bus;
+    dc_bus_init(&bus);
     LoadOutput load_out(&bus, load_switch);
     load_init(&load_out);
     load_out.error_flags = ERR_LOAD_SHORT_CIRCUIT;

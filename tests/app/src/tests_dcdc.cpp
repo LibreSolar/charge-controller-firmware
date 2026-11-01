@@ -19,12 +19,12 @@ static void init_structs_buck(int num_batteries = 1)
     half_bridge_stop(dcdc.half_bridge);
 
     dev_stat.error_flags = 0;
-    hv_terminal.init_solar();
+    power_port_init_solar(&hv_terminal);
     hv_terminal.bus->voltage = 20 * num_batteries;
     hv_terminal.bus->src_voltage_intercept = 18 * num_batteries;
     hv_terminal.bus->series_multiplier = 1;
     hv_terminal.current = 0;
-    hv_terminal.update_bus_current_margins();
+    power_port_update_bus_current_margins(&hv_terminal);
 
     battery_conf_init(&bat_conf, BAT_TYPE_GEL, 6, 100);
     charger.port = &lv_terminal;
@@ -32,7 +32,7 @@ static void init_structs_buck(int num_batteries = 1)
     lv_terminal.bus->voltage = 14 * num_batteries;
     lv_terminal.bus->series_multiplier = num_batteries;
     lv_terminal.current = 0;
-    lv_terminal.update_bus_current_margins();
+    power_port_update_bus_current_margins(&lv_terminal);
 
     dcdc.mode = DCDC_MODE_BUCK;
     dcdc.temp_mosfets = 25;
@@ -60,13 +60,13 @@ static void init_structs_boost(int num_batteries = 1)
 {
     half_bridge_stop(dcdc.half_bridge);
 
-    hv_terminal.init_solar();
+    power_port_init_solar(&hv_terminal);
     lv_terminal.bus->voltage = 20;
     lv_terminal.bus->src_voltage_intercept = 18;
     lv_terminal.bus->series_multiplier = 1;
     dcdc.inductor_current = 0;
     dcdc.power = 0;
-    lv_terminal.update_bus_current_margins();
+    power_port_update_bus_current_margins(&lv_terminal);
 
     int num_cells = (num_batteries == 1) ? 10 : 5;
     battery_conf_init(&bat_conf, BAT_TYPE_NMC, num_cells, 9);
@@ -76,7 +76,7 @@ static void init_structs_boost(int num_batteries = 1)
     hv_terminal.bus->series_multiplier = num_batteries;
     hv_terminal.current = 0;
     hv_terminal.power = 0;
-    hv_terminal.update_bus_current_margins();
+    power_port_update_bus_current_margins(&hv_terminal);
 
     dcdc.mode = DCDC_MODE_BOOST;
     dcdc.temp_mosfets = 25;
@@ -231,7 +231,7 @@ ZTEST(dcdc, test_buck_derating_output_current_too_high)
     start_buck();
     float pwm_before = half_bridge_get_duty_cycle(dcdc.half_bridge);
     lv_terminal.current = lv_terminal.pos_current_limit + 0.1f;
-    lv_terminal.update_bus_current_margins();
+    power_port_update_bus_current_margins(&lv_terminal);
     dcdc.control();
     float pwm_after = half_bridge_get_duty_cycle(dcdc.half_bridge);
     zassert_true(pwm_after < pwm_before);
@@ -266,7 +266,7 @@ ZTEST(dcdc, test_buck_derating_input_current_too_high)
     start_buck();
     float pwm_before = half_bridge_get_duty_cycle(dcdc.half_bridge);
     hv_terminal.current = hv_terminal.neg_current_limit - 0.1f;
-    hv_terminal.update_bus_current_margins();
+    power_port_update_bus_current_margins(&hv_terminal);
     dcdc.control();
     float pwm_after = half_bridge_get_duty_cycle(dcdc.half_bridge);
     zassert_true(pwm_after < pwm_before);
@@ -344,7 +344,7 @@ ZTEST(dcdc, test_boost_derating_output_current_too_high)
     start_boost();
     float pwm_before = half_bridge_get_duty_cycle(dcdc.half_bridge);
     hv_terminal.current = hv_terminal.pos_current_limit + 0.1f;
-    hv_terminal.update_bus_current_margins();
+    power_port_update_bus_current_margins(&hv_terminal);
     dcdc.control();
     float pwm_after = half_bridge_get_duty_cycle(dcdc.half_bridge);
     zassert_true(pwm_after > pwm_before);
@@ -356,7 +356,7 @@ ZTEST(dcdc, test_boost_derating_input_voltage_too_low)
     float pwm_before = half_bridge_get_duty_cycle(dcdc.half_bridge);
     lv_terminal.bus->voltage = lv_terminal.bus->src_voltage_intercept - 0.1f;
     dcdc.power = -1.2f;
-    hv_terminal.update_bus_current_margins();
+    power_port_update_bus_current_margins(&hv_terminal);
     dcdc.control();
     float pwm_after = half_bridge_get_duty_cycle(dcdc.half_bridge);
     zassert_equal(dcdc.state, DCDC_CONTROL_CV_LS);
