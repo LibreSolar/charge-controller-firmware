@@ -14,12 +14,6 @@ child-binding:
     pwms:
       type: phandle-array
       description: PWM handle for PWM type output
-    latching-pgood:
-      type: boolean
-      description: Driver for latching power good pin (optional)
     current-max:
       type: int
       description: Maximum current of driven power switch (A)
-    kconfig-flag:
-      type: boolean
-      description: This value can be checked by Kconfig parser using dt_node_has_bool_prop function

@@ -73,7 +73,7 @@ endchoice
 
 choice
     prompt "PWM terminal"
-    depends on $(dt_node_bool_prop,/outputs/pwm_switch,kconfig-flag)
+    depends on $(dt_nodelabel_enabled,pwm_switch)
     help
       Select the device connected to the PWM switch (currently
       only solar panel possible)

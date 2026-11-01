@@ -40,7 +40,7 @@ Dcdc dcdc(DEVICE_DT_GET(HALF_BRIDGE_NODE), &hv_bus, &lv_bus, DCDC_MODE_BUCK);
 #endif
 
 #if BOARD_HAS_PWM_PORT
-PwmSwitch pwm_switch(&lv_bus);
+PwmSwitch pwm_switch(&lv_bus, DEVICE_DT_GET(PWM_SWITCH_NODE));
 #endif
 
 #if BOARD_HAS_LOAD_OUTPUT

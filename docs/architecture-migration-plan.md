@@ -174,7 +174,10 @@ Move all remaining hardware access from `app/src` into Zephyr drivers.
   - [x] STM32 LPTIM backend with comparator-based short-circuit protection
         (`libresolar,stm32-lptim-power-switch`, PWM 2420 LUS), needs hardware test
   - [x] Load and USB outputs use the driver, `load_driver.c` removed
-- [ ] PWM switch backend for PWM charge controllers (replaces `pwm_switch_driver.c`)
+- [x] PWM support in the `power_switch` API
+  - [x] STM32 timer backend (`libresolar,stm32-pwm-power-switch`) for PWM charge controllers
+        (replaces `pwm_switch_driver.c`), needs hardware test
+  - [x] Emulated backend (`libresolar,power-switch-emul`) for tests on native_sim
 - [ ] NTC thermistors via Zephyr sensor API (replaces `ntc_temp()` in `daq.cpp`)
 - [ ] Bootloader entry and SoC-specific setup out of the application (`hardware.cpp`,
       `setup.cpp`, `mcu.h`)

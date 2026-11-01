@@ -52,12 +52,6 @@
 	outputs {
 		compatible = "outputs";
 
-		pwm_switch {
-			pwms = <&pwm3 2 (20*1000*1000) 0>; /* 20 ms period = 50 Hz */
-			current-max = <20>;
-			kconfig-flag;	/* make node visible in Kconfig */
-		};
-
 		can_en {
 			gpios = <&gpio0 11 GPIO_ACTIVE_LOW>;
 		};
@@ -137,13 +131,10 @@
 		deadtime-ns = <300>;
 	};
 
-	timers3: timers {
-		status = "okay";
-
-		pwm3: pwm3 {
-                        compatible = "zephyr,dummy-pwm";
-			#pwm-cells = <3>;
-		};
+	pwm_switch: pwm-switch {
+		compatible = "libresolar,power-switch-emul";
+		frequency = <50>;
+		current-max = <20>;
 	};
 
 	aliases {

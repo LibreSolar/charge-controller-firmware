@@ -78,14 +78,6 @@
 	outputs {
 		compatible = "outputs";
 
-		pwm_switch {
-			pwms = <&pwm3 4 (20*1000*1000) PWM_POLARITY_NORMAL>; /* 20 ms period = 50 Hz */
-			// Current reduced to 15A. Increase to 20A PCB max values
-			// only if attached to a big heat sink.
-			current-max = <15>;
-			kconfig-flag;	/* make node visible in Kconfig */
-		};
-
 		boot0 {
 			gpios = <&gpiob 12 GPIO_ACTIVE_HIGH>;
 		};
@@ -211,11 +203,15 @@ uext_i2c: &i2c1 {
 
 &timers3 {
 	status = "okay";
-	st,prescaler = <10000>;
-	pwm3: pwm {
-		status = "okay";
+
+	pwm_switch: pwm-switch {
+		compatible = "libresolar,stm32-pwm-power-switch";
 		pinctrl-0 = <&tim3_ch4_pb1>;
 		pinctrl-names = "default";
+		channel = <4>;
+		frequency = <50>;
+		/* reduced to 15A, increase to 20A PCB max value only if attached to a big heat sink */
+		current-max = <15>;
 	};
 };
 

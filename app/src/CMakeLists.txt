@@ -12,7 +12,6 @@ target_sources(app PRIVATE
         load.cpp
         main.cpp
         power_port.cpp
-        pwm_switch_driver.c
         pwm_switch.cpp
         setup.cpp
 )
