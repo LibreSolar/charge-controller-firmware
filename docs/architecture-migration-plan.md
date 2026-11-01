@@ -189,6 +189,22 @@ Move all remaining hardware access from `app/src` into Zephyr drivers.
   - DC/DC duty cycle step size configurable via `CONFIG_DCDC_DUTY_STEP_SIZE` instead of
     depending on the SoC series in the code
 
+### Step 1b: Conversion from C++ to C
+
+Convert the application from C++ to C, so that the power model and all further modules can be
+written in C and instantiated from the devicetree with static initializers.
+
+- Bottom-up, one module per commit. C++ code can call the converted C modules, so every
+  intermediate state builds and passes the tests.
+- Classes become structs with prefixed functions (e.g. `LoadOutput::control()` →
+  `load_control(struct load_output *load)`).
+- `LoadOutput` and `PwmSwitch` reference their power port via pointer instead of inheriting from
+  `PowerPort`, so that the ports can be owned by the power model in step 2.
+- Default member initializers and constructors become explicit init functions called in a
+  defined order from `main()`.
+- Field names are kept, so ThingSet items and the data layout don't change.
+- Finally the unit tests are converted and C++ support is disabled.
+
 ### Step 2: Devicetree power model
 
 - Bindings for `dc-bus`, `power-port` and converters
