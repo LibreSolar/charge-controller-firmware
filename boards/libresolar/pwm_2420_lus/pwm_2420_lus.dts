@@ -61,6 +61,20 @@
 		};
 	};
 
+	/* load switch with short-circuit comparator at i-load measurement (PB4) */
+	load_switch: load-switch {
+		compatible = "libresolar,stm32-lptim-power-switch";
+		gpios = <&gpiob 2 GPIO_ACTIVE_LOW>;
+		pinctrl-0 = <&lptim1_out_pb2 &comp2_inp_pb4>;
+		pinctrl-names = "default";
+		current-max = <15>;
+	};
+
+	usb_switch: usb-switch {
+		compatible = "libresolar,gpio-power-switch";
+		gpios = <&gpiob 5 GPIO_ACTIVE_LOW>;
+	};
+
 	outputs {
 		compatible = "outputs";
 
@@ -70,16 +84,6 @@
 			// only if attached to a big heat sink.
 			current-max = <15>;
 			kconfig-flag;	/* make node visible in Kconfig */
-		};
-
-		load {
-			gpios = <&gpiob 2 GPIO_ACTIVE_LOW>;
-			current-max = <15>;
-			kconfig-flag;	/* make node visible in Kconfig */
-		};
-
-		usb-pwr {
-			gpios = <&gpiob 5 GPIO_ACTIVE_LOW>;
 		};
 
 		boot0 {

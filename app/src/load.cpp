@@ -15,7 +15,13 @@
 #include "helper.h"
 #include "leds.h"
 
-#define LOAD_CURRENT_MAX DT_PROP(DT_CHILD(DT_PATH(outputs), load), current_max)
+#include <libresolar/drivers/power_switch.h>
+
+#include <zephyr/logging/log.h>
+
+LOG_MODULE_REGISTER(load, CONFIG_LOAD_LOG_LEVEL);
+
+#define LOAD_CURRENT_MAX DT_PROP(LOAD_SWITCH_NODE, current_max)
 
 #define PCB_LS_VOLTAGE_MAX    DT_PROP(DT_PATH(pcb), ls_voltage_max)
 #define PCB_MOSFETS_TJ_MAX    DT_PROP(DT_PATH(pcb), mosfets_tj_max)
@@ -24,14 +30,18 @@
 
 extern DeviceStatus dev_stat;
 
-LoadOutput::LoadOutput(DcBus *dc_bus, void (*switch_fn)(bool), void (*init_fn)(),
-                       bool (*pgood_fn)())
-    : PowerPort(dc_bus), switch_set(switch_fn), pgood_check(pgood_fn)
+LoadOutput::LoadOutput(DcBus *dc_bus, const struct device *sw, int led_pos)
+    : PowerPort(dc_bus), power_switch(sw), led(led_pos)
 {
     state = LOAD_STATE_OFF;
 
-    // call driver initialization function
-    init_fn();
+    if (!device_is_ready(power_switch)) {
+        LOG_ERR("Power switch %s not ready", power_switch->name);
+    }
+    else {
+        // not supported by all switches, so the return value is ignored
+        power_switch_set_fault_callback(power_switch, short_circuit_callback, this);
+    }
 
     switch_set(false);
     junction_temperature = 25; // starting point: 25°C
@@ -61,7 +71,7 @@ void LoadOutput::control()
             oc_timestamp = uptime();
         }
 
-        if (pgood_check != NULL && !pgood_check()) {
+        if (power_switch_power_good(power_switch) == 0) {
             flags_set(&error_flags, ERR_LOAD_OVERCURRENT);
             oc_timestamp = uptime();
         }
@@ -164,11 +174,25 @@ void LoadOutput::set_voltage_limits(float lvd, float lvr, float ov)
     overvoltage = ov;
 }
 
-extern LoadOutput load;
-
-void load_short_circuit_stop()
+void LoadOutput::switch_set(bool on)
 {
-    load.stop(ERR_LOAD_SHORT_CIRCUIT);
+    if (led >= 0) {
+        leds_set(led, on, LED_TIMEOUT_INFINITE);
+    }
+
+    if (device_is_ready(power_switch)) {
+        if (on) {
+            power_switch_on(power_switch);
+        }
+        else {
+            power_switch_off(power_switch);
+        }
+    }
+}
+
+void LoadOutput::short_circuit_callback(const struct device *dev, void *user_data)
+{
+    static_cast<LoadOutput *>(user_data)->stop(ERR_LOAD_SHORT_CIRCUIT);
 }
 
 #endif /* BOARD_HAS_LOAD_OUTPUT */

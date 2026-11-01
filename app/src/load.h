@@ -21,6 +21,8 @@
 
 #include "power_port.h"
 
+#include <zephyr/device.h>
+
 /**
  * Load/USB output states
  */
@@ -65,7 +67,7 @@ enum LoadErrorFlag
     /**
      * Short circuit detected at load port
      *
-     * Set by LoadOutput::control() after overcurrent comparator triggered, cleared only if
+     * Set after the power switch reported a short circuit detected in hardware, cleared only if
      * load output is manually disabled and enabled again.
      */
     ERR_LOAD_SHORT_CIRCUIT = 1U << 3,
@@ -94,15 +96,13 @@ class LoadOutput : public PowerPort
 {
 public:
     /**
-     * Initialize LoadOutput struct and overcurrent / short circuit protection comparator (if
-     * existing)
+     * Initialize LoadOutput struct and switch off the output
      *
      * @param dc_bus DC bus the load is connected to
-     * @param switch_fn Pointer to function for enabling/disabling load switch
-     * @param init_fn Pointer to function for load driver initialization
-     * @param pgood_fn Pointer to pgood check
+     * @param power_switch Power switch device of the output
+     * @param led LED indicating the switch state or -1 if not existing
      */
-    LoadOutput(DcBus *dc_bus, void (*switch_fn)(bool), void (*init_fn)(), bool (*pgood_fn)());
+    LoadOutput(DcBus *dc_bus, const struct device *power_switch, int led = -1);
 
     /** Main load control function, should be called by control timer
      *
@@ -157,14 +157,24 @@ public:
 
 private:
     /**
-     * Pointer to the load switch function
+     * Switch the output and the indicator LED (if existing)
      */
-    void (*switch_set)(bool);
+    void switch_set(bool on);
 
     /**
-     * Pointer to the function to check the power output status
+     * Callback for short circuits detected by the power switch hardware
      */
-    bool (*pgood_check)(void);
+    static void short_circuit_callback(const struct device *dev, void *user_data);
+
+    /**
+     * Power switch device
+     */
+    const struct device *power_switch;
+
+    /**
+     * LED indicating the switch state or -1 if not existing
+     */
+    int led;
 
     /**
      * Used to prevent switching of because of very short voltage dip
@@ -176,24 +186,6 @@ private:
      */
     int ov_debounce_counter = 0;
 };
-#endif
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-void load_out_init();
-void usb_out_init();
-
-void load_out_set(bool);
-void usb_out_set(bool);
-
-void load_short_circuit_stop();
-
-bool pgood_check();
-
-#ifdef __cplusplus
-}
 #endif
 
 #endif /* LOAD_H */

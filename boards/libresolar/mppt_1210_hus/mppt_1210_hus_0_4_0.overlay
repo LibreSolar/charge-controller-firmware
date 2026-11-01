@@ -42,14 +42,6 @@
 	outputs {
 		compatible = "outputs";
 
-		load {
-			gpios = <&gpioc 13 GPIO_ACTIVE_HIGH>;
-		};
-
-		usb-pwr {
-			gpios = <&gpiob 12 GPIO_ACTIVE_HIGH>;
-		};
-
 		/delete-node/ v-solar;
 		/delete-node/ boot0;
 	};
@@ -73,4 +65,12 @@
 
 		/delete-node/ temp-bat;
 	};
+};
+
+&load_switch {
+	gpios = <&gpioc 13 GPIO_ACTIVE_HIGH>;
+};
+
+&usb_switch {
+	gpios = <&gpiob 12 GPIO_ACTIVE_HIGH>;
 };

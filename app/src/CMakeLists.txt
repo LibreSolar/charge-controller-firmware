@@ -10,7 +10,6 @@ target_sources(app PRIVATE
         hardware.cpp
         leds.cpp
         load.cpp
-        load_driver.c
         main.cpp
         power_port.cpp
         pwm_switch_driver.c

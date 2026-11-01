@@ -44,11 +44,15 @@ PwmSwitch pwm_switch(&lv_bus);
 #endif
 
 #if BOARD_HAS_LOAD_OUTPUT
-LoadOutput load(&lv_bus, &load_out_set, &load_out_init, NULL);
+#if LED_EXISTS(load)
+LoadOutput load(&lv_bus, DEVICE_DT_GET(LOAD_SWITCH_NODE), LED_POS(load));
+#else
+LoadOutput load(&lv_bus, DEVICE_DT_GET(LOAD_SWITCH_NODE));
+#endif
 #endif
 
 #if BOARD_HAS_USB_OUTPUT
-LoadOutput usb_pwr(&lv_bus, &usb_out_set, &usb_out_init, &pgood_check);
+LoadOutput usb_pwr(&lv_bus, DEVICE_DT_GET(USB_SWITCH_NODE));
 #endif
 
 #if CONFIG_HV_TERMINAL_SOLAR

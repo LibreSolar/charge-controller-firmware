@@ -58,18 +58,19 @@
 		};
 	};
 
+	load_switch: load-switch {
+		compatible = "libresolar,gpio-power-switch";
+		gpios = <&gpioc 13 GPIO_ACTIVE_HIGH>;
+		current-max = <10>;
+	};
+
+	usb_switch: usb-switch {
+		compatible = "libresolar,gpio-power-switch";
+		gpios = <&gpiob 10 GPIO_ACTIVE_HIGH>;
+	};
+
 	outputs {
 		compatible = "outputs";
-
-		load {
-			gpios = <&gpioc 13 GPIO_ACTIVE_HIGH>;
-			current-max = <10>;
-			kconfig-flag;	/* make node visible in Kconfig */
-		};
-
-		usb-pwr {
-			gpios = <&gpiob 10 GPIO_ACTIVE_HIGH>;
-		};
 
 		boot0 {
 			gpios = <&gpiob 12 GPIO_ACTIVE_HIGH>;

@@ -294,7 +294,7 @@ endmenu # Battery default settings
 
 
 menu "Load output settings"
-    depends on $(dt_node_bool_prop,/outputs/load,kconfig-flag)
+    depends on $(dt_nodelabel_enabled,load_switch)
 
 config LOAD_OC_RECOVERY_DELAY
     int "Overcurrent recovery delay (s)"
@@ -386,6 +386,13 @@ config BAT_LOG_LEVEL
     depends on LOG
     help
       Log level for the battery module. 0=off, 1=ERR, 2=WRN, 3=INF, 4=DBG
+
+config LOAD_LOG_LEVEL
+    int "Log level for the load output module (if included)"
+    default 2
+    depends on LOG
+    help
+      Log level for the load output module (if included). 0=off, 1=ERR, 2=WRN, 3=INF, 4=DBG
 
 config PWM_LOG_LEVEL
     int "Log level for the PWM module (if included)"

@@ -49,18 +49,16 @@
 		};
 	};
 
+	load_switch: load-switch {
+		compatible = "libresolar,gpio-power-switch";
+		gpios = <&gpiob 2 GPIO_ACTIVE_LOW>;
+		/* 200 us period = 5 kHz */
+		charge-pump-pwms = <&pwm8 2 200000 PWM_POLARITY_NORMAL>;
+		current-max = <20>;
+	};
+
 	outputs {
 		compatible = "outputs";
-
-		load {
-			gpios = <&gpiob 2 GPIO_ACTIVE_LOW>;
-			current-max = <20>;
-			kconfig-flag;	/* make node visible in Kconfig */
-		};
-
-		charge_pump {
-			pwms = <&pwm8 2 200000 PWM_POLARITY_NORMAL>; /* 200 us period = 5 kHz */
-		};
 
 		can_en {
 			gpios = <&gpiob 11 GPIO_ACTIVE_LOW>;

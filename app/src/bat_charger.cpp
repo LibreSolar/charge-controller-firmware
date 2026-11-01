@@ -24,7 +24,7 @@ extern LoadOutput load;
 
 // DISCHARGE_CURRENT_MAX used to estimate current-compensation of load disconnect voltage
 #if BOARD_HAS_LOAD_OUTPUT
-#define DISCHARGE_CURRENT_MAX DT_PROP(DT_CHILD(DT_PATH(outputs), load), current_max)
+#define DISCHARGE_CURRENT_MAX DT_PROP(LOAD_SWITCH_NODE, current_max)
 #else
 #define DISCHARGE_CURRENT_MAX DT_PROP(DT_PATH(pcb), dcdc_current_max)
 #endif
