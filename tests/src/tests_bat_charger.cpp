@@ -292,6 +292,18 @@ void no_soc_below_0()
     TEST_ASSERT(0);
 }
 
+void soc_uses_series_battery_voltage()
+{
+    init_structs();
+    bat_terminal.bus->series_multiplier = 2;
+    bat_terminal.bus->voltage = bat_conf.ocv_empty + bat_conf.ocv_full;
+    for (int i = 0; i < 2000; i++) {
+        charger.update_soc(&bat_conf);
+    }
+    TEST_ASSERT_INT_WITHIN(2, 50, charger.soc);
+    bat_terminal.bus->series_multiplier = 1;
+}
+
 int bat_charger_tests()
 {
     UNITY_BEGIN();
@@ -329,6 +341,8 @@ int bat_charger_tests()
     RUN_TEST(restart_discharge_if_allowed);
 
     // RUN_TEST(battery_values_propagated_to_lv_bus_int);
+
+    RUN_TEST(soc_uses_series_battery_voltage);
 
     // ToDo: SOC calculation
     // RUN_TEST(no_soc_above_100);
