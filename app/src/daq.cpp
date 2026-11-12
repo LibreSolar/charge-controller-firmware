@@ -335,6 +335,9 @@ uint16_t adc_raw_clamp(float scale, float limit)
     // even if we have a higher voltage limit, we must limit it
     // to the max value the ADC will be able to deliver
     const float limit_scaled = limit * scale;
+    if (limit_scaled < 0.0F) {
+        return 0;
+    }
     return limit_scaled > (float)UINT16_MAX ? UINT16_MAX : (uint16_t)(limit_scaled);
 }
 
