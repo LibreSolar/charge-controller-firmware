@@ -167,6 +167,14 @@ void adc_alert_hv_overvoltage_triggering()
     TEST_ASSERT_EQUAL(DCDC_CONTROL_OFF, dcdc.state);
 }
 
+void adc_raw_clamp_handles_negative_limits()
+{
+    TEST_ASSERT_EQUAL_HEX(0, adc_raw_clamp(1.0F, -1.0F));
+    TEST_ASSERT_EQUAL_HEX(0, adc_raw_clamp(2.0F, -100.0F));
+    TEST_ASSERT_EQUAL_HEX(0, adc_raw_clamp(1.0F, 0.0F));
+    TEST_ASSERT_EQUAL_HEX(100, adc_raw_clamp(2.0F, 50.0F));
+}
+
 void adc_alert_overflow_prevention()
 {
     // try to set an alert that overflows the 12-bit ADC resolution
@@ -209,6 +217,7 @@ int daq_tests()
     RUN_TEST(adc_alert_lv_overvoltage_triggering);
     RUN_TEST(adc_alert_hv_overvoltage_triggering);
     RUN_TEST(adc_alert_overflow_prevention);
+    RUN_TEST(adc_raw_clamp_handles_negative_limits);
 
     return UNITY_END();
 }
