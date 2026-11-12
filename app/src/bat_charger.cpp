@@ -368,7 +368,8 @@ void Charger::update_soc(BatConf *bat_conf)
     static int soc_filtered = 0; // SOC / 100 for better filtering
 
     if (fabs(port->current) < 0.2f) {
-        int soc_new = (int)((port->bus->voltage - bat_conf->ocv_empty)
+        int soc_new = (int)((port->bus->voltage / port->bus->series_multiplier
+                            - bat_conf->ocv_empty)
                             / (bat_conf->ocv_full - bat_conf->ocv_empty) * 10000.0f);
 
         if (soc_new > 500 && soc_filtered == 0) {
