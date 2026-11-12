@@ -482,11 +482,13 @@ void Charger::charge_control(BatConf *bat_conf)
         port->pos_current_limit = 0;
         dev_stat.set_error(ERR_BAT_CHG_OVERTEMP);
         enter_state(CHG_STATE_IDLE);
+        return;
     }
     else if (bat_temperature < bat_conf->charge_temp_min) {
         port->pos_current_limit = 0;
         dev_stat.set_error(ERR_BAT_CHG_UNDERTEMP);
         enter_state(CHG_STATE_IDLE);
+        return;
     }
 
     if (dev_stat.has_error(ERR_BAT_OVERVOLTAGE)
