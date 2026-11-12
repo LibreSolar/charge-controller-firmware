@@ -6,6 +6,7 @@
 
 #include "tests.h"
 
+#include <initializer_list>
 #include <stdio.h>
 #include <time.h>
 
@@ -292,9 +293,22 @@ void no_soc_below_0()
     TEST_ASSERT(0);
 }
 
+void default_lithium_configuration_is_valid()
+{
+    for (int type : { BAT_TYPE_LFP, BAT_TYPE_NMC, BAT_TYPE_NMC_HV }) {
+        BatConf config = {};
+        battery_conf_init(&config, type, 4, 100);
+        TEST_ASSERT_TRUE(battery_conf_check(&config));
+        config.topping_cutoff_current = 10.1F;
+        TEST_ASSERT_FALSE(battery_conf_check(&config));
+    }
+}
+
 int bat_charger_tests()
 {
     UNITY_BEGIN();
+
+    RUN_TEST(default_lithium_configuration_is_valid);
 
     // startup of charging
     RUN_TEST(no_start_at_high_voltage);

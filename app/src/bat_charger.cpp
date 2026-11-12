@@ -260,9 +260,9 @@ bool battery_conf_check(BatConf *bat_conf)
           .text = "Wire Resistances must not cause more than 3% drop at Max Discharge Current" },
         { .func =
               [bat_conf]() {
-                  return bat_conf->topping_cutoff_current < (bat_conf->nominal_capacity / 10.0f);
+                  return bat_conf->topping_cutoff_current <= (bat_conf->nominal_capacity / 10.0f);
               },
-          .text = "Topping Cutoff Current must be less than 10% of Nominal Capacity (C/10)" },
+          .text = "Topping Cutoff Current must be at most 10% of Nominal Capacity (C/10)" },
         { .func = [bat_conf]() { return bat_conf->topping_cutoff_current > 0.01f; },
           .text = "Topping Cutoff Current must be higher than 0.01A" },
         { .func =
