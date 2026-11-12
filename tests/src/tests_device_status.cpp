@@ -17,6 +17,10 @@ void reset_counters_at_start_of_day()
     solar_terminal.bus->voltage = bat_terminal.bus->voltage - 1;
 
     dev_stat.day_counter = 0;
+    dev_stat.solar_power_max_day = 100;
+    dev_stat.load_power_max_day = 80;
+    dev_stat.solar_power_max_total = 200;
+    dev_stat.load_power_max_total = 160;
 
     solar_terminal.neg_energy_Wh = 10.0;
     bat_terminal.neg_energy_Wh = 3.0;
@@ -51,6 +55,10 @@ void reset_counters_at_start_of_day()
     TEST_ASSERT_EQUAL(0, bat_terminal.neg_energy_Wh);
     TEST_ASSERT_EQUAL(0, bat_terminal.pos_energy_Wh);
     TEST_ASSERT_EQUAL(0, load.pos_energy_Wh);
+    TEST_ASSERT_EQUAL(0, dev_stat.solar_power_max_day);
+    TEST_ASSERT_EQUAL(0, dev_stat.load_power_max_day);
+    TEST_ASSERT_EQUAL(200, dev_stat.solar_power_max_total);
+    TEST_ASSERT_EQUAL(160, dev_stat.load_power_max_total);
 }
 
 void dev_stat_new_solar_voltage_max()
