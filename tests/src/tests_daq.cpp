@@ -167,6 +167,27 @@ void adc_alert_hv_overvoltage_triggering()
     TEST_ASSERT_EQUAL(DCDC_CONTROL_OFF, dcdc.state);
 }
 
+void adc_alert_remains_active_during_sustained_overvoltage()
+{
+    battery_conf_init(&bat_conf, BAT_TYPE_LFP, 4, 100);
+    daq_set_lv_limits(bat_conf.absolute_max_voltage, bat_conf.absolute_min_voltage);
+    adcval.battery_voltage = bat_conf.absolute_max_voltage + 0.1F;
+    prepare_adc_readings(adcval);
+    adc_update_value(ADC_POS(v_low));
+    adc_update_value(ADC_POS(v_low));
+
+    for (int i = 0; i < 40000; i++) {
+        dev_stat.clear_error(ERR_BAT_OVERVOLTAGE);
+        adc_update_value(ADC_POS(v_low));
+        TEST_ASSERT_TRUE(dev_stat.has_error(ERR_BAT_OVERVOLTAGE));
+    }
+
+    adcval.battery_voltage = 12;
+    prepare_adc_readings(adcval);
+    adc_update_value(ADC_POS(v_low));
+    dev_stat.clear_error(ERR_BAT_OVERVOLTAGE);
+}
+
 void adc_alert_overflow_prevention()
 {
     // try to set an alert that overflows the 12-bit ADC resolution
@@ -209,6 +230,7 @@ int daq_tests()
     RUN_TEST(adc_alert_lv_overvoltage_triggering);
     RUN_TEST(adc_alert_hv_overvoltage_triggering);
     RUN_TEST(adc_alert_overflow_prevention);
+    RUN_TEST(adc_alert_remains_active_during_sustained_overvoltage);
 
     return UNITY_END();
 }
