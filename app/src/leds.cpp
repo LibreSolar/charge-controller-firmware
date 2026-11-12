@@ -225,7 +225,7 @@ void leds_update_1s()
         if (trigger_timeout[led] > 0) {
             trigger_timeout[led]--;
         }
-        else if (trigger_timeout[led] == 0) {
+        if (trigger_timeout[led] == 0) {
             led_states[led] = LED_STATE_OFF;
         }
     }
