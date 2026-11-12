@@ -6,6 +6,7 @@
 
 #include "tests.h"
 
+#include <initializer_list>
 #include <stdio.h>
 #include <time.h>
 
@@ -292,9 +293,23 @@ void no_soc_below_0()
     TEST_ASSERT(0);
 }
 
+void lead_acid_temperature_compensation_scales_with_cells()
+{
+    for (int type : { BAT_TYPE_FLOODED, BAT_TYPE_AGM, BAT_TYPE_GEL }) {
+        for (int cells : { 1, 6, 12 }) {
+            BatConf config = {};
+            battery_conf_init(&config, type, cells, 100);
+            TEST_ASSERT_FLOAT_WITHIN(
+                0.00001F, -0.003F * cells, config.temperature_compensation);
+        }
+    }
+}
+
 int bat_charger_tests()
 {
     UNITY_BEGIN();
+
+    RUN_TEST(lead_acid_temperature_compensation_scales_with_cells);
 
     // startup of charging
     RUN_TEST(no_start_at_high_voltage);
