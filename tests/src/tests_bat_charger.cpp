@@ -52,6 +52,31 @@ void no_start_outside_temperature_limits()
     TEST_ASSERT_EQUAL(CHG_STATE_IDLE, charger.state);
 }
 
+void follower_respects_temperature_limits()
+{
+    init_structs();
+    const float temperatures[] = { bat_conf.charge_temp_max + 1,
+                                   bat_conf.charge_temp_min - 1 };
+    const int errors[] = { ERR_BAT_CHG_OVERTEMP, ERR_BAT_CHG_UNDERTEMP };
+    const int states[] = { CHG_STATE_IDLE, CHG_STATE_BULK, CHG_STATE_FOLLOWER };
+
+    for (int state : states) {
+        for (int i = 0; i < 2; i++) {
+            init_structs();
+            charger.state = state;
+            charger.bat_temperature = temperatures[i];
+            charger.target_current_control = 5;
+            charger.time_last_ctrl_msg = time(NULL);
+
+            charger.charge_control(&bat_conf);
+
+            TEST_ASSERT_EQUAL(CHG_STATE_IDLE, charger.state);
+            TEST_ASSERT_EQUAL_FLOAT(0, bat_terminal.pos_current_limit);
+            TEST_ASSERT_TRUE(dev_stat.has_error(errors[i]));
+        }
+    }
+}
+
 void start_if_everything_just_fine()
 {
     init_structs();
@@ -300,6 +325,7 @@ int bat_charger_tests()
     RUN_TEST(no_start_at_high_voltage);
     RUN_TEST(no_start_after_short_rest);
     RUN_TEST(no_start_outside_temperature_limits);
+    RUN_TEST(follower_respects_temperature_limits);
     RUN_TEST(start_if_everything_just_fine);
 
     // topping
