@@ -68,8 +68,10 @@ void DeviceStatus::update_energy()
             grid_export_total_Wh_prev = grid_export_total_Wh;
 #endif
             solar_terminal.neg_energy_Wh = 0.0;
+            solar_power_max_day = 0;
 #if BOARD_HAS_LOAD_OUTPUT
             load.pos_energy_Wh = 0.0;
+            load_power_max_day = 0;
 #endif
             bat_terminal.pos_energy_Wh = 0.0;
             bat_terminal.neg_energy_Wh = 0.0;
