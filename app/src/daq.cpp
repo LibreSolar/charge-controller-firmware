@@ -136,7 +136,9 @@ void adc_update_value(unsigned int pos)
     }
 
     // check upper alerts
-    adc_alerts_upper[pos].debounce_ms++;
+    if (adc_alerts_upper[pos].debounce_ms < 2) {
+        adc_alerts_upper[pos].debounce_ms++;
+    }
     if (adc_alerts_upper[pos].callback != NULL && adc_readings[pos] >= adc_alerts_upper[pos].limit)
     {
         if (adc_alerts_upper[pos].debounce_ms > 1) {
@@ -151,7 +153,9 @@ void adc_update_value(unsigned int pos)
     }
 
     // same for lower alerts
-    adc_alerts_lower[pos].debounce_ms++;
+    if (adc_alerts_lower[pos].debounce_ms < 2) {
+        adc_alerts_lower[pos].debounce_ms++;
+    }
     if (adc_alerts_lower[pos].callback != NULL && adc_readings[pos] <= adc_alerts_lower[pos].limit)
     {
         if (adc_alerts_lower[pos].debounce_ms > 1) {
