@@ -292,6 +292,19 @@ void no_soc_below_0()
     TEST_ASSERT(0);
 }
 
+void battery_health_is_reported_as_percentage()
+{
+    init_structs();
+    charger.empty = false;
+    charger.usable_capacity = 0.0F;
+    charger.discharged_Ah = 80.0F;
+    load.error_flags = ERR_LOAD_SHEDDING;
+    charger.discharge_control(&bat_conf);
+    TEST_ASSERT_EQUAL(80, charger.soh);
+    load.error_flags = 0;
+    charger.empty = false;
+}
+
 int bat_charger_tests()
 {
     UNITY_BEGIN();
@@ -322,6 +335,8 @@ int bat_charger_tests()
 
     // TODO: temperature compensation
     // TODO: current compensation
+
+    RUN_TEST(battery_health_is_reported_as_percentage);
 
     RUN_TEST(stop_discharge_at_low_voltage);
     RUN_TEST(stop_discharge_at_overtemp);

@@ -420,7 +420,7 @@ void Charger::discharge_control(BatConf *bat_conf)
             }
 
             // simple SOH estimation
-            soh = usable_capacity / bat_conf->nominal_capacity;
+            soh = 100.0F * usable_capacity / bat_conf->nominal_capacity;
         }
     }
     else {
