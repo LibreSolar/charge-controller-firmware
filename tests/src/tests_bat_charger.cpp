@@ -292,9 +292,23 @@ void no_soc_below_0()
     TEST_ASSERT(0);
 }
 
+void reject_negative_compensation_resistance()
+{
+    init_structs();
+    bat_conf.internal_resistance = -0.01F;
+    TEST_ASSERT_FALSE(battery_conf_check(&bat_conf));
+    bat_conf.internal_resistance = 0.0F;
+    bat_conf.wire_resistance = -0.01F;
+    TEST_ASSERT_FALSE(battery_conf_check(&bat_conf));
+    bat_conf.wire_resistance = 0.0F;
+    TEST_ASSERT_TRUE(battery_conf_check(&bat_conf));
+}
+
 int bat_charger_tests()
 {
     UNITY_BEGIN();
+
+    RUN_TEST(reject_negative_compensation_resistance);
 
     // startup of charging
     RUN_TEST(no_start_at_high_voltage);

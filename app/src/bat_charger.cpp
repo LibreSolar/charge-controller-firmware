@@ -247,17 +247,19 @@ bool battery_conf_check(BatConf *bat_conf)
           .text = "Load Disconnecct Voltage must be higher than Absolute Min Voltage + 0.4" },
         { .func =
               [bat_conf]() {
-                  return bat_conf->internal_resistance
-                         < bat_conf->load_disconnect_voltage * 0.1f / DISCHARGE_CURRENT_MAX;
+                  return bat_conf->internal_resistance >= 0.0F
+                         && bat_conf->internal_resistance
+                                < bat_conf->load_disconnect_voltage * 0.1f / DISCHARGE_CURRENT_MAX;
               },
-          .text = "Internal Battery Resistance must not cause more than 10% drop at Max Discharge "
+          .text = "Internal Battery Resistance must be non-negative and cause at most 10% drop at Max Discharge "
                   "Current" },
         { .func =
               [bat_conf]() {
-                  return bat_conf->wire_resistance
-                         < bat_conf->topping_voltage * 0.03f / DISCHARGE_CURRENT_MAX;
+                  return bat_conf->wire_resistance >= 0.0F
+                         && bat_conf->wire_resistance
+                                < bat_conf->topping_voltage * 0.03f / DISCHARGE_CURRENT_MAX;
               },
-          .text = "Wire Resistances must not cause more than 3% drop at Max Discharge Current" },
+          .text = "Wire Resistance must be non-negative and cause at most 3% drop at Max Discharge Current" },
         { .func =
               [bat_conf]() {
                   return bat_conf->topping_cutoff_current < (bat_conf->nominal_capacity / 10.0f);
