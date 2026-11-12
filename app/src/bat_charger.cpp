@@ -88,7 +88,7 @@ void battery_conf_init(BatConf *bat, int type, int num_cells, float nominal_capa
             bat->equalization_trigger_days = 60;
             bat->equalization_trigger_deep_cycles = 10;
 
-            bat->temperature_compensation = -0.003F; // -3 mV/°C/cell
+            bat->temperature_compensation = -0.003F * num_cells; // -3 mV/°C/cell
             break;
 
         case BAT_TYPE_LFP:
