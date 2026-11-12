@@ -46,7 +46,7 @@ void oled_update()
     char buf[30];
     unsigned int len;
 
-#if CONFIG_HV_TERMINAL_SOLAR || CONFIG_PWM_TERMINAL_SOLAR
+#if CONFIG_HV_TERMINAL_SOLAR || CONFIG_LV_TERMINAL_SOLAR || CONFIG_PWM_TERMINAL_SOLAR
     PowerPort &in_terminal = solar_terminal;
 #elif CONFIG_HV_TERMINAL_NANOGRID
     PowerPort &in_terminal = grid_terminal;
